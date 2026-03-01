@@ -2,7 +2,7 @@
 
 > Turn Claude Code into a disciplined engineering partner.
 
-A lightweight workflow system for Claude Code. No opinions. No ceremonies. Just the patterns that actually work.
+A lightweight workflow system for Claude Code. Opinionated, but in the way that crystallized engineering lore is opinionated—patterns that survived contact with reality.
 
 ## Philosophy
 
@@ -14,7 +14,7 @@ The approach is simple:
 - **Fresh contexts, better results** — Spawn agents for heavy lifting, keep your main session clean
 - **Write it down** — Decisions, research, plans—all persisted for future sessions
 
-Inspired by [superpowers](https://github.com/pcvelz/superpowers) and [get-shit-done](https://github.com/gsd-build/get-shit-done), but less prescriptive. Use what works. Skip what doesn't.
+Inspired by [obra/superpowers](https://github.com/obra/superpowers) and [get-shit-done](https://github.com/gsd-build/get-shit-done), but less prescriptive. Use what works. Skip what doesn't.
 
 ## Installation
 
@@ -118,7 +118,7 @@ Just you, Claude, and the work.
 ## Credits
 
 Built on ideas from:
-- [pcvelz/superpowers](https://github.com/pcvelz/superpowers) — Disciplined TDD workflows
+- [obra/superpowers](https://github.com/obra/superpowers) — The original. Jesse Vincent's disciplined workflow system that started it all
 - [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done) — Context engineering pioneer
 
 ## License
