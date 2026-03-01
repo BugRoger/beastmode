@@ -4,30 +4,19 @@ Include this section at the end of every agent prompt.
 
 ## Output Format
 
-Return ONLY valid JSON matching this schema:
+Return the complete updated markdown file for the prime document.
 
-```json
-{
-  "prime": "[PRIME_NAME]",
-  "confidence": "high|medium|low",
-  "sections": {
-    "Section Name": {
-      "action": "replace|merge|keep",
-      "content": "markdown content for this section"
-    }
-  },
-  "sources": ["file1.json", "path/to/file2.ts"]
-}
-```
+Do NOT return JSON. Do NOT wrap in code blocks. Just return the markdown content directly.
 
-## Action Rules
+## Merge Rules
 
-- Use `replace` when: section has only placeholders like `[e.g., ...]` or `[command]`
-- Use `merge` when: section has real content but you found additional items (tables, lists)
-- Use `keep` when: section has accurate content that matches your findings
+- **Preserve** sections that have real content (not placeholders)
+- **Fill** sections that have placeholder patterns: `[e.g., ...]`, `[command]`, `[what it's used for]`, `<!-- Fill in ... -->`
+- **Update** sections with stale or incomplete information
+- **Keep** the original document structure and headings
 
 ## Safety Rules
 
 - NEVER read: `.env`, `*.pem`, `credentials*`, `secrets*`, `*.key`
-- Always cite source files in the `sources` array
-- Set `confidence` to `low` if findings are ambiguous
+- Include source file paths in your analysis comments if helpful
+- If uncertain about a finding, note it with `[inferred]` or `[uncertain]`
