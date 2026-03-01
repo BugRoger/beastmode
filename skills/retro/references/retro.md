@@ -6,7 +6,7 @@ You are an expert in prompt engineering, specializing in optimizing AI code assi
 
 Collect artifacts from the current development cycle:
 
-1. **Find session records**: `ls .agent/status/*-session.md 2>/dev/null`
+1. **Find session records**: `ls .agent/status/*.md 2>/dev/null`
 2. **Find design docs**: `ls .agent/design/*.md 2>/dev/null`
 3. **Find plan docs**: `ls .agent/plan/*.md 2>/dev/null`
 4. **Identify feature name**: Extract from most recent plan or design filename
