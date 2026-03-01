@@ -9,26 +9,35 @@ Workflow patterns for Claude Code. Opinionated like crystallized engineering lor
 A simple loop that scales from quick fixes to deep feature work:
 
 ```
-/prime → /research → /design → /plan → /implement → /verify → /retro
+/prime → /design → /plan → /implement → /release → /retro
 ```
 
-**Quick fix?** Prime, build, done.
+**Quick fix?** Prime, implement, done.
 
-**New feature?** Research the domain. Design the approach. Plan the tasks. Build. Verify. Learn.
+**New feature?** Design the approach. Plan the tasks. Implement. Release. Learn.
 
 **Multi-session project?** Each phase writes artifacts to `.agents/`. Next session, `/prime` restores context. Pick up where you left off.
 
 **Every project?** `/retro` feeds learnings back into your agent instructions. Knowledge compounds automatically.
 
+### Core Workflow
+
 | Skill | Purpose |
 |-------|---------|
 | `/prime` | Load project context into session |
-| `/research` | Explore domain before building |
 | `/design` | Think through the approach |
 | `/plan` | Turn design into implementation tasks |
 | `/implement` | Execute the plan, write the code |
-| `/verify` | Prove it works |
+| `/release` | Create changelog and release notes |
 | `/retro` | Capture learnings for next time |
+
+### Utilities
+
+| Skill | Purpose |
+|-------|---------|
+| `/bootstrap` | Initialize project with .agents/ structure |
+| `/research` | Explore domain when needed |
+| `/status` | Track project state and milestones |
 
 Use what helps. Skip what doesn't.
 
@@ -64,7 +73,6 @@ All project context lives here:
 ├── design/             # Feature brainstorms, specs
 ├── plan/               # Implementation tasks
 ├── status/             # Current state
-├── verify/             # Test reports
 └── release/            # Changelogs
 ```
 
@@ -72,7 +80,7 @@ Your root `CLAUDE.md` imports: `@.agents/CLAUDE.md`
 
 ## Why This Works
 
-**Proven workflow.** Research before design. Design before code. Verify before ship. Old wisdom, applied to AI coding.
+**Proven workflow.** Design before code. Plan before build. Old wisdom, applied to AI coding.
 
 **Context survives sessions.** Each phase writes artifacts. Next session reads them. No lost work. No repeated explanations.
 
@@ -91,16 +99,15 @@ Your root `CLAUDE.md` imports: `@.agents/CLAUDE.md`
 
 | Skill | Ready |
 |-------|-------|
-| `/bootstrap` | ✅ |
 | `/prime` | ✅ |
 | `/design` | ✅ |
 | `/plan` | ✅ |
-| `/retro` | ✅ |
-| `/research` | 🚧 |
 | `/implement` | 🚧 |
-| `/status` | 🚧 |
-| `/verify` | 🚧 |
 | `/release` | 🚧 |
+| `/retro` | ✅ |
+| `/bootstrap` | ✅ |
+| `/research` | 🚧 |
+| `/status` | 🚧 |
 
 ## Credits
 
