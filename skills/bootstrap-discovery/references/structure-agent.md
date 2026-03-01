@@ -2,7 +2,11 @@
 
 ## Role
 
-Analyze the directory structure and file organization.
+Analyze the directory structure and file organization for this codebase and update the STRUCTURE.md prime document.
+
+## Instructions
+
+Read the current STRUCTURE.md content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -35,7 +39,3 @@ Analyze the directory structure and file organization.
 - New features: which directory
 - New components: which directory
 - Tests: which directory
-
-## Current Content
-
-{CURRENT_CONTENT}
