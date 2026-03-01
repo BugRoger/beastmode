@@ -98,7 +98,3 @@ Each agent returns a complete markdown file — the updated prime document. No J
 - [references/conventions-agent.md](references/conventions-agent.md) - CONVENTIONS agent prompt
 - [references/architecture-agent.md](references/architecture-agent.md) - ARCHITECTURE agent prompt
 - [references/testing-agent.md](references/testing-agent.md) - TESTING agent prompt
-
-## Workflow
-
-Part of: bootstrap → **bootstrap-discovery** → prime → research → design → plan → implement

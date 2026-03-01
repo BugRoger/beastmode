@@ -204,10 +204,6 @@ The skill reads the `.tasks.json` file and continues from where it left off.
 
 ---
 
-## Workflow
-
-Part of: bootstrap → prime → research → design → **plan** → implement → status → verify → release → retro
-
 ## Session Status Tracking
 
 **On completion (after writing plan doc and committing):**

@@ -49,10 +49,6 @@ If the session was short or routine with nothing notable, say "Nothing to improv
 - [agents/claude-md.md](agents/claude-md.md) — CLAUDE.md review prompts
 - [agents/generic.md](agents/generic.md) — Generic fallback prompts
 
-## Workflow
-
-Part of: bootstrap → prime → research → design → plan → implement → status → verify → release → **retro**
-
 ## Context Report
 
 @../_shared/CONTEXT-REPORT.md

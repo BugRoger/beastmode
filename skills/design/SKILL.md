@@ -95,10 +95,6 @@ digraph design {
 
 Replace with the actual filename you just created.
 
-## Workflow
-
-Part of: bootstrap → prime → research → **design** → plan → implement → status → verify → release → retro
-
 ## Session Status Tracking
 
 **On completion (after writing design doc and committing):**

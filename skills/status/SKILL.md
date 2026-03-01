@@ -49,7 +49,3 @@ When displaying status, show:
 ## Output
 
 Reads from: `.agents/status/`
-
-## Workflow
-
-Part of: bootstrap → prime → research → design → plan → implement → **status** → verify → release → retro

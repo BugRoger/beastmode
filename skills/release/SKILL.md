@@ -35,10 +35,6 @@ If no version provided, suggest next version based on changes.
 
 Writes to: `.agents/release/`
 
-## Workflow
-
-Part of: bootstrap → prime → research → design → plan → implement → status → verify → **release** → retro
-
 ## Session Status Tracking
 
 **On completion:**

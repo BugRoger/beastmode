@@ -103,7 +103,3 @@ After all sections:
 ## Question Bank
 
 For deeper discovery questions, see [references/question-bank.md](references/question-bank.md).
-
-## Workflow
-
-Part of: bootstrap → **bootstrap-wizard** OR bootstrap-discovery → prime → research → design → ...
