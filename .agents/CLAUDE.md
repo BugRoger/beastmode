@@ -13,6 +13,8 @@ See .agents/prime/AGENTS.md
 - ALWAYS verify in code; NEVER guess
 - NEVER create/drop git stash unless explicitly requested
 - ALWAYS assume other agents may be working
+- NEVER create/modify git worktrees unless explicitly requested
+- NEVER switch branches unless explicitly requested
 
 ### 2. Stack
 See .agents/prime/STACK.md

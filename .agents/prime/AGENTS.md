@@ -19,6 +19,12 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 - **When user says "commit all"**: Commit everything in grouped chunks
 - **Unrecognized files**: Keep going; focus on your changes and commit only those
 
+## Worktree Workflow
+
+- **Context verification**: Before editing, verify `pwd` is in the correct worktree (not main repo)
+- **Recovery from main repo edits**: If you accidentally edit main repo instead of worktree, immediately `git checkout -- <files>` to discard, then switch to worktree
+- **Merge pattern**: When merging worktree branch back to main, prefer fast-forward (preserves linear history)
+
 ## Refactoring
 
 - **Implementation plans are authoritative**: When executing a `.agents/plan/*.md` file, the plan takes precedence over existing documentation or code comments

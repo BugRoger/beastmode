@@ -99,4 +99,5 @@ Example: /implement skill with Setup, Prepare, Execute, Complete phases
 - AVOID single-file skill definitions (structure with SKILL.md in skill directory)
 - NEVER create unnamed worktrees or isolated work without clear integration strategy
 - AVOID paragraph prose where bullet lists suffice (prefer bullets for readability)
+- NEVER duplicate workflow sequence strings in skill YAML descriptions; centralize in README.md and ARCHITECTURE.md
 - NEVER call `EnterPlanMode`/`ExitPlanMode` in skill definitions outside /plan skill context

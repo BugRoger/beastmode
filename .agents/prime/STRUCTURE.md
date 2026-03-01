@@ -28,6 +28,7 @@ beastmode/
 ├── .claude/               # Claude IDE local settings
 ├── .claude-plugin/        # Plugin marketplace configuration
 ├── skills/                # Agent skills (executable workflows)
+│   ├── _shared/          # Shared utilities (SESSION-TRACKING.md, CONTEXT-REPORT.md)
 │   ├── prime/            # Load project context
 │   ├── research/         # Domain exploration
 │   ├── design/           # Design thinking
