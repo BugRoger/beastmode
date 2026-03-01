@@ -218,3 +218,7 @@ Part of: bootstrap → prime → research → design → **plan** → implement 
 4. Update `.agent/status/YYYY-MM-DD-<feature>.md`
 5. Add entry to "Executed Phases" list
 6. Append Plan phase section with Summary/Decisions/Issues
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

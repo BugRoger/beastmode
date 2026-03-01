@@ -157,3 +157,7 @@ TaskUpdate:
 Run `TaskList` to display the complete task structure with dependencies.
 
 Include task IDs in the design document for reference.
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

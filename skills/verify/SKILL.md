@@ -48,3 +48,7 @@ Part of: bootstrap → prime → research → design → plan → implement → 
 3. Update `.agent/status/YYYY-MM-DD-<feature>.md`
 4. Add entry to "Executed Phases" list
 5. Append Verify phase section with test results summary
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

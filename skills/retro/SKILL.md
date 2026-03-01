@@ -52,3 +52,7 @@ If the session was short or routine with nothing notable, say "Nothing to improv
 ## Workflow
 
 Part of: bootstrap → prime → research → design → plan → implement → status → verify → release → **retro**
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

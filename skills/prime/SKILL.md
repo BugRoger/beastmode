@@ -112,3 +112,7 @@ Provide a concise summary covering:
 - Use bullet points and clear headers
 - Note any missing files explicitly
 - Keep it concise but comprehensive
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

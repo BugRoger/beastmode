@@ -125,3 +125,7 @@ Part of: bootstrap → prime → research → design → plan → **implement** 
    - Summary: tasks completed, merge status
    - Decisions: any implementation choices made
    - Issues: blockers encountered, how resolved
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md

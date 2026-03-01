@@ -14,3 +14,7 @@ Writes to: `.agent/research/`
 ## Status
 
 🚧 Stub - not yet implemented
+
+## Context Report
+
+@../_shared/CONTEXT-REPORT.md
