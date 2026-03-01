@@ -55,4 +55,9 @@ Templates are in [templates/](templates/):
 
 ## Workflow
 
-Part of: bootstrap → prime → research → design → plan → implement → status → verify → release → retro
+Part of: **bootstrap** → (bootstrap-wizard OR bootstrap-discovery) → prime → research → design → plan → implement → status → verify → release → retro
+
+**Next steps after bootstrap:**
+- `/bootstrap-wizard` — Interactive prefill via conversation
+- `/bootstrap-discovery` — Autonomous codebase analysis
+- Or fill `.agent/prime/*.md` manually
