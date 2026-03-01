@@ -3,7 +3,7 @@ name: plan
 description: "Create implementation plans. Outputs to .agent/plan/."
 ---
 
-@../references/session-tracking.md
+@../_shared/SESSION-TRACKING.md
 
 # /plan
 

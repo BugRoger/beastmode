@@ -3,7 +3,7 @@ name: verify
 description: Run verification and create reports. Outputs to .agent/verify/.
 ---
 
-@../references/session-tracking.md
+@../_shared/SESSION-TRACKING.md
 
 # /verify
 

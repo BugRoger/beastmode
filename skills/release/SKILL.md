@@ -3,7 +3,7 @@ name: release
 description: Create changelogs and release notes. Outputs to .agent/release/.
 ---
 
-@../references/session-tracking.md
+@../_shared/SESSION-TRACKING.md
 
 # /release
 

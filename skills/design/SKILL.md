@@ -3,7 +3,7 @@ name: design
 description: "Brainstorm and create design specs. Outputs to .agent/design/. Part of workflow: bootstrap → prime → research → design → plan → implement → status → verify → release → retro"
 ---
 
-@../references/session-tracking.md
+@../_shared/SESSION-TRACKING.md
 
 # /design
 

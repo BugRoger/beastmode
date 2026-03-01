@@ -3,7 +3,7 @@ name: implement
 description: "Execute implementation plans in isolated git worktrees. Creates .agent/worktrees/ workspace, runs tasks from .agent/plan/*.md, merges back to main on completion. Use when you have a plan ready to implement or when executing multi-task development work."
 ---
 
-@../references/session-tracking.md
+@../_shared/SESSION-TRACKING.md
 
 # /implement
 
