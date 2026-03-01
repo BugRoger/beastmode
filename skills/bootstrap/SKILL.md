@@ -1,9 +1,9 @@
 ---
-name: init
+name: bootstrap
 description: Initialize a project with the .agent/ folder structure for Claude and agents. Creates canonical workflow folders and prime/ reference templates.
 ---
 
-# /init
+# /bootstrap
 
 Initialize a project with Michi's canonical `.agent/` folder structure.
 
@@ -55,4 +55,4 @@ Templates are in [templates/](templates/):
 
 ## Workflow
 
-Part of: init → prime → research → design → plan → implement → status → verify → release → retro
+Part of: bootstrap → prime → research → design → plan → implement → status → verify → release → retro

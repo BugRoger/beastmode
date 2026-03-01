@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Brainstorm and create design specs. Outputs to .agent/design/. Part of workflow: init → prime → research → design → plan → implement → status → verify → release → retro"
+description: "Brainstorm and create design specs. Outputs to .agent/design/. Part of workflow: bootstrap → prime → research → design → plan → implement → status → verify → release → retro"
 ---
 
 # /design
@@ -95,7 +95,7 @@ Replace with the actual filename you just created.
 
 ## Workflow
 
-Part of: init → prime → research → **design** → plan → implement → status → verify → release → retro
+Part of: bootstrap → prime → research → **design** → plan → implement → status → verify → release → retro
 
 ## Key Principles
 

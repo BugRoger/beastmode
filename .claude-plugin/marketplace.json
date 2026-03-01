@@ -1,0 +1,15 @@
+{
+  "name": "beastmode-marketplace",
+  "owner": {
+    "name": "bugroger",
+    "email": "michael.j.schmidt@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "beastmode",
+      "description": "Agentic workflow skills for Claude Code. Activate beastmode.",
+      "version": "0.1.2",
+      "source": "./"
+    }
+  ]
+}
