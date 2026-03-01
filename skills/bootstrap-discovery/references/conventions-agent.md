@@ -2,7 +2,11 @@
 
 ## Role
 
-Analyze coding conventions and style patterns.
+Analyze coding conventions and style patterns for this codebase and update the CONVENTIONS.md prime document.
+
+## Instructions
+
+Read the current CONVENTIONS.md content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -32,7 +36,3 @@ Analyze coding conventions and style patterns.
 **Anti-Patterns:**
 - Things explicitly forbidden by linter rules
 - Patterns that contradict observed conventions
-
-## Current Content
-
-{CURRENT_CONTENT}
