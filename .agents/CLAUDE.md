@@ -13,8 +13,9 @@ See .agents/prime/AGENTS.md
 - ALWAYS verify in code; NEVER guess
 - NEVER create/drop git stash unless explicitly requested
 - ALWAYS assume other agents may be working
-- NEVER create/modify git worktrees unless explicitly requested
+- NEVER create/modify git worktrees unless explicitly requested (Exception: Skills manage cycle worktrees)
 - NEVER switch branches unless explicitly requested
+- Cycle workflow: `cycle/<topic>` branches, single unified commit at /release
 
 ### 2. Stack
 See .agents/prime/STACK.md
@@ -34,6 +35,7 @@ See .agents/prime/CONVENTIONS.md
 ### 5. Architecture
 See .agents/prime/ARCHITECTURE.md
 - Six-phase workflow (prime → design → plan → implement → release → retro) with .agents/ persistence
+- Unified cycle commits: design creates worktree, phases inherit it, release commits + merges + cleans
 
 ### 6. Testing
 See .agents/prime/TESTING.md

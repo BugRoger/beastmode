@@ -10,7 +10,7 @@ Documents naming patterns, code style, and project-specific conventions.
 - UPPERCASE.md: Invariant meta files with fixed structure (CLAUDE.md, STACK.md, CONVENTIONS.md)
 - lowercase.md: Variant content files (dates, research, plans)
 - Example: `CONVENTIONS.md` (template), `2026-03-01-bootstrap-discovery-v2.md` (variant), `SKILL.md` (skill definition)
-- Shared utilities: lowercase (session-tracking.md, context-report.md) — variant content @imported by phases
+- Shared utilities: lowercase (session-tracking.md, context-report.md, worktree-manager.md) — variant content @imported by phases
 
 **Phase Files:**
 - Pattern: `1-name.md`, `2-name.md`, `3-name.md` (numbered prefix for execution order)
@@ -20,6 +20,9 @@ Documents naming patterns, code style, and project-specific conventions.
 **Directories:**
 - Skill directories: lowercase-with-hyphens, colocated with SKILL.md manifest
 - Example: `skills/bootstrap/`, `skills/bootstrap-discovery/`, `skills/implement/`
+
+**Branches:**
+- Cycle branches: `cycle/<topic>` — spanning entire feature cycle (design → plan → implement → retro → release)
 
 **Variables:**
 - camelCase: For variables in documentation (e.g., subagentType, bootstrapPath)
@@ -131,7 +134,7 @@ Example: /implement skill with Setup, Prepare, Execute, Complete phases
 - AVOID mixing placeholder formats in same section (use consistent brackets across related items)
 - NEVER include code blocks in template placeholders (use `[command]` not `` `command` ``)
 - AVOID single-file skill definitions (structure with SKILL.md in skill directory)
-- NEVER create unnamed worktrees or isolated work without clear integration strategy
+- NEVER create unnamed worktrees or isolated work without clear integration strategy (approved: cycle worktrees at `.agents/worktrees/cycle/<topic>` managed by design → release phases)
 - AVOID paragraph prose where bullet lists suffice (prefer bullets for readability)
 - NEVER duplicate workflow sequence strings in skill YAML descriptions; centralize in README.md and ARCHITECTURE.md
 - NEVER call `EnterPlanMode`/`ExitPlanMode` in skill definitions outside /plan skill context

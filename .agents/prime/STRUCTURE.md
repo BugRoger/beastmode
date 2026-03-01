@@ -24,11 +24,12 @@ beastmode/
 │   ├── status/            # Current state & milestones
 │   ├── release/           # Changelogs
 │   ├── worktrees/         # Worktree management
+│   │   └── cycle/        # Feature cycle worktrees (cycle/<topic>)
 │   └── templates/         # Task/artifact templates
 ├── .claude/               # Claude IDE local settings
 ├── .claude-plugin/        # Plugin marketplace configuration
 ├── skills/                # Agent skills (executable workflows)
-│   ├── _shared/          # Shared utilities (session-tracking.md, context-report.md)
+│   ├── _shared/          # Shared utilities (session-tracking.md, context-report.md, worktree-manager.md)
 │   ├── prime/            # Load project context
 │   │   └── phases/       # 1-prime.md
 │   ├── research/         # Domain exploration

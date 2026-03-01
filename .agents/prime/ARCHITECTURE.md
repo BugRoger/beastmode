@@ -56,9 +56,9 @@ Beastmode is a workflow system that turns Claude Code into a disciplined enginee
 - Dependencies: .agents/status/ directory
 
 **Release Skill:**
-- Purpose: Create changelogs and release notes
+- Purpose: Create changelogs, stage unified cycle changes, commit, merge to main, and cleanup worktree
 - Location: `/skills/release/`
-- Dependencies: Git history, .agents/release/ directory
+- Dependencies: Git, .agents/ artifacts, plan/implement/retro outputs, status file with worktree info
 
 **Retro Skill:**
 - Purpose: Analyze session work to improve agent instructions through parallel prime file review
@@ -80,15 +80,17 @@ Beastmode is a workflow system that turns Claude Code into a disciplined enginee
 ```
 User workflow intent
   ↓
-Skill execution
+Skill execution (design creates cycle worktree)
   ↓
-Phase-specific processing (analysis, dialogue, planning, execution)
+Status file updated with worktree path
   ↓
-.agents/ artifact storage (research/, design/, plan/, status/, release/)
+Subsequent phases (plan, implement, retro) inherit worktree from status
   ↓
-Next session loads .agents/CLAUDE.md + prime/
+Each phase: cd into worktree → execute → write artifacts (NO commit)
   ↓
-Resume from checkpoint or build on previous work
+Release: stage all → single commit → merge → cleanup worktree
+  ↓
+.agents/ artifacts + code changes persist on main
 ```
 
 For Bootstrap Discovery specifically:
@@ -149,6 +151,11 @@ Apply phase updates .agents/prime/
 - Context: Implement skill needs to execute complex plans without disrupting main branch or other agents
 - Decision: Create isolated git worktrees in .agents/worktrees/ for execution, merge back on completion
 - Rationale: Git worktrees provide branch isolation; enables concurrent work; clean merge on success
+
+**Unified Cycle Commit Architecture:**
+- Context: Five phase-specific commits per feature cycle create noise; worktree isolation enables consolidation
+- Decision: Design creates worktree, all phases write artifacts without committing, Release owns single commit + merge + cleanup
+- Rationale: Reduces commit noise; maintains WIP safety via worktree isolation; clear endpoint for merge/cleanup logic; single commit simplifies history
 
 **CLAUDE.md Bridge + .agents/CLAUDE.md:**
 - Context: Need minimal project brain in root while keeping comprehensive docs in .agents/
