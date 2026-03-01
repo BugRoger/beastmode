@@ -28,23 +28,37 @@ beastmode/
 ├── .claude/               # Claude IDE local settings
 ├── .claude-plugin/        # Plugin marketplace configuration
 ├── skills/                # Agent skills (executable workflows)
-│   ├── _shared/          # Shared utilities (SESSION-TRACKING.md, CONTEXT-REPORT.md)
+│   ├── _shared/          # Shared utilities (session-tracking.md, context-report.md)
 │   ├── prime/            # Load project context
+│   │   └── phases/       # 1-analyze.md, 2-report.md
 │   ├── research/         # Domain exploration
+│   │   └── phases/       # 1-scope.md, 2-investigate.md, 3-document.md
 │   ├── design/           # Design thinking
+│   │   ├── phases/       # 1-explore.md, 2-design.md, 3-document.md
+│   │   └── references/   # constraints.md
 │   ├── plan/             # Break down into tasks
+│   │   ├── phases/       # 1-prepare.md, 2-write.md, 3-handoff.md
+│   │   └── references/   # constraints.md, task-format.md
 │   ├── implement/        # Execute implementation
-│   │   └── phases/       # Implementation phase templates
+│   │   ├── phases/       # 1-setup.md, 2-prepare.md, 3-execute.md, 4-complete.md
+│   │   └── references/   # constraints.md
 │   ├── retro/            # Capture learnings
+│   │   ├── phases/       # 1-gather.md, 2-review.md, 3-apply.md
+│   │   ├── agents/       # Review agent prompts
 │   │   └── references/   # Retrospective references
 │   ├── status/           # Show project status
+│   │   └── phases/       # 1-display.md
+│   ├── release/          # Release management
+│   │   └── phases/       # 1-analyze.md, 2-generate.md, 3-publish.md
 │   ├── bootstrap/        # Initialize projects
+│   │   ├── phases/       # 1-create.md, 2-handoff.md
 │   │   └── templates/    # Bootstrap template files
 │   ├── bootstrap-wizard/ # Interactive project setup
-│   │   └── references/   # Setup references
-│   ├── bootstrap-discovery/ # Auto-populate prime docs
-│   │   └── references/   # Discovery references
-│   └── release/          # Release management
+│   │   ├── phases/       # 1-orient.md, 2-discover.md, 3-complete.md
+│   │   └── references/   # question-bank.md
+│   └── bootstrap-discovery/ # Auto-populate prime docs
+│       ├── phases/       # 1-prepare.md, 2-analyze.md, 3-complete.md
+│       └── references/   # Agent prompts (*-agent.md)
 ├── agents/               # Agent documentation
 │   └── discovery.md      # Codebase discovery patterns
 ├── README.md             # Project overview & workflow
@@ -62,8 +76,8 @@ beastmode/
 
 **`skills/`** — Agent Skills (Executable Workflows)
 - Purpose: Reusable agent prompts that implement the beastmode workflow
-- Contains: 13 skill definitions (prime, research, design, plan, implement, retro, status, bootstrap, bootstrap-wizard, bootstrap-discovery, release)
-- Each skill has: SKILL.md (prompt definition) + optional references/ or phases/ subdirectories
+- Contains: 11 skill definitions (prime, research, design, plan, implement, retro, status, bootstrap, bootstrap-wizard, bootstrap-discovery, release)
+- Each skill has: SKILL.md (prompt definition) + phases/ subdirectory + optional references/
 
 **`agents/`** — Agent Documentation
 - Purpose: Discovery guides and agent behavior patterns

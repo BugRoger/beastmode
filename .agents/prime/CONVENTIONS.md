@@ -10,6 +10,12 @@ Documents naming patterns, code style, and project-specific conventions.
 - UPPERCASE.md: Invariant meta files with fixed structure (CLAUDE.md, STACK.md, CONVENTIONS.md)
 - lowercase.md: Variant content files (dates, research, plans)
 - Example: `CONVENTIONS.md` (template), `2026-03-01-bootstrap-discovery-v2.md` (variant), `SKILL.md` (skill definition)
+- Shared utilities: lowercase (session-tracking.md, context-report.md) — variant content @imported by phases
+
+**Phase Files:**
+- Pattern: `1-name.md`, `2-name.md`, `3-name.md` (numbered prefix for execution order)
+- Location: `skills/{skill}/phases/`
+- Example: `phases/1-explore.md`, `phases/2-design.md`, `phases/3-document.md`
 
 **Directories:**
 - Skill directories: lowercase-with-hyphens, colocated with SKILL.md manifest
