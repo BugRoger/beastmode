@@ -61,7 +61,8 @@ beastmode/
 │       ├── phases/       # 1-prepare.md, 2-analyze.md, 3-complete.md
 │       └── references/   # Agent prompts (*-agent.md)
 ├── agents/               # Agent documentation
-│   └── discovery.md      # Codebase discovery patterns
+│   ├── discovery.md      # Codebase discovery patterns
+│   └── researcher.md     # Phase research agent
 ├── README.md             # Project overview & workflow
 ├── CLAUDE.md             # Root entry point (imports .agents/CLAUDE.md)
 ├── LICENSE               # MIT License
@@ -81,8 +82,8 @@ beastmode/
 - Each skill has: SKILL.md (prompt definition) + phases/ subdirectory + optional references/
 
 **`agents/`** — Agent Documentation
-- Purpose: Discovery guides and agent behavior patterns
-- Contains: discovery.md and other agent instruction files
+- Purpose: Subagent prompts for specialized tasks
+- Contains: discovery.md (codebase analysis), researcher.md (phase research)
 
 **`.claude-plugin/`** — Plugin Configuration
 - Purpose: Defines marketplace integration for beastmode plugin

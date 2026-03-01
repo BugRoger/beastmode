@@ -27,7 +27,7 @@ output_path=".agents/research/${date}-${topic}.md"
 ```
 
 Spawn an Explore agent with:
-- Prompt: Contents of `@../_shared/research-agent.md`
+- Prompt: Contents of `@../../agents/researcher.md`
 - Additional context: "Topic: <user's feature description>"
 - Additional context: "Output path: $output_path"
 - Additional context: "Phase: design"

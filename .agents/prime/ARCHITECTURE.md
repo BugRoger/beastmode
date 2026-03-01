@@ -43,7 +43,7 @@ Beastmode is a workflow system that turns Claude Code into a disciplined enginee
 **Phase Research (Optional):**
 - Purpose: Discover unknowns before design or plan phases via keyword/complexity triggers
 - Location: `skills/design/phases/0-research.md`, `skills/plan/phases/0-research.md`
-- Dependencies: `skills/_shared/research-agent.md`, Perplexity MCP, .agents/prime/ docs
+- Dependencies: `agents/researcher.md`, Context7/WebFetch/WebSearch (tool priority), .agents/prime/ docs
 
 **Plan Skill:**
 - Purpose: Convert designs into bite-sized implementation tasks with comprehensive documentation
@@ -71,8 +71,9 @@ Beastmode is a workflow system that turns Claude Code into a disciplined enginee
 - Dependencies: Session artifacts (.agents/status/ markdown + session JSONL files), .agents/CLAUDE.md, agent instruction files, design/plan docs for architectural decisions
 
 **Agents:**
-- Purpose: Subagents spawned for parallel discovery and analysis (Discovery agent for codebase analysis)
+- Purpose: Subagents spawned for specialized tasks (discovery, research)
 - Location: `/agents/`
+- Contains: discovery.md (codebase analysis), researcher.md (phase research with verification protocol)
 - Dependencies: Skill prompts, project codebase
 
 **.agents/ Infrastructure:**
