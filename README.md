@@ -94,9 +94,9 @@ Your root `CLAUDE.md` imports: `@.agent/CLAUDE.md`
 | `/bootstrap` | ✅ |
 | `/prime` | ✅ |
 | `/design` | ✅ |
+| `/plan` | ✅ |
 | `/retro` | ✅ |
 | `/research` | 🚧 |
-| `/plan` | 🚧 |
 | `/implement` | 🚧 |
 | `/status` | 🚧 |
 | `/verify` | 🚧 |
