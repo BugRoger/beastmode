@@ -2,7 +2,11 @@
 
 ## Role
 
-Analyze testing setup and conventions.
+Analyze testing setup and conventions for this codebase and update the TESTING.md prime document.
+
+## Instructions
+
+Read the current TESTING.md content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -32,7 +36,3 @@ Analyze testing setup and conventions.
 **Coverage:**
 - Coverage target if configured
 - Critical paths that must be tested
-
-## Current Content
-
-{CURRENT_CONTENT}
