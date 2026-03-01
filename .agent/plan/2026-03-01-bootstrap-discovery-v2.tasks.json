@@ -1,0 +1,15 @@
+{
+  "planPath": ".agent/plan/2026-03-01-bootstrap-discovery-v2.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Update common-instructions.md", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Update stack-agent.md", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Update structure-agent.md", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Update conventions-agent.md", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Update architecture-agent.md", "status": "pending"},
+    {"id": 5, "subject": "Task 5: Update testing-agent.md", "status": "pending"},
+    {"id": 6, "subject": "Task 6: Rewrite SKILL.md", "status": "pending", "blockedBy": [0, 1, 2, 3, 4, 5]},
+    {"id": 7, "subject": "Task 7: Test on beastmode project", "status": "pending", "blockedBy": [6]},
+    {"id": 8, "subject": "Task 8: Update design doc status", "status": "pending", "blockedBy": [7]}
+  ],
+  "lastUpdated": "2026-03-01T12:00:00Z"
+}
