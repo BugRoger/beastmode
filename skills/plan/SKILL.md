@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Create implementation plans. Outputs to .agent/plan/. Part of workflow: init → prime → research → design → plan → implement → status → verify → release → retro
+description: Create implementation plans. Outputs to .agent/plan/.
 ---
 
 # /plan

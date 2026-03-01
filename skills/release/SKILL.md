@@ -1,6 +1,6 @@
 ---
 name: release
-description: Create changelogs and release notes. Outputs to .agent/release/. Part of workflow: init → prime → research → design → plan → implement → status → verify → release → retro
+description: Create changelogs and release notes. Outputs to .agent/release/.
 ---
 
 # /release

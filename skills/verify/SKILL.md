@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run verification and create reports. Outputs to .agent/verify/. Part of workflow: init → prime → research → design → plan → implement → status → verify → release → retro
+description: Run verification and create reports. Outputs to .agent/verify/.
 ---
 
 # /verify

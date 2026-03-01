@@ -42,7 +42,7 @@ Use what helps. Skip what doesn't.
 Then initialize your project:
 
 ```bash
-/init
+/bootstrap
 ```
 
 ## The `.agent/` Folder
@@ -91,7 +91,7 @@ Your root `CLAUDE.md` imports: `@.agent/CLAUDE.md`
 
 | Skill | Ready |
 |-------|-------|
-| `/init` | ✅ |
+| `/bootstrap` | ✅ |
 | `/prime` | ✅ |
 | `/design` | ✅ |
 | `/retro` | ✅ |
