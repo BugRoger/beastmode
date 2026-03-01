@@ -2,123 +2,109 @@
 
 > Turn Claude Code into a disciplined engineering partner.
 
-A lightweight workflow system for Claude Code. Opinionated, but in the way that crystallized engineering lore is opinionated—patterns that survived contact with reality.
-
-## Philosophy
-
-Most AI coding sessions follow the same arc: Claude starts strong, context fills up, quality degrades, you lose track of what's done. **Beastmode fixes this.**
-
-The approach is simple:
-- **Structure over chaos** — A `.agent/` folder keeps all project context organized
-- **Skills over prompts** — Invoke workflows like `/research` or `/design` instead of explaining what you want
-- **Fresh contexts, better results** — Spawn agents for heavy lifting, keep your main session clean
-- **Write it down** — Decisions, research, plans—all persisted for future sessions
-
-Inspired by [obra/superpowers](https://github.com/obra/superpowers) and [get-shit-done](https://github.com/gsd-build/get-shit-done), but less prescriptive. Use what works. Skip what doesn't.
-
-## Installation
-
-```bash
-/plugin marketplace add bugroger/overrides-marketplace
-/plugin install beastmode@overrides-marketplace
-```
+Workflow patterns for Claude Code. Opinionated like crystallized engineering lore—patterns that survived contact with reality.
 
 ## The Workflow
 
+A simple loop that scales from quick fixes to deep feature work:
+
 ```
-/init → /prime → /research → /design → /plan → implement → /verify → /release → /retro
+/prime → /research → /design → /plan → /implement → /verify → /retro
 ```
 
-That's it. Run the skills when they make sense. Skip them when they don't.
+**Quick fix?** Prime, build, done.
 
-| Skill | What it does |
-|-------|--------------|
-| `/init` | Create the `.agent/` structure |
-| `/prime` | Load project context into your session |
-| `/research` | Explore before you build |
+**New feature?** Research the domain. Design the approach. Plan the tasks. Build. Verify. Learn.
+
+**Multi-session project?** Each phase writes artifacts to `.agent/`. Next session, `/prime` restores context. Pick up where you left off.
+
+**Every project?** `/retro` feeds learnings back into your agent instructions. Knowledge compounds automatically.
+
+| Skill | Purpose |
+|-------|---------|
+| `/prime` | Load project context into session |
+| `/research` | Explore domain before building |
 | `/design` | Think through the approach |
-| `/plan` | Break work into small, verifiable tasks |
+| `/plan` | Turn design into implementation tasks |
+| `/implement` | Execute the plan, write the code |
 | `/verify` | Prove it works |
-| `/release` | Document what shipped |
-| `/retro` | Learn from the session |
+| `/retro` | Capture learnings for next time |
 
-## The `.agent/` Convention
+Use what helps. Skip what doesn't.
 
-One folder. Everything in its place.
+## Install
+
+```bash
+/plugin marketplace add bugroger/overrides-marketplace
+/plugin install beastmode@overrides-marketplace
+```
+
+Then initialize your project:
+
+```bash
+/init
+```
+
+## The `.agent/` Folder
+
+All project context lives here:
 
 ```
 .agent/
-├── CLAUDE.md       # Your project's brain (<200 lines)
-├── prime/          # Reference material, templates
-├── research/       # Discovery, exploration notes
-├── design/         # Specs, architecture decisions
-├── plan/           # Implementation plans
-├── status/         # Current state, progress
-├── verify/         # Test reports, verification
-└── release/        # Changelogs, release notes
+├── CLAUDE.md           # Project brain (<200 lines)
+├── prime/              # Context loaded every session
+│   ├── META.md         # How to maintain these docs
+│   ├── AGENTS.md       # Multi-agent coordination
+│   ├── STACK.md        # Tech stack
+│   ├── STRUCTURE.md    # Directory layout
+│   ├── CONVENTIONS.md  # Naming patterns
+│   ├── ARCHITECTURE.md # System design
+│   └── TESTING.md      # Test strategy
+├── research/           # Domain exploration
+├── design/             # Feature brainstorms, specs
+├── plan/               # Implementation tasks
+├── status/             # Current state
+├── verify/             # Test reports
+└── release/            # Changelogs
 ```
 
-Your root `./CLAUDE.md` just imports: `@.agent/CLAUDE.md`
+Your root `CLAUDE.md` imports: `@.agent/CLAUDE.md`
 
 ## Why This Works
 
-**Context engineering matters.** Claude's quality degrades as context fills. Beastmode gives you:
+**Proven workflow.** Research before design. Design before code. Verify before ship. Old wisdom, applied to AI coding.
 
-- **Persistent state** — Research and decisions survive across sessions
-- **Spawn agents** — Heavy research? Spawn an agent with fresh 200K context
-- **Clear phases** — Know where you are in the process
-- **Written record** — Future-you (and future-Claude) will thank you
+**Context survives sessions.** Each phase writes artifacts. Next session reads them. No lost work. No repeated explanations.
 
-**No ceremony required.** Unlike enterprise tools:
-- No sprint planning
-- No story points
-- No standups
-- No RACI matrices
+**Scales to complexity.** Trivial change? Skip to build. Complex feature? Run every phase. The workflow adapts.
 
-Just you, Claude, and the work.
+**Knowledge compounds.** After each implementation, `/retro` updates your agent instructions. Patterns that work get encoded. Mistakes get documented. Over time, Claude gets smarter about *your* project—automatically.
 
-## File Conventions
+**No ceremony.** No sprint planning. No story points. No standups. Just you, Claude, and the work.
 
-- **UPPERCASE.md** — Meta files (CLAUDE.md, STATUS.md) — same structure always
-- **lowercase.md** — Content files (plans, research) — whatever fits
+## File Naming
 
-## Skills Status
+- **UPPERCASE.md** — Meta files with fixed structure (CLAUDE.md, STATUS.md)
+- **lowercase.md** — Content files, flexible structure
 
-| Skill | Status | Description |
-|-------|--------|-------------|
-| `/init` | ✅ | Initialize `.agent/` structure |
-| `/prime` | ✅ | Load project context |
-| `/research` | 🚧 | Discovery and exploration |
-| `/design` | ✅ | Brainstorming and specs |
-| `/plan` | 🚧 | Implementation planning |
-| `/status` | 🚧 | Project state tracking |
-| `/verify` | 🚧 | Verification reports |
-| `/release` | 🚧 | Changelog generation |
-| `/retro` | ✅ | Session retrospective |
+## Status
 
-## Quick Start
-
-```bash
-# 1. Install beastmode
-/plugin marketplace add bugroger/overrides-marketplace
-/plugin install beastmode@overrides-marketplace
-
-# 2. Initialize your project
-/init
-
-# 3. Load context
-/prime
-
-# 4. Start building
-/research "How should auth work in this stack?"
-/design "User authentication flow"
-/plan "Implement login endpoint"
-```
+| Skill | Ready |
+|-------|-------|
+| `/init` | ✅ |
+| `/prime` | ✅ |
+| `/design` | ✅ |
+| `/retro` | ✅ |
+| `/research` | 🚧 |
+| `/plan` | 🚧 |
+| `/implement` | 🚧 |
+| `/status` | 🚧 |
+| `/verify` | 🚧 |
+| `/release` | 🚧 |
 
 ## Credits
 
-Built on ideas from:
-- [obra/superpowers](https://github.com/obra/superpowers) — The original. Jesse Vincent's disciplined workflow system that started it all
+- [obra/superpowers](https://github.com/obra/superpowers) — Jesse Vincent's original disciplined workflow system
 - [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done) — Context engineering pioneer
 
 ## License
