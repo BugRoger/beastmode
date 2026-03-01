@@ -61,5 +61,4 @@ On phase completion, update `.agents/status/YYYY-MM-DD-<feature>.md`:
 | `/design` | From arguments or user-provided topic |
 | `/plan` | From design doc filename |
 | `/implement` | From plan doc filename |
-| `/verify` | From recent status file or explicit |
 | `/release` | From recent status file or explicit |
