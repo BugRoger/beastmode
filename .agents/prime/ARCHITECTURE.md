@@ -61,9 +61,9 @@ Beastmode is a workflow system that turns Claude Code into a disciplined enginee
 - Dependencies: Git history, .agents/release/ directory
 
 **Retro Skill:**
-- Purpose: Analyze session work to improve agent instructions through Review & Remember phase
+- Purpose: Analyze session work to improve agent instructions through parallel prime file review
 - Location: `/skills/retro/`
-- Dependencies: Session artifacts, .agents/CLAUDE.md, agent instruction files
+- Dependencies: Session artifacts (.agents/status/ markdown + session JSONL files), .agents/CLAUDE.md, agent instruction files, design/plan docs for architectural decisions
 
 **Agents:**
 - Purpose: Subagents spawned for parallel discovery and analysis (Discovery agent for codebase analysis)
@@ -108,6 +108,21 @@ Update CLAUDE.md Rules Summary
 Offer commit to git
 ```
 
+For Retro specifically:
+```
+.agents/status/ (with Session Files section)
+  ↓
+Gather phase collects session JSONL paths
+  ↓
+Review agents receive paths in prompts
+  ↓
+Agents read JSONL conversations for context
+  ↓
+Findings include conversation-informed recommendations
+  ↓
+Apply phase updates .agents/prime/
+```
+
 ## Key Decisions
 
 **Six-Phase Workflow:**
@@ -139,6 +154,16 @@ Offer commit to git
 - Context: Need minimal project brain in root while keeping comprehensive docs in .agents/
 - Decision: Root CLAUDE.md imports @.agents/CLAUDE.md which imports @.agents/prime/META.md
 - Rationale: Clear precedent for project context; <200 lines rule keeps root simple; @imports reduce duplication
+
+**Session JSONL Access for Retro Inspection:**
+- Context: Retro agents need access to actual conversation history, not just markdown summaries
+- Decision: Store absolute paths to session JSONL files in status markdown under "Session Files" section; agents read files directly
+- Rationale: Raw conversation context enables agents to identify patterns and provide informed recommendations; machine-readable section enables simple path collection
+
+**Design-Documentation Alignment via Retro:**
+- Context: Design docs establish architectural decisions that may not make it to prime documentation
+- Decision: Retro review agents check each design doc against corresponding prime files to verify patterns are captured
+- Rationale: Ensures design decisions don't get lost; creates feedback loop where design informs documentation
 
 ## Boundaries
 

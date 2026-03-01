@@ -27,6 +27,7 @@ See .agents/prime/STRUCTURE.md
 ### 4. Conventions
 See .agents/prime/CONVENTIONS.md
 - UPPERCASE.md for meta files; kebab-case for skills; @ imports for references
+- Skill Authoring: SKILL.md <50 lines, HARD-GATE blocks, 3-5 phases max
 
 ### 5. Architecture
 See .agents/prime/ARCHITECTURE.md

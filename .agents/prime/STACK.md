@@ -79,5 +79,5 @@ Beastmode is a meta-framework for Claude Code — it doesn't have traditional pa
 - **Self-bootstrapping:** Uses its own skills to analyze and document codebases
 - **Markdown-first:** All documentation and skill prompts are written in markdown
 - **Parallel execution:** bootstrap-discovery spawns 5 Explore agents simultaneously for STACK, STRUCTURE, CONVENTIONS, ARCHITECTURE, TESTING analysis
-- **Version:** 0.1.9 (from plugin.json)
+- **Version:** 0.1.10 (from plugin.json)
 - **Author:** bugroger (github: BugRoger)
