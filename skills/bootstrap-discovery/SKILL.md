@@ -13,36 +13,29 @@ Verify `.agent/prime/` exists. If missing: "Run `/bootstrap` first to create the
 
 ## Execution Flow
 
-```yaml
-1. Read Current State:
-   - Read all 5 prime files
-   - Store content for agent prompts
+1. **Check prerequisite** — verify `.agent/prime/` directory exists
+2. **Read current state** — read all 5 prime files
+3. **Assemble prompts** — for each prime, concatenate: agent prompt + common instructions + current content
+4. **Spawn agents** — launch 5 Explore agents in parallel (haiku model)
+5. **Collect outputs** — wait for all agents, collect markdown responses
+6. **Write files** — write each output to corresponding prime file
+7. **Update CLAUDE.md** — follow META.md conventions for Rules Summary
+8. **Complete** — list updated files, offer to commit
 
-2. Spawn 5 Agents (parallel):
-   - STACK, STRUCTURE, CONVENTIONS, ARCHITECTURE, TESTING
-   - Use Agent tool with subagent_type: Explore, model: haiku
-   - Each gets: role + hints + current content + output schema
+## Prompt Assembly
 
-3. Collect Results:
-   - Wait for all agents
-   - Parse JSON responses
+For each prime file, assemble the prompt by reading and concatenating:
 
-4. Merge & Write:
-   - Apply merge strategy per section
-   - Write to .agent/prime/{FILE}.md
-
-5. Update CLAUDE.md:
-   - Generate one-liner summaries
-   - Update Rules Summary section
-
-6. Complete:
-   - List updated files
-   - Offer to commit
+```
+Read: references/{prime}-agent.md
+Read: references/common-instructions.md
+Append: "\n\n## Current Content\n\n"
+Append: .agent/prime/{PRIME}.md content
 ```
 
 ## Agent Invocation
 
-Spawn all 5 agents in a single message for parallel execution:
+Spawn all 5 agents in a SINGLE message for parallel execution:
 
 ```yaml
 Agent:
@@ -50,81 +43,56 @@ Agent:
   model: haiku
   description: "Analyze STACK"
   prompt: |
-    [STACK agent prompt - see references/stack-agent.md]
-    [common instructions - see references/common-instructions.md]
-
-    Current STACK.md content:
-    [paste current content]
+    [assembled prompt for STACK]
 
 Agent:
   subagent_type: Explore
   model: haiku
   description: "Analyze STRUCTURE"
   prompt: |
-    [STRUCTURE agent prompt - see references/structure-agent.md]
-    [common instructions - see references/common-instructions.md]
+    [assembled prompt for STRUCTURE]
 
-    Current STRUCTURE.md content:
-    [paste current content]
+Agent:
+  subagent_type: Explore
+  model: haiku
+  description: "Analyze CONVENTIONS"
+  prompt: |
+    [assembled prompt for CONVENTIONS]
 
-# ... CONVENTIONS, ARCHITECTURE, TESTING agents
+Agent:
+  subagent_type: Explore
+  model: haiku
+  description: "Analyze ARCHITECTURE"
+  prompt: |
+    [assembled prompt for ARCHITECTURE]
+
+Agent:
+  subagent_type: Explore
+  model: haiku
+  description: "Analyze TESTING"
+  prompt: |
+    [assembled prompt for TESTING]
 ```
 
-## Output Schema
+## Agent Output
 
-Each agent returns JSON:
-
-```json
-{
-  "prime": "STACK",
-  "confidence": "high",
-  "sections": {
-    "Core Stack": {
-      "action": "replace",
-      "content": "**Runtime:**\n- Language: TypeScript 5.4\n- Runtime: Bun 1.2"
-    },
-    "Key Dependencies": {
-      "action": "merge",
-      "content": "| zod | Schema validation |"
-    }
-  },
-  "sources": ["package.json", "tsconfig.json"]
-}
-```
-
-## Merge Strategy
-
-| Action | Behavior |
-|--------|----------|
-| `replace` | Overwrite section with new content |
-| `merge` | Append to existing (tables, lists) |
-| `keep` | Leave existing unchanged |
-
-### Placeholder Detection
-
-Agents identify placeholders by patterns:
-- `[e.g., ...]` — example placeholder
-- `[what it's used for]` — instruction placeholder
-- `[command]` — empty placeholder
-- `<!-- Fill in ... -->` — comment placeholder
-
-Sections with only placeholders → `action: replace`
+Each agent returns a complete markdown file — the updated prime document. No JSON, no code blocks. The coordinator writes this output directly to the prime file.
 
 ## Error Handling
 
-- Agent timeout → skip prime, log warning
-- Malformed JSON → skip, preserve existing
-- Empty response → preserve existing
+- Agent timeout → skip prime, preserve existing, log warning
+- Empty response → preserve existing, log warning
+- Agent error → preserve existing, log warning
 
 ## Safety Rules
 
 - **Never read:** `.env`, `*.pem`, `credentials*`, `secrets*`, `*.key`
-- **Always cite:** Include source files in response
-- **Mark uncertainty:** Use confidence levels
+- **Always cite:** Include source files in analysis
+- **Mark uncertainty:** Use `[inferred]` for low-confidence findings
 
 ## References
 
-- [references/common-instructions.md](references/common-instructions.md) - Output format and safety rules (include in all prompts)
+- [references/common-instructions.md](references/common-instructions.md) - Output format and merge rules
 - [references/stack-agent.md](references/stack-agent.md) - STACK agent prompt
 - [references/structure-agent.md](references/structure-agent.md) - STRUCTURE agent prompt
 - [references/conventions-agent.md](references/conventions-agent.md) - CONVENTIONS agent prompt
