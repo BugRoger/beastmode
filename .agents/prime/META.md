@@ -44,6 +44,5 @@ This file defines how to maintain the `.agents/` documentation structure. It is 
 ├── design/         # Specs, brainstorming output
 ├── plan/           # Implementation plans
 ├── status/         # Current state, milestones
-├── verify/         # Verification reports
 └── release/        # Changelogs, release notes
 ```
