@@ -24,7 +24,6 @@ Initialize a project with Michi's canonical `.agents/` folder structure.
 ├── design/             # /design output
 ├── plan/               # /plan output
 ├── status/             # /status output
-├── verify/             # /verify output
 └── release/            # /release output
 
 ./CLAUDE.md             # Bridge: @.agents/CLAUDE.md
@@ -52,10 +51,6 @@ Templates are in [templates/](templates/):
 - [ARCHITECTURE.md](templates/ARCHITECTURE.md) - template
 - [TESTING.md](templates/TESTING.md) - template
 - [CLAUDE.md](templates/CLAUDE.md) - template
-
-## Workflow
-
-Part of: **bootstrap** → (bootstrap-wizard OR bootstrap-discovery) → prime → research → design → plan → implement → status → verify → release → retro
 
 **Next steps after bootstrap:**
 - `/bootstrap-wizard` — Interactive prefill via conversation
