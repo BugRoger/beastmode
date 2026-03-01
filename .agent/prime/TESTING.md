@@ -7,44 +7,50 @@ Documents the testing approach, commands, and conventions.
 ## Test Commands
 
 ```bash
-# Run all tests
-[command]
+# Verify bootstrap-discovery on a project
+/bootstrap-discovery
 
-# Run specific test file
-[command]
+# Verify generated prime files have real content
+grep -v "\[" .agent/prime/*.md | grep -v "^\[" | grep -v "^--" | wc -l
 
-# Run with coverage
-[command]
-
-# Run in watch mode
-[command]
+# Review generated documentation
+cat .agent/prime/STACK.md .agent/prime/STRUCTURE.md .agent/prime/TESTING.md
 ```
 
 ## Test Structure
 
-**Unit Tests:**
-- Location: [path]
-- Naming: [convention]
+**Verification Tests:**
+- Location: `.agent/prime/` (auto-generated after `/bootstrap-discovery`)
+- Naming: UPPERCASE.md files contain generated content, not placeholder patterns
 
 **Integration Tests:**
-- Location: [path]
-- Naming: [convention]
+- Location: Project-level verification by running `/bootstrap-discovery` on actual codebases
+- Naming: Manual inspection of generated files in `.agent/prime/`
 
 ## Conventions
 
-**Test File Naming:**
-- [pattern]
+**Verification Success Criteria:**
+- All 5 prime files (STACK, STRUCTURE, CONVENTIONS, ARCHITECTURE, TESTING) updated
+- No `[placeholder]` or `[command]` patterns remain in generated content
+- Each section contains substantive project-specific information
 
-**Test Function Naming:**
-- [pattern]
+**Content Validation:**
+- STACK.md: Lists actual dependencies and tech stack from project manifests
+- STRUCTURE.md: Shows real directory layout matching project structure
+- CONVENTIONS.md: Reflects actual coding patterns from source files
+- ARCHITECTURE.md: Describes actual system design, not generic templates
+- TESTING.md: Documents real testing setup (or confirms no testing if applicable)
 
 **Fixtures/Mocks:**
-- Location: [path]
-- Usage: [convention]
+- Location: `skills/bootstrap-discovery/references/` contains agent prompts and instructions
+- Usage: Each agent prompt (e.g., `testing-agent.md`) provides exploration hints and merge rules
 
 ## Coverage
 
-**Target:** [percentage]
+**Target:** All 5 prime documents populated with project-specific content on first run
 
 **Critical Paths:**
-- [path/module]: [why critical]
+- `bootstrap-discovery` skill execution: Must complete without errors
+- Parallel agent spawning: All 5 Explore agents must respond with markdown (not JSON)
+- Content merge: Generated output must preserve existing content while filling placeholders
+- File write operations: Prime files must be updated atomically without corruption
