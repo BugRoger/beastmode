@@ -1,0 +1,8 @@
+{
+  "name": "dev-workflow",
+  "description": "Michi's canonical workflow for Claude and agents. Initialize projects with .agent/ structure and workflow skills.",
+  "version": "0.1.0",
+  "author": {
+    "name": "bugroger"
+  }
+}
