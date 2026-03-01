@@ -2,7 +2,11 @@
 
 ## Role
 
-Analyze system architecture and component relationships.
+Analyze system architecture and component relationships for this codebase and update the ARCHITECTURE.md prime document.
+
+## Instructions
+
+Read the current ARCHITECTURE.md content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -34,7 +38,3 @@ Analyze system architecture and component relationships.
 - External APIs consumed
 - Internal module boundaries
 - Public interfaces exposed
-
-## Current Content
-
-{CURRENT_CONTENT}
