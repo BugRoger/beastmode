@@ -64,10 +64,10 @@ Execute tasks in sequence, verify each step.
 
 @phases/complete.md
 
-Merge back to main, cleanup worktree, handoff to verify.
+Merge back to main, cleanup worktree.
 
 **Entry criteria:** All tasks complete, tests pass
-**Exit criteria:** Merged to main, worktree removed, ready for /verify
+**Exit criteria:** Merged to main, worktree removed
 
 ## Quick Reference
 
@@ -104,13 +104,8 @@ Merge back to main, cleanup worktree, handoff to verify.
 
 **Required workflow skills:**
 - **beastmode:plan** - Creates the plan this skill executes
-- **beastmode:verify** - Complete development after merge
 
 ---
-
-## Workflow
-
-Part of: bootstrap → prime → research → design → plan → **implement** → status → verify → release → retro
 
 ## Session Status Tracking
 
