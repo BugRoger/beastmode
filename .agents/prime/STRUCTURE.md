@@ -63,6 +63,8 @@ beastmode/
 ├── agents/               # Agent documentation
 │   ├── discovery.md      # Codebase discovery patterns
 │   └── researcher.md     # Phase research agent
+├── hooks/                # Plugin lifecycle hooks
+│   └── session-start.sh  # Beastmode activation banner
 ├── README.md             # Project overview & workflow
 ├── CLAUDE.md             # Root entry point (imports .agents/CLAUDE.md)
 ├── LICENSE               # MIT License
