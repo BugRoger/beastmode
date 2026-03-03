@@ -5,13 +5,5 @@
   "author": {
     "name": "bugroger"
   },
-  "repository": "https://github.com/BugRoger/beastmode",
-  "hooks": {
-    "SessionStart": [
-      {
-        "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
-      }
-    ]
-  }
+  "repository": "https://github.com/BugRoger/beastmode"
 }
