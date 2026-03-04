@@ -10,14 +10,20 @@ Read:
 - `.beastmode/context/VALIDATE.md`
 - `.beastmode/meta/VALIDATE.md`
 
-## 3. Enter Feature Worktree
+## 3. Discover and Enter Feature Worktree
 
 **MANDATORY — do not skip this step.**
 
-Read the worktree path from the feature name and `cd` into it:
+Resolve the feature name and enter the worktree:
+
+1. If arguments contain a state file path → extract feature name from filename (strip date prefix and `.md`)
+2. If no arguments → scan `.beastmode/worktrees/` for directories:
+   - Exactly one → use it automatically
+   - Multiple → list with branch names, ask user to pick via `AskUserQuestion`
+   - Zero → print: "No active worktrees found. Run /design to start a new feature, or provide a state file path as argument." and STOP
+3. Enter the worktree:
 
 ```bash
-feature="<feature-name>"
 worktree_path=".beastmode/worktrees/$feature"
 if [ ! -d "$worktree_path" ]; then
   echo "Error: Worktree not found at $worktree_path"
@@ -26,8 +32,6 @@ fi
 cd "$worktree_path"
 pwd  # confirm you are in the worktree
 ```
-
-If the worktree directory doesn't exist, STOP and tell the user — do not continue on main.
 
 See @../_shared/worktree-manager.md for full reference.
 
