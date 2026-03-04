@@ -8,7 +8,7 @@ Opinionated workflow patterns that survived contact with reality.
 
 [![GitHub stars](https://img.shields.io/github/stars/BugRoger/beastmode?style=flat-square)](https://github.com/BugRoger/beastmode/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
+[![Version](https://img.shields.io/badge/version-0.6.0-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
 
 </div>
 

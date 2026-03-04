@@ -4,6 +4,11 @@ All notable changes to beastmode.
 
 ---
 
+### v0.6.0 — The Paper Trail (Mar 2026)
+
+- **CHANGELOG.md** — Consolidated 18 releases into 10 scannable entries with subtle personality in version titles
+- **README changelog link** — Credits section now links to the full changelog
+
 ### v0.5.2 — Living Docs & README Rewrite (Mar 2026)
 
 - **PRODUCT.md release rollup** — PRODUCT.md becomes a living document updated at release time with capabilities inventory and current version
