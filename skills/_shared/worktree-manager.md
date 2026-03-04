@@ -2,6 +2,39 @@
 
 Shared worktree operations for all phases. @import this file; do not inline worktree logic.
 
+## Discover Feature
+
+Used by: `/plan`, `/implement`, `/validate` 0-prime — before entering worktree.
+
+Resolves the feature name from arguments or filesystem scan.
+
+**Case 1: Argument provided** — extract feature name from the state file path:
+
+```bash
+# Input: .beastmode/state/design/2026-03-04-worktree-session-discovery.md
+# Output: worktree-session-discovery
+feature=$(basename "$argument" .md | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
+```
+
+**Case 2: No argument, worktrees exist** — scan and prompt:
+
+```bash
+ls .beastmode/worktrees/
+```
+
+- If exactly one directory → use it automatically
+- If multiple directories → list all with branch names using `AskUserQuestion`, let user pick
+- Format: `1. <feature-name> (feature/<feature-name>)`
+
+**Case 3: No argument, zero worktrees** — print guidance:
+
+```
+No active worktrees found. Run /design to start a new feature,
+or provide a state file path as argument.
+```
+
+After discovery, pass the resolved `feature` name to "Enter Worktree" below.
+
 ## Create Worktree
 
 Used by: `/design` 0-prime

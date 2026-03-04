@@ -32,3 +32,6 @@ Learnings from design phases. Key patterns: competitive analysis beats brainstor
 ### 2026-03-04: hitl-gate-config
 - **Research platform constraints before locking architecture**: The initial design assumed `/clear` could be issued programmatically. Web research revealed it's user-only, forcing a redesign from `/run` orchestrator to self-chaining transitions. Always verify platform capabilities before locking architectural decisions.
 - **Concrete per-gate analysis eliminates bad abstractions**: Walking through each gate with "what does skip actually do here?" revealed `skip` was either dangerous (approvals) or redundant (transitions). Concrete case-by-case analysis beats abstract taxonomy debates for eliminating unnecessary complexity.
+
+### 2026-03-04: worktree-session-discovery
+- **Cross-session state loss is a design gap, not a bug**: When a mechanism relies on in-session context (like the feature name derived during /design), it will silently break across sessions. Any state that subsequent phases need must be either persisted to disk or re-derivable from arguments. Treat session boundaries as a hard reset.
