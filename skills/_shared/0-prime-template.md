@@ -29,9 +29,9 @@ If triggered, spawn Explore agent with `@../../agents/researcher.md`.
 ## 4. Enter Cycle Worktree (if applicable)
 
 ```bash
-# Read worktree path from status file
-status_file=".beastmode/sessions/status/YYYY-MM-DD-<topic>.md"
-worktree_path=$(grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`')
+# Derive feature from design/plan doc filename or arguments
+feature="<feature-name>"
+worktree_path=".beastmode/worktrees/$feature"
 
 if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
   cd "$worktree_path"

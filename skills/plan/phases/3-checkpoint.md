@@ -19,23 +19,15 @@ Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.tasks.json`:
 }
 ```
 
-## 3. Update Status
-
-Add Plan phase entry to status file.
-
-## 4. Phase Retro
+## 3. Phase Retro
 
 @../_shared/retro.md
 
-## 5. Session Tracking
-
-@../_shared/session-tracking.md
-
-## 6. Context Report
+## 4. Context Report
 
 @../_shared/context-report.md
 
-## 7. Suggest Next Step
+## 5. Suggest Next Step
 
 <HARD-GATE>
 DO NOT call EnterPlanMode or ExitPlanMode. DO NOT automatically start implementation.
