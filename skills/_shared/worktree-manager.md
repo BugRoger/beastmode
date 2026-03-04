@@ -50,6 +50,8 @@ Ask user via AskUserQuestion:
 
 ### Option 1: Merge Locally
 
+> **Note:** If the feature branch was rebased onto main (as done by `/release` step 2), this merge is typically a fast-forward.
+
 ```bash
 worktree_abs=$(pwd)
 feature_branch=$(git branch --show-current)
