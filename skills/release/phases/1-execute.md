@@ -112,6 +112,30 @@ Update version in all three files:
 
 @../_shared/retro.md
 
+## 8.5. Update PRODUCT.md
+
+Roll up L1 summaries and release features into `.beastmode/PRODUCT.md`.
+
+1. Read current `.beastmode/PRODUCT.md`
+2. Read all L1 domain summaries (`context/DESIGN.md`, `context/PLAN.md`, `context/IMPLEMENT.md`, `context/VALIDATE.md`, `context/RELEASE.md`, `meta/DESIGN.md`, `meta/PLAN.md`, `meta/IMPLEMENT.md`, `meta/VALIDATE.md`, `meta/RELEASE.md`, `state/DESIGN.md`, `state/PLAN.md`, `state/IMPLEMENT.md`, `state/VALIDATE.md`, `state/RELEASE.md`)
+3. Read the release notes generated in step 5
+4. Update **Capabilities** section:
+   - Add new capabilities from this release's `feat:` commits
+   - Remove capabilities for features that were dropped
+   - Keep existing entries that are still accurate
+   - Format: `- **Bold label**: One-sentence description`
+5. Update **How It Works** section if the release changes workflow mechanics
+6. Update **Current Version** to the new version and release count
+
+<!-- HITL-GATE: release.product-md-approval | CONDITIONAL -->
+@../_shared/gate-check.md
+
+**Significance check:**
+- If only Current Version changed → auto-apply silently
+- If Capabilities or How It Works changed → present the before/after diff for user approval
+
+- **auto**: Claude auto-applies all changes and logs: "Gate `release.product-md-approval` → auto: updated PRODUCT.md with N new capabilities"
+
 ## 9. Commit Release Changes
 
 Stage and commit release artifacts (changelog, version bumps):
