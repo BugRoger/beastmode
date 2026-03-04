@@ -21,26 +21,11 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 - **Parallel wave execution**: Implementation tasks dispatched in parallel within waves when file isolation analysis confirms no overlaps
 - **Git worktree isolation**: Feature work happens in isolated worktrees created at design time, inherited by all phases, merged clean by /release
 - **HITL gate configuration**: Configurable human-in-the-loop gates (auto/interactive/approval) across all workflow phases via config.yaml
-- **Auto-transitions**: Phases chain automatically via explicit Skill tool calls when transition gates are set to auto
 - **Brownfield discovery**: Auto-populate project context by spawning parallel exploration agents against existing codebases
 - **Fractal knowledge hierarchy**: L0/L1/L2/L3 progressive loading with bottom-up retro bubble to keep documentation accurate
 - **Self-improving retro**: Each phase checkpoint captures meta learnings and verifies context doc accuracy via parallel review agents
 - **Unified cycle commits**: All phase artifacts accumulate uncommitted in worktree; /release owns the single commit + merge + cleanup
 - **Release automation**: Version detection, commit categorization, changelog generation, marketplace publishing, and PRODUCT.md rollup
-
-## Where It Fits
-
-Beastmode focuses only on the Development layer of software delivery:
-
-```
-Portfolio:   Strategy → Ideate → Review → Analyse → Prioritize → Epic
-Program:     Epic → Refine → Partition → Estimate → Approve → Feature
-Development: Feature → Design → Plan → Implement → Validate → Story    ← BEASTMODE
-Delivery:    Story → Integrate → Test → Deploy → Release → Product
-Operations:  Product → Support → Patch → Secure → Optimize → Stability
-```
-
-Takes a Feature as input, produces working code as output. Ignores Portfolio (strategy), Program (project management), Delivery (CI/CD), and Operations (monitoring). Different tools, different concerns.
 
 ## How It Works
 
@@ -48,4 +33,4 @@ Each skill (/design, /plan, /implement, /validate, /release) follows the same fo
 
 ## Current Version
 
-v0.5.5 — 20 releases
+v0.6.0 — 19 releases
