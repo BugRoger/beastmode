@@ -1,56 +1,81 @@
 # 1. Execute
 
-## 1. Enter Feature Worktree
+## 1. Wave Loop
 
-**MANDATORY — do not skip this step.**
+For each wave (ascending order):
 
-Read the worktree path from the status file and `cd` into it:
+### 1.1 Identify Runnable Tasks
 
-```bash
-status_file=".agents/status/YYYY-MM-DD-<feature>.md"
-# Extract path from "## Worktree" section
-worktree_path=$(grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`')
-cd "$worktree_path"
-pwd  # confirm you are in the worktree
-```
+From the wave map (built in prime), select tasks where:
+- Task belongs to current wave
+- All dependencies are completed (or no dependencies)
+- Task is not already completed (from .tasks.json resume)
 
-If the worktree path is missing from the status file or the directory doesn't exist, STOP and tell the user — do not continue on main.
+### 1.2 Dispatch Subagent Per Task
 
-See @../_shared/worktree-manager.md for full reference.
+For each runnable task in the wave:
 
-## 2. Prepare Environment
+1. Read the task's **Files** section — pre-read the listed files
+2. Build the agent prompt:
+   - Read `@../references/implementer-agent.md` for the agent role
+   - Append: full task text (all steps, files, verification)
+   - Append: pre-read file contents
+   - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
+3. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+4. Collect the agent's result report
 
-```bash
-# Install dependencies if needed
-npm install  # or appropriate command
-```
+**Sequential within a wave** — spawn one agent at a time to avoid file conflicts. (Parallel dispatch is a future optimization when plans guarantee file isolation per task.)
 
-## 3. Load Task State
+### 1.3 Spec Check
 
-Read `.agents/plan/YYYY-MM-DD-<feature>.tasks.json` to resume from last completed task.
+After each agent completes, the controller verifies:
 
-## 4. Execute Tasks
+1. **Files match plan?** — Check that files listed in the task's `**Files:**` section were actually modified
+2. **Verification passes?** — Run the task's verification command if the agent didn't already
+3. **No unplanned files?** — Check `git diff --name-only` against the plan's file list. Flag unexpected changes.
 
-For each task in the plan:
+If spec check fails:
+- Re-dispatch the same task to a new agent with the failure context
+- After 2 retries: mark task as blocked, report to user
 
-1. Read task details
-2. Execute each step
-3. Mark task complete in TodoWrite
-4. Update tasks.json status
+### 1.4 Handle Deviations
 
-## 5. Task Execution Pattern
+Process the agent's deviation report per @../references/deviation-rules.md:
 
-```
-For each task:
-  Read files listed
-  Execute steps in order
-  Run verification command
-  Mark complete
-```
+- **Auto-fix / Blocking**: Log to deviation tracker, continue
+- **Architectural**: Present to user via AskUserQuestion:
+  - "Proceed with proposed change"
+  - "Different approach" (user specifies)
+  - "Skip this task" (mark blocked)
 
-## 6. Error Handling
+### 1.5 Update Task Persistence
 
-If a step fails:
-- Stop and report the error
-- Do NOT proceed to next task
-- Suggest fix or ask for guidance
+After each task completes (or is blocked):
+
+1. Update `.beastmode/state/plan/YYYY-MM-DD-<feature>.tasks.json`:
+   - Set task status to `completed` or `blocked`
+   - Set `lastUpdated` timestamp
+2. Update TodoWrite
+
+### 1.6 Wave Checkpoint
+
+After ALL tasks in the current wave complete:
+
+1. Run the project test suite (command from `.beastmode/context/implement/testing.md`)
+2. If tests fail:
+   - Identify which task likely caused the regression
+   - Re-dispatch that task with failure context
+   - After 2 retries: mark wave as blocked, report to user
+3. If tests pass: proceed to next wave
+
+## 2. Blocked Task Handling
+
+If a task is blocked and has dependents in later waves:
+- Report to user: "Task N is blocked. Tasks [X, Y] in Wave M depend on it."
+- Ask: "Skip dependent tasks or investigate?"
+
+## 3. Completion
+
+When all waves complete:
+- Report: "Implementation complete. N tasks done, M deviations tracked."
+- Proceed to validate phase.
