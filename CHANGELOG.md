@@ -4,6 +4,11 @@ All notable changes to beastmode.
 
 ---
 
+### v0.6.1 — No More Rebase (Mar 2026)
+
+- **Merge-only release** — Replaced `git rebase origin/main` with merge-only strategy; conflicts resolve once instead of per-commit replay
+- **Fewer version files** — Dropped hardcoded version from README.md badge and PRODUCT.md `Current Version` section; version now lives in 3 files (plugin.json, marketplace.json, session-start.sh)
+
 ### v0.6.0 — The Paper Trail (Mar 2026)
 
 - **CHANGELOG.md** — Consolidated 18 releases into 10 scannable entries with subtle personality in version titles
