@@ -10,7 +10,7 @@ gates:
     design-approval: human           # APPROVAL — approve before documenting
 
   plan:
-    plan-approval: human             # APPROVAL — approve before saving
+    plan-approval: auto              # APPROVAL — approve before saving
 
   implement:
     architectural-deviation: auto    # CONDITIONAL — tier 3 deviation decision
@@ -21,9 +21,9 @@ gates:
     version-confirmation: human      # APPROVAL — version bump override
 
 transitions:
-  design-to-plan: human              # TRANSITION
-  plan-to-implement: human           # TRANSITION
+  design-to-plan: auto               # TRANSITION
+  plan-to-implement: auto            # TRANSITION
   implement-to-validate: auto        # TRANSITION
-  validate-to-release: human         # TRANSITION
+  validate-to-release: auto          # TRANSITION
 
   context_threshold: 60              # % remaining context required to auto-advance
