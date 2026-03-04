@@ -39,7 +39,7 @@ beastmode/
 │       ├── VALIDATE.md     # L1: Validate learnings
 │       └── RELEASE.md      # L1: Release learnings
 ├── skills/                 # Agent skills (executable workflows)
-│   ├── _shared/           # Shared utilities (prime, checkpoint, retro, session, worktree, task-runner, context-report)
+│   ├── _shared/           # Shared utilities (prime, checkpoint, retro, worktree, task-runner, context-report)
 │   ├── beastmode/         # Project initialization (install, init --brownfield, init --greenfield)
 │   ├── design/            # Design thinking (0-prime → 1-execute → 2-validate → 3-checkpoint)
 │   ├── plan/              # Break down into tasks
@@ -64,7 +64,7 @@ beastmode/
 
 **`.beastmode/`** — Project Context & State
 - Purpose: Central hub for all project knowledge organized by domain
-- Contains: PRODUCT.md (L0), state/ (feature kanban), context/ (build knowledge), meta/ (learnings), sessions/ (gitignored session state)
+- Contains: PRODUCT.md (L0), state/ (feature kanban), context/ (build knowledge), meta/ (learnings)
 - L1 files always loaded by /prime; L2 files loaded on-demand via @imports
 
 **`skills/`** — Agent Skills (Executable Workflows)

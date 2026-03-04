@@ -17,8 +17,7 @@ Review session artifacts to identify what worked, what didn't, and what patterns
 ## Artifact Sources
 
 - Session artifacts (design docs, plan docs, implementation changes)
-- Session JSONL (if available) for actual conversation flow
-- Phase timing from session tracking
+- Git diff from this phase
 
 ## Output Format
 

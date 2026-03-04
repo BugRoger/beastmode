@@ -168,11 +168,6 @@ Learnings inform future sessions via L1 loading
 - Decision: Root CLAUDE.md imports @.beastmode/PRODUCT.md and @.beastmode/context/*.md
 - Rationale: Clear precedent for project context; @imports reduce duplication; context files loaded hierarchically
 
-**Session JSONL Access for Retro Inspection:**
-- Context: Retro agents need access to actual conversation history, not just markdown summaries
-- Decision: Store absolute paths to session JSONL files in status markdown under "Session Files" section; agents read files directly
-- Rationale: Raw conversation context enables agents to identify patterns and provide informed recommendations
-
 ## Boundaries
 
 **External APIs:**

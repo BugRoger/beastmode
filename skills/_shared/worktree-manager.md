@@ -23,8 +23,8 @@ Report: "Created worktree at `$path` on branch `$branch`"
 Used by: `/plan`, `/implement`, `/validate` 0-prime
 
 ```bash
-status_file=".beastmode/sessions/status/YYYY-MM-DD-<feature>.md"
-worktree_path=$(grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`')
+feature="<feature-name>"
+worktree_path=".beastmode/worktrees/$feature"
 
 if [ ! -d "$worktree_path" ]; then
   echo "Error: Worktree not found at $worktree_path"
@@ -103,21 +103,3 @@ git worktree remove "$worktree_abs" --force
 git branch -D "$feature_branch"
 ```
 
-## Status File Format
-
-Add to status file after `## Context`:
-
-```markdown
-## Worktree
-- **Path**: `.beastmode/worktrees/<feature>`
-- **Branch**: `feature/<feature>`
-```
-
-## Read Worktree from Status
-
-```bash
-get_worktree_path() {
-  local status_file="$1"
-  grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`'
-}
-```

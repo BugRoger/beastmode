@@ -7,9 +7,7 @@ Review this phase's work for context doc accuracy and meta learnings.
 Determine current phase and feature:
 
 1. Identify current phase from the skill being executed (design/plan/implement/validate/release)
-2. Read the status file at `.beastmode/sessions/status/YYYY-MM-DD-<feature>.md` for:
-   - Session JSONL paths (under `### Session Files`)
-   - Phase artifacts (design doc, plan doc paths)
+2. Read phase artifacts (design doc, plan doc) from `.beastmode/state/`
 3. Read the phase's context docs from `.beastmode/context/{phase}/`
 4. Read the phase's meta doc from `.beastmode/meta/{PHASE}.md`
 
@@ -40,8 +38,7 @@ Include in both agent prompts:
 ## Session Context
 - **Phase**: {current phase}
 - **Feature**: {feature name}
-- **Artifacts**: {list of design/plan/status doc paths}
-- **Session JSONL**: {session file path if available}
+- **Artifacts**: {list of design/plan doc paths}
 ```
 
 ## 4. Present Findings

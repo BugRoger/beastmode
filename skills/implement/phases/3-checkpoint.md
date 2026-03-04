@@ -1,24 +1,14 @@
 # 3. Checkpoint
 
-## 1. Update Status
-
-Update `.beastmode/sessions/status/YYYY-MM-DD-<topic>.md`:
-- Add Implement phase entry
-- Record tasks completed
-
-## 2. Phase Retro
+## 1. Phase Retro
 
 @../_shared/retro.md
 
-## 3. Session Tracking
-
-@../_shared/session-tracking.md
-
-## 4. Context Report
+## 2. Context Report
 
 @../_shared/context-report.md
 
-## 5. Suggest Next Step
+## 3. Suggest Next Step
 
 ```
 /validate

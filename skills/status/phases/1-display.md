@@ -2,34 +2,39 @@
 
 ## 1. Parse Arguments
 
-- No args → Show most recent status file
-- `list` → List all status files
-- `<feature>` → Show specific feature status
+- No args → Show active worktrees and recent state files
+- `list` → List all state files across phases
+- `<feature>` → Show specific feature state files
 
 ## 2. Execute Command
 
 ### Default (no args)
 
 ```bash
-ls -t .beastmode/sessions/status/*.md 2>/dev/null | head -1 | xargs cat
+# Show active feature worktrees
+git worktree list | grep ".beastmode/worktrees/"
+
+# Show most recent state files
+ls -t .beastmode/state/design/*.md 2>/dev/null | head -3
+ls -t .beastmode/state/plan/*.md 2>/dev/null | head -3
 ```
 
 ### List
 
 ```bash
-ls -lt .beastmode/sessions/status/*.md 2>/dev/null
+ls -lt .beastmode/state/**/*.md 2>/dev/null
 ```
 
 ### Feature
 
 ```bash
-cat .beastmode/sessions/status/*-<feature>.md 2>/dev/null
+ls .beastmode/state/*/YYYY-MM-DD-<feature>*.md 2>/dev/null
 ```
 
 ## 3. Display Output
 
 Show:
 - Feature name and date
-- Executed phases with timestamps
-- Current phase (last in list)
-- Links to Claude sessions for each phase
+- Active worktree (if any)
+- State files across phases (design, plan, validate, release)
+- Current phase (latest state file)
