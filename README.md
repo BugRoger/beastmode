@@ -37,7 +37,9 @@ A simple loop that scales from quick fixes to deep feature work:
 
 | Skill | Purpose |
 |-------|---------|
-| `/bootstrap` | Initialize project with .agents/ structure |
+| `/beastmode install` | Copy `.beastmode/` skeleton to project |
+| `/beastmode init --greenfield` | Interactive setup for new projects |
+| `/beastmode init --brownfield` | Autonomous discovery for existing codebases |
 | `/research` | Explore domain when needed |
 | `/status` | Track project state and milestones |
 
@@ -46,14 +48,22 @@ Use what helps. Skip what doesn't.
 ## Install
 
 ```bash
-/plugin marketplace add bugroger/overrides-marketplace
-/plugin install beastmode@overrides-marketplace
+/plugin marketplace add bugroger/beastmode-marketplace
+/plugin install beastmode@beastmode-marketplace
 ```
 
 Then initialize your project:
 
 ```bash
-/bootstrap
+/beastmode install
+/beastmode init --greenfield  # or --brownfield
+
+# Start building
+/design
+/plan
+/implement
+/validate
+/release
 ```
 
 ## The `.agents/` Folder
@@ -107,7 +117,7 @@ Your root `CLAUDE.md` imports: `@.agents/CLAUDE.md`
 | `/implement` | 🚧 |
 | `/release` | 🚧 |
 | `/retro` | ✅ |
-| `/bootstrap` | ✅ |
+| `/beastmode` | ✅ |
 | `/research` | 🚧 |
 | `/status` | 🚧 |
 

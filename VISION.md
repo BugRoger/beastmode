@@ -266,30 +266,43 @@ Choose based on team size and preference. Small team? Files are simpler. Larger 
 
 ## Context Structure
 
-Context is scaffolded on project creation and evolves over time. Stored as markdown in Git. Two levels deep.
+Context is scaffolded on project creation and evolves over time. Stored as markdown in Git. Three levels: L0 (product), L1 (summaries), L2 (details).
 
 ```
-CONTEXT/
-├── PRODUCT/
-│   ├── Vision       # What we're building and why
-│   └── Features     # Feature backlog and descriptions
-├── DESIGN/
-│   ├── Architecture # System design, component relationships
-│   └── Tech Stack   # Languages, frameworks, dependencies
-├── RELEASE/
-│   └── Versioning   # Version strategy, changelog format
-├── PLAN/
-│   ├── Conventions  # Naming patterns, code style
-│   └── Structure    # Directory layout, file organization
-└── IMPLEMENT/
-    ├── Style Guide  # Code formatting, linting rules
-    └── Structure    # Implementation patterns, utilities
+.beastmode/
+├── PRODUCT.md              # L0: Product vision and goals
+├── context/                # Build context (how to build)
+│   ├── DESIGN.md           # L1: Design context summary
+│   ├── design/             # L2: Architecture and tech stack
+│   │   ├── architecture.md
+│   │   └── tech-stack.md
+│   ├── PLAN.md             # L1: Plan context summary
+│   ├── plan/               # L2: Conventions and structure
+│   │   ├── conventions.md
+│   │   └── structure.md
+│   ├── IMPLEMENT.md        # L1: Implement context summary
+│   ├── implement/          # L2: Testing and agent rules
+│   │   ├── agents.md
+│   │   └── testing.md
+│   ├── VALIDATE.md         # L1: Validate context summary
+│   └── RELEASE.md          # L1: Release context summary
+├── meta/                   # Self-improvement (learnings)
+│   ├── DESIGN.md
+│   ├── PLAN.md
+│   ├── IMPLEMENT.md
+│   ├── VALIDATE.md
+│   └── RELEASE.md
+└── state/                  # Feature tracking (kanban)
+    ├── DESIGN.md
+    ├── PLAN.md
+    ├── IMPLEMENT.md
+    ├── VALIDATE.md
+    └── RELEASE.md
 ```
 
-**Level 1** = summary + one-liner references to Level 2.
-**Level 2** = detailed documentation.
-
-Level 1 is always loaded. Level 2 is loaded on demand.
+**L0** = Product vision (PRODUCT.md)
+**L1** = Phase summaries (UPPERCASE.md) — always loaded
+**L2** = Detailed docs (lowercase.md) — loaded on-demand via @imports
 
 **Progressive enhancement:** Start minimal. Add detail as the project grows. Don't front-load documentation you don't need yet.
 
