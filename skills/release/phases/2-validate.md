@@ -1,23 +1,26 @@
 # 2. Validate
 
-## 1. Check Merge Readiness
+## 1. Verify Release Notes
 
-```bash
-git fetch origin main
-git merge-base --is-ancestor origin/main HEAD
-```
+Check that release notes file exists in `.beastmode/state/release/`.
 
-## 2. Verify Changelog
+## 2. Verify CHANGELOG
 
-- Changelog entry exists?
-- Version number correct?
-- All changes documented?
+If project has CHANGELOG.md, verify new section was prepended with correct version.
 
-## 3. Validation Gate
+## 3. Verify Plugin Version
 
-If issues found:
-- Report problems
-- Do NOT proceed to merge
+Check `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` have updated version matching the release.
 
-If clean:
-- Proceed to checkpoint
+## 4. Verify Commit
+
+Check unified commit was created with cycle artifact references.
+
+## 5. Validation Gate
+
+If any check fails:
+- Report specific problems
+- Do NOT proceed to checkpoint
+
+If all clean:
+- Report: "Release verified. Proceeding to checkpoint."

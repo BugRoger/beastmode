@@ -1,35 +1,21 @@
 # 3. Checkpoint
 
-## 1. Merge to Main
+## 1. Update Status
 
-```bash
-git checkout main
-git merge <feature-branch> --ff-only
-```
+Add Release phase entry to status file. Remove `## Worktree` section if merged or discarded.
 
-## 2. Cleanup Worktree
+## 2. Capture Learnings
 
-```bash
-git worktree remove <worktree-path>
-git branch -d <feature-branch>
-```
+If notable patterns discovered during release, update `.beastmode/meta/RELEASE.md`.
 
-## 3. Comprehensive Retro
-
-Update all relevant `.beastmode/meta/*.md` files with learnings from the entire cycle.
-
-## 4. Update Status
-
-Mark feature as released in status file.
-
-## 5. Session Tracking
+## 3. Session Tracking
 
 @../_shared/session-tracking.md
 
-## 6. Context Report
+## 4. Context Report
 
 @../_shared/context-report.md
 
-## 7. Complete
+## 5. Complete
 
-"Feature released to main. Worktree cleaned up."
+"Release complete."
