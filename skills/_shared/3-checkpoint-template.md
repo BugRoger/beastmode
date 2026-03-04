@@ -4,21 +4,9 @@
 
 <!-- Each skill specifies what to save -->
 
-## 2. Capture Learnings (Retro)
+## 2. Phase Retro
 
-Update `.beastmode/meta/{PHASE}.md` with learnings from this phase:
-
-**Learnings format:**
-```markdown
-## Learnings
-
-### YYYY-MM-DD: {feature-name}
-- {what worked well}
-- {what to improve}
-- {patterns discovered}
-```
-
-Only add learnings if something notable happened.
+@retro.md
 
 ## 3. Session Tracking
 

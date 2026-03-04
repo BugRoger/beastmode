@@ -23,9 +23,9 @@ Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.tasks.json`:
 
 Add Plan phase entry to status file.
 
-## 4. Capture Learnings
+## 4. Phase Retro
 
-If notable planning patterns discovered, update `.beastmode/meta/PLAN.md`.
+@../_shared/retro.md
 
 ## 5. Session Tracking
 

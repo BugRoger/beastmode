@@ -1,0 +1,11 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-04-restore-phase-retro.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create Shared Agent Instructions", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Create Context Review Agent", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Create Meta Learnings Agent", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Create Retro Orchestrator", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Update All Checkpoint Files", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-04T12:30:00Z"
+}
