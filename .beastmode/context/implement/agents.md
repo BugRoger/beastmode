@@ -9,7 +9,7 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 - **High-confidence answers only**: ALWAYS verify in code; NEVER guess
 - **Multi-agent safety**: NEVER create/apply/drop git stash entries unless explicitly requested
 - **Multi-agent safety**: ALWAYS assume other agents may be working; keep unrelated WIP untouched
-- **Multi-agent safety**: NEVER create/remove/modify git worktrees unless explicitly requested (Exception: Skills manage worktrees as part of cycle workflow: /design creates, /plan through /retro inherit, /release merges and cleans)
+- **Multi-agent safety**: NEVER create/remove/modify git worktrees unless explicitly requested (Exception: Skills manage worktrees as part of feature workflow: /design creates, /plan through /validate inherit, /release merges and cleans)
 - **Multi-agent safety**: NEVER switch branches unless explicitly requested
 
 ## Git Workflow
@@ -25,13 +25,13 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 - **Recovery from main repo edits**: If you accidentally edit main repo instead of worktree, immediately `git checkout -- <files>` to discard, then switch to worktree
 - **Merge pattern**: When merging worktree branch back to main, prefer fast-forward (preserves linear history)
 
-## Cycle Workflow (Unified Commit Pattern)
+## Feature Workflow (Branch + Worktree)
 
-- **Branch naming**: `cycle/<topic>` — created by /design, used by all phases, cleaned by /release
-- **Status file coordination**: All phases read worktree path from `.agents/status/YYYY-MM-DD-<topic>.md`
-- **No interim commits**: /design, /plan, /implement, /retro write artifacts but do NOT commit
-- **Single unified commit**: /release commits all phase changes in one commit
-- **Worktree safety**: Worktree provides WIP isolation; phases are safe to work on same branch
+- **Branch naming**: `feature/<feature>` — created by /design, used by all phases, merged by /release
+- **Status file coordination**: All phases read worktree path from `.agents/status/YYYY-MM-DD-<feature>.md`
+- **Natural commits**: Phases may commit as needed. No forced commit policy.
+- **Worktree safety**: Worktree at `.beastmode/worktrees/<feature>` provides isolation
+- **Release owns merge**: /release merges feature branch to main and cleans up worktree + branch
 
 ## Refactoring
 

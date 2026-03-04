@@ -33,8 +33,8 @@ On phase completion, update `.agents/status/YYYY-MM-DD-<feature>.md`:
      - Plan: .agents/plan/YYYY-MM-DD-<feature>.md
 
    ## Worktree
-   - **Path**: `.agents/worktrees/cycle/<feature>`
-   - **Branch**: `cycle/<feature>`
+   - **Path**: `.beastmode/worktrees/<feature>`
+   - **Branch**: `feature/<feature>`
 
    ### Executed Phases
 

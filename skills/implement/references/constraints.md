@@ -7,6 +7,6 @@
 ## Worktree Isolation
 
 - Never work directly on main/master branch
-- All work happens in isolated worktree at `.agents/worktrees/`
+- All work happens in isolated worktree at `.beastmode/worktrees/`
 - Tests must pass at each phase boundary
 - Merge happens only in Complete phase

@@ -15,15 +15,23 @@ Read (if they exist):
 
 Load the plan from arguments (e.g., `.agents/plan/YYYY-MM-DD-<topic>.md`).
 
-## 4. Enter Cycle Worktree
+## 4. Enter Feature Worktree
+
+**MANDATORY — do not skip this step.**
+
+Read the worktree path from the status file and `cd` into it:
 
 ```bash
-status_file=".agents/status/YYYY-MM-DD-<topic>.md"
+status_file=".agents/status/YYYY-MM-DD-<feature>.md"
+# Extract path from "## Worktree" section
 worktree_path=$(grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`')
-
 cd "$worktree_path"
-pwd  # Verify location
+pwd  # confirm you are in the worktree
 ```
+
+If the worktree path is missing from the status file or the directory doesn't exist, STOP and tell the user — do not continue on main.
+
+See @../_shared/worktree-manager.md for full reference.
 
 ## 5. Prepare Environment
 

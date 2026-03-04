@@ -1,4 +1,5 @@
 # Beastmode worktrees
 .agents/worktrees/
+.beastmode/worktrees/
 .claude/settings.local.json
 .DS_Store

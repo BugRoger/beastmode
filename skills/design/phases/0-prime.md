@@ -31,19 +31,22 @@ If triggered:
 4. Summarize findings to user
 5. Continue with design
 
-## 4. Create Cycle Worktree
+## 4. Create Feature Worktree
+
+**MANDATORY — do not skip this step.**
+
+Derive `<feature>` from the user's topic (kebab-case, e.g. `git-branching-strategy`).
 
 ```bash
-topic="<topic-from-arguments>"
-mkdir -p .agents/worktrees/cycle
-path=".agents/worktrees/cycle/$topic"
-branch="cycle/$topic"
-
-git worktree add "$path" -b "$branch"
-cd "$path"
+mkdir -p .beastmode/worktrees
+git worktree add ".beastmode/worktrees/<feature>" -b "feature/<feature>"
+cd ".beastmode/worktrees/<feature>"
+pwd  # confirm you are in the worktree
 ```
 
-Report: "Created worktree at `$path` on branch `$branch`"
+All subsequent work in this session MUST happen inside the worktree. If `cd` or `pwd` shows you are still in the main repo, STOP and fix it.
+
+See @../_shared/worktree-manager.md for full reference.
 
 ## 5. Explore Context
 
