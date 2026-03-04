@@ -19,17 +19,20 @@ Load the plan from arguments (e.g., `.beastmode/state/plan/YYYY-MM-DD-<topic>.md
 
 **MANDATORY — do not skip this step.**
 
-Read the worktree path from the status file and `cd` into it:
+Read the worktree path from the feature name and `cd` into it:
 
 ```bash
-status_file=".beastmode/sessions/status/YYYY-MM-DD-<feature>.md"
-# Extract path from "## Worktree" section
-worktree_path=$(grep -A1 "^## Worktree" "$status_file" | grep "Path:" | sed 's/.*Path:\s*//' | tr -d '`')
+feature="<feature-name>"  # from plan doc filename
+worktree_path=".beastmode/worktrees/$feature"
+if [ ! -d "$worktree_path" ]; then
+  echo "Error: Worktree not found at $worktree_path"
+  exit 1
+fi
 cd "$worktree_path"
 pwd  # confirm you are in the worktree
 ```
 
-If the worktree path is missing from the status file or the directory doesn't exist, STOP and tell the user — do not continue on main.
+If the worktree directory doesn't exist, STOP and tell the user — do not continue on main.
 
 See @../_shared/worktree-manager.md for full reference.
 
@@ -42,4 +45,4 @@ npm install  # or appropriate command
 
 ## 6. Load Task State
 
-Read `.beastmode/sessions/tasks/YYYY-MM-DD-<feature>.tasks.json` to resume from last completed task.
+Read `.beastmode/state/plan/YYYY-MM-DD-<feature>.tasks.json` to resume from last completed task.

@@ -8,15 +8,11 @@ Save to `.beastmode/state/validate/YYYYMMDD-{feature}.md`
 
 @../_shared/retro.md
 
-## 3. Session Tracking
-
-@../_shared/session-tracking.md
-
-## 4. Context Report
+## 3. Context Report
 
 @../_shared/context-report.md
 
-## 5. Suggest Next Step
+## 4. Suggest Next Step
 
 If PASS:
 ```

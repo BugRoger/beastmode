@@ -26,6 +26,19 @@ Research triggers if ANY:
 
 If triggered, spawn Explore agent with `@../../agents/researcher.md`.
 
-## 4. Phase-Specific Setup
+## 4. Enter Cycle Worktree (if applicable)
+
+```bash
+# Derive feature from design/plan doc filename or arguments
+feature="<feature-name>"
+worktree_path=".beastmode/worktrees/$feature"
+
+if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
+  cd "$worktree_path"
+  echo "Working in cycle worktree at $worktree_path"
+fi
+```
+
+## 5. Phase-Specific Setup
 
 <!-- Each skill adds its own context loading here -->

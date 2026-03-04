@@ -10,7 +10,7 @@ Documents naming patterns, code style, and project-specific conventions.
 - UPPERCASE.md: Invariant meta files with fixed structure (CLAUDE.md, STACK.md, CONVENTIONS.md)
 - lowercase.md: Variant content files (dates, research, plans)
 - Example: `CONVENTIONS.md` (template), `2026-03-01-bootstrap-discovery-v2.md` (variant), `SKILL.md` (skill definition)
-- Shared utilities: lowercase (session-tracking.md, context-report.md, worktree-manager.md) — variant content @imported by phases
+- Shared utilities: lowercase (context-report.md, worktree-manager.md) — variant content @imported by phases
 
 **Phase Files:**
 - Pattern: `0-prime.md`, `1-execute.md`, `2-validate.md`, `3-checkpoint.md` (0-indexed for standard anatomy)
@@ -94,7 +94,7 @@ description: <Action words> — <keywords>. Use when <trigger>. <What it does>.
 **Phase File Rules:**
 - Numbered internal steps: `## 1. Step Name`, `## 2. Step Name`
 - Imperative voice throughout (commands, not descriptions)
-- @import shared functionality at any position: `@../_shared/session-tracking.md`
+- @import shared functionality at any position: `@../_shared/retro.md`
 - Specific, actionable instructions (not conceptual)
 - Code examples where applicable
 

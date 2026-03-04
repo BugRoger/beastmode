@@ -27,6 +27,5 @@ Compare session artifacts against `.beastmode/context/{phase}/` docs. Context do
 
 - Session artifacts (design docs, plan docs, implementation changes)
 - Git diff from this phase
-- Session JSONL (if available) for decisions made in conversation
 
 @common-instructions.md

@@ -12,33 +12,15 @@ Include:
 - Files affected
 - Testing strategy
 
-## 2. Update Status
-
-Update `.beastmode/sessions/status/YYYY-MM-DD-<topic>.md`:
-
-**MANDATORY — include the Worktree section** so subsequent phases can find it:
-
-```markdown
-## Worktree
-- **Path**: `.beastmode/worktrees/<feature>`
-- **Branch**: `feature/<feature>`
-```
-
-Also add Design phase entry under `## Executed Phases`.
-
-## 3. Phase Retro
+## 2. Phase Retro
 
 @../_shared/retro.md
 
-## 4. Session Tracking
-
-@../_shared/session-tracking.md
-
-## 5. Context Report
+## 3. Context Report
 
 @../_shared/context-report.md
 
-## 6. Suggest Next Step
+## 4. Suggest Next Step
 
 ```
 /plan .beastmode/state/design/YYYY-MM-DD-<topic>.md
