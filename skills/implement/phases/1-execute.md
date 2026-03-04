@@ -11,7 +11,23 @@ From the wave map (built in prime), select tasks where:
 - All dependencies are completed (or no dependencies)
 - Task is not already completed (from .tasks.json resume)
 
-### 1.2 Dispatch Subagent Per Task
+### 1.2 Dispatch Subagents
+
+Check the wave's `**Parallel-safe:**` flag (appears after the first task's `**Wave:**` line).
+
+**If Parallel-safe: true** — verify and dispatch in parallel:
+
+1. Verify: collect all file paths from all tasks in this wave and confirm no file appears in 2+ tasks
+2. If verification passes:
+   - For each task: build the agent prompt (same as sequential — see below)
+   - Spawn all agents with `Agent(subagent_type="general-purpose", prompt=<built prompt>, run_in_background=true)`
+   - Collect all results via `TaskOutput(task_id=<agent_id>, block=true)`
+   - Run spec check (1.3) on each result in order
+3. If verification fails:
+   - Log: `[Blocking] Wave N: parallel-safe flag incorrect, falling back to sequential`
+   - Fall through to sequential dispatch below
+
+**If no flag or Parallel-safe: false** — dispatch sequentially (default):
 
 For each runnable task in the wave:
 
@@ -23,8 +39,7 @@ For each runnable task in the wave:
    - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
 3. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
 4. Collect the agent's result report
-
-**Sequential within a wave** — spawn one agent at a time to avoid file conflicts. (Parallel dispatch is a future optimization when plans guarantee file isolation per task.)
+5. Run spec check (1.3) before dispatching next task
 
 ### 1.3 Spec Check
 

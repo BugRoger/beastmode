@@ -27,7 +27,32 @@ Verify every task has:
 
 If incomplete, go back to Execute phase.
 
-## 3. User Approval Gate
+## 3. File Isolation Analysis
+
+For each wave with 2+ tasks:
+
+1. Collect all file paths from `**Files:**` sections (Create, Modify, Test) across all tasks in the wave
+2. Strip line-number suffixes (e.g., `file.md:10-20` → `file.md`) for comparison
+3. Build a file → task map
+4. If any file appears in 2+ tasks:
+   - Move the later task(s) to a new wave (current wave number + 1)
+   - Shift all subsequent wave numbers up to avoid collision
+   - Add `**Depends on:** Task [conflicting-task]` if not already present
+   - Re-run analysis on the new wave (cascading splits are possible)
+5. For each wave with 2+ tasks and no file overlap: add `**Parallel-safe:** true` after the first task's `**Wave:**` line
+6. Single-task waves: no flag (nothing to parallelize)
+
+Print a summary:
+
+```
+Wave Isolation Summary
+──────────────────────
+Wave 1: 3 tasks, 0 overlaps → Parallel-safe: true
+Wave 2: 1 task → skipped (single task)
+Wave 3: 2 tasks, 1 overlap → resequenced Task 5 to Wave 4
+```
+
+## 4. User Approval Gate
 
 <HARD-GATE>
 User must explicitly approve the plan before proceeding.

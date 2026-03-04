@@ -55,9 +55,24 @@ No commit needed — unified commit at /release.
 ## Wave Rules
 
 - **Wave 1** runs before **Wave 2**, etc.
-- Tasks in the same wave with no `Depends on` can run in parallel
+- Tasks in the same wave with no `Depends on` can run in parallel — if the wave is marked parallel-safe
 - `Depends on` creates ordering within a wave
 - Default wave is 1 if omitted
+
+### Parallel-Safe Flag
+
+After all tasks are written, /plan's validate phase analyzes file overlap per wave and may add:
+
+```
+**Parallel-safe:** true
+```
+
+to the first task in a wave. This flag means no two tasks in the wave share a file, so /implement can dispatch agents in parallel.
+
+- Written by /plan validation — not by the human planner
+- If two tasks in a wave share a file, /plan auto-resequences the later task to Wave N+1
+- Single-task waves are not flagged (nothing to parallelize)
+- /implement verifies the flag at runtime before parallel dispatch
 
 ## Remember
 

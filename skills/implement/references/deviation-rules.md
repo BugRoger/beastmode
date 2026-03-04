@@ -27,6 +27,7 @@ Examples:
 - Environment variable not set
 - Build tool config missing
 - Circular import preventing compilation
+- Parallel-safe flag incorrect — file overlap detected at dispatch time, falling back to sequential
 
 Track as: `[Blocking] Task N: <description>`
 
@@ -70,6 +71,7 @@ Accumulated during execution, saved at checkpoint:
 
     - [Auto-fix] Task 3: Added missing `zod` import in validation.ts
     - [Blocking] Task 5: Installed `@types/node` — not in plan dependencies
+    - [Blocking] Wave 2: Parallel-safe flag incorrect, fell back to sequential dispatch
     - [Architectural] Task 7: User approved adding Redis cache layer
 
     **Summary:** 2 auto-fixed, 1 blocking, 1 architectural (approved)
