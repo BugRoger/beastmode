@@ -9,10 +9,22 @@ Verify design covers:
 - [ ] Component breakdown
 - [ ] Files affected
 - [ ] Testing strategy (if applicable)
+- [ ] Locked decisions clearly marked
+- [ ] Claude's Discretion areas identified
+- [ ] Acceptance criteria present
+- [ ] Deferred ideas captured (or "none")
 
 If missing sections, go back to Execute phase.
 
-## 2. User Approval Gate
+## 2. Anti-Pattern Check
+
+If the design produced fewer than 3 decisions, print:
+
+"This is a lightweight design — that's fine. Even simple designs benefit from explicit approval to prevent wasted implementation."
+
+Do NOT skip approval. Short designs still need the gate.
+
+## 3. User Approval Gate
 
 <HARD-GATE>
 User must explicitly approve the design before proceeding.

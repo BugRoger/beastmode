@@ -49,7 +49,9 @@ beastmode/
 │   └── status/            # Show project status
 ├── agents/                # Agent documentation
 │   ├── discovery.md       # Codebase discovery patterns
-│   └── researcher.md      # Phase research agent
+│   ├── researcher.md      # Phase research agent
+│   ├── retro-context.md   # Phase retro: context doc review agent
+│   └── retro-meta.md      # Phase retro: meta learnings agent
 ├── hooks/                 # Plugin lifecycle hooks
 │   └── session-start.sh   # Beastmode activation banner
 ├── .claude/               # Claude IDE local settings
@@ -75,7 +77,7 @@ beastmode/
 
 **`agents/`** — Agent Documentation
 - Purpose: Subagent prompts for specialized tasks
-- Contains: discovery.md (codebase analysis), researcher.md (phase research)
+- Contains: discovery.md (codebase analysis), researcher.md (phase research), retro-context.md (context doc review), retro-meta.md (meta learnings capture)
 
 ## Key File Locations
 
@@ -110,7 +112,7 @@ beastmode/
 - `UPPERCASE.md`: L1 summary files (always loaded) — PRODUCT.md, DESIGN.md, PLAN.md, etc.
 - `lowercase.md`: L2 detail files (loaded on-demand) — architecture.md, conventions.md
 - `SKILL.md`: Agent skill definitions (always in skill root directory)
-- `*-agent.md`: Agent prompts (in references/ subdirectories)
+- `*-agent.md`: Agent prompts (in `agents/` directory or skill `references/` subdirectories)
 
 **Directories:**
 - `.beastmode/{domain}/`: Four domains — state/, context/, meta/

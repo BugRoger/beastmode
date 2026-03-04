@@ -24,11 +24,11 @@ If skipping, add a one-liner to meta if anything minor was noted, then proceed t
 
 Launch 2 parallel Explore agents (haiku model):
 
-1. **Context Agent** — prompt from `@retro/context-agent.md`
+1. **Context Agent** — read prompt from `agents/retro-context.md`
    - Append: current phase name, paths to context docs, session artifacts
    - Reviews `.beastmode/context/{phase}/` docs for accuracy
 
-2. **Meta Agent** — prompt from `@retro/meta-agent.md`
+2. **Meta Agent** — read prompt from `agents/retro-meta.md`
    - Append: current phase name, paths to meta doc, session artifacts
    - Captures learnings for `.beastmode/meta/{PHASE}.md`
 
