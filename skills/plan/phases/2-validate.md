@@ -1,17 +1,33 @@
 # 2. Validate
 
-## 1. Completeness Check
+## 1. Design Coverage Check
 
-Verify plan has:
-- [ ] Goal statement
-- [ ] Architecture summary
-- [ ] All design components covered
-- [ ] Each task has files and steps
-- [ ] Verification steps included
+Extract all components from the design doc's `## Components` or `## Key Decisions` sections. For each, verify it appears in at least one plan task.
 
-If missing, go back to Execute phase.
+Print a coverage table:
 
-## 2. User Approval Gate
+```
+Design Component          → Plan Task    Status
+─────────────────────────────────────────────────
+0-prime.md changes        → Task 1       ✓
+1-execute.md changes      → Task 2       ✓
+2-validate.md changes     → Task 4       ✓
+task-format.md changes    → Task 3       ✓
+```
+
+If any component shows `✗ MISSING`, go back to Execute phase and add the missing task.
+
+## 2. Completeness Check
+
+Verify every task has:
+- [ ] Files section with exact paths
+- [ ] Wave and Depends on fields
+- [ ] Steps with code or commands
+- [ ] Verification step
+
+If incomplete, go back to Execute phase.
+
+## 3. User Approval Gate
 
 <HARD-GATE>
 User must explicitly approve the plan before proceeding.

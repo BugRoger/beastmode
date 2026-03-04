@@ -44,11 +44,3 @@ pwd  # confirm you are in the worktree
 If the worktree directory doesn't exist, STOP and tell the user — do not continue on main.
 
 See @../_shared/worktree-manager.md for full reference.
-
-## 6. Explore Codebase
-
-Understand:
-- Existing patterns and conventions
-- Files that will be touched
-- Test structure and commands
-- Dependencies and build tools

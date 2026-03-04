@@ -1,0 +1,10 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-04-release-version-sync.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add Sync with Main step and renumber release 1-execute.md", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Switch version detection from git tags to plugin.json", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add hooks/session-start.sh to version bump step", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Annotate worktree-manager.md about fast-forward after rebase", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-04T19:35:00Z"
+}
