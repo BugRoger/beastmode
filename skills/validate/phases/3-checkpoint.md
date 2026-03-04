@@ -26,4 +26,4 @@ If PASS:
 <!-- HITL-GATE: transitions.validate-to-release | TRANSITION -->
 @../_shared/transition-check.md
 
-Next skill: `/release`
+Next skill: `beastmode:release YYYY-MM-DD-<feature>.md`

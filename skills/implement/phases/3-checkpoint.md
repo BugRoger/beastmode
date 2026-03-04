@@ -35,4 +35,4 @@ If no deviations, skip this step.
 <!-- HITL-GATE: transitions.implement-to-validate | TRANSITION -->
 @../_shared/transition-check.md
 
-Next skill: `/validate`
+Next skill: `beastmode:validate YYYY-MM-DD-<feature>.md`
