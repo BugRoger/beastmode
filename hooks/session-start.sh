@@ -21,7 +21,7 @@ quotes=(
 quote=${quotes[$RANDOM % ${#quotes[@]}]}
 
 cat << EOF
-========== BEASTMODE v0.3.7 ==========
+========== BEASTMODE v0.4.1 ==========
 $quote
 
 
