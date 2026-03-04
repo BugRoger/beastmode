@@ -39,6 +39,6 @@ If no clear criteria emerged during discussion, include:
 <!-- HITL-GATE: transitions.design-to-plan | TRANSITION -->
 @../_shared/transition-check.md
 
-Next skill: `/plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+Next skill: `beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
 
 Do NOT invoke any implementation skill directly — only via transition-check auto mode.
