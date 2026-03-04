@@ -1,0 +1,10 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-04-plan-skill-improvements.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Fix 0-prime.md — Remove Explore Codebase step", "wave": 1, "dependsOn": [], "status": "pending"},
+    {"id": 2, "subject": "Task 2: Fix 1-execute.md — Remove duplicate worktree entry, add skill routing", "wave": 1, "dependsOn": [], "status": "pending"},
+    {"id": 3, "subject": "Task 3: Extend task-format.md — Add wave/dependency fields", "wave": 1, "dependsOn": [], "status": "pending"},
+    {"id": 4, "subject": "Task 4: Enhance 2-validate.md — Add design coverage table", "wave": 2, "dependsOn": [1, 2, 3], "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-04T17:50:00Z"
+}

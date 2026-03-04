@@ -7,12 +7,14 @@ Each step is one action (2-5 minutes):
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Commit" - step
 
 ## Task Structure
 
 ```markdown
 ### Task N: [Component Name]
+
+**Wave:** [integer, default 1]
+**Depends on:** [Task references, or `-` if none]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -49,6 +51,13 @@ Expected: PASS
 Run all related tests to confirm nothing broke.
 No commit needed — unified commit at /release.
 ```
+
+## Wave Rules
+
+- **Wave 1** runs before **Wave 2**, etc.
+- Tasks in the same wave with no `Depends on` can run in parallel
+- `Depends on` creates ordering within a wave
+- Default wave is 1 if omitted
 
 ## Remember
 
