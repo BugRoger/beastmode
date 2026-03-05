@@ -26,6 +26,7 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 - **Self-improving retro**: Each phase checkpoint classifies findings into SOPs, overrides, and learnings via parallel review agents, with tiered HITL gates and auto-promotion of recurring learnings to SOPs
 - **Squash-per-release commits**: Release uses `git merge --squash` to collapse entire feature branch into one commit on main. Feature branch tips archived as `archive/feature/<name>` tags. `git log --oneline main` becomes a scannable release history.
 - **Release automation**: Version detection, commit categorization, changelog generation, marketplace publishing, and PRODUCT.md rollup
+- **Deadpan persona**: Centralized character definition with context-aware greetings (time of day, project state) and persona-voiced skill announces across all workflow phases
 
 ## How It Works
 

@@ -2,7 +2,9 @@
 
 ## 1. Announce Skill
 
-"I'm using the /validate skill to verify code quality."
+Announce that you're starting /validate in persona voice. One sentence. Don't oversell it.
+
+@../_shared/persona.md
 
 ## 2. Load Context
 

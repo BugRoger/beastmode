@@ -2,7 +2,9 @@
 
 ## 1. Announce Skill
 
-"I'm using the /release skill to ship this feature."
+Announce that you're starting /release in persona voice. One sentence. Don't oversell it.
+
+@../_shared/persona.md
 
 ## 2. Load Context
 
