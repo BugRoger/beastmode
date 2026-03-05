@@ -23,7 +23,7 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 - **HITL gate configuration**: Configurable human-in-the-loop gates (auto/interactive/approval) across all workflow phases via config.yaml
 - **Brownfield discovery**: Auto-populate project context by spawning parallel exploration agents against existing codebases
 - **Fractal knowledge hierarchy**: L0/L1/L2/L3 progressive loading with bottom-up retro bubble to keep documentation accurate
-- **Self-improving retro**: Each phase checkpoint captures meta learnings and verifies context doc accuracy via parallel review agents
+- **Self-improving retro**: Each phase checkpoint classifies findings into SOPs, overrides, and learnings via parallel review agents, with tiered HITL gates and auto-promotion of recurring learnings to SOPs
 - **Unified cycle commits**: All phase artifacts accumulate uncommitted in worktree; /release owns the single commit + merge + cleanup
 - **Release automation**: Version detection, commit categorization, changelog generation, marketplace publishing, and PRODUCT.md rollup
 
