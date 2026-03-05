@@ -1,15 +1,15 @@
 # Validate Meta
 
-Learnings from validation phases. No notable patterns captured yet.
+Learnings from validation phases. No notable patterns captured yet — validate learnings will accumulate as more validation cycles run.
 
-## Defaults
+## SOPs
+No validate SOPs established yet. SOPs will be added by retro classification or auto-promoted from recurring learnings.
+@validate/sops.md
 
-<!-- From plugin -->
-
-## Project Overrides
-
-<!-- User additions -->
+## Overrides
+No project-specific validate overrides yet. Overrides will be added by retro classification or user.
+@validate/overrides.md
 
 ## Learnings
-
-<!-- From /retro -->
+No notable learnings from validation phases yet.
+@validate/learnings.md

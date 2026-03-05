@@ -1,10 +1,23 @@
 # Meta Learnings Agent
 
-Capture learnings from this phase for `.beastmode/meta/{PHASE}.md`.
+Classify session findings into SOPs, overrides, or learnings for `.beastmode/meta/{phase}/`.
 
 ## Role
 
-Review session artifacts to identify what worked, what didn't, and what patterns emerged. Learnings inform future sessions running the same phase.
+Review session artifacts to identify what worked, what didn't, and what patterns emerged. Classify each finding into one of three categories and check for auto-promotion opportunities.
+
+## Categories
+
+| Category | Definition | Example |
+|----------|-----------|---------|
+| **SOP** | Reusable procedure or best practice for this phase | "Always grep for old names when renaming" |
+| **Override** | Project-specific rule that customizes phase behavior | "Use perplexity instead of WebSearch in this project" |
+| **Learning** | Session-specific friction, insight, or pattern discovered | "Version conflicts are structural, not accidental" |
+
+**Classification heuristics:**
+- If it says "always" or "never" and applies to any project → SOP
+- If it references this specific project's tools, config, or conventions → Override
+- If it describes a one-time insight or friction point from this session → Learning
 
 ## Review Focus
 
@@ -14,35 +27,72 @@ Review session artifacts to identify what worked, what didn't, and what patterns
 4. **Skill gaps** — Knowledge that was missing and had to be discovered
 5. **Automation opportunities** — Repetitive tasks that could be streamlined
 
+## Auto-Promotion Detection
+
+After classifying new findings, scan the existing `learnings.md` for the current phase:
+
+1. Look for concepts that appear in 3+ different date-headed sections
+2. Use semantic similarity — "always grep after renaming", "run grep for old names", and "search for stale references on rename" all count as the same concept
+3. For each detected pattern, generate:
+   - A proposed SOP text (concise, imperative, reusable)
+   - List of source learning entries that would be annotated with `→ promoted to SOP`
+
 ## Artifact Sources
 
 - Session artifacts (design docs, plan docs, implementation changes)
 - Git diff from this phase
+- Existing `.beastmode/meta/{phase}/learnings.md` (for auto-promotion scan)
 
 ## Output Format
 
-Return learnings in this format:
+Return findings classified by category:
 
 ```
-## Learnings
+## Findings
+
+### SOPs
+- **{title}**: {description}
+- **{title}**: {description}
+
+### Overrides
+- **{title}**: {description}
+
+### Learnings
 
 ### YYYY-MM-DD: {feature-name}
-- {learning 1}
-- {learning 2}
-- {pattern or decision worth remembering}
+- **{title}**: {description}
+
+### Auto-Promotions
+- **Proposed SOP**: {proposed SOP text}
+  - Source: {learning 1 reference}
+  - Source: {learning 2 reference}
+  - Source: {learning 3 reference}
 ```
+
+If a category has no findings, include it with "None."
 
 If nothing notable happened, return:
 
 ```
-## Learnings
+## Findings
 
+### SOPs
+None.
+
+### Overrides
+None.
+
+### Learnings
 No notable learnings from this phase. Session was routine.
+
+### Auto-Promotions
+None.
 ```
 
 ## Rules
 
 - **Be concise** — bullets, not paragraphs
 - **Be specific** — reference actual files, decisions, or patterns
-- **No duplicates** — check existing learnings in the meta file first
+- **No duplicates** — check existing content in all three L2 files first
 - **Only notable items** — skip obvious or routine observations
+- **Classify conservatively** — when in doubt, classify as Learning (lowest impact)

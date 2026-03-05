@@ -46,3 +46,20 @@ Every level follows the same pattern: summary + section summaries of children + 
 
 - **UPPERCASE.md** — Invariant meta files (always exist, same structure)
 - **lowercase.md** — Variant files (plans, research docs, date-prefixed)
+
+## Meta Domain Structure
+
+The meta domain follows the same fractal L1/L2 hierarchy as context. Each phase has three L2 category files:
+
+| Category | File | Purpose | Write Path |
+|----------|------|---------|-----------|
+| **SOPs** | `meta/{phase}/sops.md` | Reusable procedures and best practices | Retro classification + auto-promotion (APPROVAL gate) |
+| **Overrides** | `meta/{phase}/overrides.md` | Project-specific rules that customize phase behavior | Retro classification (APPROVAL gate) |
+| **Learnings** | `meta/{phase}/learnings.md` | Session-specific friction, insights, patterns | Retro classification (INTERACTIVE gate, auto-append) |
+
+**Auto-promotion**: When a learning concept appears in 3+ date-headed sections within a `learnings.md`, the retro agent proposes promoting it to an SOP. Promotion requires user approval via the `retro.sops-write` gate.
+
+**HITL Gates**:
+- `retro.learnings-write` | INTERACTIVE — learnings shown to user, auto-appended
+- `retro.sops-write` | APPROVAL — SOPs require explicit user approval
+- `retro.overrides-write` | APPROVAL — overrides require explicit user approval

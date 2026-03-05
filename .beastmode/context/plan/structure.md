@@ -32,12 +32,17 @@ beastmode/
 │   │   ├── validate/       # L2: quality gates
 │   │   ├── RELEASE.md      # L1: Release context summary
 │   │   └── release/        # L2: versioning, changelog format
-│   └── meta/               # Self-improvement (learnings, overrides)
-│       ├── DESIGN.md       # L1: Design learnings
-│       ├── PLAN.md         # L1: Plan learnings
-│       ├── IMPLEMENT.md    # L1: Implement learnings
-│       ├── VALIDATE.md     # L1: Validate learnings
-│       └── RELEASE.md      # L1: Release learnings
+│   └── meta/               # Self-improvement (SOPs, overrides, learnings)
+│       ├── DESIGN.md       # L1: Design meta summary
+│       ├── design/         # L2: sops.md, overrides.md, learnings.md
+│       ├── PLAN.md         # L1: Plan meta summary
+│       ├── plan/           # L2: sops.md, overrides.md, learnings.md
+│       ├── IMPLEMENT.md    # L1: Implement meta summary
+│       ├── implement/      # L2: sops.md, overrides.md, learnings.md
+│       ├── VALIDATE.md     # L1: Validate meta summary
+│       ├── validate/       # L2: sops.md, overrides.md, learnings.md
+│       ├── RELEASE.md      # L1: Release meta summary
+│       └── release/        # L2: sops.md, overrides.md, learnings.md
 ├── skills/                 # Agent skills (executable workflows)
 │   ├── _shared/           # Shared utilities (prime, checkpoint, retro, worktree, task-runner, context-report)
 │   ├── beastmode/         # Project initialization (install, init --brownfield, init --greenfield)

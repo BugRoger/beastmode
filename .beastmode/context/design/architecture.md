@@ -35,7 +35,7 @@ Each level follows the same fractal pattern: summary + section summaries of chil
 | **Product** | What we're building | `.beastmode/PRODUCT.md` |
 | **State** | Where features are in workflow (kanban) | `.beastmode/state/` |
 | **Context** | How to build (architecture, conventions, testing) | `.beastmode/context/` |
-| **Meta** | How to improve (learnings, overrides) | `.beastmode/meta/` |
+| **Meta** | How to improve (SOPs, overrides, learnings) | `.beastmode/meta/` |
 
 ## Components
 
@@ -119,11 +119,17 @@ state/design/2026-03-03-login-form.md
 
 For Retro functionality (now in 3-checkpoint sub-phase):
 ```
-3-checkpoint sub-phase triggers learnings capture
+3-checkpoint sub-phase triggers retro-meta agent
   ↓
-Update .beastmode/meta/ with session insights
+Agent classifies findings as SOP, override, or learning
   ↓
-Learnings inform future sessions via L1 loading
+Tiered HITL gates: learnings (interactive), SOPs/overrides (approval)
+  ↓
+Writes routed to meta/{phase}/sops.md, overrides.md, or learnings.md
+  ↓
+Recurring learnings (3+ sessions) auto-promoted to SOPs
+  ↓
+Classified knowledge informs future sessions via L1 loading
 ```
 
 ## Key Decisions
@@ -200,3 +206,4 @@ Learnings inform future sessions via L1 loading
 - Skill anatomy refactored to 4 sub-phases. See [skill-anatomy-refactor](../../state/design/2026-03-04-skill-anatomy-refactor.md)
 - Git branching with feature worktrees. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
 - Progressive L1 docs with fractal hierarchy. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)
+- Meta domain restructured to fractal L2 hierarchy. See [meta-hierarchy](../../state/design/2026-03-05-meta-hierarchy.md)

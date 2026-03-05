@@ -9,7 +9,7 @@ Determine current phase and feature:
 1. Identify current phase from the skill being executed (design/plan/implement/validate/release)
 2. Read phase artifacts (design doc, plan doc) from `.beastmode/state/`
 3. Read the phase's context docs from `.beastmode/context/{phase}/`
-4. Read the phase's meta doc from `.beastmode/meta/{PHASE}.md`
+4. Read the phase's meta L2 files from `.beastmode/meta/{phase}/` (sops.md, overrides.md, learnings.md)
 
 ## 2. Quick-Exit Check
 
@@ -18,19 +18,20 @@ Skip agent review if session was trivial:
 - No new patterns, decisions, or discrepancies observed
 - Phase was a routine re-run
 
-If skipping, add a one-liner to meta if anything minor was noted, then proceed to next checkpoint step.
+If skipping, add a one-liner to learnings.md if anything minor was noted, then proceed to next checkpoint step.
 
 ## 3. Spawn Review Agents
 
-Launch 2 parallel Explore agents (haiku model):
+Launch 2 parallel agents:
 
 1. **Context Agent** — read prompt from `agents/retro-context.md`
    - Append: current phase name, paths to context docs, session artifacts
    - Reviews `.beastmode/context/{phase}/` docs for accuracy
 
 2. **Meta Agent** — read prompt from `agents/retro-meta.md`
-   - Append: current phase name, paths to meta doc, session artifacts
-   - Captures learnings for `.beastmode/meta/{PHASE}.md`
+   - Append: current phase name, paths to meta L2 files, session artifacts
+   - Classifies findings into SOPs, overrides, and learnings
+   - Detects auto-promotion opportunities
 
 Include in both agent prompts:
 
@@ -51,13 +52,43 @@ Show user a summary:
 **Context changes** ({N} findings):
 - {finding summary} — confidence: {level}
 
-**Meta learnings** ({N} items):
-- {learning summary}
+**Meta findings** ({N} items):
+- SOPs: {count} proposed
+- Overrides: {count} proposed
+- Learnings: {count} new
+- Auto-promotions: {count} detected
 ```
 
 ## 5. Apply Changes
 
-- **Meta learnings**: Auto-append to `.beastmode/meta/{PHASE}.md` under `## Learnings`
+### 5.1 Learnings
+
+<!-- HITL-GATE: retro.learnings-write | INTERACTIVE -->
+@gate-check.md
+
+- **human**: Show learnings to user, then auto-append to `.beastmode/meta/{phase}/learnings.md` under the appropriate date-headed section
+- **auto**: Auto-append without showing
+
+### 5.2 SOPs
+
+<!-- HITL-GATE: retro.sops-write | APPROVAL -->
+@gate-check.md
+
+- **human**: Present each proposed SOP (including auto-promoted ones) and ask for approval before writing to `.beastmode/meta/{phase}/sops.md`
+- **auto**: Auto-write all proposed SOPs
+
+On approval of auto-promoted SOPs: annotate the source learning entries in `learnings.md` with `→ promoted to SOP`.
+
+### 5.3 Overrides
+
+<!-- HITL-GATE: retro.overrides-write | APPROVAL -->
+@gate-check.md
+
+- **human**: Present each proposed override and ask for approval before writing to `.beastmode/meta/{phase}/overrides.md`
+- **auto**: Auto-write all proposed overrides
+
+### 5.4 Context Changes
+
 - **Context changes**: Present each proposed edit and ask for approval before applying
   - High confidence: "Apply this change? [Y/n]"
   - Medium/Low confidence: "Review suggested change: [apply / skip / edit]"

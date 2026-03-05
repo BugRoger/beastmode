@@ -1,0 +1,17 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-05-meta-hierarchy.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create L2 Files for Design Phase (Migration)", "status": "completed", "lastUpdated": "2026-03-05T09:40:00Z"},
+    {"id": 1, "subject": "Task 1: Create L2 Files for Plan Phase (Migration)", "status": "completed", "lastUpdated": "2026-03-05T09:40:00Z"},
+    {"id": 2, "subject": "Task 2: Create L2 Files for Implement Phase (Migration)", "status": "completed", "lastUpdated": "2026-03-05T09:40:00Z"},
+    {"id": 3, "subject": "Task 3: Create L2 Files for Validate Phase (Empty)", "status": "completed", "lastUpdated": "2026-03-05T09:40:00Z"},
+    {"id": 4, "subject": "Task 4: Create L2 Files for Release Phase (Migration)", "status": "completed", "lastUpdated": "2026-03-05T09:40:00Z"},
+    {"id": 5, "subject": "Task 5: Rewrite All 5 Meta L1 Files to Progressive Format", "status": "completed", "lastUpdated": "2026-03-05T09:41:00Z"},
+    {"id": 6, "subject": "Task 6: Update Retro-Meta Agent with Classification Protocol", "status": "completed", "lastUpdated": "2026-03-05T09:41:00Z"},
+    {"id": 7, "subject": "Task 7: Update Retro Orchestrator with Tiered Write Routing", "status": "completed", "lastUpdated": "2026-03-05T09:41:00Z"},
+    {"id": 8, "subject": "Task 8: Update META.md Documentation", "status": "completed", "lastUpdated": "2026-03-05T09:42:00Z"},
+    {"id": 9, "subject": "Task 9: Update Architecture Documentation", "status": "completed", "lastUpdated": "2026-03-05T09:42:00Z"},
+    {"id": 10, "subject": "Task 10: Update Structure Documentation", "status": "completed", "lastUpdated": "2026-03-05T09:42:00Z"}
+  ],
+  "lastUpdated": "2026-03-05T09:42:00Z"
+}
