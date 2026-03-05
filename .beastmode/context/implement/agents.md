@@ -23,7 +23,7 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 
 - **Context verification**: Before editing, verify `pwd` is in the correct worktree (not main repo)
 - **Recovery from main repo edits**: If you accidentally edit main repo instead of worktree, immediately `git checkout -- <files>` to discard, then switch to worktree
-- **Merge pattern**: When merging worktree branch back to main, prefer fast-forward (preserves linear history)
+- **Merge pattern**: When merging worktree branch back to main, use `git merge --squash` (squash merge for clean single-commit history)
 
 ## Feature Workflow (Branch + Worktree)
 
@@ -31,7 +31,9 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 - **Worktree discovery**: All phases find worktree at `.beastmode/worktrees/<feature>` by convention
 - **Natural commits**: Phases may commit as needed. No forced commit policy.
 - **Worktree safety**: Worktree at `.beastmode/worktrees/<feature>` provides isolation
-- **Release owns merge**: /release merges feature branch to main and cleans up worktree + branch
+- **Release owns merge**: /release squash-merges feature branch to main and cleans up worktree + branch
+- **Archive tagging**: Before squash merge, feature branch tip tagged as `archive/feature/<feature>` for future reference
+- **Squash merge**: `git merge --squash` collapses branch history into one commit on main
 
 ## Refactoring
 
@@ -47,3 +49,4 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 ## Related Decisions
 - Agent safety rules formalized. See [implement-skill-refactor](../../state/design/2026-03-01-implement-skill-refactor.md)
 - Git branching strategy for feature workflow. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
+- Squash-per-release commit architecture. See [squash-per-release](../../state/design/2026-03-05-squash-per-release.md)
