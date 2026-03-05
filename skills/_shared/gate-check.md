@@ -1,14 +1,8 @@
-# Gate Check
+# Gate Check — Reference Only
 
-Evaluate a HITL gate by reading `.beastmode/config.yaml` and branching on the gate's mode.
+> **Note:** This file is documentation only. Gate logic is now executed inline via `## N. Gate:` steps in each phase file, processed by the task runner. This file is NOT @imported by any phase file.
 
-## Usage
-
-At any gate point in a phase file, after the `<!-- HITL-GATE: ... -->` annotation:
-
-1. Read `.beastmode/config.yaml`
-2. Look up the gate ID under `gates.<phase>.<gate-name>`
-3. If config file not found or gate ID not found → default to `human`
+Gate behavior by mode, for reference:
 
 ## Behavior by Mode
 

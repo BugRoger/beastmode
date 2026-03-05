@@ -42,3 +42,10 @@ Friction and insights captured during design retros.
 
 ### 2026-03-05: design-approval-summary
 - **Users prefer concise approval views over verbose ones**: When offered "full design doc preview" vs "executive summary," the user initially picked full but then switched to executive summary when given the format choice. For approval gates, default to the minimal information needed for a go/no-go decision.
+
+### 2026-03-05: hitl-adherence
+- **HTML comments are invisible to Claude on the critical path**: The `<!-- HITL-GATE: id | CATEGORY -->` annotation pattern was consistently skipped during execution. HTML comments work for grep-based discovery but fail as execution triggers. Critical-path instructions must be visible markdown (headings, bold text, numbered steps).
+- **@imported files lose priority against inline instructions**: `gate-check.md` and `transition-check.md` were @imported but routinely ignored when inline instructions (especially `<HARD-GATE>` blocks) gave competing directives. For critical-path behavior, inline beats imported.
+- **Make skippable behavior unskippable by embedding it in the task runner**: Converting gates from advisory annotations into numbered `## N. Gate:` steps that the task runner must process makes them structural — the step-walking loop cannot skip a step without violating its own execution model.
+- **Competing mechanisms on the same decision create unpredictable behavior**: `<HARD-GATE>User must explicitly approve</HARD-GATE>` forced human mode unconditionally, while `config.yaml` offered auto mode for the same decision. When adding configurable behavior, audit and remove all unconditional overrides covering the same decision point.
+- **Three-iteration diagnosis reveals structural patterns**: hitl-gate-config (v1) added invisible annotations, fix-auto-transitions (v2) fixed chaining but not intra-phase gates, hitl-adherence (v3) identified the root cause as format, not logic. When a feature fails twice with different symptoms, focus on the delivery mechanism rather than the logic.

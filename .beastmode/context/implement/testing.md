@@ -15,6 +15,11 @@ grep -v "\[" .beastmode/context/**/*.md | grep -v "^\[" | grep -v "^--" | wc -l
 
 # Review generated documentation
 cat .beastmode/context/design/tech-stack.md .beastmode/context/plan/structure.md .beastmode/context/implement/testing.md
+
+# Verify HITL gate steps are properly structured
+grep -r "## [0-9]*\. Gate:" skills/*/phases/*.md    # Should return 15 gate steps
+grep -r "HITL-GATE" skills/                          # Should return 0 (all HTML comments removed)
+grep -r "gate-check\|transition-check" skills/*/phases/  # Should return 0 (all @imports removed)
 ```
 
 ## Test Structure
@@ -54,6 +59,8 @@ cat .beastmode/context/design/tech-stack.md .beastmode/context/plan/structure.md
 - Parallel agent spawning: Explore agents must respond with markdown (not JSON)
 - Content merge: Generated output must preserve existing content while filling placeholders
 - File write operations: Context files must be updated atomically without corruption
+- Gate step structure: All 15 `## N. Gate:` steps in phase files with human/auto substeps
+- Task runner gate detection: Gate steps processed by task-runner.md with config.yaml lookup and substep pruning
 
 ## Related Decisions
 - Bootstrap discovery v2 defined testing approach. See [bootstrap-discovery-v2](../../state/design/2026-03-01-bootstrap-discovery-v2.md)

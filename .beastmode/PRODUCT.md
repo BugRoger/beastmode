@@ -20,7 +20,7 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 - **Bite-sized planning**: Design components decomposed into wave-ordered, file-isolated tasks with complete code and exact commands
 - **Parallel wave execution**: Implementation tasks dispatched in parallel within waves when file isolation analysis confirms no overlaps
 - **Git worktree isolation**: Feature work happens in isolated worktrees created at design time, inherited by all phases, merged clean by /release
-- **HITL gate configuration**: Configurable human-in-the-loop gates (auto/interactive/approval) across all workflow phases via config.yaml
+- **HITL gate configuration**: Two-tier gate system — unconditional `<HARD-GATE>` constraints plus configurable `Gate:` steps (human/auto) resolved from config.yaml at runtime by the task runner
 - **Brownfield discovery**: Auto-populate project context by spawning parallel exploration agents against existing codebases
 - **Fractal knowledge hierarchy**: L0/L1/L2/L3 progressive loading with bottom-up retro bubble to keep documentation accurate
 - **Self-improving retro**: Each phase checkpoint classifies findings into SOPs, overrides, and learnings via parallel review agents, with tiered HITL gates and auto-promotion of recurring learnings to SOPs

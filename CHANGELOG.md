@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.10.0 — The Visible Gate (Mar 2026)
+
+- **Task-runner gate detection** — Gate steps processed by task runner with config.yaml lookup and mode-based substep pruning
+- **Inline gate steps** — 15 `## N. Gate:` steps replace `<!-- HITL-GATE -->` annotations + `@gate-check.md`/`@transition-check.md` imports across all skill phases
+- **Two-tier HITL system** — `<HARD-GATE>` for unconditional constraints, `## N. Gate:` for configurable human/auto behavior
+
+### v0.9.0 — The Dynamic Retro (Mar 2026)
+
+- **Dynamic retro walkers** — Replace hardcoded retro agents with structure-walking hierarchy walkers
+- **Design approval summary** — Executive summary shown before design approval gate
+- **Meta hierarchy** — Fractal L2 hierarchy for meta domain with SOPs, overrides, learnings per phase
+
 ### v0.8.1 — The Summary (Mar 2026)
 
 - **Design approval summary** — Executive summary (goal, approach, locked decisions, acceptance criteria) shown before the approval gate so users see the full picture before approving

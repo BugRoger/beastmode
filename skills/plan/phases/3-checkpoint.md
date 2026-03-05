@@ -27,13 +27,24 @@ Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.tasks.json`:
 
 @../_shared/context-report.md
 
-## 5. Phase Transition
+## 5. Gate: transitions.plan-to-implement
+
+Read `.beastmode/config.yaml` → check `transitions.plan-to-implement`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
 
 <HARD-GATE>
 DO NOT call EnterPlanMode or ExitPlanMode.
 </HARD-GATE>
 
-<!-- HITL-GATE: transitions.plan-to-implement | TRANSITION -->
-@../_shared/transition-check.md
+### 5.1 human — Suggest Next Step
 
-Next skill: `beastmode:implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+Print and STOP:
+Next step: `/beastmode:implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+
+### 5.2 auto — Chain to Next Phase
+
+Estimate context remaining. If >= threshold (default 60%):
+Call `Skill(skill="beastmode:implement", args=".beastmode/state/plan/YYYY-MM-DD-<feature-name>.md")`
+
+If below threshold, print session-restart instructions and STOP.

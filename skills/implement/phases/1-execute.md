@@ -58,15 +58,23 @@ If spec check fails:
 Process the agent's deviation report per @../references/deviation-rules.md:
 
 - **Auto-fix / Blocking**: Log to deviation tracker, continue
-<!-- HITL-GATE: implement.architectural-deviation | CONDITIONAL -->
-@../_shared/gate-check.md
 
-- **Architectural**: Present to user via AskUserQuestion:
+#### 1.4.1 Gate: implement.architectural-deviation
+
+Read `.beastmode/config.yaml` → check `gates.implement.architectural-deviation`.
+Default: `auto`. Execute ONLY the matching option below.
+
+##### human — Ask User
+
+Present to user via AskUserQuestion:
   - "Proceed with proposed change"
   - "Different approach" (user specifies)
   - "Skip this task" (mark blocked)
 
-- **auto**: Claude evaluates the deviation and proceeds with the proposed change. If the deviation is clearly safe, continue. If ambiguous, proceed cautiously and log. Log: "Gate `implement.architectural-deviation` → auto: <decision>"
+##### auto — Claude Decides
+
+Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
+Log: "Gate `implement.architectural-deviation` → auto: <decision>"
 
 ### 1.5 Update Task Persistence
 
@@ -88,16 +96,23 @@ After ALL tasks in the current wave complete:
    - After 2 retries: mark wave as blocked, report to user
 3. If tests pass: proceed to next wave
 
-## 2. Blocked Task Handling
+## 2. Gate: implement.blocked-task-decision
 
 If a task is blocked and has dependents in later waves:
 - Report to user: "Task N is blocked. Tasks [X, Y] in Wave M depend on it."
-<!-- HITL-GATE: implement.blocked-task-decision | CONDITIONAL -->
-@../_shared/gate-check.md
 
-- Ask: "Skip dependent tasks or investigate?"
+Read `.beastmode/config.yaml` → check `gates.implement.blocked-task-decision`.
+Default: `auto`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
 
-- **auto**: Claude investigates the blocked task. If resolvable, fix and continue. If not, skip dependent tasks and log the decision.
+### 2.1 human — Ask User
+
+Ask: "Skip dependent tasks or investigate?"
+
+### 2.2 auto — Claude Investigates
+
+Investigate the blocked task. If resolvable, fix and continue. If not, skip dependent tasks and log.
+Log: "Gate `implement.blocked-task-decision` → auto: <decision>"
 
 ## 3. Completion
 

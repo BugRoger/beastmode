@@ -53,18 +53,23 @@ Print:
 
 Render this from the decisions and criteria gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
 
-## 4. User Approval Gate
+## 4. Gate: design.design-approval
 
-<!-- HITL-GATE: design.design-approval | APPROVAL -->
-@../_shared/gate-check.md
+Read `.beastmode/config.yaml` → check `gates.design.design-approval`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
 
-<HARD-GATE>
-User must explicitly approve the design before proceeding.
-</HARD-GATE>
+### 4.1 human — User Approval
 
 Ask: "Does this design look complete? Ready to document?"
 
 Options:
 - Yes, document it
 - No, let's revise [specify what]
-- **auto**: Claude self-approves and proceeds to checkpoint. Log: "Gate `design.design-approval` → auto: approved"
+
+Wait for user response before continuing.
+
+### 4.2 auto — Self-Approve
+
+Log: "Gate `design.design-approval` → auto: approved"
+Proceed to checkpoint.

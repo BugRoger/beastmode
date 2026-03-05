@@ -12,7 +12,7 @@ Each workflow phase follows the standard sub-phase anatomy: `0-prime → 1-execu
 
 - **0-prime**: Read-only — loads project context (`.beastmode/` L0/L1), meta, and input artifacts (design doc, plan, status file). No side effects, no bash commands, no `cd`.
 - **1-execute**: Action phase — worktree entry/creation is always step 1, followed by skill-specific work (exploration, coding, testing, releasing).
-- **2-validate**: Quality check — verifies work completeness, user approval gates.
+- **2-validate**: Quality check — verifies work completeness, approval gates.
 - **3-checkpoint**: Persistence — saves artifacts, captures learnings, suggests next step.
 
 ## Knowledge Architecture
@@ -179,6 +179,11 @@ Classified knowledge informs future sessions via L1 loading
 - Decision: `.beastmode/CLAUDE.md` imports L0 files (PRODUCT.md, META.md). Root `CLAUDE.md` imports `.beastmode/CLAUDE.md` + all L1 domain summaries (context/, meta/, state/) + Prime Directives
 - Rationale: Root file is the single entry point; .beastmode/CLAUDE.md scopes L0; all L1 imports listed explicitly in root for visibility; @imports reduce duplication
 
+**Two-Tier HITL Gate System:**
+- Context: Workflow phases have human-in-the-loop gates (approvals, interactive choices, transitions) that need to be configurable for autonomous operation
+- Decision: Two-tier system — `<HARD-GATE>` for unconditional constraints (always enforced), `## N. Gate: <id>` steps for configurable gates (human/auto modes resolved from `.beastmode/config.yaml` at runtime by the task runner)
+- Rationale: HARD-GATEs prevent dangerous skip behavior; configurable gates enable autonomous phase chaining when set to auto; task runner handles gate detection and substep pruning; config read at each gate (self-contained, no pre-loading)
+
 ## Boundaries
 
 **External APIs:**
@@ -207,3 +212,5 @@ Classified knowledge informs future sessions via L1 loading
 - Git branching with feature worktrees. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
 - Progressive L1 docs with fractal hierarchy. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)
 - Meta domain restructured to fractal L2 hierarchy. See [meta-hierarchy](../../state/design/2026-03-05-meta-hierarchy.md)
+- HITL gate configuration with config.yaml. See [hitl-gate-config](../../state/design/2026-03-04-hitl-gate-config.md)
+- HITL gate adherence with task-runner integration. See [hitl-adherence](../../state/design/2026-03-05-hitl-adherence.md)

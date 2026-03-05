@@ -34,11 +34,25 @@ If no clear criteria emerged during discussion, include:
 
 @../_shared/context-report.md
 
-## 5. Phase Transition
+## 5. Gate: transitions.design-to-plan
 
-<!-- HITL-GATE: transitions.design-to-plan | TRANSITION -->
-@../_shared/transition-check.md
+Read `.beastmode/config.yaml` → check `transitions.design-to-plan`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
 
-Next skill: `beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+### 5.1 human — Suggest Next Step
 
-Do NOT invoke any implementation skill directly — only via transition-check auto mode.
+Print and STOP:
+Next step: `/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+
+Do NOT invoke any implementation skill directly.
+
+### 5.2 auto — Chain to Next Phase
+
+Estimate context remaining. If >= threshold (default 60%):
+Call `Skill(skill="beastmode:plan", args=".beastmode/state/design/YYYY-MM-DD-<topic>.md")`
+
+If below threshold, print:
+Context is low. Start a new session and run:
+`/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+STOP.

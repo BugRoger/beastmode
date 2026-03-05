@@ -11,5 +11,5 @@ No project-specific implement overrides yet. Overrides will be added by retro cl
 @implement/overrides.md
 
 ## Learnings
-Implementation learnings from hitl-gate-config: file-isolated waves enable reliable parallel dispatch, and annotation tasks are ideal for parallel subagents.
+Implementation learnings from hitl-gate-config and hitl-adherence: file-isolated waves enable reliable parallel dispatch, annotation tasks are ideal for parallel subagents, and uniform transformation patterns scale to 11+ parallel subagents with zero deviations.
 @implement/learnings.md

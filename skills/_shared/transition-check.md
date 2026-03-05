@@ -1,20 +1,8 @@
-# Transition Check
+# Transition Check — Reference Only
 
-Smart phase-to-phase transition logic. Import this in each phase's 3-checkpoint.md at the "Suggest Next Step" position.
+> **Note:** This file is documentation only. Transition logic is now executed inline via `## N. Gate: transitions.*` steps in each phase checkpoint, processed by the task runner. This file is NOT @imported by any phase file.
 
-## Usage
-
-Replace hardcoded "Suggest /next-skill" blocks with:
-
-```
-@../_shared/transition-check.md
-```
-
-## Logic
-
-1. Read `.beastmode/config.yaml`
-2. Look up `transitions.<current-phase>-to-<next-phase>`
-3. If config file not found or transition not found → default to `human`
+Transition behavior by mode, for reference:
 
 ### human mode
 Print the next step suggestion and STOP:

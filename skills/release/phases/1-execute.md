@@ -38,12 +38,19 @@ Detect version bump from commit messages:
 - Any `feat:` or `feat(` prefix → **minor** bump
 - Otherwise → **patch** bump
 
-<!-- HITL-GATE: release.version-confirmation | APPROVAL -->
-@../_shared/gate-check.md
+### 3.1 Gate: release.version-confirmation
 
-Increment from `$current_version` (not from tag). Present suggested version via AskUserQuestion with override option.
+Read `.beastmode/config.yaml` → check `gates.release.version-confirmation`.
+Default: `human`. Execute ONLY the matching option below.
 
-- **auto**: Claude uses the auto-detected version bump without asking. Log: "Gate `release.version-confirmation` → auto: vX.Y.Z"
+#### human — Ask User
+
+Increment from `$current_version`. Present suggested version via AskUserQuestion with override option.
+
+#### auto — Auto-Detect
+
+Use the auto-detected version bump without asking.
+Log: "Gate `release.version-confirmation` → auto: vX.Y.Z"
 
 ## 4. Categorize Commits
 
@@ -120,14 +127,21 @@ Roll up L1 summaries and release features into `.beastmode/PRODUCT.md`.
    - Format: `- **Bold label**: One-sentence description`
 5. Update **How It Works** section if the release changes workflow mechanics
 
-<!-- HITL-GATE: release.product-md-approval | CONDITIONAL -->
-@../_shared/gate-check.md
+### 8.6 Gate: release.product-md-approval
+
+Read `.beastmode/config.yaml` → check `gates.release.product-md-approval`.
+Default: `auto`. Execute ONLY the matching option below.
+
+#### human — Ask User
 
 **Significance check:**
 - If Capabilities or How It Works changed → present the before/after diff for user approval
 - If neither changed → auto-apply silently
 
-- **auto**: Claude auto-applies all changes and logs: "Gate `release.product-md-approval` → auto: updated PRODUCT.md with N new capabilities"
+#### auto — Auto-Apply
+
+Auto-apply all changes.
+Log: "Gate `release.product-md-approval` → auto: updated PRODUCT.md with N new capabilities"
 
 ## 9. Commit Release Changes
 

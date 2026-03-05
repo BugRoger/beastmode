@@ -55,10 +55,19 @@ If arguments point to an existing PRD, spec, or requirements document (not a `.b
 2. Skip gray area identification in execute
 3. Jump directly to "Propose Approaches" with the doc as input
 
-<!-- HITL-GATE: design.existing-design-choice | INTERACTIVE -->
-@../_shared/gate-check.md
+## 7. Gate: design.existing-design-choice
+
+Read `.beastmode/config.yaml` → check `gates.design.existing-design-choice`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
+
+### 7.1 human — Ask User
 
 If a prior design doc exists for the same topic (matching feature name):
 - Ask: "Found existing design for this topic. What do you want to do?"
 - Options: Update existing / View first / Start fresh
-- **auto**: Claude reads the existing design and decides whether to update or start fresh based on how different the new requirements are. Log the decision.
+
+### 7.2 auto — Claude Decides
+
+Read the existing design and decide whether to update or start fresh based on how different the new requirements are.
+Log: "Gate `design.existing-design-choice` → auto: <decision>"

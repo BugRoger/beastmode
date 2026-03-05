@@ -40,10 +40,13 @@ Analyze the topic to find decisions that would change the outcome:
 Bad: "UI", "UX", "Behavior"
 Good: "Layout style", "Loading pattern", "Empty state handling", "Error recovery approach"
 
-<!-- HITL-GATE: design.gray-area-selection | INTERACTIVE -->
-@../_shared/gate-check.md
+## 4. Gate: design.gray-area-selection
 
-## 4. Present Gray Areas
+Read `.beastmode/config.yaml` → check `gates.design.gray-area-selection`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
+
+### 4.1 human — Ask User
 
 Use `AskUserQuestion` with `multiSelect: true`:
 
@@ -55,12 +58,19 @@ Use `AskUserQuestion` with `multiSelect: true`:
 
 At least 1 area must be discussed. Do NOT include "skip all."
 
-- **auto**: Claude selects all areas for internal analysis without asking. Proceed to discuss each using Claude's judgment.
+### 4.2 auto — Select All
 
-<!-- HITL-GATE: design.gray-area-discussion | INTERACTIVE -->
-@../_shared/gate-check.md
+Select all areas for internal analysis without asking.
+Log: "Gate `design.gray-area-selection` → auto: all areas selected"
+Proceed to discuss each using Claude's judgment.
 
-## 5. Discuss Selected Areas
+## 5. Gate: design.gray-area-discussion
+
+Read `.beastmode/config.yaml` → check `gates.design.gray-area-discussion`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
+
+### 5.1 human — Interactive Discussion
 
 For each selected area:
 
@@ -75,7 +85,10 @@ For each selected area:
    "That sounds like its own feature — I'll note it as a deferred idea. Back to [area]."
 5. Maintain running "Deferred Ideas" list internally
 
-- **auto**: Claude makes reasonable decisions for each area based on codebase context and prior decisions. Log each decision inline. No AskUserQuestion calls.
+### 5.2 auto — Claude Decides
+
+Make reasonable decisions for each area based on codebase context and prior decisions.
+Log each decision inline. No AskUserQuestion calls.
 
 ## 6. Propose Approaches
 
@@ -84,16 +97,24 @@ For each selected area:
 - Annotate with codebase context: "Approach A reuses existing X"
 - Informed by gray area discussions — don't re-ask decided points
 
-<!-- HITL-GATE: design.section-review | INTERACTIVE -->
-@../_shared/gate-check.md
+## 7. Gate: design.section-review
 
-## 7. Present Design
+Read `.beastmode/config.yaml` → check `gates.design.section-review`.
+Default: `human`. Execute ONLY the matching option below.
+Remove non-matching options from the task list.
+
+### 7.1 human — Section-by-Section Review
 
 Once requirements understood:
 - Scale each section to complexity
 - Ask after each section if it looks right
-- **auto**: Claude presents the full design without per-section approval pauses. Proceed directly to validation.
 - Cover: architecture, components, data flow, error handling, testing
+
+### 7.2 auto — Present Full Design
+
+Present the full design without per-section approval pauses.
+Proceed directly to validation.
+Log: "Gate `design.section-review` → auto: full design presented"
 
 ## 8. Iterate Until Ready for Validation
 
