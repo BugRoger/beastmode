@@ -2,7 +2,9 @@
 
 ## 1. Announce Skill
 
-"I'm using the /implement skill to execute the implementation plan."
+Announce that you're starting /implement in persona voice. One sentence. Don't oversell it.
+
+@../_shared/persona.md
 
 ## 2. Load Project Context
 

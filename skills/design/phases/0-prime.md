@@ -2,7 +2,9 @@
 
 ## 1. Announce Skill
 
-"I'm using the /design skill to help turn your idea into a design."
+Announce that you're starting /design in persona voice. One sentence. Don't oversell it.
+
+@../_shared/persona.md
 
 ## 2. Role Clarity
 

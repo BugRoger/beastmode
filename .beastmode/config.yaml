@@ -19,13 +19,6 @@ gates:
 
   release:
     version-confirmation: human      # APPROVAL — version bump override
-    merge-strategy: human            # APPROVAL — merge/PR/keep/discard
-
-  retro:
-    learnings: human                 # INTERACTIVE — show then auto-append
-    sops: human                      # APPROVAL — require approval
-    overrides: human                 # APPROVAL — require approval
-    context-changes: human           # APPROVAL — require approval
 
 transitions:
   design-to-plan: auto               # TRANSITION
@@ -33,7 +26,4 @@ transitions:
   implement-to-validate: auto        # TRANSITION
   validate-to-release: auto          # TRANSITION
 
-  context_threshold: 60              # % remaining context required to auto-advance
-
-release:
-  merge-default: local               # local | pr | keep | discard
+  context_threshold: 20              # % remaining context required to auto-advance

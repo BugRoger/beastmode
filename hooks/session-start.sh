@@ -15,11 +15,31 @@ taglines=(
   "disciplined enough to plan, reckless enough to ship"
   "remember nothing, document everything"
   "hallucinating responsibly since 2024"
+  "another session, another chance to overcomplicate things"
+  "your git log is an autobiography. make it interesting."
+  "complexity is easy. simplicity takes planning."
+  "the commit message is the documentation"
+  "shipping code is a team sport. even if the team is just us."
+  "you had an idea. I have concerns."
+  "this is fine. everything is fine."
+  "plan the work. work the plan. question the plan."
+  "code review: where optimism meets reality"
+  "if it compiles, it ships. kidding. mostly."
+  "documenting the obvious so future-you doesn't have to guess"
+  "making implicit knowledge explicit, one markdown file at a time"
+  "structured procrastination in five phases"
+  "measuring twice, cutting once, refactoring three times"
+  "your codebase called. it wants boundaries."
+  "the best time to plan was before coding. the second best time is now."
+  "less yolo, more ymmv"
+  "making the computer do the boring parts"
+  "opinions included, batteries not"
+  "we take notes so you don't have to remember"
 )
 
 quote=${taglines[$RANDOM % ${#taglines[@]}]}
 
-line1="█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀  v0.11.2"
+line1="█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀  v0.12.0"
 line2="█▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄  ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄"
 
 if [[ "$COLORTERM" == "truecolor" || "$COLORTERM" == "24bit" ]]; then

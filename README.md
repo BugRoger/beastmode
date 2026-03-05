@@ -66,21 +66,7 @@ Four domains organize what gets persisted:
 
 Beastmode organizes project knowledge into four levels. Each level summarizes the level below. Agents navigate summaries first and load detail only when the task requires it. Deterministic navigation through a known structure, not similarity search through a vector space.
 
-```
-PRODUCT.md                            ← L0: always loaded, full project summary
-├── context/DESIGN.md                 ← L1: domain summary, always loaded
-│   ├── design/architecture.md        ← L2: detail, loaded on demand
-│   └── design/tech-stack.md
-├── context/PLAN.md
-│   ├── plan/conventions.md
-│   └── plan/structure.md
-├── state/DESIGN.md
-│   └── design/2026-03-05-feature.md  ← L3: raw artifact, loaded via L2 link
-└── meta/DESIGN.md
-    ├── design/sops.md
-    ├── design/overrides.md
-    └── design/learnings.md
-```
+<img src="docs/assets/progressive-knowledge-hierarchy.svg" alt="Progressive Knowledge Hierarchy" width="100%">
 
 Every phase follows the same four steps: prime loads context from `.beastmode/`, execute does the work, validate checks quality, checkpoint saves artifacts back.
 
@@ -102,6 +88,8 @@ Every checkpoint captures what worked, what didn't, and what to do differently. 
 
 Recurring learnings auto-promote to SOPs after appearing in 3+ sessions. Each cycle sharpens Claude's understanding of *your* codebase, not codebases in general. The meta domain feeds back into prime, so the next session starts smarter than the last.
 
+<img src="docs/assets/retro-bubble-up.svg" alt="Retro Bubble-Up" width="100%">
+
 **Progressive autonomy through configurable gates.**
 
 Every phase has human-in-the-loop gates: design approval, plan review, version confirmation, merge strategy. By default, all gates require human input. As trust builds, flip individual gates to `auto` in `.beastmode/config.yaml`:
@@ -122,6 +110,32 @@ transitions:
 ```
 
 Start with human everywhere. Flip gates to auto as patterns prove reliable. The structure scales from fully supervised to fully autonomous. Same workflow, different level of trust.
+
+## Why?
+
+Software doesn't get built by a lone developer anymore. It moves through layers.
+
+<img src="docs/assets/SAFE.svg" alt="SAFe layers with beastmode at Development" width="100%">
+
+Portfolio decides what matters. Program breaks it into features. Development turns features into code. Delivery ships it. Operations keeps it alive. Frameworks like SAFe formalize this into five layers, each with its own rituals, roles, and artifacts.
+
+Every layer has tooling — except the one where the code actually gets written.
+
+Portfolio has Jira, Aha!, ProductBoard. Program has PI planning boards and capacity calculators. Delivery has CI/CD pipelines, feature flags, deployment orchestrators. Operations has Datadog, PagerDuty, Kubernetes. These layers are drowning in tooling.
+
+Development? You get an IDE and good luck.
+
+The Development layer — where a feature becomes a design, a design becomes a plan, a plan becomes code, and code becomes a validated story — has no structural tooling. Developers carry the entire workflow in their heads. Context lives in memory. Decisions evaporate between sessions. The handoff from "I understand the feature" to "here's a tested story" is entirely manual.
+
+This is where beastmode lives. Not portfolio strategy. Not CI/CD. Not monitoring. Just the five steps where a feature becomes working code:
+
+```
+Feature → Design → Plan → Implement → Validate → Story
+```
+
+That's it. The gap nobody tools for, because it's "just development." But it's also where the most context gets lost, where the most rework happens, and where AI agents have the most leverage — if they have structure to work within.
+
+Beastmode gives them that structure.
 
 ## Credits
 

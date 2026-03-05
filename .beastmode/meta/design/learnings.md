@@ -55,3 +55,6 @@ Friction and insights captured during design retros.
 ### 2026-03-05: ungated-hitl-fixes
 - **Shared files are blind spots for phase-scoped refactors**: retro.md was missed by hitl-adherence because the refactor scanned `skills/*/phases/*.md` but not `skills/_shared/*.md`. When a refactor targets a structural pattern (like gate format), the sweep must include shared files — not just phase files. This is the same class of issue as "stale references survive longer than expected."
 - **Not every user interaction needs a gate**: Worktree disambiguation (picking from multiple worktrees) and deviation-rules.md Tier 3 (agent STOP → controller gate) look like ungated interactions but are intentional. Disambiguation resolves ambiguity (safety), not approval. Tier 3 is agent-side of a two-step process. Distinguish safety mechanisms from approval gates before adding config.
+
+### 2026-03-05: dynamic-persona-greetings
+- **Static hook + Claude-side intelligence is the right split for pre-session features**: The hook provides raw material (banner, tagline) before Claude loads; Claude provides interpretation (context-awareness, persona voice) after loading. When a feature needs both pre-Claude delivery and reasoning, keep the hook dumb and let Claude add intelligence. Don't try to make bash smart.
