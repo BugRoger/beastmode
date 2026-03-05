@@ -11,5 +11,5 @@ No project-specific design overrides yet. Overrides will be added by retro class
 @design/overrides.md
 
 ## Learnings
-Extensive design learnings spanning competitive analysis, fractal hierarchy patterns, HITL gate design, cross-session state management, research-informed documentation structure, dynamic retro walker design, and HITL gate adherence patterns. Most learnings from the 2026-03-04 and 2026-03-05 design sessions.
+Extensive design learnings spanning competitive analysis, fractal hierarchy patterns, HITL gate design, cross-session state management, research-informed documentation structure, dynamic retro walker design, HITL gate adherence patterns, and the static-hook/Claude-side-intelligence split for pre-session features. Most learnings from the 2026-03-04 and 2026-03-05 design sessions.
 @design/learnings.md
