@@ -1,6 +1,6 @@
 # Design Meta
 
-Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, and fractal consistency (applying the same pattern across all domains) beats special-casing.
+Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, fractal consistency (applying the same pattern across all domains) beats special-casing, and feature requests that push on mechanism can generalize into architecture improvements.
 
 ## Defaults
 
@@ -35,3 +35,7 @@ Learnings from design phases. Key patterns: competitive analysis beats brainstor
 
 ### 2026-03-04: worktree-session-discovery
 - **Cross-session state loss is a design gap, not a bug**: When a mechanism relies on in-session context (like the feature name derived during /design), it will silently break across sessions. Any state that subsequent phases need must be either persisted to disk or re-derivable from arguments. Treat session boundaries as a hard reset.
+
+### 2026-03-05: dynamic-retro-walkers
+- **Feature requests can generalize into architecture improvements**: User started with "deferred ideas should bubble up" and through discussion pivoted to "the retro agents should be dynamic, not hardcoded." The specific feature became a deferred idea itself — the general solution subsumes it. When a user pushes on implementation mechanism, explore whether the underlying system needs redesign, not just a new feature bolted on.
+- **Present trade-offs before recommendations**: User pushed back on "do we need a new agent?" wanting to see options first. Presenting the recommendation upfront without showing the analysis path felt presumptuous. Show the trade-off matrix first, then recommend.

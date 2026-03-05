@@ -24,13 +24,13 @@ If skipping, add a one-liner to meta if anything minor was noted, then proceed t
 
 Launch 2 parallel Explore agents (haiku model):
 
-1. **Context Agent** — read prompt from `agents/retro-context.md`
-   - Append: current phase name, paths to context docs, session artifacts
-   - Reviews `.beastmode/context/{phase}/` docs for accuracy
+1. **Context Walker** — read prompt from `agents/retro-context.md`
+   - Agent discovers its own review targets from the L1 hierarchy
+   - Reviews `.beastmode/context/{phase}/` docs for accuracy, extensions, and gaps
 
-2. **Meta Agent** — read prompt from `agents/retro-meta.md`
-   - Append: current phase name, paths to meta doc, session artifacts
-   - Captures learnings for `.beastmode/meta/{PHASE}.md`
+2. **Meta Walker** — read prompt from `agents/retro-meta.md`
+   - Agent discovers its own review targets from the L1 hierarchy
+   - Captures learnings, flags stale entries, detects promotion candidates
 
 Include in both agent prompts:
 
@@ -38,7 +38,10 @@ Include in both agent prompts:
 ## Session Context
 - **Phase**: {current phase}
 - **Feature**: {feature name}
+- **L1 context path**: `.beastmode/context/{PHASE}.md`
+- **L1 meta path**: `.beastmode/meta/{PHASE}.md`
 - **Artifacts**: {list of design/plan doc paths}
+- **Worktree root**: {current working directory}
 ```
 
 ## 4. Present Findings
