@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="72" viewBox="0 0 600 72">
+  <style>
+    .mono { font-family: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace; }
+  </style>
+  <rect width="600" height="72" fill="#0d1117"/>
+  <text class="mono" font-size="14" font-weight="700" xml:space="preserve"><tspan x="13" y="24" fill="#64beff">█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀</tspan><tspan fill="#3c82c8"> █▀▄▀█ █▀█ █▀▄ █▀▀</tspan><tspan x="13" y="38" fill="#64beff">█▄█ ██▄ █▀█ ▄▄█  █ </tspan><tspan fill="#3c82c8"> █ ▀ █ █▄█ █▄▀ ██▄</tspan><tspan fill="#96c8f5">  ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄</tspan></text>
+  <text class="mono" font-size="13" fill="#7a7a98" xml:space="preserve"><tspan x="13" y="56">turning vibes into version-controlled artifacts</tspan></text>
+</svg>

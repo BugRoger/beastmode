@@ -1,27 +1,6 @@
-<div align="center">
+<img src="docs/assets/banner.svg" alt="beastmode" width="100%">
 
-```
- █▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀
- █▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄
-```
-
-**Turn Claude Code into a disciplined engineering partner.**
-
-Opinionated workflow patterns that survived contact with reality.
-
-[![GitHub stars](https://img.shields.io/github/stars/BugRoger/beastmode?style=flat-square)](https://github.com/BugRoger/beastmode/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-
-</div>
-
----
-
-```bash
-claude plugin add beastmode@beastmode-marketplace
-```
-
-<!-- TODO: Replace with assets/demo.svg when recorded -->
-<!-- ![beastmode demo](assets/demo.svg) -->
+Workflow skills for Claude Code. Design, plan, implement, validate, release. Context persists across sessions. A meta layer learns from every cycle.
 
 ## What It Does
 
