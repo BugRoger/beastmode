@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.2 — The Gap Detector (Mar 2026)
+
+- **L2 gap detection** — Context walker gains Gap Detection Protocol with structured `context_gap` output type, confidence scoring, and accumulation-based promotion thresholds
+- **Gap proposal processing** — Retro phase gains step 9 for processing context gap findings: logs gaps to learnings, gates file creation via `retro.l2-write`, creates approved L2 files with session-seeded content
+- **New HITL gate** — `retro.l2-write` gate (default: human) controls L2 file creation approval
+
 ### v0.14.1 — The Agent's Handbook (Mar 2026)
 
 - **L0 rework** — BEASTMODE.md rewritten as agent survival guide: prime directives, persona, workflow, knowledge hierarchy, domains, configuration

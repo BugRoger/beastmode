@@ -17,6 +17,9 @@ gates:
     blocked-task-decision: auto      # CONDITIONAL — blocked task with dependents
     validation-failure: auto         # CONDITIONAL — fix loop exhausted
 
+  retro:
+    l2-write: human                  # APPROVAL — new L2 context file creation
+
   release:
     version-confirmation: human      # APPROVAL — version bump override
 

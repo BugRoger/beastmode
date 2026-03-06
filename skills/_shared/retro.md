@@ -122,7 +122,70 @@ Log: "Gate `retro.context-changes` → auto: applied {N} context changes"
 
 If no findings from either agent, report: "Phase retro: no changes needed." and skip gates 5-8.
 
-## 9. Bottom-Up Summary Bubble
+## 9. Process Context Gap Proposals
+
+If the context walker returned any `context_gap` findings (type = `context_gap`):
+
+### 9.1 Log ALL gaps to learnings
+
+For each `context_gap` or `context_gap_logged` finding, append to `meta/{phase}/learnings.md` under a `## Context Gaps` section (create if missing):
+
+```markdown
+### {YYYY-MM-DD}
+- **{domain}** ({phase}) — {confidence} confidence
+  Evidence: {evidence summary, one line}
+  Status: {Proposed for creation | Logged, {N}/{threshold} occurrences}
+```
+
+### 9.2 [GATE|retro.l2-write]
+
+Read `.beastmode/config.yaml` → resolve mode for `retro.l2-write`.
+Default: `human`.
+
+Only enter this gate if there are `context_gap` findings that met their promotion threshold.
+
+#### [GATE-OPTION|human] Review L2 File Proposals
+
+For each promoted `context_gap` finding, present to user:
+
+```
+Proposing new L2 file: context/{phase}/{domain}.md
+Confidence: {level}
+Evidence:
+  - {evidence items}
+Seed content preview:
+  {proposed content from the finding}
+
+Create this file? [Create / Defer / Dismiss]
+```
+
+- **Create**: Proceed to file creation (step 9.3)
+- **Defer**: Log to learnings only, do not create file
+- **Dismiss**: Remove from learnings, do not create file
+
+#### [GATE-OPTION|auto] Auto-Create L2 Files
+
+Create all promoted gap files without asking.
+Log: "Gate `retro.l2-write` → auto: created {N} L2 files"
+
+### 9.3 Create Approved L2 Files
+
+For each approved gap:
+
+1. **Create L2 file** at `context/{phase}/{domain}.md`:
+   - Title: `# {Domain Title}` (Title Case of domain name)
+   - Seed with content from the gap proposal's evidence and suggested sections
+   - Include a `## Related Decisions` section (empty or populated from session artifacts)
+   - Follow the project's writing guidelines (bullets over paragraphs, be concrete)
+
+2. **Update parent L1 file** (`context/{PHASE}.md`):
+   - Add a new `## {Domain Title}` section with a 1-2 sentence summary
+   - Add `@{phase}/{domain}.md` import on the line after the summary
+
+3. **Mark gap entry** in `meta/{phase}/learnings.md`:
+   - Update the Status line to: `Status: Created → context/{phase}/{domain}.md`
+
+## 10. Bottom-Up Summary Bubble
 
 After applying L2 changes, propagate summaries upward:
 

@@ -30,6 +30,71 @@ For the L1 file itself:
 2. **Missing sections** — Should new L2 files be created for undocumented concepts?
 3. **Orphan detection** — Are there L2 files in `context/{phase}/` not referenced in the L1?
 
+## Gap Detection Protocol
+
+When reviewing L1 files for missing sections (step 2 above), apply structured gap detection:
+
+### 1. Identify Gap Signals
+
+Scan session artifacts and codebase for evidence of undocumented knowledge domains:
+
+- **Codebase signals**: Patterns appearing in 3+ source files with no corresponding L2 context doc (e.g., ad-hoc error handling patterns, scattered API client code, inconsistent state management)
+- **Session friction signals**: The session explicitly discussed, designed, or implemented something in a domain not covered by existing L2 files
+- **Prior learning signals**: Existing entries in `meta/{phase}/learnings.md` reference the same domain concept
+
+### 2. Score Confidence
+
+For each detected gap, assign a confidence level:
+
+- **HIGH**: 3+ source files with the pattern AND no existing L2 file AND session explicitly dealt with this domain
+- **MEDIUM**: Pattern detected in code OR session friction, but not both
+- **LOW**: Weak signal — one mention, tangential evidence, or uncertain domain boundary
+
+### 3. Check Accumulation
+
+Read `meta/{phase}/learnings.md` and look for a `## Context Gaps` section. Count prior entries matching the same domain + phase combination:
+
+- HIGH confidence: promote at 1st occurrence (immediate)
+- MEDIUM confidence: promote at 2nd occurrence
+- LOW confidence: promote at 3rd occurrence
+
+If below threshold, the gap is logged but not proposed for creation.
+
+### 4. Emit Gap Proposals
+
+For gaps that meet their promotion threshold, emit a `context_gap` finding:
+
+```
+### Finding N: Context gap — [domain name]
+- **Target**: `context/{phase}/{domain}.md` (new file)
+- **Type**: context_gap
+- **Domain**: [kebab-case domain name]
+- **Phase**: [phase where this context belongs]
+- **Confidence**: HIGH | MEDIUM | LOW
+- **Evidence**:
+  - [specific evidence item 1]
+  - [specific evidence item 2]
+  - [specific evidence item 3]
+- **Suggested sections**:
+  - [section heading 1]
+  - [section heading 2]
+- **Proposed content**: [2-5 sentences of seed content extracted from session evidence]
+- **Accumulation**: [Nth occurrence / threshold] (e.g., "1/1 for HIGH" or "2/2 for MEDIUM")
+```
+
+For gaps below threshold, emit as a standard finding with type `context_gap_logged`:
+
+```
+### Finding N: Context gap logged — [domain name]
+- **Target**: `meta/{phase}/learnings.md` (append to Context Gaps section)
+- **Type**: context_gap_logged
+- **Domain**: [domain name]
+- **Phase**: [phase]
+- **Confidence**: [level]
+- **Evidence**: [brief evidence summary]
+- **Accumulation**: [Nth occurrence / threshold needed]
+```
+
 ## Hierarchy Awareness
 
 Context docs follow a progressive enhancement hierarchy. When reviewing:
@@ -58,7 +123,7 @@ Format:
 
 ### Finding 1: [Brief title]
 - **Target**: [L1 or L2 file path]
-- **Type**: accuracy | extension | gap | orphan | staleness
+- **Type**: accuracy | extension | gap | orphan | staleness | context_gap | context_gap_logged
 - **Discrepancy**: [What the artifact shows vs what the doc says]
 - **Evidence**: [File/artifact that revealed this]
 - **Proposed change**: [Exact text or section to update]
@@ -85,4 +150,4 @@ No changes needed. Documentation accurately reflects current state.
 - **Preserve structure** — suggest edits within existing document structure
 - **Mark uncertainty** — use `[inferred]` for low-confidence findings
 - **Design prescriptions** — check if the design doc established patterns that should be documented
-- **Flag gaps, don't fill them** — suggest new L2 files but don't write their content
+- **Detect and score gaps** — use the Gap Detection Protocol to emit structured `context_gap` or `context_gap_logged` findings with confidence scores and seed content
