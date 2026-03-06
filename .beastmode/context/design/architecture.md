@@ -15,7 +15,7 @@ Three domains with distinct purposes: State (feature workflow, `.beastmode/state
 
 1. NEVER mix domain concerns — State tracks features, Context documents knowledge, Meta captures learnings
 2. ALWAYS write phase artifacts to `state/` — retro promotes to `context/` and `meta/`
-3. Write protection: phases write L3 (`state/`) only; retro gates L0/L1/L2 promotion
+3. Write protection: phases write `state/` only; retro promotes to context and meta
 
 ## Sub-Phase Anatomy
 Every workflow phase follows: 0-prime (read-only context load), 1-execute (action phase), 2-validate (quality check), 3-checkpoint (persistence + retro).
