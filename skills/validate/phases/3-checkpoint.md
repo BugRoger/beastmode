@@ -4,9 +4,9 @@
 
 Save to `.beastmode/state/validate/YYYYMMDD-{feature}.md`
 
-## 2. Capture Learnings
+## 2. Phase Retro
 
-If quality insights discovered, update `.beastmode/meta/VALIDATE.md`.
+@../_shared/retro.md
 
 ## 3. Session Tracking
 

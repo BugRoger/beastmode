@@ -26,15 +26,9 @@ Update `.agents/status/YYYY-MM-DD-<topic>.md`:
 
 Also add Design phase entry under `## Executed Phases`.
 
-## 3. Capture Learnings
+## 3. Phase Retro
 
-If notable design decisions or patterns discovered, update `.beastmode/meta/DESIGN.md`:
-```markdown
-## Learnings
-
-### YYYY-MM-DD: <feature>
-- <pattern or decision worth remembering>
-```
+@../_shared/retro.md
 
 ## 4. Session Tracking
 

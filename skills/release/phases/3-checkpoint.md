@@ -4,9 +4,9 @@
 
 Add Release phase entry to status file. Remove `## Worktree` section if merged or discarded.
 
-## 2. Capture Learnings
+## 2. Phase Retro
 
-If notable patterns discovered during release, update `.beastmode/meta/RELEASE.md`.
+@../_shared/retro.md
 
 ## 3. Session Tracking
 

@@ -6,9 +6,9 @@ Update `.agents/status/YYYY-MM-DD-<topic>.md`:
 - Add Implement phase entry
 - Record tasks completed
 
-## 2. Capture Learnings
+## 2. Phase Retro
 
-If notable implementation patterns discovered, update `.beastmode/meta/IMPLEMENT.md`.
+@../_shared/retro.md
 
 ## 3. Session Tracking
 
