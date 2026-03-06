@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.12 — The Argument Docs (Mar 2026)
+
+- **Retro loop doc** — Dedicated argumentative essay at `docs/retro-loop.md` covering the self-improving retro mechanism
+- **Configurable gates doc** — Dedicated argumentative essay at `docs/configurable-gates.md` covering progressive autonomy through gates
+- **README integration** — All three differentiator sections in "What's Different" now link to their full argument docs
+
+
 ### v0.14.9 — The Banner Fix, For Real This Time (Mar 2026)
 
 - **L0 Prime Directive** — Banner display instruction moved to BEASTMODE.md (autoloaded) with BEFORE-priority wording
