@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.17 — The Visual Language v2 (Mar 2026)
+
+- **Handoff guidance restored** — Added missing handoff guidance thresholds to visual-language.md
+- **Context report tightened** — Explicit "single code block" and "after the code block" rendering instructions in context-report.md
+
+
 ### v0.14.16 — The Split-Brain Fix (Mar 2026)
 
 - **Context report authority cleanup** — Eliminated duplication between visual-language.md and context-report.md; each file now has clear ownership boundaries
