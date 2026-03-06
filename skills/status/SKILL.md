@@ -15,3 +15,5 @@ View and manage session status files.
 ## Phases
 
 1. [Display](phases/1-display.md) — Parse args and show status
+
+@_shared/task-runner.md

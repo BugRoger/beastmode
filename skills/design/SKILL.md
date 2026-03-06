@@ -13,7 +13,9 @@ No implementation until design is approved. [→ Why](references/constraints.md)
 
 ## Phases
 
-0. [Research](phases/0-research.md) — (Optional) Discover unknowns via keywords/complexity
-1. [Explore](phases/1-explore.md) — Understand context and requirements
-2. [Design](phases/2-design.md) — Propose and refine solution
-3. [Document](phases/3-document.md) — Write doc and handoff to /plan
+0. [Prime](phases/0-prime.md) — Load context, research if needed
+1. [Execute](phases/1-execute.md) — Propose approaches, iterate design
+2. [Validate](phases/2-validate.md) — Completeness check, user approval
+3. [Checkpoint](phases/3-checkpoint.md) — Save doc, update status, suggest /plan
+
+@_shared/task-runner.md

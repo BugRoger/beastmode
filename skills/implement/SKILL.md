@@ -5,7 +5,7 @@ description: Execute implementation plans — implementing, coding, building. Us
 
 # /implement
 
-Create isolated worktree, load plan, execute tasks, merge back, cleanup.
+Load plan, execute tasks in cycle worktree, verify completion.
 
 <HARD-GATE>
 No EnterPlanMode or ExitPlanMode — worktree isolation only. [→ Why](references/constraints.md)
@@ -13,7 +13,9 @@ No EnterPlanMode or ExitPlanMode — worktree isolation only. [→ Why](referenc
 
 ## Phases
 
-1. [Setup](phases/1-setup.md) — Create worktree, verify tests
-2. [Prepare](phases/2-prepare.md) — Load plan, create task list
-3. [Execute](phases/3-execute.md) — Run tasks, verify steps
-4. [Complete](phases/4-complete.md) — Merge, cleanup, handoff
+0. [Prime](phases/0-prime.md) — Load plan, enter worktree
+1. [Execute](phases/1-execute.md) — Run tasks, write code
+2. [Validate](phases/2-validate.md) — Run tests, check build
+3. [Checkpoint](phases/3-checkpoint.md) — Update status, suggest /validate
+
+@_shared/task-runner.md

@@ -1,0 +1,8 @@
+# Release Context L2 Files
+
+This directory will contain release-specific context files as they are created.
+
+Examples:
+- versioning.md - Version numbering conventions
+- changelog-format.md - Changelog formatting rules
+- deployment.md - Deployment procedures

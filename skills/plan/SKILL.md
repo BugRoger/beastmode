@@ -13,7 +13,9 @@ No EnterPlanMode or ExitPlanMode — this skill manages its own flow. [→ Why](
 
 ## Phases
 
-0. [Research](phases/0-research.md) — (Optional) Discover unknowns via keywords/complexity
-1. [Prepare](phases/1-prepare.md) — Read design, explore codebase
-2. [Write](phases/2-write.md) — Create tasks with TDD steps
-3. [Handoff](phases/3-handoff.md) — Ask user, provide /implement command
+0. [Prime](phases/0-prime.md) — Load context, read design doc
+1. [Execute](phases/1-execute.md) — Create tasks with steps
+2. [Validate](phases/2-validate.md) — Completeness check, user approval
+3. [Checkpoint](phases/3-checkpoint.md) — Save plan, suggest /implement
+
+@_shared/task-runner.md

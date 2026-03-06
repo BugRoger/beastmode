@@ -1,14 +1,17 @@
 ---
 name: release
-description: Create changelogs and release notes — releasing, documenting, shipping. Use after implement. Generates changelog and release notes from commits.
+description: Create changelogs and release notes — releasing, documenting, shipping. Use after validate. Detects version, categorizes commits, generates changelog, commits, merges or creates PR.
 ---
 
 # /release
 
-Create release notes, update changelog, suggest version bump.
+Detect version, categorize commits, generate changelog, commit, merge or PR, tag.
 
 ## Phases
 
-1. [Analyze](phases/1-analyze.md) — Gather and categorize commits
-2. [Generate](phases/2-generate.md) — Write changelog and release notes
-3. [Publish](phases/3-publish.md) — Commit and provide tag commands
+0. [Prime](phases/0-prime.md) — Load artifacts, determine version
+1. [Execute](phases/1-execute.md) — Categorize, changelog, commit, merge/PR, tag
+2. [Validate](phases/2-validate.md) — Verify release completeness
+3. [Checkpoint](phases/3-checkpoint.md) — Retro, status update
+
+@_shared/task-runner.md
