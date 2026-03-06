@@ -8,7 +8,7 @@ Opinionated workflow patterns that survived contact with reality.
 
 [![GitHub stars](https://img.shields.io/github/stars/BugRoger/beastmode?style=flat-square)](https://github.com/BugRoger/beastmode/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
+[![Version](https://img.shields.io/badge/version-0.5.5-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
 
 </div>
 
@@ -38,7 +38,6 @@ Beastmode fixes this. Five phases. Context persists. Patterns compound.
 ```
 /design → /plan → /implement → /validate → /release
 ```
-
 **Quick fix?** Implement, done.
 **New feature?** Design the approach. Plan the tasks. Implement. Validate. Release.
 **Multi-session?** Each phase writes artifacts to `.beastmode/`. Next session picks up where you left off.

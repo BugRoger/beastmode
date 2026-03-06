@@ -36,4 +36,4 @@ DO NOT call EnterPlanMode or ExitPlanMode.
 <!-- HITL-GATE: transitions.plan-to-implement | TRANSITION -->
 @../_shared/transition-check.md
 
-Next skill: `/implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+Next skill: `beastmode:implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
