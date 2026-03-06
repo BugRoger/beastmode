@@ -200,4 +200,28 @@ After applying L2 changes, propagate summaries upward:
    - Remove entries where the link target is missing
    - Flag entries where the one-liner no longer matches the linked file's goal
 
-L0 (BEASTMODE.md) updates are handled by /release, not by the retro bubble.
+## 10. L0 Promotion (Release Phase Only)
+
+If running in the release phase, check for an L0 update proposal:
+
+1. Look for `.beastmode/state/release/YYYY-MM-DD-vX.Y.Z-l0-proposal.md`
+2. If no proposal file exists → skip (no L0 changes needed)
+3. If proposal exists → apply the proposed sections to `.beastmode/BEASTMODE.md`:
+   - Replace **Capabilities** section with proposed version
+   - Replace **How It Works** section with proposed version (if present in proposal)
+
+### 10.1 [GATE|release.beastmode-md-approval]
+
+Read `.beastmode/config.yaml` → resolve mode for `release.beastmode-md-approval`.
+Default: `auto`.
+
+#### [GATE-OPTION|human] Ask User
+
+**Significance check:**
+- If Capabilities or How It Works changed → present the before/after diff for user approval
+- If neither changed → auto-apply silently
+
+#### [GATE-OPTION|auto] Auto-Apply
+
+Auto-apply all changes.
+Log: "Gate `release.beastmode-md-approval` → auto: updated BEASTMODE.md with N new capabilities"
