@@ -15,9 +15,11 @@ Build task list with:
 - `isValidation`: true if title contains "Validate", "Approval", "Check", or "Verify"
 - `parent`: Parent task id for nested tasks (null for top-level)
 
+**Linked items are opaque**: For items with `[Link](path)` syntax, create a single task entry. **Do NOT read or parse the linked file yet.** Store the path on the task for lazy expansion during execution.
+
 ## 2. Initialize TodoWrite
 
-Create TodoWrite entries for all tasks:
+Create TodoWrite entries for top-level tasks only (linked sub-phases are not yet expanded):
 - First task: `status: in_progress`
 - All others: `status: pending`
 
@@ -43,7 +45,7 @@ LOOP:
   # --- Lazy expansion ---
   IF task has a linked file (from [Link](path) syntax) AND task has no children yet:
     Read the linked file
-    Parse ## N. Title headings into child tasks
+    Parse top-level ## N. Title headings into child tasks (ignore ### and deeper)
     Insert children into todo list after parent (ids: "{parent.id}.{N}")
     Set first child to "in_progress"
     Update TodoWrite
@@ -70,6 +72,11 @@ LOOP:
   # --- Parent completion ---
   IF task.parent exists AND all siblings completed:
     Set parent.status = "completed"
+
+  # --- Collapse completed children ---
+  IF task.parent exists AND parent.status == "completed":
+    Remove all child entries of parent from TodoWrite list
+    (Parent stays as "completed" for progress tracking)
 
   Update TodoWrite
 
