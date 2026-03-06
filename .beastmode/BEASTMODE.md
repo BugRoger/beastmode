@@ -29,52 +29,14 @@ When greeting at session start, factor in time of day and project state.
 
 ## Workflow
 
-Five phases, always in order: **design** -> **plan** -> **implement** -> **validate** -> **release**.
+Five phases: **design** -> **plan** -> **implement** -> **validate** -> **release**.
 
-Each phase follows sub-phase anatomy: **prime** -> **execute** -> **validate** -> **checkpoint**.
+## Knowledge
 
-Invoke phases via slash commands: `/beastmode:design`, `/beastmode:plan`, `/beastmode:implement`, `/beastmode:validate`, `/beastmode:release`.
-
-## Knowledge Hierarchy
-
-Four levels. Higher levels summarize lower levels. Only L0 is autoloaded.
-
-| Level | Content | Path |
-|-------|---------|------|
-| **L0** | System manual (this file) | `.beastmode/BEASTMODE.md` |
-| **L1** | Phase summaries | `.beastmode/context/{PHASE}.md`, `.beastmode/meta/{PHASE}.md` |
-| **L2** | Full detail per topic | `.beastmode/context/{phase}/{domain}.md` |
-| **L3** | Records | `.beastmode/context/{phase}/{domain}/{record}.md` |
-
-### Domains
-
-| Domain | Path | Purpose |
-|--------|------|---------|
-| **Context** | `context/` | Published knowledge. What the project knows. |
-| **Meta** | `meta/` | Learnings, SOPs, overrides. How the project works. |
-| **State** | `state/` | Checkpoint artifacts. What happened when. |
-
-All paths relative to `.beastmode/`.
-
-### File Naming
-- **UPPERCASE.md** — Invariant meta files (always exist, same structure)
-- **lowercase.md** — Variant files (plans, research, date-prefixed)
-
-### Write Protection
-
-Phases write artifacts to `state/` only. Compaction and promotion to L0, L1, and L2 happens exclusively through retro.
-
-| Writer | Allowed Targets | Mechanism |
-|--------|----------------|-----------|
-| Phase checkpoints | `state/` | Direct write |
-| Retro (embedded in checkpoints) | L1, L2 | Bottom-up promotion |
-| Release (L0 rollup) | L0 | Release-time L1->L0 promotion |
-| Init (`/beastmode init`) | L0, L1, L2 | Bootstrap exemption |
-
-No phase may write to `context/` or `meta/` files directly. Retro is the sole gatekeeper for upward knowledge promotion.
+Four-level hierarchy (L0-L3). Only L0 autoloads.
+Phases write to state/ only.
+Retro promotes upward. Release rolls up to L0.
 
 ## Configuration
 
-`.beastmode/config.yaml` controls gate behavior. Gates are decision points in each phase where the workflow can pause for human input or let Claude decide.
-
-Two settings per gate: `human` (ask the user) or `auto` (Claude decides).
+`.beastmode/config.yaml` controls gate behavior.

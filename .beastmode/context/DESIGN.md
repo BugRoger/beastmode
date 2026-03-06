@@ -10,7 +10,7 @@ Product vision, four key differentiators, and capabilities. Beastmode turns Clau
 3. Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, /beastmode command, deadpan persona
 
 ## Architecture
-System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion.
+System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion. L0 is minimal: persona spec and workflow map only; operational details live in skills.
 
 1. ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 2. NEVER use @imports between hierarchy levels — convention-based paths only

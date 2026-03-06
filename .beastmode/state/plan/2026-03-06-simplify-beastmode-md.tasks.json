@@ -1,0 +1,8 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-06-simplify-beastmode-md.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Rewrite BEASTMODE.md", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Update persona.md to pointer", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-06T15:00:00Z"
+}

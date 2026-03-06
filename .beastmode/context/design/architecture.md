@@ -3,7 +3,7 @@
 System design for beastmode. L0/L1/L2/L3 progressive loading hierarchy with standardized format per level. Three data domains (State/Context/Meta). Worktree isolation for implementation. Squash-per-release commits. Two-tier HITL gate system with task-runner enforcement. Artifact-scoped retro reconciliation. Write-protected knowledge promotion.
 
 ## Knowledge Hierarchy
-Four-level progressive enhancement: L0 (system manual, autoloaded), L1 (phase summaries, loaded at prime), L2 (full detail, on-demand), L3 (records, linked from L2). Each level follows standardized format: summary paragraph, sections grouped by child-level topics, numbered rules, convention paths.
+Four-level progressive enhancement: L0 (system manual, autoloaded), L1 (phase summaries, loaded at prime), L2 (full detail, on-demand), L3 (records, linked from L2). Each level follows standardized format: summary paragraph, sections grouped by child-level topics, numbered rules, convention paths. L0 contains only persona spec and high-level workflow map; operational details (hierarchy paths, write protection, gate mechanics, sub-phase anatomy) live in skills.
 
 1. ALWAYS follow progressive loading — L0 autoloads, L1 at prime, L2 on-demand, L3 linked from L2
 2. NEVER use @imports between levels — convention-based paths only
@@ -11,6 +11,7 @@ Four-level progressive enhancement: L0 (system manual, autoloaded), L1 (phase su
 4. L1 files use UPPERCASE.md naming, L2 use lowercase.md
 5. ALWAYS use absolute directives (NEVER/ALWAYS) for non-negotiable rules in L1/L2 files
 6. L3 records ALWAYS have four sections: Context, Decision, Rationale, Source
+7. L0 contains persona + map only — operational details belong in skills, not in the autoloaded system manual
 
 ## Data Domains
 Three domains with distinct purposes: State (feature workflow, `.beastmode/state/`), Context (published knowledge, `.beastmode/context/`), Meta (learnings/SOPs/overrides, `.beastmode/meta/`). Meta uses three L2 files per phase: `sops.md` (reusable procedures), `overrides.md` (project-specific rules), `learnings.md` (session-specific, append-only).
