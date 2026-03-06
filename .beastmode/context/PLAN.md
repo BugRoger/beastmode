@@ -10,13 +10,9 @@ Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill ma
 3. NEVER use @imports between hierarchy levels — convention-based paths described in BEASTMODE.md
 4. ALWAYS use gate syntax: `## N. [GATE|namespace.gate-id]`
 
-plan/conventions.md
-
 ## Structure
 Directory layout with `.beastmode/` as central context hub, `skills/` for agent workflows, `agents/` for subagent documentation. Key file locations for entry points, configuration, core logic, and knowledge base.
 
 1. ALWAYS colocate skill interface (SKILL.md) with implementation in `/skills/{verb}/`
 2. NEVER store context outside `.beastmode/` — it's the single source of truth
 3. Agent prompts live in `/agents/`, shared utilities in `skills/_shared/`
-
-plan/structure.md

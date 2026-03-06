@@ -4,12 +4,7 @@ Learnings from plan phases. Key pattern: investing in detailed design documents 
 
 ## SOPs
 No plan SOPs established yet. SOPs will be added by retro classification or auto-promoted from recurring learnings.
-plan/sops.md
-
 ## Overrides
 No project-specific plan overrides yet. Overrides will be added by retro classification or user.
-plan/overrides.md
-
 ## Learnings
 Two key learnings: detailed designs enable 1:1 task mapping, and research files can substitute for formal design docs when they contain sufficient context.
-plan/learnings.md

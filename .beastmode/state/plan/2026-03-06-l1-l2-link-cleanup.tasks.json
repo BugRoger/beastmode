@@ -1,0 +1,18 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-06-l1-l2-link-cleanup.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add L1 format rule to retro agent", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Remove L2 paths from context/DESIGN.md", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Remove L2 paths from context/VALIDATE.md", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Remove L2 paths from context/PLAN.md", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Remove L2 paths from context/IMPLEMENT.md", "status": "pending"},
+    {"id": 5, "subject": "Task 5: Remove L2 paths from context/RELEASE.md", "status": "pending"},
+    {"id": 6, "subject": "Task 6: Remove L2 paths from meta/DESIGN.md", "status": "pending"},
+    {"id": 7, "subject": "Task 7: Remove L2 paths from meta/VALIDATE.md", "status": "pending"},
+    {"id": 8, "subject": "Task 8: Remove L2 paths from meta/PLAN.md", "status": "pending"},
+    {"id": 9, "subject": "Task 9: Remove L2 paths from meta/IMPLEMENT.md", "status": "pending"},
+    {"id": 10, "subject": "Task 10: Remove L2 paths from meta/RELEASE.md", "status": "pending"},
+    {"id": 11, "subject": "Task 11: Final cross-file verification", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-06T20:00:00Z"
+}

@@ -55,7 +55,7 @@ Does the artifact introduce a concept that has no L2 home?
 2. If the artifact's primary topic doesn't map to any existing L2 → propose new L2 file:
    - Filename: `context/{phase}/{domain}.md`
    - Seed content: extracted from the artifact's key decisions and approach
-   - Parent L1 section: summary to add to `context/{PHASE}.md`
+   - Parent L1 section: heading + summary paragraph + numbered rules to add to `context/{PHASE}.md` (no L2 file path — L1 sections are self-contained)
 
 This is NOT gap detection. No confidence scoring, no accumulation thresholds. Just: "this concept has no doc home, here's a draft."
 
@@ -92,3 +92,4 @@ No changes needed. L1 summaries already account for this artifact.
 - **Preserve structure** — suggest edits within existing document structure
 - **No gap detection** — only recognize obvious new areas, don't scan for patterns
 - **No confidence scoring** — propose changes or don't; no HIGH/MEDIUM/LOW
+- **L1 format** — L1 sections contain heading + summary paragraph + numbered rules only. No L2 file paths, no @imports, no cross-level references of any kind

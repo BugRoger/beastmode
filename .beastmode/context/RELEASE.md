@@ -9,5 +9,3 @@ Versioning strategy, commit message format, and archive tagging conventions.
 2. ALWAYS archive feature branch tips as `archive/feature/<name>` before deletion
 3. ALWAYS follow commit format: `Release vX.Y.Z — Title` with categorized sections
 4. NEVER skip retro before the release commit
-
-release/versioning.md

@@ -9,8 +9,6 @@ Product vision, four key differentiators, and capabilities. Beastmode turns Clau
 2. NEVER skip the retro sub-phase — it's how the system learns and improves
 3. Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, /beastmode command, deadpan persona
 
-design/product.md
-
 ## Architecture
 System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion.
 
@@ -21,16 +19,12 @@ System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per leve
 5. NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 6. Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
 
-design/architecture.md
-
 ## Task Runner
 Shared utility that parses markdown skill files into hierarchical tasks and enforces step completion through a depth-first execution loop. Lazy expansion, structural gate enforcement, validation auto-reset.
 
 1. ALWAYS track tasks via TodoWrite — one in_progress at a time
 2. NEVER expand linked files eagerly — lazy expansion on first visit only
 3. Gate steps (`## N. [GATE|...]`) are structural — cannot be bypassed
-
-design/task-runner.md
 
 ## Release Workflow
 Version detection, commit sequencing, changelog generation, and merge strategy. Retro runs inside execute before commit to ensure meta changes are included.
@@ -39,15 +33,11 @@ Version detection, commit sequencing, changelog generation, and merge strategy. 
 2. NEVER make interim commits during feature work — single commit at release
 3. ALWAYS archive branch tip before squash merge
 
-design/release-workflow.md
-
 ## Phase Transitions
 Self-chaining mechanism between phases. Auto-transitions use fully-qualified Skill tool calls with context threshold checks.
 
 1. ALWAYS check context threshold before auto-advancing
 2. NEVER auto-advance below threshold — print restart instructions and STOP
-
-design/phase-transitions.md
 
 ## Tech Stack
 Claude Code plugin platform with markdown + YAML frontmatter for skill definitions. No runtime dependencies — pure agentic workflow system interpreted directly by Claude Code.
@@ -55,5 +45,3 @@ Claude Code plugin platform with markdown + YAML frontmatter for skill definitio
 1. NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
 2. ALWAYS use markdown + YAML frontmatter for skill definitions
 3. Distribution via Claude Code marketplace
-
-design/tech-stack.md

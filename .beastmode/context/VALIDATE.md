@@ -7,5 +7,3 @@ Quality gate definitions — criteria, thresholds, and pass/fail rules for the v
 
 1. ALWAYS run all project-specific checks (tests, lint, type checks) before release
 2. NEVER proceed to release with failing quality gates
-
-validate/quality-gates.md
