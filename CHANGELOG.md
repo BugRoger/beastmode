@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.12 — The Argument Docs (Mar 2026)
+
+- **Retro loop doc** — Dedicated argumentative essay at `docs/retro-loop.md` covering the self-improving retro mechanism
+- **Configurable gates doc** — Dedicated argumentative essay at `docs/configurable-gates.md` covering progressive autonomy through gates
+- **README integration** — All three differentiator sections in "What's Different" now link to their full argument docs
+
+
 ### v0.14.11 — The Declutter, Part II (Mar 2026)
 
 - **L0 simplification** — BEASTMODE.md cut from 81 to 42 lines; removed knowledge hierarchy tables, domain definitions, write protection table, sub-phase anatomy, slash commands, and configuration explanation

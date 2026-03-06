@@ -86,6 +86,8 @@ Recurring learnings promote to SOPs after three sessions. Each cycle sharpens Cl
 
 <img src="docs/assets/retro-bubble-up.svg" alt="Retro Bubble-Up" width="100%">
 
+[Read the full argument.](docs/retro-loop.md)
+
 **Progressive autonomy through configurable gates.**
 
 Most AI coding tools offer two modes: manual or autonomous. No middle ground.
@@ -106,6 +108,8 @@ transitions:
   design-to-plan: auto            # auto-chain between phases
   plan-to-implement: auto
 ```
+
+[Read the full argument.](docs/configurable-gates.md)
 
 Same workflow, different trust level. The structure scales from supervised to autonomous.
 
