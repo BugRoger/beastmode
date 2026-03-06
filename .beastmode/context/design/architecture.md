@@ -169,10 +169,10 @@ Classified knowledge informs future sessions via L1 loading
 - Decision: Create isolated git worktrees in .beastmode/worktrees/ for execution, merge back on completion
 - Rationale: Git worktrees provide branch isolation; enables concurrent work; clean merge on success
 
-**Unified Cycle Commit Architecture:**
-- Context: Multiple phase-specific commits per feature cycle create noise; worktree isolation enables consolidation
-- Decision: Design creates worktree, all phases write artifacts without committing, Release owns single commit + merge + cleanup
-- Rationale: Reduces commit noise; maintains WIP safety via worktree isolation; clear endpoint for merge/cleanup logic; single commit simplifies history
+**Squash-Per-Release Commit Architecture:**
+- Context: Multiple phase-specific commits per feature cycle create noise on main; branch history leaks via regular merge
+- Decision: Release uses `git merge --squash` to collapse entire feature branch into one commit on main. Feature branch tips archived as `archive/feature/<name>` tags before deletion. Commit message follows GitHub release style: `Release vX.Y.Z — Title` with categorized Features/Fixes/Artifacts sections.
+- Rationale: One commit per version on main; full branch history preserved via archive tags; `git log --oneline main` becomes a scannable release history
 
 **Two-Level CLAUDE.md Wiring:**
 - Context: Need minimal project brain in root while keeping comprehensive docs organized
@@ -208,6 +208,7 @@ Classified knowledge informs future sessions via L1 loading
 ## Related Decisions
 - Bootstrap discovery auto-populates context. See [bootstrap-discovery-v2](../../state/design/2026-03-01-bootstrap-discovery-v2.md)
 - Unified cycle commit reduces noise. See [unified-cycle-commit](../../state/design/2026-03-01-unified-cycle-commit.md)
+- Squash-per-release commit architecture. See [squash-per-release](../../state/design/2026-03-05-squash-per-release.md)
 - Skill anatomy refactored to 4 sub-phases. See [skill-anatomy-refactor](../../state/design/2026-03-04-skill-anatomy-refactor.md)
 - Git branching with feature worktrees. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
 - Progressive L1 docs with fractal hierarchy. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)

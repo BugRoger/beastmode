@@ -59,6 +59,8 @@ beastmode/
 │   └── retro-meta.md      # Phase retro: meta learnings agent
 ├── docs/                    # External-facing deep-dive documentation
 │   └── progressive-hierarchy.md  # Why hierarchical context beats flat retrieval
+├── scripts/                 # One-time utility scripts
+│   └── squash-history.sh   # Retroactive history rewrite (one commit per version tag)
 ├── hooks/                 # Plugin lifecycle hooks
 │   └── session-start.sh   # Beastmode activation banner
 ├── .claude/               # Claude IDE local settings

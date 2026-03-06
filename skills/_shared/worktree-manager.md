@@ -90,12 +90,23 @@ worktree_abs=$(pwd)
 feature_branch=$(git branch --show-current)
 main_repo=$(git rev-parse --show-toplevel)/..
 
+# Archive the branch tip before squash merge
 cd "$main_repo"
 git checkout main
 git pull
-git merge "$feature_branch"
+git tag "archive/$feature_branch"
+git merge --squash "$feature_branch"
+# Do NOT commit here — the release skill's commit step handles the message
+```
+
+After the squash merge stages changes, the release commit step (1-execute step 10) creates the single commit with the GitHub release style message.
+
+Cleanup after commit:
+```bash
 git worktree remove "$worktree_abs"
 git branch -d "$feature_branch"
+# Remote cleanup (if branch was pushed)
+git push origin --delete "$feature_branch" 2>/dev/null || true
 ```
 
 ### Option 2: Push and Create PR
