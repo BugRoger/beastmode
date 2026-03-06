@@ -33,17 +33,5 @@ Learnings from design phases. Key patterns: competitive analysis beats brainstor
 - **Research platform constraints before locking architecture**: The initial design assumed `/clear` could be issued programmatically. Web research revealed it's user-only, forcing a redesign from `/run` orchestrator to self-chaining transitions. Always verify platform capabilities before locking architectural decisions.
 - **Concrete per-gate analysis eliminates bad abstractions**: Walking through each gate with "what does skip actually do here?" revealed `skip` was either dangerous (approvals) or redundant (transitions). Concrete case-by-case analysis beats abstract taxonomy debates for eliminating unnecessary complexity.
 
-### 2026-03-04: readme-rework
-- **README inconsistencies compound silently**: The README referenced 3 non-existent skills (/prime, /retro, /research) and omitted /validate. Nobody caught this because internal docs (CLAUDE.md, architecture.md) are correct. README drifts when it's not part of the release checklist. Consider adding README accuracy to /release validation.
-- **Competitive research quantifies intuition**: "Status tables with incomplete items hurt credibility" is an opinion. "No repo above 24k stars shows incomplete features" is evidence. The research agent turned subjective design instincts into data-backed decisions. Use research for any design where the user states a measurable goal (stars, adoption, engagement).
-
-### 2026-03-04: product-md-rollup
-- **Separation of propagation concerns simplifies reasoning**: Splitting L2→L1 (retro, every phase) from L1→L0 (release, at ship time) eliminated the "skip if minor" ambiguity that caused L0 to never update. When two mechanisms share responsibility for an outcome, neither takes ownership. Assign each level transition to exactly one workflow step.
-
-### 2026-03-04: vision-readme-consolidation
-- **Audit before consolidation surfaces orphaned content**: Comparing VISION.md section-by-section against README + PRODUCT.md + architecture.md revealed 6 sections with no home (Progressive Autonomy, SAFe positioning, Roadmap, "What Beastmode Is NOT", parallel features, agent teams). Without the audit, these would have been silently lost when deleting VISION.md.
-- **"README is REAL" as a content policy**: The user's principle — README and PRODUCT.md contain only shipped features, aspirational content goes to ROADMAP.md — eliminates the recurring design question of "where does this future thing go?" Apply this rule to all future content decisions.
-
-### 2026-03-04: fix-auto-transitions
-- **"Invoke" is not an instruction — "Call the Skill tool" is**: transition-check.md said "invoke the next skill" but Claude never actually called the Skill tool because the instruction was ambiguous. Superpowers works because it says "**REQUIRED SUB-SKILL:** Use superpowers-extended-cc:skill-name" — explicit tool-call language triggers the behavior. When designing agentic instructions, name the exact tool and parameters, not just the intent.
-- **Platform capability verification should happen at design time, not implementation time**: The HITL gate config design assumed `/compact` could be called programmatically but never verified. This became the second platform constraint miss (after `/clear`). Checklist item for future designs: "Can each referenced command be invoked from within a skill?"
+### 2026-03-04: worktree-session-discovery
+- **Cross-session state loss is a design gap, not a bug**: When a mechanism relies on in-session context (like the feature name derived during /design), it will silently break across sessions. Any state that subsequent phases need must be either persisted to disk or re-derivable from arguments. Treat session boundaries as a hard reset.
