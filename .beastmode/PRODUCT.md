@@ -27,10 +27,24 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 - **Unified cycle commits**: All phase artifacts accumulate uncommitted in worktree; /release owns the single commit + merge + cleanup
 - **Release automation**: Version detection, commit categorization, changelog generation, marketplace publishing, and PRODUCT.md rollup
 
+## Where It Fits
+
+Beastmode focuses only on the Development layer of software delivery:
+
+```
+Portfolio:   Strategy → Ideate → Review → Analyse → Prioritize → Epic
+Program:     Epic → Refine → Partition → Estimate → Approve → Feature
+Development: Feature → Design → Plan → Implement → Validate → Story    ← BEASTMODE
+Delivery:    Story → Integrate → Test → Deploy → Release → Product
+Operations:  Product → Support → Patch → Secure → Optimize → Stability
+```
+
+Takes a Feature as input, produces working code as output. Ignores Portfolio (strategy), Program (project management), Delivery (CI/CD), and Operations (monitoring). Different tools, different concerns.
+
 ## How It Works
 
 Each skill (/design, /plan, /implement, /validate, /release) follows the same four sub-phases: prime loads context, execute does the work, validate checks quality, checkpoint saves artifacts and captures learnings. Features flow through `.beastmode/state/` directories as they progress through the workflow. Git worktrees provide isolation — created at /design, inherited through /plan and /implement, merged by /release. The retro sub-phase propagates changes upward through the L2→L1 knowledge hierarchy, while /release rolls up L1 summaries into this L0 document.
 
 ## Current Version
 
-v0.5.3 — 18 releases
+v0.5.4 — 19 releases

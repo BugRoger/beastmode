@@ -8,7 +8,7 @@ Opinionated workflow patterns that survived contact with reality.
 
 [![GitHub stars](https://img.shields.io/github/stars/BugRoger/beastmode?style=flat-square)](https://github.com/BugRoger/beastmode/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.5.3-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
+[![Version](https://img.shields.io/badge/version-0.5.4-blue?style=flat-square)](https://github.com/BugRoger/beastmode)
 
 </div>
 
@@ -21,9 +21,17 @@ claude plugin add beastmode@beastmode-marketplace
 <!-- TODO: Replace with assets/demo.svg when recorded -->
 <!-- ![beastmode demo](assets/demo.svg) -->
 
-## What It Does
+## The Problem
 
-Claude Code is powerful. But without structure, you re-explain your project every session, get inconsistent implementations, and lose work between context windows.
+Three ways AI coding goes sideways:
+
+**Context amnesia.** New session, blank slate. You explain the architecture again. And again. The AI has no memory of yesterday's decisions, last week's refactor, or why you chose that particular pattern. Every conversation starts from zero.
+
+**Scope chaos.** You asked for a login form. You got a login form, a password reset flow, email verification, OAuth integration, and a half-finished admin panel. The AI interpreted "login" as "auth system" and burned 50k tokens before you noticed.
+
+**Process vacuum.** No design phase. No task breakdown. Just straight to code. The AI produces something that works — until you realize it doesn't fit the architecture, violates three conventions, and needs to be rewritten.
+
+These compound. Context loss means the AI can't remember the design decisions that would prevent scope creep. Without process, there's no checkpoint where you can catch any of this before it ships.
 
 Beastmode fixes this. Five phases. Context persists. Patterns compound.
 
@@ -81,6 +89,22 @@ Knowledge compounds. After each cycle, learnings feed back into your project con
 **Scales to complexity.** Trivial change? Skip to implement. Complex feature? Run every phase.
 
 **No ceremony.** No sprint planning. No story points. No standups. Just you, Claude, and the work.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for what's coming next.
+
+## What Beastmode Is NOT
+
+**Not a replacement for engineering judgment.** You still design. Agents assist. Final call is yours.
+
+**Not project management.** No sprints. No story points. No standups. No burndown charts. Just engineering workflow.
+
+**Not prescriptive about your stack.** Works with any language, framework, or toolchain. The workflow is stack-agnostic.
+
+**Not autonomous by default.** You choose the leash length. Start with full control. Loosen as trust builds.
+
+**Not magic.** Crystallized engineering lore — patterns that survived contact with reality. Structure helps. Structure isn't a substitute for thinking.
 
 ## Credits
 
