@@ -1,6 +1,6 @@
 # Release Meta
 
-How to improve the release phase.
+Learnings from release phases. Key pattern: worktrees branch from older commits so version files are always stale — the release flow must sync with main before bumping.
 
 ## Defaults
 

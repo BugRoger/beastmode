@@ -1,6 +1,6 @@
 # Implement Meta
 
-How to improve the implement phase.
+Learnings from implementation phases. No notable patterns captured yet.
 
 ## Defaults
 

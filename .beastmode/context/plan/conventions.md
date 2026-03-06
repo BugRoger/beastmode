@@ -145,3 +145,8 @@ Example: /implement skill with Prime, Execute, Validate, Checkpoint phases
 - AVOID paragraph prose where bullet lists suffice (prefer bullets for readability)
 - NEVER duplicate workflow sequence strings in skill YAML descriptions; centralize in README.md and ARCHITECTURE.md
 - NEVER call `EnterPlanMode`/`ExitPlanMode` in skill definitions outside /plan skill context
+
+## Related Decisions
+- Skill anatomy standardized to 4 sub-phases. See [skill-anatomy-refactor](../../state/design/2026-03-04-skill-anatomy-refactor.md)
+- Skill refactor established current patterns. See [skill-refactor](../../state/design/2026-03-01-skill-refactor.md)
+- Phase context report added to all skills. See [phase-context-report](../../state/design/2026-03-01-phase-context-report.md)

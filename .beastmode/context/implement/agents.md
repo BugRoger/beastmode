@@ -43,3 +43,7 @@ Rules for Claude and agents working on this project. Ensures safe multi-agent co
 - Focus on your edits
 - Avoid guard-rail disclaimers unless truly blocked
 - End with brief "other files present" note only if relevant
+
+## Related Decisions
+- Agent safety rules formalized. See [implement-skill-refactor](../../state/design/2026-03-01-implement-skill-refactor.md)
+- Git branching strategy for feature workflow. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)

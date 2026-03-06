@@ -1,6 +1,6 @@
 # Validate Meta
 
-How to improve the validate phase.
+Learnings from validation phases. No notable patterns captured yet.
 
 ## Defaults
 

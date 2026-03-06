@@ -70,3 +70,7 @@ claude plugin update beastmode@beastmode-marketplace --scope project
 - **Parallel execution:** `/beastmode init --brownfield` spawns parallel Explore agents to auto-populate context
 - **Version:** 0.3.1 (from plugin.json)
 - **Author:** bugroger (github: BugRoger)
+
+## Related Decisions
+- Claude Code is the mandatory platform. See [session-tracking](../../state/design/2026-03-01-session-tracking.md)
+- Markdown-first with no runtime dependencies. See [bootstrap-prefill](../../state/design/2026-03-01-bootstrap-prefill.md)

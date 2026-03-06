@@ -23,6 +23,14 @@ Compare session artifacts against `.beastmode/context/{phase}/` docs. Context do
 3. **Staleness** — Are there references to things that no longer exist?
 4. **Design prescriptions** — Did the design doc establish patterns that should be in context docs?
 
+## Hierarchy Awareness
+
+Context docs follow a progressive enhancement hierarchy. When reviewing:
+
+1. **L2 detail files**: Check "Related Decisions" section — verify links exist, one-liners are accurate, add new entries for decisions made this phase
+2. **L1 summary files**: Check section summaries match their L2 @imports — summaries should be 2-3 sentences capturing the current L2 content
+3. **Report hierarchy drift**: If an L1 summary no longer matches its L2 content, flag as a finding
+
 ## Artifact Sources
 
 - Session artifacts (design docs, plan docs, implementation changes)

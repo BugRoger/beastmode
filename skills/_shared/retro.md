@@ -63,3 +63,22 @@ Show user a summary:
   - Medium/Low confidence: "Review suggested change: [apply / skip / edit]"
 
 If no findings from either agent, report: "Phase retro: no changes needed."
+
+## 6. Bottom-Up Summary Bubble
+
+After applying L2 changes, propagate summaries upward:
+
+1. **Update L1 summaries** — For each L1 file in the current domain (`context/{PHASE}.md`, `meta/{PHASE}.md`, `state/{PHASE}.md`):
+   - Re-read all L2 @imported files
+   - Rewrite the section summary (2-3 sentences) to reflect current L2 content
+   - Rewrite the top-level summary paragraph to reflect all sections
+
+2. **Update L0 summary** — If L1 changes were significant:
+   - Re-read PRODUCT.md
+   - Update the "How It Works" or relevant section to reflect L1 changes
+   - Skip if changes are minor (e.g., only one-liner additions to L2)
+
+3. **Prune stale entries** — In L2 "Related Decisions" sections:
+   - Verify each linked state file still exists
+   - Remove entries where the link target is missing
+   - Flag entries where the one-liner no longer matches the linked file's goal

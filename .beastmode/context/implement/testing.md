@@ -54,3 +54,6 @@ cat .beastmode/context/design/tech-stack.md .beastmode/context/plan/structure.md
 - Parallel agent spawning: Explore agents must respond with markdown (not JSON)
 - Content merge: Generated output must preserve existing content while filling placeholders
 - File write operations: Context files must be updated atomically without corruption
+
+## Related Decisions
+- Bootstrap discovery v2 defined testing approach. See [bootstrap-discovery-v2](../../state/design/2026-03-01-bootstrap-discovery-v2.md)

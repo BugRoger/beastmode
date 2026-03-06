@@ -17,11 +17,16 @@ Each workflow phase follows the standard sub-phase anatomy: `0-prime → 1-execu
 
 ## Knowledge Architecture
 
-### L0/L1/L2 Hierarchy
+### Knowledge Hierarchy (Progressive Enhancement)
 
-- **L0**: Top-level files (PRODUCT.md) — Product vision
-- **L1**: Phase summaries (UPPERCASE.md) — Always loaded by /prime
-- **L2**: Detail files (lowercase/) — Loaded on-demand via @imports
+Each level follows the same fractal pattern: summary + section summaries of children + @imports to the next level.
+
+- **L0**: `PRODUCT.md` — Richest standalone project summary. Sufficient for any agent starting cold.
+- **L1**: Phase summaries (`{domain}/{PHASE}.md`) — Domain summary + section summaries per L2 + @imports. Loaded via `.beastmode/CLAUDE.md` manifest.
+- **L2**: Detail files (`{domain}/{phase}/{detail}.md`) — Full topic detail + "Related Decisions" linking to L3 artifacts.
+- **L3**: State artifacts (`state/{phase}/{date}-{feature}.md`) — Raw design docs, plans, validation records, release notes.
+
+`.beastmode/CLAUDE.md` is a pure manifest (@imports only, no prose) that wires all L0 and L1 files into sessions.
 
 ### Four Data Domains
 
@@ -188,3 +193,10 @@ Learnings inform future sessions via L1 loading
 - .beastmode/ folder structure (user-facing artifact storage)
 - @import syntax for CLAUDE.md (documentation composition)
 - Root CLAUDE.md (entry point for project brain)
+
+## Related Decisions
+- Bootstrap discovery auto-populates context. See [bootstrap-discovery-v2](../../state/design/2026-03-01-bootstrap-discovery-v2.md)
+- Unified cycle commit reduces noise. See [unified-cycle-commit](../../state/design/2026-03-01-unified-cycle-commit.md)
+- Skill anatomy refactored to 4 sub-phases. See [skill-anatomy-refactor](../../state/design/2026-03-04-skill-anatomy-refactor.md)
+- Git branching with feature worktrees. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
+- Progressive L1 docs with fractal hierarchy. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)

@@ -1,6 +1,6 @@
 # Design Meta
 
-How to improve the design phase.
+Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, and fractal consistency (applying the same pattern across all domains) beats special-casing.
 
 ## Defaults
 
@@ -15,3 +15,13 @@ How to improve the design phase.
 - **Parse vs Execute contradiction** (2026-03-04): When a prompt has two mechanisms that touch the same data (Step 1 parses tasks, Step 3 expands tasks), Claude will follow the eager path. Explicit "do NOT" constraints are needed to preserve lazy semantics.
 - **Competitive analysis produces better designs** (2026-03-04): Fetching 2-3 similar systems and doing structured comparison yields more concrete improvements than brainstorming from scratch. Consider making this a pattern for design sessions involving skill/workflow redesign.
 - **Brevity vs structure trade-off** (2026-03-04): GSD's discuss-phase is 5x longer than beastmode's design. The extra length is structured step definitions (gray areas, pacing, scope guardrails). Beastmode's brevity is a strength, but some omissions lose substance not just length. Target: add structure without matching GSD's verbosity.
+
+### 2026-03-04: progressive-l1-docs
+- **Disambiguate directional language early**: "L0 most detailed" was misinterpreted as "L0 has the most prose" when the user meant "L0 is the richest standalone summary." When users describe hierarchies with comparative adjectives, restate the interpretation back before proceeding.
+- **Root entry point should be pure wiring**: CLAUDE.md works best as a manifest of @imports, not as a content file. Content belongs in PRODUCT.md (L0). This separation makes the loading hierarchy explicit and prevents the root file from becoming a dumping ground.
+- **Fractal consistency beats special-casing**: When a structural pattern works for one domain, apply it uniformly to all domains (context, meta, state) without exceptions. The instinct to special-case individual domains adds complexity without value.
+- **User vision may need multiple rounds to formalize**: The user had a clear directional vision but it took several iterative rounds to converge on the exact model (fractal L0/L1/L2). Budget design sessions for this convergence time rather than expecting the model to crystallize in the first exchange.
+
+### 2026-03-04: implement-v2
+- **Plan-implement contract gaps surface through competitive analysis**: Beastmode's /plan produces wave numbers and dependency fields, but /implement ignores them entirely. Fetching external systems (GSD, Superpowers) made this gap obvious. When redesigning a skill, always check what its upstream skill produces and whether the contract is honored.
+- **Stale references survive longer than expected**: The implement execute phase still referenced `.agents/` paths from a pre-.beastmode/ era. Cross-phase path audits should be part of any skill restructure.

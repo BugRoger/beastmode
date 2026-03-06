@@ -134,3 +134,8 @@ beastmode/
 **New Agent Documentation:**
 - Discovery guides: `agents/{guide-name}.md`
 - Agent behaviors: `agents/{agent-type}.md`
+
+## Related Decisions
+- Agents migrated to beastmode namespace. See [agents-to-beastmode-migration](../../state/design/2026-03-04-agents-to-beastmode-migration.md)
+- Prime refactored to read-only. See [lean-prime-refactor](../../state/design/2026-03-04-lean-prime-refactor.md)
+- Progressive L1 docs restructure. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)

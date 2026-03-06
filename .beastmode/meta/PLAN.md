@@ -1,6 +1,6 @@
 # Plan Meta
 
-How to improve the plan phase.
+Learnings from plan phases. Key pattern: investing in detailed design documents with component breakdowns and acceptance criteria makes planning straightforward — the design maps 1:1 to tasks.
 
 ## Defaults
 
