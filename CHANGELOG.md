@@ -4,6 +4,10 @@ All notable changes to beastmode.
 
 ---
 
+### v0.8.1 — The Summary (Mar 2026)
+
+- **Design approval summary** — Executive summary (goal, approach, locked decisions, acceptance criteria) shown before the approval gate so users see the full picture before approving
+
 ### v0.7.0 — The Argument (Mar 2026)
 
 - **Progressive hierarchy essay** — New `docs/progressive-hierarchy.md` makes the case for curated hierarchical context over flat embedding retrieval

@@ -24,7 +24,36 @@ If the design produced fewer than 3 decisions, print:
 
 Do NOT skip approval. Short designs still need the gate.
 
-## 3. User Approval Gate
+## 3. Executive Summary
+
+Before asking for approval, present a consolidated executive summary of the design so the user can review the full picture in one place.
+
+Print:
+
+```
+### Executive Summary
+
+**Goal**: [one-sentence goal from the design]
+
+**Approach**: [one-sentence approach summary]
+
+**Locked Decisions:**
+
+| Decision | Choice |
+|----------|--------|
+| [decision 1] | [choice] |
+| [decision 2] | [choice] |
+| ... | ... |
+
+**Acceptance Criteria:**
+- [ ] [criterion 1]
+- [ ] [criterion 2]
+- [ ] ...
+```
+
+Render this from the decisions and criteria gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
+
+## 4. User Approval Gate
 
 <!-- HITL-GATE: design.design-approval | APPROVAL -->
 @../_shared/gate-check.md
