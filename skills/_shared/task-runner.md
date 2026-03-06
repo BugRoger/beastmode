@@ -30,7 +30,7 @@ Flattened with hierarchy preserved in labels:
 
 ```
 LOOP:
-  task = first task where status == "pending" AND parent is completed (or no parent)
+  task = first task where status == "pending" AND (parent is completed OR parent is in_progress OR no parent)
 
   IF no task found:
     IF all completed → EXIT phase
@@ -39,6 +39,15 @@ LOOP:
 
   Set task.status = "in_progress"
   Update TodoWrite
+
+  # --- Lazy expansion ---
+  IF task has a linked file (from [Link](path) syntax) AND task has no children yet:
+    Read the linked file
+    Parse ## N. Title headings into child tasks
+    Insert children into todo list after parent (ids: "{parent.id}.{N}")
+    Set first child to "in_progress"
+    Update TodoWrite
+    CONTINUE LOOP (children execute first, parent completes when all done)
 
   Execute the task content
 
@@ -57,6 +66,10 @@ LOOP:
         task.status = "blocked"
       ELSE:
         task.status = "pending"
+
+  # --- Parent completion ---
+  IF task.parent exists AND all siblings completed:
+    Set parent.status = "completed"
 
   Update TodoWrite
 

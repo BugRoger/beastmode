@@ -1,0 +1,9 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-04-task-runner-lazy-expansion.md",
+  "tasks": [
+    {"id": 1, "subject": "Task 1: Update Loop Entry Condition", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add Lazy Expansion Block", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Add Parent Completion Block", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-04T00:00:00Z"
+}

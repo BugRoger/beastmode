@@ -44,8 +44,7 @@ beastmode/
 │   ├── research/           # Domain exploration
 │   ├── status/             # Current state & milestones
 │   ├── release/            # Changelogs
-│   └── worktrees/          # Worktree management
-│       └── cycle/          # Feature cycle worktrees
+│   └── worktrees/          # Worktree management (legacy)
 ├── commands/               # Phase interface definitions
 │   ├── design.md           # /design command contract
 │   ├── plan.md             # /plan command contract

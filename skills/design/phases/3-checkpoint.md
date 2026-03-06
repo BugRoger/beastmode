@@ -15,10 +15,16 @@ Include:
 ## 2. Update Status
 
 Update `.agents/status/YYYY-MM-DD-<topic>.md`:
-- Add Worktree section with path and branch
-- Add Design phase entry
 
-**Do NOT commit.** Worktree provides WIP safety.
+**MANDATORY — include the Worktree section** so subsequent phases can find it:
+
+```markdown
+## Worktree
+- **Path**: `.beastmode/worktrees/<feature>`
+- **Branch**: `feature/<feature>`
+```
+
+Also add Design phase entry under `## Executed Phases`.
 
 ## 3. Capture Learnings
 

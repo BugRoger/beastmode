@@ -22,7 +22,7 @@ Documents naming patterns, code style, and project-specific conventions.
 - Example: `skills/bootstrap/`, `skills/bootstrap-discovery/`, `skills/implement/`
 
 **Branches:**
-- Cycle branches: `cycle/<topic>` — spanning entire feature cycle (design → plan → implement → validate → release)
+- Feature branches: `feature/<feature>` — spanning entire feature cycle (design → plan → implement → validate → release)
 
 **Variables:**
 - camelCase: For variables in documentation (e.g., subagentType, bootstrapPath)
@@ -136,7 +136,7 @@ Example: /implement skill with Prime, Execute, Validate, Checkpoint phases
 - AVOID mixing placeholder formats in same section (use consistent brackets across related items)
 - NEVER include code blocks in template placeholders (use `[command]` not `` `command` ``)
 - AVOID single-file skill definitions (structure with SKILL.md in skill directory)
-- NEVER create unnamed worktrees or isolated work without clear integration strategy (approved: cycle worktrees at `.agents/worktrees/cycle/<topic>` managed by design → release phases)
+- NEVER create unnamed worktrees or isolated work without clear integration strategy (approved: feature worktrees at `.beastmode/worktrees/<feature>` managed by design → release phases)
 - AVOID paragraph prose where bullet lists suffice (prefer bullets for readability)
 - NEVER duplicate workflow sequence strings in skill YAML descriptions; centralize in README.md and ARCHITECTURE.md
 - NEVER call `EnterPlanMode`/`ExitPlanMode` in skill definitions outside /plan skill context

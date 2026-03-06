@@ -25,7 +25,3 @@ If a step fails:
 - Stop and report the error
 - Do NOT proceed to next task
 - Suggest fix or ask for guidance
-
-## 4. No Commits
-
-**Do NOT commit during implementation.** Unified commit happens at /release.
