@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "commons@overrides": true,
+    "beastmode@beastmode-marketplace": true
+  }
+}
