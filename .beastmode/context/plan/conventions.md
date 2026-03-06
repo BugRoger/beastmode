@@ -48,6 +48,11 @@ Documents naming patterns, code style, and project-specific conventions.
 - Use @ symbol for internal imports (e.g., @.beastmode/META.md, @phases/setup.md, @references/common-instructions.md)
 - URL-style references with forward slashes for semantic clarity
 
+**@ Import Semantics:**
+- `@file` standalone on its own line = mandatory import (read this file now)
+- `[name](path)` in prose = reference link (consult if useful)
+- NEVER use `@` in flowing prose text — use markdown links instead
+
 **Exports:**
 - Markdown files exported as reference material via @ imports
 - Each SKILL.md declares metadata via YAML frontmatter block (name, description)
@@ -73,7 +78,9 @@ description: <Action words> — <keywords>. Use when <trigger>. <What it does>.
 <One sentence overview.>
 
 <HARD-GATE>
-<Constraint one-liner.> [→ Why](references/constraints.md)
+Read @_shared/task-runner.md. Parse and execute the phases below.
+
+<Skill-specific constraints.> [→ Why](references/constraints.md)
 </HARD-GATE>
 
 ## Phases
@@ -84,10 +91,19 @@ description: <Action words> — <keywords>. Use when <trigger>. <What it does>.
 3. [Checkpoint](phases/3-checkpoint.md) — Save artifacts, capture learnings
 ```
 
+**Gate Syntax:**
+- Gate headings: `## N. [GATE|<namespace>.<gate-id>]`
+- Gate options: `### [GATE-OPTION|mode] Label`
+- Preamble: 2 lines — config lookup instruction + default mode
+- Nested gates use heading depth matching their context (####, #####) — task runner detects `[GATE|` regardless of heading level
+- Config lookup: `gates.{id}` for approval gates, `transitions.{id}` for phase transition gates
+
 **Skill Authoring Rules:**
 - SKILL.md body MUST be under 50 lines
 - Description format: `<Action words> — <keywords>. Use when <trigger>. <What it does>.`
 - HARD-GATE block required if skill has constraints (link to references/constraints.md)
+- Task runner referenced as first line in HARD-GATE block (not trailing @import)
+- No trailing @_shared/task-runner.md at bottom of SKILL.md
 - 4 phases (0-prime, 1-execute, 2-validate, 3-checkpoint), descriptions are terse (3-5 words)
 - One sentence overview after heading
 

@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.12.2 — The Cleanup (Mar 2026)
+
+- **Unified gate syntax** — `[GATE|id]` / `[GATE-OPTION|mode]` replaces old `Gate:` format across all 20 gates
+- **Standardized SKILL.md template** — task runner as first line in HARD-GATE, no trailing @imports
+- **Import semantics** — `@file` = mandatory import, `[name](path)` = reference link, documented in conventions.md
+- **Worktree detection fix** — state file reads now happen after worktree entry in plan/implement primes
+- **Stale steps removed** — `Role Clarity`, `Load Prior Decisions`, prose `@` references cleaned up
+
 ### v0.12.1 — The Audit (Mar 2026)
 
 - **ROADMAP accuracy audit** — moved shipped features (auto-chaining, persona) to Now, clarified partial implementations in Next, added designed-but-unshipped features (dynamic retro walkers), reordered Later by implementation proximity

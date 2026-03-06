@@ -52,14 +52,14 @@ LOOP:
     CONTINUE LOOP (children execute first, parent completes when all done)
 
   # --- Gate detection ---
-  IF task.content matches pattern "Gate: <gate-id>":
+  IF task.content matches pattern "[GATE|<gate-id>]":
     Read `.beastmode/config.yaml`
     Look up gate-id:
       - If gate-id starts with "transitions." → check under `transitions:` key
       - Otherwise → check under `gates:` key (e.g., "design.design-approval" → gates.design.design-approval)
     Resolve mode: config value, or "human" if config missing or key not found
-    Find child tasks (N.1, N.2, etc.) — each starts with a mode label (e.g., "human — ...", "auto — ...")
-    Remove all children whose mode label does NOT match the resolved mode
+    Find child tasks — each has a [GATE-OPTION|mode] label
+    Remove all children whose [GATE-OPTION|mode] does NOT match the resolved mode
     Set the surviving child to "in_progress"
     Update TodoWrite
     CONTINUE LOOP (surviving child executes, parent completes when child done)

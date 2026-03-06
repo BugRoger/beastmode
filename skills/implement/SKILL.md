@@ -8,6 +8,8 @@ description: Execute implementation plans — implementing, coding, building. Us
 Load plan, dispatch subagents per task in wave order, verify completion.
 
 <HARD-GATE>
+Read @_shared/task-runner.md. Parse and execute the phases below.
+
 No EnterPlanMode or ExitPlanMode — worktree isolation only. [→ Why](references/constraints.md)
 </HARD-GATE>
 
@@ -17,5 +19,3 @@ No EnterPlanMode or ExitPlanMode — worktree isolation only. [→ Why](referenc
 1. [Execute](phases/1-execute.md) — Dispatch agents, spec check, wave checkpoints
 2. [Validate](phases/2-validate.md) — Run tests, deviation summary, fix loop
 3. [Checkpoint](phases/3-checkpoint.md) — Save deviations, suggest /validate
-
-@_shared/task-runner.md

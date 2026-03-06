@@ -35,16 +35,16 @@ Detect version bump from commit messages:
 - Any `feat:` or `feat(` prefix → **minor** bump
 - Otherwise → **patch** bump
 
-### 3.1 Gate: release.version-confirmation
+### 3.1 [GATE|release.version-confirmation]
 
-Read `.beastmode/config.yaml` → check `gates.release.version-confirmation`.
-Default: `human`. Execute ONLY the matching option below.
+Read `.beastmode/config.yaml` → resolve mode for `release.version-confirmation`.
+Default: `human`.
 
-#### human — Ask User
+#### [GATE-OPTION|human] Ask User
 
 Increment from `$current_version`. Present suggested version via AskUserQuestion with override option.
 
-#### auto — Auto-Detect
+#### [GATE-OPTION|auto] Auto-Detect
 
 Use the auto-detected version bump without asking.
 Log: "Gate `release.version-confirmation` → auto: vX.Y.Z"
@@ -124,18 +124,18 @@ Roll up L1 summaries and release features into `.beastmode/PRODUCT.md`.
    - Format: `- **Bold label**: One-sentence description`
 5. Update **How It Works** section if the release changes workflow mechanics
 
-### 8.6 Gate: release.product-md-approval
+### 8.6 [GATE|release.product-md-approval]
 
-Read `.beastmode/config.yaml` → check `gates.release.product-md-approval`.
-Default: `auto`. Execute ONLY the matching option below.
+Read `.beastmode/config.yaml` → resolve mode for `release.product-md-approval`.
+Default: `auto`.
 
-#### human — Ask User
+#### [GATE-OPTION|human] Ask User
 
 **Significance check:**
 - If Capabilities or How It Works changed → present the before/after diff for user approval
 - If neither changed → auto-apply silently
 
-#### auto — Auto-Apply
+#### [GATE-OPTION|auto] Auto-Apply
 
 Auto-apply all changes.
 Log: "Gate `release.product-md-approval` → auto: updated PRODUCT.md with N new capabilities"

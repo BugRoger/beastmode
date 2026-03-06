@@ -34,20 +34,19 @@ If no clear criteria emerged during discussion, include:
 
 @../_shared/context-report.md
 
-## 5. Gate: transitions.design-to-plan
+## 5. [GATE|transitions.design-to-plan]
 
-Read `.beastmode/config.yaml` → check `transitions.design-to-plan`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `transitions.design-to-plan`.
+Default: `human`.
 
-### 5.1 human — Suggest Next Step
+### [GATE-OPTION|human] Suggest Next Step
 
 Print and STOP:
 Next step: `/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
 
 Do NOT invoke any implementation skill directly.
 
-### 5.2 auto — Chain to Next Phase
+### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:plan", args=".beastmode/state/design/YYYY-MM-DD-<topic>.md")`

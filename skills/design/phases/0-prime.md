@@ -2,35 +2,21 @@
 
 ## 1. Announce Skill
 
-Announce that you're starting /design in persona voice. One sentence. Don't oversell it.
+Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
 
 @../_shared/persona.md
 
-## 2. Role Clarity
-
-Print:
-
-"You own vision and preferences. I handle technical details. During design, I'll ask about what you want and how it should feel — not about implementation. That's for /plan and /implement."
-
-## 3. Load Project Context
+## 2. Load Project Context
 
 Read (if they exist):
 - `.beastmode/PRODUCT.md`
 - `.beastmode/context/DESIGN.md`
 - `.beastmode/meta/DESIGN.md`
 
-## 4. Load Prior Decisions
+Follow links in these L1 files to L2 details when relevant to the current topic.
+Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
 
-Scan `.beastmode/state/design/*.md` for existing design docs in this project.
-
-If found (load most recent 3):
-1. Extract "Key Decisions" and "Locked Decisions" sections
-2. Build internal `<prior_decisions>` context
-3. Use to annotate gray area options in execute phase ("You chose X in the Y design")
-
-If none found, skip — this is expected for first designs.
-
-## 5. Check Research Trigger
+## 3. Check Research Trigger
 
 Research triggers if ANY:
 
@@ -47,29 +33,27 @@ If triggered:
 1. Extract topic from arguments
 2. Spawn Explore agent with `@../../agents/researcher.md`
 3. Save findings to `.beastmode/state/research/YYYY-MM-DD-<topic>.md`
-4. Summarize findings to user
-5. Continue with design
+4. Summarize findings to user and continue to next step
 
-## 6. Express Path Check
+## 4. Express Path Check
 
 If arguments point to an existing PRD, spec, or requirements document (not a `.beastmode/state/design/` file):
 1. Read the document
 2. Skip gray area identification in execute
 3. Jump directly to "Propose Approaches" with the doc as input
 
-## 7. Gate: design.existing-design-choice
+## 5. [GATE|design.existing-design-choice]
 
-Read `.beastmode/config.yaml` → check `gates.design.existing-design-choice`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `design.existing-design-choice`.
+Default: `human`.
 
-### 7.1 human — Ask User
+### [GATE-OPTION|human] Ask User
 
 If a prior design doc exists for the same topic (matching feature name):
 - Ask: "Found existing design for this topic. What do you want to do?"
 - Options: Update existing / View first / Start fresh
 
-### 7.2 auto — Claude Decides
+### [GATE-OPTION|auto] Claude Decides
 
 Read the existing design and decide whether to update or start fresh based on how different the new requirements are.
 Log: "Gate `design.existing-design-choice` → auto: <decision>"

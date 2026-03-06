@@ -12,8 +12,10 @@ View and manage session status files.
 - `/status list` — List all session files
 - `/status <feature>` — Show specific session
 
+<HARD-GATE>
+Read @_shared/task-runner.md. Parse and execute the phases below.
+</HARD-GATE>
+
 ## Phases
 
 1. [Display](phases/1-display.md) — Parse args and show status
-
-@_shared/task-runner.md

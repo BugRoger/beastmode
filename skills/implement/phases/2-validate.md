@@ -52,21 +52,20 @@ Print the accumulated deviation log from the execute phase:
 
 If no deviations: "No deviations — plan executed exactly as written."
 
-## 7. Gate: implement.validation-failure
+## 7. [GATE|implement.validation-failure]
 
 If any check still fails after fix loop:
 - Report failures with full context
 - Do NOT proceed to checkpoint
 
-Read `.beastmode/config.yaml` → check `gates.implement.validation-failure`.
-Default: `auto`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `implement.validation-failure`.
+Default: `auto`.
 
-### 7.1 human — Ask User
+### [GATE-OPTION|human] Ask User
 
 Ask: "Fix manually and re-run /implement, or investigate together?"
 
-### 7.2 auto — Claude Investigates
+### [GATE-OPTION|auto] Claude Investigates
 
 Attempt additional investigation and targeted fixes. After exhausting options, log the failures and proceed to checkpoint with a warning.
 Do NOT proceed to next phase if critical tests fail.

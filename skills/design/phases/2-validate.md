@@ -53,13 +53,12 @@ Print:
 
 Render this from the decisions and criteria gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
 
-## 4. Gate: design.design-approval
+## 4. [GATE|design.design-approval]
 
-Read `.beastmode/config.yaml` → check `gates.design.design-approval`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `design.design-approval`.
+Default: `human`.
 
-### 4.1 human — User Approval
+### [GATE-OPTION|human] User Approval
 
 Ask: "Does this design look complete? Ready to document?"
 
@@ -69,7 +68,7 @@ Options:
 
 Wait for user response before continuing.
 
-### 4.2 auto — Self-Approve
+### [GATE-OPTION|auto] Self-Approve
 
 Log: "Gate `design.design-approval` → auto: approved"
 Proceed to checkpoint.

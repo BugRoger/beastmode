@@ -61,3 +61,6 @@ Friction and insights captured during design retros.
 
 ### 2026-03-05: roadmap-audit
 - **ROADMAP drift is predictable with the worktree model**: Features ship on feature branches but ROADMAP lives on main. The retro bubble updates context/ and meta/ docs but not ROADMAP.md. External-facing docs (README, ROADMAP, CHANGELOG) need their own audit cadence — the retro walker doesn't touch them.
+
+### 2026-03-06: skill-cleanup
+- **Parsability constraints drive syntax design through multiple iterations**: The gate syntax took 5 rounds to converge because each round surfaced a new constraint (greppable → config-linkable → human-readable → no tag ambiguity → related tags). When designing machine-parsable syntax that humans also read, expect iterative refinement — each stakeholder concern (parser, config, grep, human reader) eliminates options the others didn't.

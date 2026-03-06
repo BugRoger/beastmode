@@ -55,23 +55,23 @@ If spec check fails:
 
 ### 1.4 Handle Deviations
 
-Process the agent's deviation report per @../references/deviation-rules.md:
+Process the agent's deviation report per [deviation-rules.md](../references/deviation-rules.md):
 
 - **Auto-fix / Blocking**: Log to deviation tracker, continue
 
-#### 1.4.1 Gate: implement.architectural-deviation
+#### 1.4.1 [GATE|implement.architectural-deviation]
 
-Read `.beastmode/config.yaml` → check `gates.implement.architectural-deviation`.
-Default: `auto`. Execute ONLY the matching option below.
+Read `.beastmode/config.yaml` → resolve mode for `implement.architectural-deviation`.
+Default: `auto`.
 
-##### human — Ask User
+##### [GATE-OPTION|human] Ask User
 
 Present to user via AskUserQuestion:
   - "Proceed with proposed change"
   - "Different approach" (user specifies)
   - "Skip this task" (mark blocked)
 
-##### auto — Claude Decides
+##### [GATE-OPTION|auto] Claude Decides
 
 Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
 Log: "Gate `implement.architectural-deviation` → auto: <decision>"
@@ -96,20 +96,19 @@ After ALL tasks in the current wave complete:
    - After 2 retries: mark wave as blocked, report to user
 3. If tests pass: proceed to next wave
 
-## 2. Gate: implement.blocked-task-decision
+## 2. [GATE|implement.blocked-task-decision]
 
 If a task is blocked and has dependents in later waves:
 - Report to user: "Task N is blocked. Tasks [X, Y] in Wave M depend on it."
 
-Read `.beastmode/config.yaml` → check `gates.implement.blocked-task-decision`.
-Default: `auto`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `implement.blocked-task-decision`.
+Default: `auto`.
 
-### 2.1 human — Ask User
+### [GATE-OPTION|human] Ask User
 
 Ask: "Skip dependent tasks or investigate?"
 
-### 2.2 auto — Claude Investigates
+### [GATE-OPTION|auto] Claude Investigates
 
 Investigate the blocked task. If resolvable, fix and continue. If not, skip dependent tasks and log.
 Log: "Gate `implement.blocked-task-decision` → auto: <decision>"

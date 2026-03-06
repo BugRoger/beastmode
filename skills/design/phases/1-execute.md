@@ -15,7 +15,7 @@ pwd  # confirm you are in the worktree
 
 All subsequent work in this session MUST happen inside the worktree. If `cd` or `pwd` shows you are still in the main repo, STOP and fix it.
 
-See @../_shared/worktree-manager.md for full reference.
+See [worktree-manager.md](../_shared/worktree-manager.md) for full reference.
 
 ## 2. Scout Codebase
 
@@ -40,13 +40,12 @@ Analyze the topic to find decisions that would change the outcome:
 Bad: "UI", "UX", "Behavior"
 Good: "Layout style", "Loading pattern", "Empty state handling", "Error recovery approach"
 
-## 4. Gate: design.gray-area-selection
+## 4. [GATE|design.gray-area-selection]
 
-Read `.beastmode/config.yaml` → check `gates.design.gray-area-selection`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `design.gray-area-selection`.
+Default: `human`.
 
-### 4.1 human — Ask User
+### [GATE-OPTION|human] Ask User
 
 Use `AskUserQuestion` with `multiSelect: true`:
 
@@ -58,19 +57,18 @@ Use `AskUserQuestion` with `multiSelect: true`:
 
 At least 1 area must be discussed. Do NOT include "skip all."
 
-### 4.2 auto — Select All
+### [GATE-OPTION|auto] Select All
 
 Select all areas for internal analysis without asking.
 Log: "Gate `design.gray-area-selection` → auto: all areas selected"
 Proceed to discuss each using Claude's judgment.
 
-## 5. Gate: design.gray-area-discussion
+## 5. [GATE|design.gray-area-discussion]
 
-Read `.beastmode/config.yaml` → check `gates.design.gray-area-discussion`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `design.gray-area-discussion`.
+Default: `human`.
 
-### 5.1 human — Interactive Discussion
+### [GATE-OPTION|human] Interactive Discussion
 
 For each selected area:
 
@@ -85,7 +83,7 @@ For each selected area:
    "That sounds like its own feature — I'll note it as a deferred idea. Back to [area]."
 5. Maintain running "Deferred Ideas" list internally
 
-### 5.2 auto — Claude Decides
+### [GATE-OPTION|auto] Claude Decides
 
 Make reasonable decisions for each area based on codebase context and prior decisions.
 Log each decision inline. No AskUserQuestion calls.
@@ -97,20 +95,19 @@ Log each decision inline. No AskUserQuestion calls.
 - Annotate with codebase context: "Approach A reuses existing X"
 - Informed by gray area discussions — don't re-ask decided points
 
-## 7. Gate: design.section-review
+## 7. [GATE|design.section-review]
 
-Read `.beastmode/config.yaml` → check `gates.design.section-review`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `design.section-review`.
+Default: `human`.
 
-### 7.1 human — Section-by-Section Review
+### [GATE-OPTION|human] Section-by-Section Review
 
 Once requirements understood:
 - Scale each section to complexity
 - Ask after each section if it looks right
 - Cover: architecture, components, data flow, error handling, testing
 
-### 7.2 auto — Present Full Design
+### [GATE-OPTION|auto] Present Full Design
 
 Present the full design without per-section approval pauses.
 Proceed directly to validation.

@@ -52,13 +52,12 @@ Wave 2: 1 task → skipped (single task)
 Wave 3: 2 tasks, 1 overlap → resequenced Task 5 to Wave 4
 ```
 
-## 4. Gate: plan.plan-approval
+## 4. [GATE|plan.plan-approval]
 
-Read `.beastmode/config.yaml` → check `gates.plan.plan-approval`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `plan.plan-approval`.
+Default: `human`.
 
-### 4.1 human — User Approval
+### [GATE-OPTION|human] User Approval
 
 Ask: "Plan complete. Ready to save and proceed to implementation?"
 
@@ -68,7 +67,7 @@ Options:
 
 Wait for user response before continuing.
 
-### 4.2 auto — Self-Approve
+### [GATE-OPTION|auto] Self-Approve
 
 Log: "Gate `plan.plan-approval` → auto: approved"
 Proceed to checkpoint.

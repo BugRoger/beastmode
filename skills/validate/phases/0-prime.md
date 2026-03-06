@@ -2,15 +2,19 @@
 
 ## 1. Announce Skill
 
-Announce that you're starting /validate in persona voice. One sentence. Don't oversell it.
+Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
 
 @../_shared/persona.md
 
-## 2. Load Context
+## 2. Load Project Context
 
-Read:
+Read (if they exist):
+- `.beastmode/PRODUCT.md`
 - `.beastmode/context/VALIDATE.md`
 - `.beastmode/meta/VALIDATE.md`
+
+Follow links in these L1 files to L2 details when relevant to the current topic.
+Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
 
 ## 3. Discover and Enter Feature Worktree
 
@@ -35,7 +39,7 @@ cd "$worktree_path"
 pwd  # confirm you are in the worktree
 ```
 
-See @../_shared/worktree-manager.md for full reference.
+See [worktree-manager.md](../_shared/worktree-manager.md) for full reference.
 
 ## 4. Identify Test Strategy
 

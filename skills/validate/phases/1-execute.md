@@ -16,7 +16,7 @@ pwd  # confirm you are in the worktree
 
 If the worktree path is missing from the status file or the directory doesn't exist, STOP and tell the user — do not continue on main.
 
-See @../_shared/worktree-manager.md for full reference.
+See [worktree-manager.md](../_shared/worktree-manager.md) for full reference.
 
 ## 2. Run Tests
 

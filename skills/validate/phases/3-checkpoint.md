@@ -12,7 +12,7 @@ Save to `.beastmode/state/validate/YYYYMMDD-{feature}.md`
 
 @../_shared/context-report.md
 
-## 4. Gate: transitions.validate-to-release
+## 4. [GATE|transitions.validate-to-release]
 
 If FAIL:
 ```
@@ -23,16 +23,15 @@ STOP — do not proceed to transition check.
 
 If PASS:
 
-Read `.beastmode/config.yaml` → check `transitions.validate-to-release`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `transitions.validate-to-release`.
+Default: `human`.
 
-### 4.1 human — Suggest Next Step
+### [GATE-OPTION|human] Suggest Next Step
 
 Print and STOP:
 Next step: `/beastmode:release YYYY-MM-DD-<feature>.md`
 
-### 4.2 auto — Chain to Next Phase
+### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:release", args="YYYY-MM-DD-<feature>.md")`

@@ -61,65 +61,61 @@ Show user a summary:
 - Auto-promotions: {count} detected
 ```
 
-## 5. Gate: retro.learnings
+## 5. [GATE|retro.learnings]
 
-Read `.beastmode/config.yaml` → check `gates.retro.learnings`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `retro.learnings`.
+Default: `human`.
 
-### 5.1 human — Review Learnings
+### [GATE-OPTION|human] Review Learnings
 
 Show learnings to user, then auto-append to `.beastmode/meta/{phase}/learnings.md` under the appropriate date-headed section.
 
-### 5.2 auto — Auto-Append Learnings
+### [GATE-OPTION|auto] Auto-Append Learnings
 
 Auto-append learnings silently.
 Log: "Gate `retro.learnings` → auto: appended {N} learnings"
 
-## 6. Gate: retro.sops
+## 6. [GATE|retro.sops]
 
-Read `.beastmode/config.yaml` → check `gates.retro.sops`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `retro.sops`.
+Default: `human`.
 
-### 6.1 human — Review SOPs
+### [GATE-OPTION|human] Review SOPs
 
 Present each proposed SOP (including auto-promoted ones) and ask for approval before writing to `.beastmode/meta/{phase}/sops.md`.
 On approval of auto-promoted SOPs: annotate source learning entries in `learnings.md` with `→ promoted to SOP`.
 
-### 6.2 auto — Auto-Write SOPs
+### [GATE-OPTION|auto] Auto-Write SOPs
 
 Auto-write all proposed SOPs.
 On auto-promoted SOPs: annotate source learning entries in `learnings.md` with `→ promoted to SOP`.
 Log: "Gate `retro.sops` → auto: wrote {N} SOPs"
 
-## 7. Gate: retro.overrides
+## 7. [GATE|retro.overrides]
 
-Read `.beastmode/config.yaml` → check `gates.retro.overrides`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `retro.overrides`.
+Default: `human`.
 
-### 7.1 human — Review Overrides
+### [GATE-OPTION|human] Review Overrides
 
 Present each proposed override and ask for approval before writing to `.beastmode/meta/{phase}/overrides.md`.
 
-### 7.2 auto — Auto-Write Overrides
+### [GATE-OPTION|auto] Auto-Write Overrides
 
 Auto-write all proposed overrides.
 Log: "Gate `retro.overrides` → auto: wrote {N} overrides"
 
-## 8. Gate: retro.context-changes
+## 8. [GATE|retro.context-changes]
 
-Read `.beastmode/config.yaml` → check `gates.retro.context-changes`.
-Default: `human`. Execute ONLY the matching option below.
-Remove non-matching options from the task list.
+Read `.beastmode/config.yaml` → resolve mode for `retro.context-changes`.
+Default: `human`.
 
-### 8.1 human — Review Context Changes
+### [GATE-OPTION|human] Review Context Changes
 
 Present each proposed edit with confidence annotations.
 Ask per-category: "Apply these context changes? [Y/n]"
 
-### 8.2 auto — Auto-Apply Context Changes
+### [GATE-OPTION|auto] Auto-Apply Context Changes
 
 Apply all context changes silently.
 Log: "Gate `retro.context-changes` → auto: applied {N} context changes"
