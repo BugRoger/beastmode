@@ -106,39 +106,40 @@ Update version in all three files:
 - `.claude-plugin/marketplace.json` → version in plugins array
 - `hooks/session-start.sh` → banner line `BEASTMODE vX.Y.Z`
 
-## 8. Phase Retro
+## 8. Prepare L0 Update Proposal
 
-@../_shared/retro.md
-
-## 8.5. Update BEASTMODE.md
-
-Roll up L1 summaries and release features into `.beastmode/BEASTMODE.md`.
+Roll up L1 summaries and release features into an L0 update proposal.
 
 1. Read current `.beastmode/BEASTMODE.md`
 2. Read all L1 domain summaries (`context/DESIGN.md`, `context/PLAN.md`, `context/IMPLEMENT.md`, `context/VALIDATE.md`, `context/RELEASE.md`, `meta/DESIGN.md`, `meta/PLAN.md`, `meta/IMPLEMENT.md`, `meta/VALIDATE.md`, `meta/RELEASE.md`, `state/DESIGN.md`, `state/PLAN.md`, `state/IMPLEMENT.md`, `state/VALIDATE.md`, `state/RELEASE.md`)
 3. Read the release notes generated in step 5
-4. Update **Capabilities** section:
+4. Prepare proposed **Capabilities** section:
    - Add new capabilities from this release's `feat:` commits
    - Remove capabilities for features that were dropped
    - Keep existing entries that are still accurate
    - Format: `- **Bold label**: One-sentence description`
-5. Update **How It Works** section if the release changes workflow mechanics
+5. Prepare proposed **How It Works** section if the release changes workflow mechanics
 
-### 8.6 [GATE|release.beastmode-md-approval]
+Save the proposal to `.beastmode/state/release/YYYY-MM-DD-vX.Y.Z-l0-proposal.md`:
 
-Read `.beastmode/config.yaml` → resolve mode for `release.beastmode-md-approval`.
-Default: `auto`.
+```markdown
+# L0 Update Proposal — vX.Y.Z
 
-#### [GATE-OPTION|human] Ask User
+## Proposed Capabilities
 
-**Significance check:**
-- If Capabilities or How It Works changed → present the before/after diff for user approval
-- If neither changed → auto-apply silently
+- **Bold label**: One-sentence description
+- ...
 
-#### [GATE-OPTION|auto] Auto-Apply
+## Proposed How It Works
 
-Auto-apply all changes.
-Log: "Gate `release.beastmode-md-approval` → auto: updated BEASTMODE.md with N new capabilities"
+[Only if changed, otherwise omit this section]
+```
+
+If no changes to Capabilities or How It Works are needed, skip writing the proposal file.
+
+## 8.5. Phase Retro
+
+@../_shared/retro.md
 
 ## 9. Squash Merge to Main
 

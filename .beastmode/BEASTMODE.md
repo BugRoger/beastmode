@@ -60,6 +60,18 @@ All paths relative to `.beastmode/`.
 - **UPPERCASE.md** — Invariant meta files (always exist, same structure)
 - **lowercase.md** — Variant files (plans, research, date-prefixed)
 
+### Write Protection
+
+Phases write artifacts to L3 (`state/`) only. Compaction and promotion to L0, L1, and L2 happens exclusively through retro.
+
+| Writer | Allowed Targets | Mechanism |
+|--------|----------------|-----------|
+| Phase checkpoints | L3 (`state/`) | Direct write |
+| Retro (embedded in checkpoints) | L0, L1, L2 | Bottom-up promotion |
+| Init (`/beastmode init`) | L0, L1, L2 | Bootstrap exemption |
+
+No phase may write to `context/` or `meta/` files directly. Retro is the sole gatekeeper for upward knowledge promotion.
+
 ## Configuration
 
 `.beastmode/config.yaml` controls gate behavior. Gates are decision points in each phase where the workflow can pause for human input or let Claude decide.

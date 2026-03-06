@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.3 — The Write Guard (Mar 2026)
+
+- **Write protection rule** — Phases write only to L3 state; retro is the sole gatekeeper for L0/L1/L2 promotion
+- **Release L0 migration** — BEASTMODE.md updates flow through L3 proposal + retro promotion instead of direct write
+- **Retro L0 promotion** — New step 10 applies L0 update proposals during release phase retro
+- **Config gate** — `retro.l2-write` controls L2 context file creation during retro
+
 ### v0.14.2 — The Gap Detector (Mar 2026)
 
 - **L2 gap detection** — Context walker gains Gap Detection Protocol with structured `context_gap` output type, confidence scoring, and accumulation-based promotion thresholds
