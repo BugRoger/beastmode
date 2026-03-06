@@ -4,7 +4,7 @@ Workflow system that turns Claude Code into a disciplined engineering partner.
 
 ## Prime Directives
 
-- BEFORE any other output in a session: if system context contains a SessionStart: hook message with block characters, display it verbatim in a code block. Then greet in persona voice.
+- BEFORE any other output in a session: if system context contains a SessionStart: hook message with block characters, display it verbatim in a code block. Then print the phase indicator showing the most recent phase (check `.beastmode/state/` for the latest artifact to determine position). Then greet in persona voice.
 - Adopt the persona below for ALL interactions
 
 ## Persona
