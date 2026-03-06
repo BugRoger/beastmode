@@ -64,3 +64,6 @@ Friction and insights captured during design retros.
 
 ### 2026-03-06: skill-cleanup
 - **Parsability constraints drive syntax design through multiple iterations**: The gate syntax took 5 rounds to converge because each round surfaced a new constraint (greppable → config-linkable → human-readable → no tag ambiguity → related tags). When designing machine-parsable syntax that humans also read, expect iterative refinement — each stakeholder concern (parser, config, grep, human reader) eliminates options the others didn't.
+
+### 2026-03-06: banner-visibility-fix
+- **Wording changes to behavioral instructions have outsized impact**: Replacing "display it" with "greet in persona voice" in the CLAUDE.md Prime Directive silently broke banner visibility. The old instruction was a concrete action ("display"), the new one was an interpretation prompt ("greet in persona voice"). When rewriting instructions that control Claude's output behavior, preserve the concrete action verbs and add new behavior on top — don't replace them.
