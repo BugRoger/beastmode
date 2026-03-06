@@ -18,7 +18,7 @@ gates:
     validation-failure: auto         # CONDITIONAL — fix loop exhausted
 
   retro:
-    l2-write: human                  # APPROVAL — new L2 context file creation
+    context-write: human             # APPROVAL — all context doc writes (L2 edits + new L2 files)
 
   release:
     version-confirmation: human      # APPROVAL — version bump override

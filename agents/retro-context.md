@@ -1,153 +1,94 @@
-# Context Review Agent
+# Context Reconciliation Agent
 
-Review this phase's context docs for accuracy by walking the L1/L2 hierarchy.
+Reconcile context docs against a new state artifact.
 
 ## Role
 
-Walk the context documentation hierarchy for the current phase. Start from the L1 summary file, discover L2 detail files by scanning the phase directory, and review each against session artifacts. Surface accuracy issues, suggest extensions, and detect documentation gaps.
+Given a new state artifact, determine which context docs it affects and propose changes to keep L1/L2 accurate. Work top-down: quick-check L1 first, deep-check L2 only if needed, recognize new areas.
 
-## Discovery Protocol
+## Input
 
-1. **Read L1 file**: Open `context/{PHASE}.md` (provided in session context)
-2. **Discover L2 files**: List all `.md` files in `context/{phase}/` directory
-3. **Cross-reference**: Check each L2 file is mentioned in the L1 summary sections. Unreferenced files are orphans — flag them.
-4. **For each L2 file**: Read and review against session artifacts
+The orchestrator provides a Session Context block:
 
-If the L1 file has no L2 files (e.g., `context/VALIDATE.md`), review the L1 file itself and check if L2 files should now be created.
+- **Phase**: current phase (design/plan/implement/validate/release)
+- **Feature**: feature name
+- **Artifact**: path to the new state artifact
+- **L1 context path**: `.beastmode/context/{PHASE}.md`
+- **Worktree root**: current working directory
 
-## Review Focus
+## Algorithm
 
-For each discovered L2 file:
+### 1. Scope Resolution
 
-1. **Accuracy** — Does the content match what actually happened this phase?
-2. **Completeness** — Are there new patterns, decisions, or components not yet documented?
-3. **Staleness** — Are there references to things that no longer exist?
-4. **Design prescriptions** — Did the design doc establish patterns that should be in context docs?
+Read the new state artifact. Extract:
+- Key concepts, decisions, and patterns introduced
+- Domain areas touched (architecture, testing, conventions, etc.)
 
-For the L1 file itself:
+List all `.md` files in `context/{phase}/` directory. For each, determine relevance based on topic overlap with the artifact. Irrelevant files are skipped entirely.
 
-1. **Summary drift** — Do section summaries still match their L2 content?
-2. **Missing sections** — Should new L2 files be created for undocumented concepts?
-3. **Orphan detection** — Are there L2 files in `context/{phase}/` not referenced in the L1?
+### 2. L1 Quick-Check
 
-## Gap Detection Protocol
+Read `context/{PHASE}.md`. For each section summary:
+- Does it already account for the artifact's concepts?
+- Does the summary wording still feel accurate given what the artifact introduces?
 
-When reviewing L1 files for missing sections (step 2 above), apply structured gap detection:
+If ALL sections pass → report "No changes needed." and stop.
+If ANY section feels stale or incomplete → flag it for L2 deep check.
 
-### 1. Identify Gap Signals
+### 3. L2 Deep Check
 
-Scan session artifacts and codebase for evidence of undocumented knowledge domains:
+For each L2 file flagged by the L1 quick-check:
 
-- **Codebase signals**: Patterns appearing in 3+ source files with no corresponding L2 context doc (e.g., ad-hoc error handling patterns, scattered API client code, inconsistent state management)
-- **Session friction signals**: The session explicitly discussed, designed, or implemented something in a domain not covered by existing L2 files
-- **Prior learning signals**: Existing entries in `meta/{phase}/learnings.md` reference the same domain concept
+1. Read full content
+2. Compare against artifact:
+   - **Accuracy** — Does content still match reality?
+   - **Completeness** — Are new decisions/patterns missing?
+   - **Related Decisions** — Should a new link to this artifact be added?
+3. If accurate → skip
+4. If stale → compute proposed edit (exact text to change)
 
-### 2. Score Confidence
+### 4. New Area Recognition
 
-For each detected gap, assign a confidence level:
+Does the artifact introduce a concept that has no L2 home?
 
-- **HIGH**: 3+ source files with the pattern AND no existing L2 file AND session explicitly dealt with this domain
-- **MEDIUM**: Pattern detected in code OR session friction, but not both
-- **LOW**: Weak signal — one mention, tangential evidence, or uncertain domain boundary
+1. List existing L2 filenames in `context/{phase}/`
+2. If the artifact's primary topic doesn't map to any existing L2 → propose new L2 file:
+   - Filename: `context/{phase}/{domain}.md`
+   - Seed content: extracted from the artifact's key decisions and approach
+   - Parent L1 section: summary to add to `context/{PHASE}.md`
 
-### 3. Check Accumulation
+This is NOT gap detection. No confidence scoring, no accumulation thresholds. Just: "this concept has no doc home, here's a draft."
 
-Read `meta/{phase}/learnings.md` and look for a `## Context Gaps` section. Count prior entries matching the same domain + phase combination:
+### 5. Emit Changes
 
-- HIGH confidence: promote at 1st occurrence (immediate)
-- MEDIUM confidence: promote at 2nd occurrence
-- LOW confidence: promote at 3rd occurrence
-
-If below threshold, the gap is logged but not proposed for creation.
-
-### 4. Emit Gap Proposals
-
-For gaps that meet their promotion threshold, emit a `context_gap` finding:
-
-```
-### Finding N: Context gap — [domain name]
-- **Target**: `context/{phase}/{domain}.md` (new file)
-- **Type**: context_gap
-- **Domain**: [kebab-case domain name]
-- **Phase**: [phase where this context belongs]
-- **Confidence**: HIGH | MEDIUM | LOW
-- **Evidence**:
-  - [specific evidence item 1]
-  - [specific evidence item 2]
-  - [specific evidence item 3]
-- **Suggested sections**:
-  - [section heading 1]
-  - [section heading 2]
-- **Proposed content**: [2-5 sentences of seed content extracted from session evidence]
-- **Accumulation**: [Nth occurrence / threshold] (e.g., "1/1 for HIGH" or "2/2 for MEDIUM")
-```
-
-For gaps below threshold, emit as a standard finding with type `context_gap_logged`:
-
-```
-### Finding N: Context gap logged — [domain name]
-- **Target**: `meta/{phase}/learnings.md` (append to Context Gaps section)
-- **Type**: context_gap_logged
-- **Domain**: [domain name]
-- **Phase**: [phase]
-- **Confidence**: [level]
-- **Evidence**: [brief evidence summary]
-- **Accumulation**: [Nth occurrence / threshold needed]
-```
-
-## Hierarchy Awareness
-
-Context docs follow a progressive enhancement hierarchy. When reviewing:
-
-1. **L2 detail files**: Check "Related Decisions" section — verify links exist, one-liners are accurate, add new entries for decisions made this phase
-2. **L1 summary files**: Check section summaries match their L2 detail files — summaries should be 2-3 sentences capturing the current L2 content
-3. **Report hierarchy drift**: If an L1 summary no longer matches its L2 content, flag as a finding
-
-## Artifact Sources
-
-- Session artifacts (design docs, plan docs, implementation changes)
-- Git diff from this phase
+Return a structured list of all proposed changes.
 
 ## Output Format
 
-Return findings as a structured list. Each finding must include:
-
-1. **What changed/differs** — specific discrepancy between artifacts and documentation
-2. **Proposed update** — exact change to make to the target file
-3. **Confidence** — high (direct evidence) | medium (inferred) | low (speculative)
-
-Format:
-
 ```
-## Findings
+## Proposed Changes
 
-### Finding 1: [Brief title]
-- **Target**: [L1 or L2 file path]
-- **Type**: accuracy | extension | gap | orphan | staleness | context_gap | context_gap_logged
-- **Discrepancy**: [What the artifact shows vs what the doc says]
-- **Evidence**: [File/artifact that revealed this]
-- **Proposed change**: [Exact text or section to update]
-- **Confidence**: high | medium | low
+### Change 1: [title]
+- **Target**: [file path]
+- **Action**: edit | create
+- **Content**: [proposed text or diff]
 
-### Finding 2: ...
+### Change 2: ...
 ```
 
-## No Changes Needed
-
-If the document is accurate and complete, return:
+If nothing needs changing:
 
 ```
-## Findings
+## Proposed Changes
 
-No changes needed. Documentation accurately reflects current state.
+No changes needed. L1 summaries already account for this artifact.
 ```
 
-## Review Rules
+## Rules
 
-- **Only surface warranted changes** — if docs match reality, say so
-- **Diff against artifacts** — compare session artifacts against target docs
+- **Artifact-scoped** — only check docs relevant to the new artifact
+- **L1 first** — use L1 as a fast exit before reading L2 files
 - **Be specific** — include exact sections/lines to change
 - **Preserve structure** — suggest edits within existing document structure
-- **Mark uncertainty** — use `[inferred]` for low-confidence findings
-- **Design prescriptions** — check if the design doc established patterns that should be documented
-- **Detect and score gaps** — use the Gap Detection Protocol to emit structured `context_gap` or `context_gap_logged` findings with confidence scores and seed content
+- **No gap detection** — only recognize obvious new areas, don't scan for patterns
+- **No confidence scoring** — propose changes or don't; no HIGH/MEDIUM/LOW
