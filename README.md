@@ -34,34 +34,6 @@ Beastmode fixes this. Five phases. Context persists. Patterns compound.
 **New feature?** Design the approach. Plan the tasks. Implement. Validate. Release.
 **Multi-session?** Each phase writes artifacts to `.beastmode/`. Next session picks up where you left off.
 
-## What Makes It Different
-
-**Structured context, not flat retrieval.**
-
-Embedding-based retrieval treats your codebase as a flat bag of chunks. As the codebase grows, precision collapses — agents get noise instead of signal, spending tokens on irrelevant context.
-
-Beastmode organizes project knowledge into four levels: product vision, domain summaries, detail files, and raw artifacts. Agents navigate curated summaries at each level, loading detail only when the current task requires it. Deterministic navigation through a known structure, not probabilistic search through a vector space.
-
-[Read the full argument →](docs/progressive-hierarchy.md)
-
-**Knowledge compounds.**
-
-Most AI tools start every session from scratch. Mistakes repeat. Patterns are rediscovered. Nothing accumulates.
-
-Beastmode captures learnings at the end of every phase. Retro agents classify findings into standard procedures, project-specific overrides, and session insights. Recurring patterns auto-promote to SOPs. Each cycle makes Claude smarter about *your* codebase — not just any codebase.
-
-**Context survives sessions.**
-
-New session, blank slate, explain the architecture again. This is the default experience with AI coding tools.
-
-Beastmode writes artifacts to `.beastmode/` — design specs, implementation plans, validation records, release notes. All stored as markdown in git. No vector database to maintain, no embeddings to regenerate. Context survives sessions, branches, and collaborators because it's just files in your repo.
-
-**Design before code.**
-
-Ask an AI for a login form and you might get an entire auth system. Without structure, scope explodes and implementation goes sideways.
-
-Beastmode provides five phases: design the approach, plan the tasks, implement in isolation, validate quality, release to main. Trivial change? Skip to implement. Complex feature? Run every phase. The structure scales to complexity without adding overhead to simple work.
-
 ## Install
 
 ```bash
@@ -89,15 +61,46 @@ Then initialize your project:
 
 ## How It Works
 
-Every phase writes artifacts to `.beastmode/` — design specs, implementation plans, validation records, release notes. Your root `CLAUDE.md` imports the project context. Next session, Claude starts with full knowledge of your project.
+Five phases, one flow:
 
-The `.beastmode/` folder organizes four domains:
+```
+/design → /plan → /implement → /validate → /release
+```
+
+Each phase stands on its own. Prime loads project context from `.beastmode/`, execute does the work, validate checks quality, checkpoint saves artifacts back. Then the session ends. Next phase starts clean — fresh context, no leftover state, just the artifacts the previous phase wrote.
+
+`.beastmode/` is the shared bus. Design specs, implementation plans, validation records, release notes — all written as markdown, all version-controlled in git. Your root `CLAUDE.md` imports the project context. Every new session starts with full knowledge of your project.
+
+Four domains organize what gets persisted:
+
 - **Product** — what you're building (vision, goals)
 - **Context** — how to build it (architecture, conventions, testing)
 - **State** — where features are in the workflow (design → release)
-- **Meta** — what you've learned (phase retros that improve future sessions)
+- **Meta** — what you've learned (SOPs, overrides, session insights)
 
-Knowledge compounds. After each cycle, learnings feed back into your project context. Claude gets smarter about *your* codebase over time.
+## What Makes It Work
+
+**Progressive context, not flat retrieval.**
+
+Project knowledge is organized into four levels: product vision at the top, domain summaries below it, detail files below that, raw artifacts at the bottom. Each level summarizes the level below. Agents navigate summaries first and load detail only when the task requires it. Deterministic navigation through a known structure — not similarity search through a vector space.
+
+[Read the full argument →](docs/progressive-hierarchy.md)
+
+**Every phase checkpoints. Every session starts clean.**
+
+Phases don't share memory — they share artifacts. Checkpoint writes to `.beastmode/`, prime reads from it. A new session loads exactly the context it needs from the hierarchy, not whatever happened to be in the last conversation. This is what makes multi-session work reliable: the handoff is explicit, not implicit.
+
+**Retro captures learnings. Learnings compound.**
+
+Every checkpoint captures what worked, what didn't, and what to do differently. Retro agents classify findings into standard procedures, project-specific overrides, and session insights. Recurring patterns auto-promote to SOPs. Each cycle sharpens Claude's understanding of your codebase.
+
+**Context is just files in git.**
+
+Design specs, implementation plans, validation records — all markdown, all version-controlled. No vector database to maintain. No embeddings to regenerate when code changes. Context survives sessions, branches, and collaborators because it lives in `.beastmode/` alongside your code.
+
+**Structure scales to complexity.**
+
+Five phases prevent scope explosion on complex features. But the structure doesn't add overhead to simple work — skip to `/implement` for a quick fix, run the full cycle for a new feature.
 
 ## Credits
 

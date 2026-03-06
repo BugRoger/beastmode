@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.11.1 — The Reflow (Mar 2026)
+
+- **README restructure** — "What Makes It Different" → expanded "How It Works" + new "What Makes It Work" section
+- **Mechanics-only prose** — Removed pitch framing, replaced with sharp explanations of how beastmode actually works
+- **Session model documented** — Self-contained phase model (checkpoint → clean session → prime) now front and center
+
 ### v0.11.0 — The Squash (Mar 2026)
 
 - **Squash-per-release** — `/release` uses `git merge --squash` to collapse feature branches into one commit on main
