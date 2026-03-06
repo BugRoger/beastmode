@@ -13,3 +13,4 @@ Isolated git worktrees in `.beastmode/worktrees/` for feature execution. Created
 
 ## Source
 state/design/2026-03-04-git-branching-strategy.md
+state/design/2026-03-04-worktree-session-discovery.md

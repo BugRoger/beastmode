@@ -67,7 +67,8 @@ Phases write artifacts to `state/` only. Compaction and promotion to L0, L1, and
 | Writer | Allowed Targets | Mechanism |
 |--------|----------------|-----------|
 | Phase checkpoints | `state/` | Direct write |
-| Retro (embedded in checkpoints) | L0, L1, L2 | Bottom-up promotion |
+| Retro (embedded in checkpoints) | L1, L2 | Bottom-up promotion |
+| Release (L0 rollup) | L0 | Release-time L1->L0 promotion |
 | Init (`/beastmode init`) | L0, L1, L2 | Bootstrap exemption |
 
 No phase may write to `context/` or `meta/` files directly. Retro is the sole gatekeeper for upward knowledge promotion.

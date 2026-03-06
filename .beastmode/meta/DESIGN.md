@@ -4,7 +4,7 @@ Learnings from design phases. Key patterns: competitive analysis beats brainstor
 
 ## SOPs
 One SOP established: "Research before structural design decisions" — produce dated research artifacts from 3+ external sources before locking decisions on structural extensions, taxonomy changes, or workflow redesigns. Auto-promoted from 4 recurring learnings across implement-v2, hitl-gate-config, key-differentiators, and l2-domain-expansion.
-@design/sops.md
+design/sops.md
 
 ## Overrides
 No project-specific design overrides yet. Overrides will be added by retro classification or user.
