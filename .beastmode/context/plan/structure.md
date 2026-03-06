@@ -52,6 +52,8 @@ beastmode/
 │   ├── researcher.md      # Phase research agent
 │   ├── retro-context.md   # Phase retro: context doc review agent
 │   └── retro-meta.md      # Phase retro: meta learnings agent
+├── docs/                    # External-facing deep-dive documentation
+│   └── progressive-hierarchy.md  # Why hierarchical context beats flat retrieval
 ├── hooks/                 # Plugin lifecycle hooks
 │   └── session-start.sh   # Beastmode activation banner
 ├── .claude/               # Claude IDE local settings
@@ -78,6 +80,11 @@ beastmode/
 **`agents/`** — Agent Documentation
 - Purpose: Subagent prompts for specialized tasks
 - Contains: discovery.md (codebase analysis), researcher.md (phase research), retro-context.md (context doc review), retro-meta.md (meta learnings capture)
+
+**`docs/`** — External-Facing Documentation
+- Purpose: Deep-dive essays on design philosophy and differentiators
+- Contains: Standalone markdown essays linked from README
+- Not imported by agents (same rule as ROADMAP.md) — agents reference via PRODUCT.md
 
 ## Key File Locations
 

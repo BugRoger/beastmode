@@ -1,6 +1,6 @@
 # Design Meta
 
-Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, and fractal consistency (applying the same pattern across all domains) beats special-casing.
+Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, fractal consistency (applying the same pattern across all domains) beats special-casing, and research-informed options should be justified on merit not borrowed authority.
 
 ## Defaults
 
@@ -35,3 +35,7 @@ Learnings from design phases. Key patterns: competitive analysis beats brainstor
 
 ### 2026-03-04: worktree-session-discovery
 - **Cross-session state loss is a design gap, not a bug**: When a mechanism relies on in-session context (like the feature name derived during /design), it will silently break across sessions. Any state that subsequent phases need must be either persisted to disk or re-derivable from arguments. Treat session boundaries as a hard reset.
+
+### 2026-03-05: key-differentiators
+- **Research informs structure, not authority**: Using perplexity to survey how successful projects organize philosophy docs yielded the docs/ folder + README bullets pattern. The user kept the structural insight but rejected citing other projects as justification. When presenting research-informed options, justify on merit, not on who else does it.
+- **Users reject borrowed authority, keep borrowed structure**: "Not sure about the react/htmx shit" rejected framework name-dropping but kept the underlying pattern. Present structures as self-evident choices, not as imitations of successful projects.

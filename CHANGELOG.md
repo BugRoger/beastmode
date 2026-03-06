@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.7.0 — The Argument (Mar 2026)
+
+- **Progressive hierarchy essay** — New `docs/progressive-hierarchy.md` makes the case for curated hierarchical context over flat embedding retrieval
+- **README rework** — "Why This Works" leads with hierarchy differentiator and links to the deep-dive essay
+- **Agent-facing differentiators** — PRODUCT.md gains "Key Differentiators" section so agents understand *why* the hierarchy exists
+- **docs/ directory** — External-facing documentation home, not imported by agents
+
 ### v0.6.1 — No More Rebase (Mar 2026)
 
 - **Merge-only release** — Replaced `git rebase origin/main` with merge-only strategy; conflicts resolve once instead of per-commit replay

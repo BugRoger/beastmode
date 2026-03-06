@@ -30,3 +30,10 @@ Turn Claude Code into a disciplined engineering partner through opinionated work
 ## How It Works
 
 Each skill (/design, /plan, /implement, /validate, /release) follows the same four sub-phases: prime loads context, execute does the work, validate checks quality, checkpoint saves artifacts and captures learnings. Features flow through `.beastmode/state/` directories as they progress through the workflow. Git worktrees provide isolation — created at /design, inherited through /plan and /implement, merged by /release. The retro sub-phase propagates changes upward through the L2→L1 knowledge hierarchy, while /release rolls up L1 summaries into this L0 document.
+
+## Key Differentiators
+
+- **Progressive knowledge hierarchy**: L0/L1/L2/L3 levels provide curated context at increasing depth. Agents navigate summaries before loading detail. This is deterministic (structured summaries) not probabilistic (embedding retrieval). See `docs/progressive-hierarchy.md` for the full argument.
+- **Self-improving retro loop**: Phase checkpoints capture learnings that improve future sessions. Retro agents review context docs for accuracy and propagate updates through the hierarchy.
+- **Structured workflow**: Five-phase design-before-code prevents wasted implementation. Each phase produces artifacts consumed by the next.
+- **Context persistence**: `.beastmode/` artifacts survive sessions via git. No vector database, no embeddings to regenerate. Just markdown files in your repo.

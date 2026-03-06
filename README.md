@@ -73,9 +73,11 @@ Knowledge compounds. After each cycle, learnings feed back into your project con
 
 ## Why This Works
 
-**Proven workflow.** Design before code. Plan before build. Old wisdom, applied to AI coding.
+**Structured context, not flat retrieval.** Most AI coding tools treat your codebase as a bag of embeddings. Beastmode organizes project knowledge into a [hierarchy](docs/progressive-hierarchy.md) — agents navigate curated summaries before diving into detail.
 
-**Context survives sessions.** No lost work. No repeated explanations. Artifacts persist in git.
+**Context survives sessions.** Every phase writes artifacts to `.beastmode/`. Next session, Claude starts with full project knowledge. No repeated explanations.
+
+**Knowledge compounds.** Phase retros capture what worked, what didn't, and feed it back into project context. Claude gets smarter about *your* codebase over time.
 
 **Scales to complexity.** Trivial change? Skip to implement. Complex feature? Run every phase.
 
