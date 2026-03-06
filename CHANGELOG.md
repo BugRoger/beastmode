@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.16 — The Split-Brain Fix (Mar 2026)
+
+- **Context report authority cleanup** — Eliminated duplication between visual-language.md and context-report.md; each file now has clear ownership boundaries
+- **Handoff guidance moved** — Thresholds and guidance text now owned exclusively by context-report.md
+- **Rendering contradiction fixed** — Removed conflicting "code block" vs "plain text" instructions
+
+
 ### v0.14.15 — The Consistency Fix (Mar 2026)
 
 - **Unified state file naming** — All phases now use `YYYY-MM-DD-<feature>.md` convention

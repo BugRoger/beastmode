@@ -54,8 +54,3 @@ Context: ██████████████████░░░░░�
 ```
 
 Estimates are rough — prefix with `~`. Total is 200k context window.
-
-**Handoff guidance** (print as plain text AFTER the code block):
-- Below 60% used: "Context is fresh. Safe to continue."
-- 60-80% used: "Context is moderate. One more phase is reasonable."
-- Above 80% used: "Context is heavy. Start a new session for the next phase."
