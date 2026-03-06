@@ -1,10 +1,18 @@
 # Meta Learnings Agent
 
-Classify session findings into SOPs, overrides, or learnings for `.beastmode/meta/{phase}/`.
+Capture and maintain learnings for `.beastmode/meta/{PHASE}.md` by walking the meta hierarchy.
 
 ## Role
 
-Review session artifacts to identify what worked, what didn't, and what patterns emerged. Classify each finding into one of three categories and check for auto-promotion opportunities.
+Walk the meta documentation for the current phase. Read the L1 meta file, understand its existing sections and learnings, then compare against session artifacts. Capture new learnings, flag stale ones, and detect cross-feature patterns worth promoting.
+
+## Discovery Protocol
+
+1. **Read L1 file**: Open `meta/{PHASE}.md` (provided in session context)
+2. **Parse existing structure**: Identify sections (Defaults, Project Overrides, Learnings) and their content
+3. **Parse existing learnings**: Extract all learning entries with their dates and feature names
+4. **Scan for L2 files**: Check if `meta/{phase}/` directory exists with detail files. If so, read and review each.
+5. **If no L2 directory**: Review the L1 file directly (current standard — all meta content is in L1)
 
 ## Categories
 
@@ -21,21 +29,24 @@ Review session artifacts to identify what worked, what didn't, and what patterns
 
 ## Review Focus
 
+For existing learnings:
+
+1. **Staleness** — Are any learnings contradicted by what happened this phase?
+2. **Duplication** — Is the same insight captured under multiple features?
+3. **Accuracy** — Do learnings still reflect how the system works?
+
+For new learnings:
+
 1. **What worked well** — Patterns, approaches, or tools that were effective
 2. **What to improve** — Friction points, mistakes, or inefficiencies
 3. **Patterns discovered** — Reusable approaches worth remembering
 4. **Skill gaps** — Knowledge that was missing and had to be discovered
 5. **Automation opportunities** — Repetitive tasks that could be streamlined
 
-## Auto-Promotion Detection
+For cross-feature patterns:
 
-After classifying new findings, scan the existing `learnings.md` for the current phase:
-
-1. Look for concepts that appear in 3+ different date-headed sections
-2. Use semantic similarity — "always grep after renaming", "run grep for old names", and "search for stale references on rename" all count as the same concept
-3. For each detected pattern, generate:
-   - A proposed SOP text (concise, imperative, reusable)
-   - List of source learning entries that would be annotated with `→ promoted to SOP`
+1. **Recurring themes** — Similar learnings appearing across 3+ features suggest a principle worth elevating
+2. **Promotion candidates** — Flag but don't auto-promote; include in output for user review
 
 ## Artifact Sources
 
@@ -52,7 +63,6 @@ Return findings classified by category:
 
 ### SOPs
 - **{title}**: {description}
-- **{title}**: {description}
 
 ### Overrides
 - **{title}**: {description}
@@ -60,13 +70,15 @@ Return findings classified by category:
 ### Learnings
 
 ### YYYY-MM-DD: {feature-name}
-- **{title}**: {description}
+- {learning 1}
+- {learning 2}
+- {pattern or decision worth remembering}
 
-### Auto-Promotions
-- **Proposed SOP**: {proposed SOP text}
-  - Source: {learning 1 reference}
-  - Source: {learning 2 reference}
-  - Source: {learning 3 reference}
+### Stale Learnings
+- [{date}: {feature}] "{learning text}" — **Reason**: {why it's stale}
+
+### Promotion Candidates
+- "{learning pattern}" — appears in: {feature1}, {feature2}, {feature3}
 ```
 
 If a category has no findings, include it with "None."
@@ -85,7 +97,7 @@ None.
 ### Learnings
 No notable learnings from this phase. Session was routine.
 
-### Auto-Promotions
+### Promotion Candidates
 None.
 ```
 
@@ -96,3 +108,4 @@ None.
 - **No duplicates** — check existing content in all three L2 files first
 - **Only notable items** — skip obvious or routine observations
 - **Classify conservatively** — when in doubt, classify as Learning (lowest impact)
+- **Flag staleness, don't delete** — stale entries are flagged for user review, not auto-removed

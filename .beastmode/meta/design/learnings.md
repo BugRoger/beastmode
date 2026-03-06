@@ -36,5 +36,9 @@ Friction and insights captured during design retros.
 - **Applying existing patterns to neglected domains reveals structural debt**: The meta domain had flat L1 files with inline content while context had full L1/L2 hierarchy. Applying the fractal pattern uniformly surfaced that meta was accumulating unstructured content (learnings, overrides, SOPs all mixed). Structural consistency across domains is not just aesthetic — it enables better tooling (retro classification, HITL routing).
 - **Three-category classification needs concrete definitions upfront**: Splitting meta into SOPs/overrides/learnings required explicit definitions to prevent ambiguous routing. When introducing new classification schemes, define each category with a one-liner and an example before designing the routing logic.
 
+### 2026-03-05: dynamic-retro-walkers
+- **Feature requests can generalize into architecture improvements**: User started with "deferred ideas should bubble up" and through discussion pivoted to "the retro agents should be dynamic, not hardcoded." The specific feature became a deferred idea itself — the general solution subsumes it. When a user pushes on implementation mechanism, explore whether the underlying system needs redesign, not just a new feature bolted on.
+- **Present trade-offs before recommendations**: User pushed back on "do we need a new agent?" wanting to see options first. Presenting the recommendation upfront without showing the analysis path felt presumptuous. Show the trade-off matrix first, then recommend.
+
 ### 2026-03-05: design-approval-summary
 - **Users prefer concise approval views over verbose ones**: When offered "full design doc preview" vs "executive summary," the user initially picked full but then switched to executive summary when given the format choice. For approval gates, default to the minimal information needed for a go/no-go decision.
