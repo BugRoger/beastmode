@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.4 — The Format Standard (Mar 2026)
+
+- **L1/L2/L3 format spec** — All context files standardized as rule-lists: dense summaries + numbered NEVER/ALWAYS rules
+- **L3 context records** — New record format (Context/Decision/Rationale/Source) at `context/{phase}/{domain}/{record}.md`
+- **Hierarchy table update** — L3 = Records, state removed from hierarchy levels in BEASTMODE.md
+- **@imports removed** — All L1/L2 context files use convention-based paths
+- **Retro format enforcement** — Context walker gains Format Enforcement section with `format_violation` finding type
+- **Rule-writing principles** — Anti-bloat rules documented in retro agent: absolute directives, concrete rules, bullets over paragraphs
+
+
 ### v0.14.3 — The Write Guard (Mar 2026)
 
 - **Write protection rule** — Phases write only to L3 state; retro is the sole gatekeeper for L0/L1/L2 promotion

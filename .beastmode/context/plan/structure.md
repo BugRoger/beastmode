@@ -1,155 +1,26 @@
-# STRUCTURE - Codebase Structure
+# Structure
 
-## Purpose
+Directory layout for beastmode. `.beastmode/` is the central context hub. `skills/` contains agent workflows. `agents/` houses subagent prompts. Knowledge hierarchy (context/, meta/, state/) lives under `.beastmode/`.
 
-Documents the directory layout and where different types of files belong.
+## Core Directories
+`.beastmode/` stores L0-L3 knowledge hierarchy. `skills/` contains workflow verb implementations. `agents/` has standalone agent prompts. `skills/_shared/` has cross-skill utilities.
 
-## Directory Layout
+1. ALWAYS put phase-specific logic in `skills/{verb}/phases/`
+2. ALWAYS put cross-skill utilities in `skills/_shared/`
+3. ALWAYS put agent prompts in `agents/` as standalone documents
+4. NEVER store knowledge outside `.beastmode/`
 
-```
-beastmode/
-├── .beastmode/              # Project context & state (L0/L1/L2 hierarchy)
-│   ├── BEASTMODE.md          # L0: System manual
-│   ├── state/              # Feature state (kanban)
-│   │   ├── DESIGN.md       # L1: Design phase summary
-│   │   ├── design/         # L2: Feature design states
-│   │   ├── PLAN.md         # L1: Plan phase summary
-│   │   ├── plan/           # L2: Feature plan states
-│   │   ├── VALIDATE.md     # L1: Validate phase summary
-│   │   ├── validate/       # L2: Feature validate states
-│   │   ├── RELEASE.md      # L1: Release phase summary
-│   │   ├── release/        # L2: Feature release states
-│   │   ├── IMPLEMENT.md    # L1: Implement phase summary
-│   │   └── status/         # Status tracking files
-│   ├── context/            # Build context (architecture, conventions)
-│   │   ├── DESIGN.md       # L1: Design context summary
-│   │   ├── design/         # L2: architecture.md, tech-stack.md
-│   │   ├── PLAN.md         # L1: Plan context summary
-│   │   ├── plan/           # L2: conventions.md, structure.md
-│   │   ├── IMPLEMENT.md    # L1: Implement context summary
-│   │   ├── implement/      # L2: agents.md, testing.md
-│   │   ├── VALIDATE.md     # L1: Validate context summary
-│   │   ├── validate/       # L2: quality gates
-│   │   ├── RELEASE.md      # L1: Release context summary
-│   │   └── release/        # L2: versioning, changelog format
-│   └── meta/               # Self-improvement (SOPs, overrides, learnings)
-│       ├── DESIGN.md       # L1: Design meta summary
-│       ├── design/         # L2: sops.md, overrides.md, learnings.md
-│       ├── PLAN.md         # L1: Plan meta summary
-│       ├── plan/           # L2: sops.md, overrides.md, learnings.md
-│       ├── IMPLEMENT.md    # L1: Implement meta summary
-│       ├── implement/      # L2: sops.md, overrides.md, learnings.md
-│       ├── VALIDATE.md     # L1: Validate meta summary
-│       ├── validate/       # L2: sops.md, overrides.md, learnings.md
-│       ├── RELEASE.md      # L1: Release meta summary
-│       └── release/        # L2: sops.md, overrides.md, learnings.md
-├── skills/                 # Agent skills (executable workflows)
-│   ├── _shared/           # Shared utilities (prime, checkpoint, retro, worktree, task-runner, context-report)
-│   ├── beastmode/         # Project initialization (install, init --brownfield, init --greenfield)
-│   ├── design/            # Design thinking (0-prime → 1-execute → 2-validate → 3-checkpoint)
-│   ├── plan/              # Break down into tasks
-│   ├── implement/         # Execute implementation
-│   ├── validate/          # Quality gate
-│   ├── release/           # Release management
-│   └── status/            # Show project status
-├── agents/                # Agent documentation
-│   ├── discovery.md       # Codebase discovery patterns
-│   ├── researcher.md      # Phase research agent
-│   ├── retro-context.md   # Phase retro: context doc review agent
-│   └── retro-meta.md      # Phase retro: meta learnings agent
-├── docs/                    # External-facing deep-dive documentation
-│   └── progressive-hierarchy.md  # Why hierarchical context beats flat retrieval
-├── scripts/                 # One-time utility scripts
-│   └── squash-history.sh   # Retroactive history rewrite (one commit per version tag)
-├── hooks/                 # Plugin lifecycle hooks
-│   └── session-start.sh   # Beastmode activation banner
-├── .claude/               # Claude IDE local settings
-├── .claude-plugin/        # Plugin marketplace configuration
-├── README.md              # Project overview & workflow
-├── CLAUDE.md              # Root entry point (imports .beastmode/)
-├── LICENSE                # MIT License
-└── .gitignore             # Git ignore rules
-```
+## Knowledge Directories
+`context/` for published knowledge (L1 summaries + L2 details + L3 records). `meta/` for learnings (L1 summaries + L2 SOPs/overrides/learnings). `state/` for checkpoint artifacts.
 
-## Key Directories
+1. ALWAYS organize context by phase: `context/{phase}/{domain}.md`
+2. ALWAYS organize meta by phase: `meta/{phase}/{type}.md` (sops, overrides, learnings)
+3. ALWAYS organize state by phase: `state/{phase}/YYYY-MM-DD-{feature}.md`
+4. L3 records live at: `context/{phase}/{domain}/{record}.md`
 
-**`.beastmode/`** — Project Context & State
-- Purpose: Central hub for all project knowledge organized by domain
-- Contains: BEASTMODE.md (L0), state/ (feature kanban), context/ (build knowledge), meta/ (learnings)
-- L1 files always loaded by /prime; L2 files loaded on-demand via @imports
+## Entry Points
+`CLAUDE.md` imports `@.beastmode/BEASTMODE.md` (sole autoload). Skills load L1 during prime. `/skills/{verb}/SKILL.md` defines each skill's interface.
 
-**`skills/`** — Agent Skills (Executable Workflows)
-- Purpose: Reusable agent prompts that implement the beastmode workflow
-- Contains: 7 skill definitions (beastmode, design, plan, implement, validate, release, status)
-- Each skill has: SKILL.md (prompt definition) + phases/ subdirectory + optional references/
-- Workflow skills follow standard anatomy: 0-prime → 1-execute → 2-validate → 3-checkpoint
-
-**`agents/`** — Agent Documentation
-- Purpose: Subagent prompts for specialized tasks
-- Contains: discovery.md (codebase analysis), researcher.md (phase research), retro-context.md (context doc review), retro-meta.md (meta learnings capture)
-
-**`docs/`** — External-Facing Documentation
-- Purpose: Deep-dive essays on design philosophy and differentiators
-- Contains: Standalone markdown essays linked from README
-- Not imported by agents (same rule as ROADMAP.md) — agents reference via BEASTMODE.md
-
-## Key File Locations
-
-**Entry Points:**
-- `CLAUDE.md`: Root project rules (imports @.beastmode/)
-- `.beastmode/BEASTMODE.md`: System manual (L0)
-- `README.md`: Workflow overview & installation instructions
-
-**Configuration:**
-- `.beastmode/meta/*.md`: Phase-specific learnings and overrides
-- `.claude/settings.local.json`: Local Claude IDE settings
-- `.claude-plugin/plugin.json`: Plugin definition
-
-**Core Logic (Workflow Skills):**
-- `skills/design/SKILL.md`: Design & brainstorming
-- `skills/plan/SKILL.md`: Break into implementation tasks
-- `skills/implement/SKILL.md`: Execute implementation
-- `skills/validate/SKILL.md`: Quality gate before release
-- `skills/release/SKILL.md`: Ship to main
-
-**Project Knowledge Base (Context Documents):**
-- `.beastmode/context/design/architecture.md`: System design
-- `.beastmode/context/design/tech-stack.md`: Technology stack
-- `.beastmode/context/plan/conventions.md`: Code conventions
-- `.beastmode/context/plan/structure.md`: Directory layout
-- `.beastmode/context/implement/agents.md`: Multi-agent safety rules
-- `.beastmode/context/implement/testing.md`: Test strategy
-
-## Naming Conventions
-
-**Files:**
-- `UPPERCASE.md`: L1 summary files (always loaded) — BEASTMODE.md, DESIGN.md, PLAN.md, etc.
-- `lowercase.md`: L2 detail files (loaded on-demand) — architecture.md, conventions.md
-- `SKILL.md`: Agent skill definitions (always in skill root directory)
-- `*-agent.md`: Agent prompts (in `agents/` directory or skill `references/` subdirectories)
-
-**Directories:**
-- `.beastmode/{domain}/`: Four domains — state/, context/, meta/
-- `.beastmode/{domain}/{phase}/`: L2 details per phase
-- `skills/{skill-name}/`: Skill name uses kebab-case
-
-## Where to Add New Code
-
-**New Skill (Agent Workflow):**
-- Skill definition: `skills/{skill-name}/SKILL.md`
-- Agent references: `skills/{skill-name}/references/{role}-agent.md`
-- Templates/phases: `skills/{skill-name}/{templates|phases}/`
-
-**New Feature Artifacts:**
-- Design specs: `.beastmode/state/design/{YYYY-MM-DD-feature}.md`
-- Implementation plans: `.beastmode/state/plan/{YYYY-MM-DD-feature}.md`
-- Research findings: `.beastmode/state/research/{YYYY-MM-DD-topic}.md`
-
-**New Agent Documentation:**
-- Discovery guides: `agents/{guide-name}.md`
-- Agent behaviors: `agents/{agent-type}.md`
-
-## Related Decisions
-- Agents migrated to beastmode namespace. See [agents-to-beastmode-migration](../../state/design/2026-03-04-agents-to-beastmode-migration.md)
-- Prime refactored to read-only. See [lean-prime-refactor](../../state/design/2026-03-04-lean-prime-refactor.md)
-- Progressive L1 docs restructure. See [progressive-l1-docs](../../state/design/2026-03-04-progressive-l1-docs.md)
+1. ALWAYS wire CLAUDE.md → BEASTMODE.md as sole autoload
+2. NEVER add additional @imports to CLAUDE.md
+3. Skills discover their own L1/L2 context during prime sub-phase

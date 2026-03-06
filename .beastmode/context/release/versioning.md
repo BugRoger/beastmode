@@ -1,17 +1,24 @@
 # Versioning
 
-## Purpose
+Versioning strategy and release mechanics. Semantic versioning detected from plugin.json. Squash merge collapses feature branches into one commit on main. Archive tags preserve branch history. Commit messages follow GitHub release style.
 
-Documents versioning strategy, commit message format, and archive tagging.
+## Version Detection
+Version read from `.claude-plugin/plugin.json`. Semantic versioning: major.minor.patch. Changelog auto-generated from commit categorization.
 
-## Version Strategy
+1. ALWAYS read version from `.claude-plugin/plugin.json`
+2. ALWAYS follow semantic versioning for bumps
+3. Changelog generated from categorized commits (Features, Fixes, Artifacts)
 
-<!-- Versioning strategy will be documented as the release process stabilizes. -->
+## Commit Format
+Release commits: `Release vX.Y.Z — Title` with categorized sections. One commit per version on main via squash merge.
 
-## Commit Message Format
+1. ALWAYS use format: `Release vX.Y.Z — Title`
+2. ALWAYS include categorized sections: Features, Fixes, Artifacts
+3. NEVER create multiple commits per release on main
 
-<!-- Release commit format: `Release vX.Y.Z — Title` with categorized Features/Fixes/Artifacts sections. -->
+## Archive Strategy
+Feature branch tips preserved as `archive/feature/<name>` tags before deletion. Full branch history accessible via archive tags.
 
-## Related Decisions
-
-<!-- No L3 artifacts linked yet. -->
+1. ALWAYS tag feature branch tip before deletion: `archive/feature/<name>`
+2. NEVER delete feature branches without archiving
+3. `git log --oneline main` should read as a scannable release history

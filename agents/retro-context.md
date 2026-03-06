@@ -99,9 +99,58 @@ For gaps below threshold, emit as a standard finding with type `context_gap_logg
 
 Context docs follow a progressive enhancement hierarchy. When reviewing:
 
-1. **L2 detail files**: Check "Related Decisions" section — verify links exist, one-liners are accurate, add new entries for decisions made this phase
+1. **L2 detail files**: Check rules are domain-adapted, summaries match record topics, no legacy "Purpose" or "Related Decisions" headers
 2. **L1 summary files**: Check section summaries match their L2 detail files — summaries should be 2-3 sentences capturing the current L2 content
 3. **Report hierarchy drift**: If an L1 summary no longer matches its L2 content, flag as a finding
+
+## Format Enforcement
+
+When reviewing L1/L2/L3 files, verify they follow the standardized format. Flag deviations as findings.
+
+### L1 Format (`context/{PHASE}.md`)
+
+Expected structure:
+- Top-level summary paragraph (information-heavy, distills full scope)
+- Sections grouped by L2 domains, each with:
+  - Dense summary (2-3 sentences)
+  - Numbered rules (NEVER/ALWAYS directives)
+  - Convention path reference (e.g., `design/product.md`)
+
+### L2 Format (`context/{phase}/{domain}.md`)
+
+Expected structure:
+- Top-level summary paragraph (detailed domain overview)
+- Sections grouped by L3 record topics, each with:
+  - Detailed summary of the topic area
+  - Numbered domain-adapted rules
+- No "Purpose" header, no "Related Decisions" section
+
+### L3 Format (`context/{phase}/{domain}/{record}.md`)
+
+Expected structure:
+- `# {Record Title}`
+- `## Context` — problem or situation
+- `## Decision` — what was decided
+- `## Rationale` — 1-3 bullet points
+- `## Source` — link to originating state artifact
+
+### Rule-Writing Principles
+
+When reviewing rules in L1/L2 files:
+1. Rules should use absolute directives (NEVER/ALWAYS) for non-negotiable items
+2. Rules should be concrete — actual commands/code, not vague guidance
+3. Bullets over paragraphs, action before theory
+4. No "Warning Signs" for obvious rules, no examples for trivial mistakes
+5. No paragraphs when bullets suffice, max 3 "Why" bullets
+
+### Format Violations
+
+Flag as findings with type `format_violation`:
+- L1 file missing numbered rules → finding
+- L2 file with "Purpose" or "Related Decisions" header → finding (legacy format)
+- L3 record missing any required section → finding
+- Rules using vague language instead of absolute directives → finding
+- @imports between hierarchy levels → finding
 
 ## Artifact Sources
 
@@ -123,7 +172,7 @@ Format:
 
 ### Finding 1: [Brief title]
 - **Target**: [L1 or L2 file path]
-- **Type**: accuracy | extension | gap | orphan | staleness | context_gap | context_gap_logged
+- **Type**: accuracy | extension | gap | orphan | staleness | format_violation | context_gap | context_gap_logged
 - **Discrepancy**: [What the artifact shows vs what the doc says]
 - **Evidence**: [File/artifact that revealed this]
 - **Proposed change**: [Exact text or section to update]
@@ -151,3 +200,4 @@ No changes needed. Documentation accurately reflects current state.
 - **Mark uncertainty** — use `[inferred]` for low-confidence findings
 - **Design prescriptions** — check if the design doc established patterns that should be documented
 - **Detect and score gaps** — use the Gap Detection Protocol to emit structured `context_gap` or `context_gap_logged` findings with confidence scores and seed content
+- **Enforce format spec** — check L1/L2/L3 files against the Format Enforcement section and emit `format_violation` findings for deviations

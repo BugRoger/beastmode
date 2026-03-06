@@ -44,7 +44,7 @@ Four levels. Higher levels summarize lower levels. Only L0 is autoloaded.
 | **L0** | System manual (this file) | `.beastmode/BEASTMODE.md` |
 | **L1** | Phase summaries | `.beastmode/context/{PHASE}.md`, `.beastmode/meta/{PHASE}.md` |
 | **L2** | Full detail per topic | `.beastmode/context/{phase}/{domain}.md` |
-| **L3** | Dated artifacts | `.beastmode/state/{phase}/YYYY-MM-DD-{topic}.md` |
+| **L3** | Records | `.beastmode/context/{phase}/{domain}/{record}.md` |
 
 ### Domains
 
@@ -62,11 +62,11 @@ All paths relative to `.beastmode/`.
 
 ### Write Protection
 
-Phases write artifacts to L3 (`state/`) only. Compaction and promotion to L0, L1, and L2 happens exclusively through retro.
+Phases write artifacts to `state/` only. Compaction and promotion to L0, L1, and L2 happens exclusively through retro.
 
 | Writer | Allowed Targets | Mechanism |
 |--------|----------------|-----------|
-| Phase checkpoints | L3 (`state/`) | Direct write |
+| Phase checkpoints | `state/` | Direct write |
 | Retro (embedded in checkpoints) | L0, L1, L2 | Bottom-up promotion |
 | Init (`/beastmode init`) | L0, L1, L2 | Bootstrap exemption |
 

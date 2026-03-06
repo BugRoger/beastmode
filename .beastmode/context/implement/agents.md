@@ -1,52 +1,26 @@
-# AGENTS - Multi-Agent Safety & Workflow
+# Agents
 
-## Purpose
+Multi-agent safety rules and workflows for implementation. Never guess, always verify. Explicit safety boundaries for git operations, worktree management, and file modifications. Feature workflow with branch naming and release ownership.
 
-Rules for Claude and agents working on this project. Ensures safe multi-agent collaboration and consistent git workflow.
+## Safety Rules
+High-confidence actions only. Never guess file paths. Verify worktree context. No stash, no branch switches, no worktree modifications without explicit request.
 
-## Core Rules
-
-- **High-confidence answers only**: ALWAYS verify in code; NEVER guess
-- **Multi-agent safety**: NEVER create/apply/drop git stash entries unless explicitly requested
-- **Multi-agent safety**: ALWAYS assume other agents may be working; keep unrelated WIP untouched
-- **Multi-agent safety**: NEVER create/remove/modify git worktrees unless explicitly requested (Exception: Skills manage worktrees as part of feature workflow: /design creates, /plan through /validate inherit, /release merges and cleans)
-- **Multi-agent safety**: NEVER switch branches unless explicitly requested
+1. NEVER stash, switch branches, or modify worktrees without explicit user request
+2. NEVER guess file paths — verify they exist first
+3. ALWAYS verify worktree context (pwd, git branch) before modifying files
+4. NEVER run destructive git commands (reset --hard, push --force) without user confirmation
 
 ## Git Workflow
+Natural commits during implementation. Release owns the squash merge. Feature branches named `feature/<feature>`.
 
-- **When user says "push"**: You may `git pull --rebase` to integrate latest changes (never discard other agents' work)
-- **When user says "commit"**: Scope to your changes only
-- **When user says "commit all"**: Commit everything in grouped chunks
-- **Unrecognized files**: Keep going; focus on your changes and commit only those
+1. ALWAYS commit naturally during implementation — don't batch
+2. NEVER push to main directly — release handles the squash merge
+3. ALWAYS use `feature/<feature>` branch naming
+4. Worktree discovery: check `.beastmode/worktrees/` for active worktrees
 
-## Worktree Workflow
+## Parallel Dispatch
+File-isolated waves enable parallel agent spawning. Same-wave tasks can run simultaneously if no shared files.
 
-- **Context verification**: Before editing, verify `pwd` is in the correct worktree (not main repo)
-- **Recovery from main repo edits**: If you accidentally edit main repo instead of worktree, immediately `git checkout -- <files>` to discard, then switch to worktree
-- **Merge pattern**: When merging worktree branch back to main, use `git merge --squash` (squash merge for clean single-commit history)
-
-## Feature Workflow (Branch + Worktree)
-
-- **Branch naming**: `feature/<feature>` — created by /design, used by all phases, merged by /release
-- **Worktree discovery**: All phases find worktree at `.beastmode/worktrees/<feature>` by convention
-- **Natural commits**: Phases may commit as needed. No forced commit policy.
-- **Worktree safety**: Worktree at `.beastmode/worktrees/<feature>` provides isolation
-- **Release owns merge**: /release squash-merges feature branch to main and cleans up worktree + branch
-- **Archive tagging**: Before squash merge, feature branch tip tagged as `archive/feature/<feature>` for future reference
-- **Squash merge**: `git merge --squash` collapses branch history into one commit on main
-
-## Refactoring
-
-- **Implementation plans are authoritative**: When executing a `.beastmode/state/plan/*.md` file, the plan takes precedence over existing documentation or code comments
-- **Grep for old names**: When renaming/deleting, run `grep -r "old-name" .` to find all references
-
-## Reports
-
-- Focus on your edits
-- Avoid guard-rail disclaimers unless truly blocked
-- End with brief "other files present" note only if relevant
-
-## Related Decisions
-- Agent safety rules formalized. See [implement-skill-refactor](../../state/design/2026-03-01-implement-skill-refactor.md)
-- Git branching strategy for feature workflow. See [git-branching-strategy](../../state/design/2026-03-04-git-branching-strategy.md)
-- Squash-per-release commit architecture. See [squash-per-release](../../state/design/2026-03-05-squash-per-release.md)
+1. ALWAYS verify file isolation before parallel dispatch
+2. NEVER let two agents modify the same file simultaneously
+3. Report results per-agent after completion — never merge silently

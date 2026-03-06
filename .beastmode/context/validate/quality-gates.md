@@ -1,13 +1,17 @@
 # Quality Gates
 
-## Purpose
+Quality gate definitions for the validate phase. Gates define criteria, thresholds, and pass/fail rules that must be satisfied before release. Currently emergent — formal gate definitions added as the project matures.
 
-Defines quality gate criteria for the validate phase.
+## Gate Criteria
+Project-specific checks: tests, lint, type checks. Each gate has a pass/fail threshold. All gates must pass before proceeding to release.
 
-## Gates
+1. ALWAYS run all configured quality checks before release
+2. NEVER proceed to release with any failing gate
+3. Gate definitions are project-specific — discovered during init or added manually
 
-<!-- Quality gate definitions will be added as formal gates emerge beyond manual verification. -->
+## Manual Verification
+Current gates are manual — invoke skills and verify behavior. Automated gates will be added as patterns stabilize.
 
-## Related Decisions
-
-<!-- No L3 artifacts linked yet. -->
+1. ALWAYS verify skill invocation produces expected artifacts
+2. ALWAYS check context files for placeholder patterns
+3. NEVER release without running validate phase

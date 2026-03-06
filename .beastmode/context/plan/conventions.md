@@ -1,168 +1,32 @@
-# CONVENTIONS - Code Conventions
+# Conventions
 
-## Purpose
+Naming patterns, code style, and anti-patterns for beastmode development. UPPERCASE.md for invariant files, lowercase.md for variant. Phase files numbered 0-3. Skills use YAML frontmatter manifests. No @imports between hierarchy levels.
 
-Documents naming patterns, code style, and project-specific conventions.
+## File Naming
+UPPERCASE.md for invariant meta files (always exist, same structure). lowercase.md for variant files (plans, research, date-prefixed). State files: YYYY-MM-DD-feature-name.md.
 
-## Naming
+1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
+2. ALWAYS prefix state files with date: YYYY-MM-DD-feature-name.md
+3. NEVER mix naming conventions within a directory level
 
-**Files:**
-- UPPERCASE.md: Invariant meta files with fixed structure (CLAUDE.md, STACK.md, CONVENTIONS.md)
-- lowercase.md: Variant content files (dates, research, plans)
-- Example: `CONVENTIONS.md` (template), `2026-03-01-bootstrap-discovery-v2.md` (variant), `SKILL.md` (skill definition)
-- Shared utilities: lowercase (context-report.md, worktree-manager.md) — variant content @imported by phases
+## Skill Definitions
+Each skill has SKILL.md with YAML frontmatter defining name, description, trigger, phases, inputs, and outputs. Phase files follow 0-prime through 3-checkpoint numbering.
 
-**Phase Files:**
-- Pattern: `0-prime.md`, `1-execute.md`, `2-validate.md`, `3-checkpoint.md` (0-indexed for standard anatomy)
-- Location: `skills/{skill}/phases/`
-- Example: `phases/0-prime.md`, `phases/1-execute.md`, `phases/2-validate.md`, `phases/3-checkpoint.md`
+1. ALWAYS define skill interface in SKILL.md with YAML frontmatter
+2. ALWAYS number phase files: 0-prime, 1-execute, 2-validate, 3-checkpoint
+3. ALWAYS write phase instructions in imperative voice with numbered steps
 
-**Directories:**
-- Skill directories: lowercase-with-hyphens, colocated with SKILL.md manifest
-- Example: `skills/beastmode/`, `skills/design/`, `skills/implement/`
+## Gate Syntax
+Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gates use `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections.
 
-**State Files:**
-- Pattern: `YYYY-MM-DD-feature-name.md` (hyphenated date + kebab-case feature)
-- Location: `.beastmode/state/{phase}/`
-- Example: `state/design/2026-03-04-git-branching-strategy.md`
-
-**Branches:**
-- Feature branches: `feature/<feature>` — spanning entire feature cycle (design → plan → implement → validate → release)
-
-**Variables:**
-- camelCase: For variables in documentation (e.g., subagentType, bootstrapPath)
-- snake_case: In YAML/structured fields (e.g., sub_issue_id, start_date)
-
-**Functions:**
-- Skill names: lowercase-with-hyphens slash-prefixed (e.g., /beastmode, /design, /plan)
-- Agent names: Descriptive titles, TitleCase (e.g., "CONVENTIONS Agent", "STACK Agent")
-- Internal functions in prompts: descriptive-with-hyphens (e.g., "Spawn agents", "Collect outputs")
-
-**Types/Interfaces:**
-- YAML frontmatter fields: TitleCase keys (name, description, version, author)
-- Agent types: TitleCase (Explore)
-
-## Code Style
-
-**Imports:**
-- Use @ symbol for internal imports (e.g., @.beastmode/BEASTMODE.md, @phases/setup.md, @references/common-instructions.md)
-- URL-style references with forward slashes for semantic clarity
-
-**@ Import Semantics:**
-- `@file` standalone on its own line = mandatory import (read this file now)
-- `[name](path)` in prose = reference link (consult if useful)
-- NEVER use `@` in flowing prose text — use markdown links instead
-
-**Exports:**
-- Markdown files exported as reference material via @ imports
-- Each SKILL.md declares metadata via YAML frontmatter block (name, description)
-- Skills structured with clear hierarchical sections (##, ###, ####)
-
-**Error Handling:**
-- Explicit error handling sections in skill documentation (e.g., "CRITICAL CONSTRAINTS", "When to Stop and Ask for Help")
-- Conditional logic marked with clear decision points (e.g., "If prerequisite exists... If missing...")
-- Structured error handling with categorized conditions (timeout, empty response, agent error)
-
-## Patterns
-
-**Skill Manifest Pattern:**
-Skills follow a standard YAML frontmatter + markdown structure:
-```yaml
----
-name: skill-name
-description: <Action words> — <keywords>. Use when <trigger>. <What it does>.
----
-
-# /skill-name
-
-<One sentence overview.>
-
-<HARD-GATE>
-Read @_shared/task-runner.md. Parse and execute the phases below.
-
-<Skill-specific constraints.> [→ Why](references/constraints.md)
-</HARD-GATE>
-
-## Phases
-
-0. [Prime](phases/0-prime.md) — Load context, research if needed
-1. [Execute](phases/1-execute.md) — Do the actual work
-2. [Validate](phases/2-validate.md) — Check work, approval gates
-3. [Checkpoint](phases/3-checkpoint.md) — Save artifacts, capture learnings
-```
-
-**Gate Syntax:**
-- Gate headings: `## N. [GATE|<namespace>.<gate-id>]`
-- Gate options: `### [GATE-OPTION|mode] Label`
-- Preamble: 2 lines — config lookup instruction + default mode
-- Nested gates use heading depth matching their context (####, #####) — task runner detects `[GATE|` regardless of heading level
-- Config lookup: `gates.{id}` for approval gates, `transitions.{id}` for phase transition gates
-
-**Skill Authoring Rules:**
-- SKILL.md body MUST be under 50 lines
-- Description format: `<Action words> — <keywords>. Use when <trigger>. <What it does>.`
-- HARD-GATE block required if skill has constraints (link to references/constraints.md)
-- Task runner referenced as first line in HARD-GATE block (not trailing @import)
-- No trailing @_shared/task-runner.md at bottom of SKILL.md
-- 4 phases (0-prime, 1-execute, 2-validate, 3-checkpoint), descriptions are terse (3-5 words)
-- One sentence overview after heading
-
-**Phase File Rules:**
-- Numbered internal steps: `## 1. Step Name`, `## 2. Step Name`
-- Imperative voice throughout (commands, not descriptions)
-- @import shared functionality at any position: `@../_shared/retro.md`
-- Specific, actionable instructions (not conceptual)
-- Code examples where applicable
-
-**Shared Functionality Rules:**
-- Location: `skills/_shared/`
-- Self-contained, context-aware (figures out phase/feature from environment)
-- No parameters needed from calling skill
-- Include templates/examples inline
-
-**Documentation Assembly Pattern:**
-Prompts are assembled by concatenating multiple source files:
-```
-Read: references/{prime}-agent.md
-Read: references/common-instructions.md
-Append: "\n\n## Current Content\n\n"
-Append: .beastmode/context/{phase}/{detail}.md content
-```
-Seen in: skills/beastmode/SKILL.md
-
-**Placeholder Pattern for Template Substitution:**
-Placeholders use bracket notation with hints:
-- `[pattern]: [example]` - For naming/file conventions
-- `[e.g., ...]` - For list items
-- `[command]` - For shell commands
-- `<!-- Fill in ... -->` - For section comments
-
-**Merge Rules Pattern:**
-All prime document updates follow these rules:
-- **Preserve** sections with real content
-- **Fill** sections with placeholder patterns
-- **Update** stale information
-- **Keep** original structure
-
-**Hierarchical Organization Pattern:**
-Workflow phases organized with progressive detail:
-```
-High-level overview → Numbered phases → Phase details with entry/exit criteria → Quick reference
-```
-Example: /implement skill with Prime, Execute, Validate, Checkpoint phases
+1. ALWAYS use exact gate syntax: `## N. [GATE|namespace.gate-id]`
+2. ALWAYS provide both `[GATE-OPTION|human]` and `[GATE-OPTION|auto]` subsections
+3. NEVER use @imports between hierarchy levels — convention paths in BEASTMODE.md
 
 ## Anti-Patterns
+Common mistakes to avoid in beastmode development.
 
-- NEVER use relative imports without @ prefix for clarity (use `@.beastmode/context/FILE.md` not `../context/FILE.md`)
-- AVOID mixing placeholder formats in same section (use consistent brackets across related items)
-- NEVER include code blocks in template placeholders (use `[command]` not `` `command` ``)
-- AVOID single-file skill definitions (structure with SKILL.md in skill directory)
-- NEVER create unnamed worktrees or isolated work without clear integration strategy (approved: feature worktrees at `.beastmode/worktrees/<feature>` managed by design → release phases)
-- AVOID paragraph prose where bullet lists suffice (prefer bullets for readability)
-- NEVER duplicate workflow sequence strings in skill YAML descriptions; centralize in README.md and ARCHITECTURE.md
-- NEVER call `EnterPlanMode`/`ExitPlanMode` in skill definitions outside /plan skill context
-
-## Related Decisions
-- Skill anatomy standardized to 4 sub-phases. See [skill-anatomy-refactor](../../state/design/2026-03-04-skill-anatomy-refactor.md)
-- Skill refactor established current patterns. See [skill-refactor](../../state/design/2026-03-01-skill-refactor.md)
-- Phase context report added to all skills. See [phase-context-report](../../state/design/2026-03-01-phase-context-report.md)
+1. NEVER put shared logic in individual skills — extract to `skills/_shared/`
+2. NEVER create circular @imports between files
+3. NEVER hardcode paths that should be convention-based
+4. NEVER add "just in case" sections to context docs — document what exists

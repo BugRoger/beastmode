@@ -1,75 +1,22 @@
-# STACK - Technology Stack
+# Tech Stack
 
-## Purpose
+Claude Code plugin platform. Markdown + YAML frontmatter for skill definitions. No runtime dependencies — pure agentic workflow system interpreted directly by Claude Code. Distributed via Claude Code marketplace.
 
-Documents the technology stack, dependencies, and versions used in this project.
+## Platform
+Claude Code is the host environment. Skills execute as agentic workflows. Multi-step workflow with parallel agent spawning.
 
-## Core Stack
+1. NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
+2. ALWAYS distribute via Claude Code marketplace
+3. Claude Code CLI provides skill execution runtime and subagent spawning
 
-**Platform:**
-- Framework: Claude Code plugin system
-- Language: Markdown + YAML frontmatter (for skill definitions)
-- Distribution: Claude Code marketplace
+## Dependencies
+No traditional package dependencies. Core components: Claude Code CLI (runtime), Anthropic Claude API (LLM backend), Git (version control + worktrees), Markdown + YAML (documentation + metadata).
 
-**Architecture:**
-- Type: Agentic workflow system (not a traditional application)
-- Execution model: Multi-step workflow with parallel agent spawning
-- Interface: Claude Code `/skills` command system
+1. ALWAYS use Git for version control and worktree isolation
+2. NEVER introduce package managers — there's nothing to package
 
-## Key Dependencies
+## Development
+No build step. Manual testing via skill invocation. No automated linting.
 
-Beastmode is a meta-framework for Claude Code — it doesn't have traditional package dependencies. Instead, it defines:
-
-| Component | Purpose |
-|-----------|---------|
-| Claude Code CLI | Host environment and skill execution runtime |
-| Anthropic Claude API | LLM backend (via Claude Code) |
-| Git | Version control and worktree isolation for `/implement` phase |
-| Markdown + YAML | Documentation format and skill metadata |
-
-## Development Tools
-
-**Build:**
-- None required — markdown/YAML files are interpreted directly
-
-**Testing:**
-- Manual testing via `/skills` command invocation
-
-**Linting:**
-- No automated linting configured
-- Manual review of markdown and prompt quality
-
-## Commands
-
-```bash
-# Install plugin
-claude plugin marketplace update
-claude plugin update beastmode@beastmode-marketplace --scope project
-
-# Initialize project with beastmode
-/beastmode install              # Initialize .beastmode/ structure
-/beastmode init --brownfield    # Auto-populate context from codebase
-/beastmode init --greenfield    # Interactive project setup
-
-# Run core workflow phases
-/design
-/plan
-/implement
-/validate
-/release
-
-# Standalone utilities
-/status
-```
-
-## Notes
-
-- **No runtime dependencies:** Beastmode is a workflow/documentation system, not an executable application
-- **Self-bootstrapping:** Uses its own skills to analyze and document codebases
-- **Markdown-first:** All documentation and skill prompts are written in markdown
-- **Parallel execution:** `/beastmode init --brownfield` spawns parallel Explore agents to auto-populate context
-- **Author:** bugroger (github: BugRoger)
-
-## Related Decisions
-- Claude Code is the mandatory platform. See [session-tracking](../../state/design/2026-03-01-session-tracking.md)
-- Markdown-first with no runtime dependencies. See [bootstrap-prefill](../../state/design/2026-03-01-bootstrap-prefill.md)
+1. Testing is manual — invoke skills and verify behavior
+2. Install via: `claude plugin marketplace update` then `claude plugin update beastmode@beastmode-marketplace --scope project`
