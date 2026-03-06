@@ -103,7 +103,11 @@ Update version in all three files:
 - `.claude-plugin/marketplace.json` → version in plugins array
 - `hooks/session-start.sh` → banner line `BEASTMODE vX.Y.Z`
 
-## 8. Commit Release Changes
+## 8. Phase Retro
+
+@../_shared/retro.md
+
+## 9. Commit Release Changes
 
 Stage and commit release artifacts (changelog, version bumps):
 
@@ -118,11 +122,11 @@ Artifacts:
 "
 ```
 
-## 9. Merge and Cleanup
+## 10. Merge and Cleanup
 
 @../_shared/worktree-manager.md#Merge Options
 
-## 10. Git Tagging
+## 11. Git Tagging
 
 ```bash
 git tag -a vX.Y.Z -m "Release X.Y.Z"
@@ -130,7 +134,7 @@ git tag -a vX.Y.Z -m "Release X.Y.Z"
 
 Suggest: `git push origin vX.Y.Z`
 
-## 11. Plugin Marketplace Update
+## 12. Plugin Marketplace Update
 
 Suggest running:
 ```bash
