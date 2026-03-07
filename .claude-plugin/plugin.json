@@ -1,7 +1,7 @@
 {
   "name": "beastmode",
   "description": "Agentic workflow skills for Claude Code. Activate beastmode.",
-  "version": "0.14.18",
+  "version": "0.14.19",
   "author": {
     "name": "bugroger"
   },

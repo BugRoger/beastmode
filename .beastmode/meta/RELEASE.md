@@ -1,10 +1,10 @@
 # Release Meta
 
-Learnings from release phases. Key patterns: worktrees branch from older commits so version files are always stale, squash merge strategy produces clean single-commit history while avoiding rebase conflicts, retro must run before commit to capture all outputs, and retro findings reliably catch internal inconsistencies that implementation and validate miss.
+Process knowledge from release phases. Key patterns: worktrees branch from older commits so version files are always stale, squash merge strategy produces clean single-commit history while avoiding rebase conflicts, retro must run before commit to capture all outputs, and retro findings reliably catch internal inconsistencies that implementation and validate miss.
 
-## SOPs
-No release SOPs established yet. SOPs will be added by retro classification or auto-promoted from recurring learnings.
-## Overrides
-No project-specific release overrides yet. Overrides will be added by retro classification or user.
-## Learnings
-Seven key learnings from v0.11.0: squash merge supersedes merge-only, archive tags preserve branch history, step ordering matters for squash merge, and version file staleness persists. Plus three from v0.14.4: docs-only releases skip validate, retro agent extension validates reuse pattern, retro catches internal inconsistencies. Three foundational learnings from v0.4.1.
+## Procedures
+
+No procedures promoted yet.
+
+## Domains
+Three insight clusters: version conflict management (structural staleness confirmed across releases), squash merge workflow (supersedes merge-only, archive tags preserve history, step ordering matters), and retro timing/quality (retro before commit, docs-only releases skip validate, retro catches inconsistencies). No upstream feedback recorded yet.

@@ -1,10 +1,10 @@
 # Validate Meta
 
-Learnings from validation phases. No notable patterns captured yet — validate learnings will accumulate as more validation cycles run.
+Process knowledge from validation phases. No notable patterns captured yet — insights will accumulate as more validation cycles run.
 
-## SOPs
-No validate SOPs established yet. SOPs will be added by retro classification or auto-promoted from recurring learnings.
-## Overrides
-No project-specific validate overrides yet. Overrides will be added by retro classification or user.
-## Learnings
-No notable learnings from validation phases yet.
+## Procedures
+
+No procedures promoted yet.
+
+## Domains
+No insights or upstream feedback recorded yet.

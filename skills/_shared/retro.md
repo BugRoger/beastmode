@@ -110,58 +110,73 @@ Show user a summary:
 ```
 ### Meta Review Results
 
-**Meta findings** ({N} items):
-- SOPs: {count} proposed
-- Overrides: {count} proposed
-- Learnings: {count} new
-- Promotion candidates: {count} detected
+**New records**: {N} ({insights count} insights, {upstream count} upstream)
+**L2 edits**: {N} proposed
+**Promotions**: {N} candidates ({HIGH count} immediate, {MED count} frequency-based)
 ```
 
-If no findings: "Meta review: no changes needed." and skip gates 8-10.
+If no findings: "Meta review: no changes needed." and skip gates 8-9.
 
-### 8. [GATE|retro.learnings]
+### 8. [GATE|retro.records]
 
-Read `.beastmode/config.yaml` → resolve mode for `retro.learnings`.
+Read `.beastmode/config.yaml` → resolve mode for `retro.records`.
 Default: `human`.
 
-#### [GATE-OPTION|human] Review Learnings
+#### [GATE-OPTION|human] Review Records
 
-Show learnings to user, then auto-append to `.beastmode/meta/{phase}/learnings.md` under the appropriate date-headed section.
+Present all proposed L3 records (new files and appends):
 
-#### [GATE-OPTION|auto] Auto-Append Learnings
+```
+### Meta Records
 
-Auto-append learnings silently.
-Log: "Gate `retro.learnings` → auto: appended {N} learnings"
+**Proposed records** ({N} total):
+- {record title} — {action: create/append} {target file} [{domain}] [{confidence}]
 
-### 9. [GATE|retro.sops]
+Apply these records? [Y/n]
+```
 
-Read `.beastmode/config.yaml` → resolve mode for `retro.sops`.
+#### [GATE-OPTION|auto] Auto-Apply Records
+
+Apply all proposed L3 records silently.
+Log: "Gate `retro.records` → auto: applied {N} meta records"
+
+### 9. [GATE|retro.promotions]
+
+Read `.beastmode/config.yaml` → resolve mode for `retro.promotions`.
 Default: `human`.
 
-#### [GATE-OPTION|human] Review SOPs
+If no promotion candidates, skip this gate.
 
-Present each proposed SOP (including auto-promoted ones) and ask for approval before writing to `.beastmode/meta/{phase}/sops.md`.
-On approval of auto-promoted SOPs: annotate source learning entries in `learnings.md` with `→ promoted to SOP`.
+#### [GATE-OPTION|human] Review Promotions
 
-#### [GATE-OPTION|auto] Auto-Write SOPs
+Present each proposed promotion:
 
-Auto-write all proposed SOPs.
-On auto-promoted SOPs: annotate source learning entries in `learnings.md` with `→ promoted to SOP`.
-Log: "Gate `retro.sops` → auto: wrote {N} SOPs"
+```
+### Meta Promotions
 
-### 10. [GATE|retro.overrides]
+**Proposed promotions** ({N} total):
+- {entry title} — {current level} → {target level} ({basis})
 
-Read `.beastmode/config.yaml` → resolve mode for `retro.overrides`.
-Default: `human`.
+Apply these promotions? [Y/n]
+```
 
-#### [GATE-OPTION|human] Review Overrides
+#### [GATE-OPTION|auto] Auto-Apply Promotions
 
-Present each proposed override and ask for approval before writing to `.beastmode/meta/{phase}/overrides.md`.
+Apply all proposed promotions silently.
+Log: "Gate `retro.promotions` → auto: applied {N} promotions"
 
-#### [GATE-OPTION|auto] Auto-Write Overrides
+### 10. Apply Changes and Recompute L1
 
-Auto-write all proposed overrides.
-Log: "Gate `retro.overrides` → auto: wrote {N} overrides"
+After gate approvals:
+
+1. **Write approved L3 records** — Create new files or append observation sections to existing records
+2. **Apply approved L2 edits** — Update `insights.md` and `upstream.md` summaries
+3. **Apply approved promotions** — Add entries to L1 Procedures section, update L3 confidence tags
+4. **Recompute L1 summaries** — For `meta/{PHASE}.md`:
+   - Read all L2 files in `meta/{phase}/`
+   - Rewrite Procedures section from promoted entries
+   - Rewrite Domains summary from L2 content
+   - Rewrite top-level summary paragraph
 
 ---
 

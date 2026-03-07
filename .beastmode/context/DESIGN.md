@@ -1,6 +1,6 @@
 # Design Context
 
-Architecture, technology decisions, and product definition for beastmode. Plugin architecture on Claude Code with markdown-first skill definitions, git worktree isolation, and a knowledge hierarchy organized across Context, Meta, and State domains. Five-phase workflow (design -> plan -> implement -> validate -> release) with four sub-phases each. Two-tier HITL gate system with task-runner enforcement. Artifact-scoped retro reconciliation. Write-protected knowledge promotion.
+Architecture, technology decisions, and product definition for beastmode. Plugin architecture on Claude Code with markdown-first skill definitions, git worktree isolation, and a knowledge hierarchy organized across Context, Meta, and State domains. Five-phase workflow (design -> plan -> implement -> validate -> release) with four sub-phases each. Two-tier HITL gate system with task-runner enforcement. Artifact-scoped retro reconciliation with confidence-gated meta promotion. Write-protected knowledge promotion.
 
 ## Product
 Product vision, four key differentiators, and capabilities. Beastmode turns Claude Code into a disciplined engineering partner with five-phase workflow, progressive knowledge hierarchy, self-improving retro loop, context persistence, and design-before-code discipline.
@@ -10,14 +10,15 @@ Product vision, four key differentiators, and capabilities. Beastmode turns Clau
 3. Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, /beastmode command, deadpan persona
 
 ## Architecture
-System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion. L0 is minimal: persona spec and workflow map only; operational details live in skills.
+System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion. L0 is minimal: persona spec and workflow map only; operational details live in skills. Meta domain uses progressive L1/L2/L3 hierarchy with two L2 domains (insights + upstream) and confidence-gated promotion.
 
 1. ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 2. NEVER use @imports between hierarchy levels — convention-based paths only
-3. Three data domains: State (feature workflow), Context (published knowledge), Meta (learnings/SOPs/overrides)
+3. Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with insights + upstream domains)
 4. Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 5. NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 6. Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
+7. Meta walker mirrors context walker algorithm — L1 quick-check, L2 deep-check, L3 record management with confidence-gated promotion
 
 ## Task Runner
 Shared utility that parses markdown skill files into hierarchical tasks and enforces step completion through a depth-first execution loop. Lazy expansion, structural gate enforcement, validation auto-reset.
