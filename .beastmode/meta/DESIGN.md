@@ -1,10 +1,12 @@
 # Design Meta
 
-Learnings from design phases. Key patterns: competitive analysis beats brainstorming for workflow redesign, detailed designs with locked decisions pay off in faster planning, fractal consistency beats special-casing, HITL gates must be carried forward when restructuring write paths, feature requests that push on mechanism can generalize into architecture improvements, critical-path instructions must be visible task-runner steps (not HTML comments or @imported files), research-first design sessions produce reusable taxonomies that inform multiple downstream designs, L0 should be persona + map only with operational details delegated to skills, and simple classification rules based on observable runtime behavior (like "spawned = agent") create clean file organization.
+Process knowledge from design phases. Key patterns: research-informed design outperforms brainstorming, fractal consistency across domains beats special-casing, HITL gate design requires structural enforcement, instruction visibility on critical paths demands visible markdown, and mirroring existing algorithms constrains the design space productively. Extensive insights spanning competitive analysis, cross-session state, scope management, L0 content scoping, agent organization, external documentation drift, and gate-to-user-decision mapping.
 
-## SOPs
-Two SOPs established: (1) "Research before structural design decisions" — produce dated research artifacts from 3+ external sources before locking decisions on structural extensions, taxonomy changes, or workflow redesigns. Auto-promoted from 4 recurring learnings. (2) "Walk every instance, don't describe the pattern" — enumerate every instance in concrete tables rather than describing abstract patterns. Catches edge cases that pattern descriptions miss. Auto-promoted from 3 recurring learnings.
-## Overrides
-No project-specific design overrides yet. Overrides will be added by retro classification or user.
-## Learnings
-Extensive design learnings spanning competitive analysis, fractal hierarchy patterns, HITL gate design, cross-session state management, research-informed documentation structure, dynamic retro walker design, HITL gate adherence patterns, the static-hook/Claude-side-intelligence split for pre-session features, research-first domain taxonomy design for L2 expansion, L0 content scope simplification, and agent file organization conventions ({phase}-{role}.md naming, "spawned = agent" classification rule). Learnings from 2026-03-04 through 2026-03-06 design sessions.
+## Procedures
+
+1. ALWAYS produce dated research artifacts from 3+ external sources before locking structural decisions — research-informed designs outperform brainstormed ones
+2. ALWAYS enumerate every instance in concrete tables for N-instance decisions — catches edge cases that pattern descriptions miss
+3. ALWAYS start from existing algorithms when building structurally analogous subsystems — constrains design space and ensures consistency
+
+## Domains
+Ten insight clusters across competitive analysis, fractal consistency, HITL gate design, cross-session state, instruction visibility, scope management, L0 content scope, agent organization, external documentation drift, and miscellaneous design patterns. No upstream feedback recorded yet.

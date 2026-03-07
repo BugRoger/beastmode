@@ -19,9 +19,8 @@ gates:
 
   retro:
     context-write: human             # APPROVAL — all context doc writes (L2 edits + new L2 files)
-    learnings: human                 # APPROVAL — append learnings to meta
-    sops: human                      # APPROVAL — write SOPs to meta
-    overrides: human                 # APPROVAL — write overrides to meta
+    records: human                   # APPROVAL — L3 record creation and appends
+    promotions: human                # APPROVAL — promotions to L1/L2
 
   release:
     version-confirmation: auto       # APPROVAL — version bump override
