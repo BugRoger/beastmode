@@ -14,12 +14,12 @@ Four-level progressive enhancement: L0 (system manual, autoloaded), L1 (phase su
 7. L0 contains persona + map only — operational details belong in skills, not in the autoloaded system manual
 
 ## Data Domains
-Three domains with distinct purposes: State (feature workflow, `.beastmode/state/`), Context (published knowledge, `.beastmode/context/`), Meta (process knowledge, `.beastmode/meta/`). Meta uses two L2 domains per phase: `insights.md` (emerging process patterns) and `upstream.md` (beastmode feedback). Topic-clustered L3 records accumulate observations with confidence tags ([LOW]/[MEDIUM]/[HIGH]).
+Three domains with distinct purposes: State (feature workflow, `.beastmode/state/`), Context (published knowledge, `.beastmode/context/`), Meta (process knowledge, `.beastmode/meta/`). Meta uses two L2 domains per phase: `process.md` (process patterns) and `workarounds.md` (beastmode feedback). Topic-clustered L3 records accumulate observations with confidence tags ([LOW]/[MEDIUM]/[HIGH]).
 
 1. NEVER mix domain concerns — State tracks features, Context documents knowledge, Meta captures process knowledge
 2. ALWAYS write phase artifacts to `state/` — retro promotes to `context/` and `meta/`
 3. Write protection: phases write `state/` only; retro promotes to context and meta
-4. Meta domain has two L2 domains per phase: insights.md (process patterns) and upstream.md (beastmode feedback)
+4. Meta domain has two L2 domains per phase: process.md (process patterns) and workarounds.md (beastmode feedback)
 5. Meta L3 records are topic-clustered with confidence tags — no date prefixes
 
 ## Sub-Phase Anatomy

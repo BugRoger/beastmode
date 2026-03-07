@@ -2,9 +2,8 @@
 
 Process knowledge from validation phases. No notable patterns captured yet — insights will accumulate as more validation cycles run.
 
-## Procedures
+## Process
+No process patterns recorded yet.
 
-No procedures promoted yet.
-
-## Domains
-No insights or upstream feedback recorded yet.
+## Workarounds
+None recorded.

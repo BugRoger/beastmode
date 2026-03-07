@@ -110,7 +110,7 @@ Show user a summary:
 ```
 ### Meta Review Results
 
-**New records**: {N} ({insights count} insights, {upstream count} upstream)
+**New records**: {N} ({process count} process, {workarounds count} workarounds)
 **L2 edits**: {N} proposed
 **Promotions**: {N} candidates ({HIGH count} immediate, {MED count} frequency-based)
 ```
@@ -170,7 +170,7 @@ Log: "Gate `retro.promotions` → auto: applied {N} promotions"
 After gate approvals:
 
 1. **Write approved L3 records** — Create new files or append observation sections to existing records
-2. **Apply approved L2 edits** — Update `insights.md` and `upstream.md` summaries
+2. **Apply approved L2 edits** — Update `process.md` and `workarounds.md` summaries
 3. **Apply approved promotions** — Add entries to L1 Procedures section, update L3 confidence tags
 4. **Recompute L1 summaries** — For `meta/{PHASE}.md`:
    - Read all L2 files in `meta/{phase}/`

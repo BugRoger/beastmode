@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.21 — The Meta Hierarchy Tightening (Mar 2026)
+
+- **Domain rename** — `insights.md` → `process.md`, `upstream.md` → `workarounds.md` across all 5 phases
+- **Directory rename** — `insights/` → `process/`, `upstream/` → `workarounds/` for all L3 record directories
+- **L1 reformat** — All 5 meta L1 files now use `## Process` / `## Workarounds` sections with inlined rules (mirrors Context L1 format)
+- **L2 reformat** — All 10 meta L2 files restructured with `##` sections per L3 topic (mirrors Context L2 format)
+- **Retro agent update** — `retro-meta.md` updated to target new domain names and output format
+- **Context/skill vocabulary** — Architecture docs and `skills/_shared/retro.md` updated from insights/upstream to process/workarounds
+
+
 ### v0.14.20 — The Docs Consistency Audit (Mar 2026)
 
 - **Domain count fix** — README updated from "four domains" to three (Product merged into Context at v0.14.0)

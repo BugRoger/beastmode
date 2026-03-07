@@ -10,11 +10,11 @@ Product vision, four key differentiators, and capabilities. Beastmode turns Clau
 3. Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, /beastmode command, deadpan persona
 
 ## Architecture
-System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion. L0 is minimal: persona spec and workflow map only; operational details live in skills. Meta domain uses progressive L1/L2/L3 hierarchy with two L2 domains (insights + upstream) and confidence-gated promotion.
+System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per level, three data domains (Context/State/Meta), worktree isolation, squash-per-release commits, two-tier HITL gate system with task-runner enforcement, artifact-scoped retro reconciliation, and write-protected knowledge promotion. L0 is minimal: persona spec and workflow map only; operational details live in skills. Meta domain uses progressive L1/L2/L3 hierarchy with two L2 domains (process + workarounds) and confidence-gated promotion.
 
 1. ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 2. NEVER use @imports between hierarchy levels — convention-based paths only
-3. Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with insights + upstream domains)
+3. Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains)
 4. Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 5. NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 6. Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale

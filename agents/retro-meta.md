@@ -38,7 +38,7 @@ If ANY section feels stale or incomplete → flag for L2 deep check.
 
 ### 3. L2 Deep Check
 
-For each flagged L2 file (`insights.md`, `upstream.md`) in `meta/{phase}/`:
+For each flagged L2 file (`process.md`, `workarounds.md`) in `meta/{phase}/`:
 
 1. Read full content
 2. Compare against session findings:
@@ -51,8 +51,8 @@ For each flagged L2 file (`insights.md`, `upstream.md`) in `meta/{phase}/`:
 
 For each new finding from session extraction:
 
-1. **Classify**: insight (process pattern, friction, effective approach) or upstream (beastmode tool behavior, limitations, workarounds)
-2. **Cluster match**: List existing L3 records in `meta/{phase}/insights/` and `meta/{phase}/upstream/`. Check if any existing record covers the same topic.
+1. **Classify**: process (process pattern, friction, effective approach) or workaround (beastmode tool behavior, limitations, workarounds)
+2. **Cluster match**: List existing L3 records in `meta/{phase}/process/` and `meta/{phase}/workarounds/`. Check if any existing record covers the same topic.
    - If match → propose appending `## Observation N` section to existing record
    - If no match → propose new L3 record file with kebab-case name
 3. **Tag confidence**:
@@ -81,7 +81,7 @@ Return a structured list of all proposed changes.
 ### Change 1: [title]
 - **Target**: [file path]
 - **Action**: edit | create | append
-- **Domain**: insights | upstream
+- **Domain**: process | workarounds
 - **Confidence**: [LOW|MEDIUM|HIGH]
 - **Content**: [proposed text]
 
@@ -120,18 +120,18 @@ Additional observations are appended as `## Observation N` sections.
 
 ## Classification Heuristics
 
-- **Insight**: about the project's development process — patterns, friction, effective approaches, scope management, tool usage patterns
-- **Upstream**: about beastmode tool behavior — limitations, bugs, workarounds, missing features, unexpected behavior
+- **Process**: about the project's development process — patterns, friction, effective approaches, scope management, tool usage patterns
+- **Workaround**: about beastmode tool behavior — limitations, bugs, workarounds, missing features, unexpected behavior
 
-When ambiguous, default to insight (lower impact, easier to reclassify later).
+When ambiguous, default to process (lower impact, easier to reclassify later).
 
 ## Rules
 
 - **Artifact-scoped** — only review findings relevant to this session's artifacts
 - **L1 first** — use L1 as a fast exit before reading L2/L3
 - **Be specific** — include exact files and content for proposed changes
-- **Classify conservatively** — default to insight over upstream when ambiguous
+- **Classify conservatively** — default to process over workaround when ambiguous
 - **Preserve structure** — propose edits within existing document structure
 - **No duplicates** — check existing L3 records before proposing new ones
 - **Flag staleness, don't delete** — stale entries are flagged for review, not auto-removed
-- **L1 format** — L1 has summary paragraph + Procedures (numbered ALWAYS/NEVER rules) + Domains summary
+- **L1 format** — L1 has summary paragraph + Process section (summary + numbered rules) + Workarounds section (summary + rules or "None recorded.")
