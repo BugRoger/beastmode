@@ -141,6 +141,6 @@ Files **NOT** changed:
 
 ## Deferred Ideas
 
-- Meta walker redesign with same artifact-scoped pattern
+- ~~Meta walker redesign with same artifact-scoped pattern~~ (implemented: 2026-03-08)
 - Cross-domain reconciliation (when context change implies meta update)
 - Batch reconciliation mode for catching up after multiple phases without retro

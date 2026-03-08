@@ -105,5 +105,5 @@ Credits
 ## Deferred Ideas
 
 - Full essays for knowledge compounds, context persistence, design before code (`docs/` folder)
-- Demo GIF/SVG for README
+- ~~Demo GIF/SVG for README~~ (implemented: 2026-03-08)
 - Comparison table vs flat-context tools

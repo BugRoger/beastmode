@@ -198,5 +198,5 @@ State remains in the Domains table as a separate domain, not a hierarchy level.
 
 ## Deferred Ideas
 
-- Meta domain L1/L2 files could follow same rule-list format (currently out of scope — focus on context domain first)
-- L2 meta files (sops.md, learnings.md, overrides.md) may need their own format spec
+- ~~Meta domain L1/L2 files could follow same rule-list format (currently out of scope — focus on context domain first)~~ (implemented: 2026-03-08)
+- ~~L2 meta files (sops.md, learnings.md, overrides.md) may need their own format spec~~ (implemented: 2026-03-08)

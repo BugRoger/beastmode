@@ -125,6 +125,6 @@ Stubs for later designs:
 
 ## Deferred Ideas
 
-- Diagrams/visuals for the hierarchy (SVG showing L0→L1→L2→L3 navigation)
+- ~~Diagrams/visuals for the hierarchy (SVG showing L0→L1→L2→L3 navigation)~~ (implemented: 2026-03-08)
 - Comparison table vs flat-context tools (after more differentiators are fleshed out)
 - Full essays for retro loop, structured workflow, context persistence

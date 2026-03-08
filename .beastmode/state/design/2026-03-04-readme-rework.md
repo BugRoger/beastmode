@@ -115,6 +115,6 @@ Research findings saved to `.beastmode/state/research/2026-03-04-readme-star-pat
 
 ## Deferred Ideas
 
-- **Demo GIF/SVG** — all high-star repos have one. Needs actual terminal recording. Separate task.
+- ~~**Demo GIF/SVG** — all high-star repos have one. Needs actual terminal recording. Separate task.~~ (implemented: 2026-03-08)
 - **Badges** — stars, license, Claude Code compatible. Easy but separate concern.
 - **Social proof quotes** — once real users exist. Can't fabricate.

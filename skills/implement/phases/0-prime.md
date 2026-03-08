@@ -30,7 +30,9 @@ The resolved `feature` name is used for all artifact paths in this phase.
 
 ## 4. Read Plan
 
-Load the plan from arguments (e.g., `.beastmode/state/plan/YYYY-MM-DD-<topic>.md`).
+Resolve the plan artifact using [worktree-manager.md](../_shared/worktree-manager.md) → "Resolve Artifact" with type=`plan` and the feature name from step 3.
+
+Read the resolved file path.
 
 ## 5. Prepare Environment
 

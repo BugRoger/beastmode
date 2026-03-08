@@ -43,19 +43,19 @@ Default: `human`.
 
 Print:
 
-Next: `/beastmode:validate .beastmode/state/plan/YYYY-MM-DD-<feature>.md`
+Next: `/beastmode:validate <feature>`
 
 STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
-Call `Skill(skill="beastmode:validate", args=".beastmode/state/plan/YYYY-MM-DD-<feature>.md")`
+Call `Skill(skill="beastmode:validate", args="<feature>")`
 
 If below threshold, print:
 
 Start a new session and run:
 
-`/beastmode:validate .beastmode/state/plan/YYYY-MM-DD-<feature>.md`
+`/beastmode:validate <feature>`
 
 STOP. No additional output.

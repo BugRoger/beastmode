@@ -120,4 +120,4 @@ Existing install + greenfield combined into one flow. Details deferred.
 
 ## Deferred Ideas
 
-- **Init consolidation (install + greenfield + brownfield)** — full redesign of the init subcommand with combined install/setup flow and optional brownfield discovery
+- ~~**Init consolidation (install + greenfield + brownfield)** — full redesign of the init subcommand with combined install/setup flow and optional brownfield discovery~~ (implemented: 2026-03-08)

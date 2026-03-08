@@ -86,4 +86,4 @@ Each phase already has the mandatory "Enter Feature Worktree" step. The change i
 
 - **Feature name shorthand** — Allow `/plan worktree-discovery` instead of the full path. Adds convenience but requires a lookup step.
 - **Most-recent-first sorting** — When listing multiple worktrees, sort by last commit date. Nice but not essential for MVP.
-- **Status file tracking** — A `.beastmode/state/status/active.md` file that tracks the current feature. More explicit than filesystem scan but can become stale.
+- ~~**Status file tracking** — A `.beastmode/state/status/active.md` file that tracks the current feature. More explicit than filesystem scan but can become stale.~~ (implemented: 2026-03-08)

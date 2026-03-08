@@ -269,4 +269,4 @@ grep -rn "Announce Skill" skills/*/phases/0-prime.md  # Should find in every 0-p
 
 ## Deferred Ideas
 
-- **Retro agents create new L2 clusters dynamically**: When retro finds patterns that don't fit in existing L2 files, it should be able to propose and create new L2 files + wire them into L1 @imports. Deferred to the existing dynamic-retro-walkers design.
+- ~~**Retro agents create new L2 clusters dynamically**: When retro finds patterns that don't fit in existing L2 files, it should be able to propose and create new L2 files + wire them into L1 @imports. Deferred to the existing dynamic-retro-walkers design.~~ (implemented: 2026-03-08)

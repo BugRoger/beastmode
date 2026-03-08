@@ -57,6 +57,6 @@ Add new step 3 "Executive Summary" between anti-pattern check and approval gate:
 
 ## Deferred Ideas
 
-- Include component breakdown in summary for complex designs
-- Include "Claude's Discretion" items for visibility
-- Auto-generate summary from a shared template to keep validate and checkpoint in sync
+- ~~Include component breakdown in summary for complex designs~~ (implemented: 2026-03-08)
+- ~~Include "Claude's Discretion" items for visibility~~ (implemented: 2026-03-08)
+- ~~Auto-generate summary from a shared template to keep validate and checkpoint in sync~~ (implemented: 2026-03-08)

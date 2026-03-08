@@ -34,19 +34,19 @@ Default: `human`.
 
 Print:
 
-Next: `/beastmode:release .beastmode/state/plan/YYYY-MM-DD-<feature>.md`
+Next: `/beastmode:release <feature>`
 
 STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
-Call `Skill(skill="beastmode:release", args=".beastmode/state/plan/YYYY-MM-DD-<feature>.md")`
+Call `Skill(skill="beastmode:release", args="<feature>")`
 
 If below threshold, print:
 
 Start a new session and run:
 
-`/beastmode:release .beastmode/state/plan/YYYY-MM-DD-<feature>.md`
+`/beastmode:release <feature>`
 
 STOP. No additional output.

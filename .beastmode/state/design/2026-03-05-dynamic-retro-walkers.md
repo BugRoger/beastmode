@@ -93,4 +93,4 @@ Currently a flat "capture learnings" prompt. Upgrade to structure-walking:
 
 - **State domain walker** — for deferred ideas aggregation and status tracking accuracy
 - **Cross-domain pattern detection** — when a learning in meta/ matches a gap in context/, suggest cross-pollination
-- **Auto-promotion of learnings to SOPs** — after a learning appears in 3+ sessions, suggest promoting to context/ doc
+- ~~**Auto-promotion of learnings to SOPs** — after a learning appears in 3+ sessions, suggest promoting to context/ doc~~ (implemented: 2026-03-08)

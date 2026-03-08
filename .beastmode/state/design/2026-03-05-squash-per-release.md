@@ -151,4 +151,4 @@ The retroactive script reads `CHANGELOG.md` to generate commit bodies. Each vers
 ## Deferred Ideas
 
 - **PR-based squash merge**: For team workflows, GitHub PRs with "squash and merge" could replace local `git merge --squash`. Not needed for single-developer project.
-- **Automated CHANGELOG.md → commit message**: Parse CHANGELOG.md programmatically during /release instead of manual crafting. Currently the release skill already generates notes — just format them as the squash commit body.
+- ~~**Automated CHANGELOG.md → commit message**: Parse CHANGELOG.md programmatically during /release instead of manual crafting. Currently the release skill already generates notes — just format them as the squash commit body.~~ (implemented: 2026-03-08)

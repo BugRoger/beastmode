@@ -123,6 +123,6 @@ All valuable content relocated. File served as founding document.
 
 ## Deferred Ideas
 
-- Demo GIF/SVG for README (needs terminal recording, separate task)
+- ~~Demo GIF/SVG for README (needs terminal recording, separate task)~~ (implemented: 2026-03-08)
 - Social proof / badges beyond current set
 - ROADMAP.md auto-update during /release (move items between tiers as features ship)

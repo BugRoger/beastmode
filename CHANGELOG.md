@@ -11,6 +11,8 @@ All notable changes to beastmode.
 - **Deferred ideas capture** — `/beastmode ideas` walks design docs, reconciles against skill files via semantic matching, marks implemented items with strikethrough
 - **Auto-detect init mode** — `init` auto-selects greenfield/brownfield based on project state
 - **Auto-install on init** — `init` installs `.beastmode/` skeleton automatically if missing
+- **Feature name arguments** — Phase transitions use feature names (`/plan deferred-ideas`) instead of file paths, eliminating cross-session worktree discovery failures
+- **Resolve Artifact** — New worktree-manager section for convention-based artifact discovery inside worktrees
 - Removed standalone `/status` skill and `install` subcommand
 
 ### v0.14.28 — The Conversational Design (Mar 2026)

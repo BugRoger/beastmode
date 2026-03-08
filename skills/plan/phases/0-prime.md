@@ -39,4 +39,6 @@ If triggered, spawn Explore agent with `@../../agents/common-researcher.md`, sav
 
 ## 5. Read Design Document
 
-Read the design doc from arguments (e.g., `.beastmode/state/design/YYYY-MM-DD-<topic>.md`).
+Resolve the design artifact using [worktree-manager.md](../_shared/worktree-manager.md) → "Resolve Artifact" with type=`design` and the feature name from step 3.
+
+Read the resolved file path.

@@ -80,4 +80,4 @@ in conversation): skip directly to Step 1.
 ## Deferred Ideas
 
 - Investigate what happens in non-skill sessions (plain text first message) now that the Prime Directive is removed. The persona greeting may need a separate mechanism for those cases.
-- Consider making the tagline appear outside the code block for better visual separation.
+- ~~Consider making the tagline appear outside the code block for better visual separation.~~ (implemented: 2026-03-08)

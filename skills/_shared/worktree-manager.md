@@ -6,7 +6,7 @@ Shared worktree operations for all phases. @import this file; do not inline work
 
 Shared derivation used by ALL phases. Single source of truth for feature naming.
 
-Used by: `/design` (worktree creation), all checkpoints (artifact naming), `/plan`, `/implement`, `/validate` 0-prime (feature extraction from artifact paths)
+Used by: `/design` (worktree creation), all checkpoints (artifact naming)
 
 **From user topic** (design phase):
 
@@ -15,7 +15,7 @@ Used by: `/design` (worktree creation), all checkpoints (artifact naming), `/pla
 feature=$(echo "$input" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
 ```
 
-**From artifact path** (plan/implement/validate phases):
+**From artifact path** (internal — used by checkpoints for artifact naming, NOT for argument parsing):
 
 ```bash
 # Input: .beastmode/state/design/2026-03-08-worktree-artifact-alignment.md
@@ -31,13 +31,26 @@ Used by: `/plan`, `/implement`, `/validate` 0-prime — before entering worktree
 
 Resolves the feature name from arguments or filesystem scan.
 
-**Case 1: Argument provided** — extract feature name using "Derive Feature Name" (from artifact path):
+**Case 1: Argument provided** — validate it is a feature name, not a file path:
 
-```bash
-feature=$(basename "$argument" .md | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
+If the argument contains `/` or `.md`, print:
+
+```
+ERROR: Argument looks like a file path. Use the feature name instead:
+  /beastmode:<phase> <feature-name>
+
+Example: /beastmode:plan deferred-ideas
 ```
 
-The extracted `feature` MUST match an existing worktree directory name exactly. If it doesn't, STOP — do not search for similar names or create a new worktree.
+STOP. Do not attempt to extract a feature name from a path.
+
+Otherwise, use the argument directly as the feature name:
+
+```bash
+feature="$argument"
+```
+
+The feature name MUST match an existing worktree directory name exactly. If it doesn't, STOP — do not search for similar names or create a new worktree.
 
 **Case 2: No argument, worktrees exist** — scan and prompt:
 
@@ -53,10 +66,35 @@ ls .beastmode/worktrees/
 
 ```
 No active worktrees found. Run /design to start a new feature,
-or provide a state file path as argument.
+or provide a feature name as argument.
 ```
 
 After discovery, pass the resolved `feature` name to "Enter Worktree" below.
+
+## Resolve Artifact
+
+Used by: `/plan` 0-prime (type=design), `/implement` 0-prime (type=plan), `/release` 0-prime (type=plan)
+
+Finds the phase input artifact by convention glob inside the worktree. MUST be called AFTER entering the worktree.
+
+```bash
+type="<artifact-type>"  # design, plan, implement, or validate
+feature="<feature-name>"
+
+# Convention: artifacts are YYYY-MM-DD-<feature>.md
+matches=$(ls .beastmode/state/$type/*-$feature.md 2>/dev/null)
+
+if [ -z "$matches" ]; then
+  echo "ERROR: No $type artifact found for feature '$feature'"
+  echo "Expected: .beastmode/state/$type/*-$feature.md"
+  exit 1
+fi
+
+# If multiple, take latest (date prefix sorts chronologically)
+artifact=$(echo "$matches" | tail -1)
+```
+
+Report: "Resolved `$type` artifact: `$artifact`"
 
 ## Create Worktree
 
@@ -190,4 +228,3 @@ git checkout main
 git worktree remove "$worktree_abs" --force
 git branch -D "$feature_branch"
 ```
-

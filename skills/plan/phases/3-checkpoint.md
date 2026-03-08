@@ -44,19 +44,19 @@ DO NOT call EnterPlanMode or ExitPlanMode.
 
 Print:
 
-Next: `/beastmode:implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+Next: `/beastmode:implement <feature>`
 
 STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
-Call `Skill(skill="beastmode:implement", args=".beastmode/state/plan/YYYY-MM-DD-<feature-name>.md")`
+Call `Skill(skill="beastmode:implement", args="<feature>")`
 
 If below threshold, print:
 
 Start a new session and run:
 
-`/beastmode:implement .beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+`/beastmode:implement <feature>`
 
 STOP. No additional output.

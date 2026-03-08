@@ -60,5 +60,5 @@ Visual review of modified skill files. Next /release cycle verifies zero-conflic
 
 ## Deferred Ideas
 
-- session-start.sh could read version from plugin.json at runtime instead of hardcoding (reduces to 2 version files)
+- ~~session-start.sh could read version from plugin.json at runtime instead of hardcoding (reduces to 2 version files)~~ (implemented: 2026-03-08)
 - CHANGELOG.md could auto-generate version badge for README via CI

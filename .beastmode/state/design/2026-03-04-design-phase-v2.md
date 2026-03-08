@@ -99,5 +99,5 @@ Replace steps 3-4 with structured gray area flow:
 ## Deferred Ideas
 
 - **Task creation during design** (from superpowers) — Create structured tasks with acceptance criteria during validation. Consider for v3 after seeing if acceptance criteria in the doc are sufficient.
-- **Auto-advance to /plan** (from GSD) — `--auto` flag that chains design into plan without user intervention. Useful but adds complexity.
+- ~~**Auto-advance to /plan** (from GSD) — `--auto` flag that chains design into plan without user intervention. Useful but adds complexity.~~ (implemented: 2026-03-08)
 - **Process flow diagram** (from superpowers) — Graphviz dot diagram in SKILL.md showing the flow. Nice for docs, low priority.

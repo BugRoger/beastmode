@@ -173,4 +173,4 @@ L0 lives in system prompt (autoloaded). Everything else is conversation content 
 
 ## Deferred Ideas
 
-- Detailed retro agent promotion logic (how findings graduate from meta → context)
+- ~~Detailed retro agent promotion logic (how findings graduate from meta → context)~~ (implemented: 2026-03-08)

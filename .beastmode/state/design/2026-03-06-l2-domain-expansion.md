@@ -159,14 +159,14 @@ retro sub-phase
 
 ## Deferred Ideas
 
-### Tier 1 Scaffolding (separate design needed)
-**Direction**: `/beastmode init` should create the 7 universal Tier 1 L2 files by default (domain-model, error-handling, build, quality-gates, versioning, changelog, deployment). Brownfield discovery populates them. Greenfield wizard asks about them. This roughly doubles the init surface area but ensures every project starts with the universal domains.
+### ~~Tier 1 Scaffolding~~ (implemented: 2026-03-08)
+~~**Direction**: `/beastmode init` should create the 7 universal Tier 1 L2 files by default (domain-model, error-handling, build, quality-gates, versioning, changelog, deployment). Brownfield discovery populates them. Greenfield wizard asks about them. This roughly doubles the init surface area but ensures every project starts with the universal domains.~~
 
 ### Tier 2 Detection (separate design needed)
 **Direction**: Brownfield discovery should conditionally spawn additional agents based on codebase signals. API routes → api-contracts.md, auth middleware → security.md, env files → environments.md, ORM models → data-access.md. This means the discovery agent needs a "trigger detection" pre-scan before spawning domain-specific agents.
 
-### Discovery Agent Expansion (separate design needed)
-**Direction**: New discovery agent templates for each Tier 1/2 domain (e.g., `domain-model-agent.md`, `error-handling-agent.md`). Follow the existing pattern: agent-specific instructions + common-instructions.md + current L2 content → merged prompt. Consider whether some agents can be merged (e.g., architecture-agent already touches domain model).
+### ~~Discovery Agent Expansion~~ (implemented: 2026-03-08)
+~~**Direction**: New discovery agent templates for each Tier 1/2 domain (e.g., `domain-model-agent.md`, `error-handling-agent.md`). Follow the existing pattern: agent-specific instructions + common-instructions.md + current L2 content → merged prompt. Consider whether some agents can be merged (e.g., architecture-agent already touches domain model).~~
 
 ### Domain Taxonomy Reference
 The research file `.beastmode/state/research/2026-03-06-emergent-knowledge-domains.md` contains the full Tier 1/2/3 taxonomy with per-project-type relevance. This should inform all three deferred designs.
