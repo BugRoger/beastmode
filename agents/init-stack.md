@@ -6,7 +6,7 @@ Analyze the technology stack for this codebase and update the tech-stack.md file
 
 ## Instructions
 
-Read the current `.beastmode/context/design/tech-stack.md` content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
+Read `.beastmode/context/design/tech-stack.md`. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -38,3 +38,5 @@ Read the current `.beastmode/context/design/tech-stack.md` content below. Preser
 - Run development server
 - Run tests
 - Build for production
+
+@common-instructions.md

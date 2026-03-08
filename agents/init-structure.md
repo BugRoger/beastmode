@@ -6,7 +6,7 @@ Analyze the directory structure and file organization for this codebase and upda
 
 ## Instructions
 
-Read the current `.beastmode/context/plan/structure.md` content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
+Read `.beastmode/context/plan/structure.md`. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -39,3 +39,5 @@ Read the current `.beastmode/context/plan/structure.md` content below. Preserve 
 - New features: which directory
 - New components: which directory
 - Tests: which directory
+
+@common-instructions.md

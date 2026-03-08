@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.38 — The Spring Cleaning (Mar 2026)
+
+- **First-class init agents** — 5 init-* agents made self-contained with `@common-instructions.md` import; dispatched via registered `beastmode:init-*` types instead of manual prompt assembly
+- **common-instructions.md relocated** — Moved from `skills/beastmode/references/discovery-agents/` to `agents/`
+- **Brownfield dispatch simplified** — `init.md` prompt assembly + concatenation replaced with direct registered agent dispatch
+- **Dead reference docs removed** — Deleted `gate-check.md` and `transition-check.md` (both "Reference Only — NOT @imported")
+
 ### v0.14.37 — The Gate Tightener (Mar 2026)
 
 - **Structural HARD-GATE enforcement** — Worktree entry/creation sections wrapped in `<HARD-GATE>` tags with numbered procedure bullets, replacing verbose prose enforcement

@@ -6,7 +6,7 @@ Analyze coding conventions and style patterns for this codebase and update the c
 
 ## Instructions
 
-Read the current `.beastmode/context/plan/conventions.md` content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
+Read `.beastmode/context/plan/conventions.md`. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -36,3 +36,5 @@ Read the current `.beastmode/context/plan/conventions.md` content below. Preserv
 **Anti-Patterns:**
 - Things explicitly forbidden by linter rules
 - Patterns that contradict observed conventions
+
+@common-instructions.md

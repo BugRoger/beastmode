@@ -6,7 +6,7 @@ Analyze system architecture and component relationships for this codebase and up
 
 ## Instructions
 
-Read the current `.beastmode/context/design/architecture.md` content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
+Read `.beastmode/context/design/architecture.md`. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -38,3 +38,5 @@ Read the current `.beastmode/context/design/architecture.md` content below. Pres
 - External APIs consumed
 - Internal module boundaries
 - Public interfaces exposed
+
+@common-instructions.md

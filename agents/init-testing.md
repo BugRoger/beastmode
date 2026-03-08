@@ -6,7 +6,7 @@ Analyze testing setup and conventions for this codebase and update the testing.m
 
 ## Instructions
 
-Read the current `.beastmode/context/implement/testing.md` content below. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
+Read `.beastmode/context/implement/testing.md`. Preserve any sections that already have real content. Fill sections that have placeholders. Update any stale information.
 
 ## Explore These Sources
 
@@ -36,3 +36,5 @@ Read the current `.beastmode/context/implement/testing.md` content below. Preser
 **Coverage:**
 - Coverage target if configured
 - Critical paths that must be tested
+
+@common-instructions.md

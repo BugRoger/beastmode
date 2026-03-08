@@ -107,84 +107,49 @@ fi
 
 "Running brownfield init — spawning discovery agents to analyze codebase."
 
-### 3. Assemble agent prompts
+### 3. Spawn 5 parallel agents
 
-For each of 5 agents (STACK, STRUCTURE, CONVENTIONS, ARCHITECTURE, TESTING):
-
-Read agent prompt template from `@../../../agents/init-{agent}.md`
-Read common instructions from `@../references/discovery-agents/common-instructions.md`
-Read current content from `.beastmode/context/{phase}/{file}.md`
-
-Concatenate into full prompt:
-```
-[agent-prompt]
-
-## Common Instructions
-
-[common-instructions]
-
-## Current Content
-
-[current-file-content]
-```
-
-### 4. Spawn 5 parallel agents
-
-Launch ALL agents in a SINGLE message:
+Launch ALL agents in a SINGLE message using registered agent types:
 
 ```yaml
 Agent:
-  subagent_type: Explore
-  model: haiku
+  subagent_type: "beastmode:init-stack"
   description: "Analyze tech stack"
-  prompt: [assembled STACK prompt → .beastmode/context/design/tech-stack.md]
+  prompt: "Analyze this project's technology stack. Write results to .beastmode/context/design/tech-stack.md"
 
 Agent:
-  subagent_type: Explore
-  model: haiku
+  subagent_type: "beastmode:init-structure"
   description: "Analyze structure"
-  prompt: [assembled STRUCTURE prompt → .beastmode/context/plan/structure.md]
+  prompt: "Analyze this project's directory structure. Write results to .beastmode/context/plan/structure.md"
 
 Agent:
-  subagent_type: Explore
-  model: haiku
+  subagent_type: "beastmode:init-conventions"
   description: "Analyze conventions"
-  prompt: [assembled CONVENTIONS prompt → .beastmode/context/plan/conventions.md]
+  prompt: "Analyze this project's coding conventions. Write results to .beastmode/context/plan/conventions.md"
 
 Agent:
-  subagent_type: Explore
-  model: haiku
+  subagent_type: "beastmode:init-architecture"
   description: "Analyze architecture"
-  prompt: [assembled ARCHITECTURE prompt → .beastmode/context/design/architecture.md]
+  prompt: "Analyze this project's system architecture. Write results to .beastmode/context/design/architecture.md"
 
 Agent:
-  subagent_type: Explore
-  model: haiku
+  subagent_type: "beastmode:init-testing"
   description: "Analyze testing"
-  prompt: [assembled TESTING prompt → .beastmode/context/implement/testing.md]
+  prompt: "Analyze this project's testing setup. Write results to .beastmode/context/implement/testing.md"
 ```
 
-### 5. Collect agent outputs
+### 4. Verify agent outputs
 
-Each agent returns updated markdown content for its target file.
+Confirm each target file was updated by checking modification times or reading a sample.
 
-### 6. Write updated files
-
-Save agent outputs to:
-- `.beastmode/context/design/tech-stack.md`
-- `.beastmode/context/design/architecture.md`
-- `.beastmode/context/plan/conventions.md`
-- `.beastmode/context/plan/structure.md`
-- `.beastmode/context/implement/testing.md`
-
-### 7. Handle errors
+### 5. Handle errors
 
 If any agent times out or errors:
 - Preserve existing file content
 - Log warning
 - Continue with other agents
 
-### 8. Update CLAUDE.md
+### 6. Update CLAUDE.md
 
 If `CLAUDE.md` doesn't exist, create with:
 
@@ -197,7 +162,7 @@ If `CLAUDE.md` doesn't exist, create with:
 
 If exists, ask user before updating.
 
-### 9. Report completion
+### 7. Report completion
 
 ```
 Brownfield init complete.

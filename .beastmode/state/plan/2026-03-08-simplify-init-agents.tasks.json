@@ -1,0 +1,10 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-08-simplify-init-agents.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Move common-instructions.md to agents/", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Delete orphaned reference docs", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Make init agents self-contained", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Simplify init.md brownfield dispatch", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-08T16:45:00Z"
+}
