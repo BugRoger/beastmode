@@ -1,9 +1,10 @@
 {
   "name": "beastmode",
   "description": "Agentic workflow skills for Claude Code. Activate beastmode.",
-  "version": "0.14.34",
+  "version": "0.14.35",
   "author": {
     "name": "bugroger"
   },
-  "repository": "https://github.com/BugRoger/beastmode"
+  "repository": "https://github.com/BugRoger/beastmode",
+  "hooks": "./hooks/hooks.json"
 }

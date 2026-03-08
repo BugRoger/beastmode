@@ -26,6 +26,29 @@ Then initialize your project:
 /beastmode init                   # auto-detect and populate context
 ```
 
+## Context Bridge (Optional)
+
+Beastmode includes a context bridge that gives skills access to real context window metrics. Hooks can't read context data directly — only statusline scripts can. The bridge works around this: a statusline script persists metrics to disk, a PostToolUse hook reads them back.
+
+The hook side installs automatically with the plugin. The statusline side requires one manual step — add this to your project's `.claude/settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "hooks/context-bridge-statusline.sh"
+  }
+}
+```
+
+If you already have a `settings.json`, merge in the `statusLine` key. The path is relative to the plugin install location — if you installed via the marketplace, use the full path:
+
+```bash
+~/.claude/plugins/beastmode@beastmode-marketplace/hooks/context-bridge-statusline.sh
+```
+
+Without this, beastmode still works — skills just won't have context window awareness.
+
 ## Skills
 
 | Skill | What it does |

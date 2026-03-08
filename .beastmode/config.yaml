@@ -18,10 +18,10 @@ gates:
     validation-failure: auto         # CONDITIONAL — fix loop exhausted
 
   retro:
-    records: human                   # APPROVAL — L3 observation creation/appends
-    context: human                   # APPROVAL — L2 context/meta doc edits + new docs
-    phase: human                     # APPROVAL — L1 phase summary rewrites + promotions
-    beastmode: auto                  # APPROVAL — L0 BEASTMODE.md updates
+    records: auto                   # APPROVAL — L3 observation creation/appends
+    context: auto                   # APPROVAL — L2 context/meta doc edits + new docs
+    phase:  auto                    # APPROVAL — L1 phase summary rewrites + promotions
+    beastmode: human                # APPROVAL — L0 BEASTMODE.md updates
 
   release:
     version-confirmation: auto       # APPROVAL — version bump override
