@@ -4,6 +4,10 @@ All notable changes to beastmode.
 
 ---
 
+### v0.15.0 — The Hook Fix (Mar 2026)
+
+- **Hook field removed from plugin.json** — The `hooks` reference to `./hooks/hooks.json` caused plugin loading issues; removed to restore correct behavior
+
 ### v0.14.38 — The Spring Cleaning (Mar 2026)
 
 - **First-class init agents** — 5 init-* agents made self-contained with `@common-instructions.md` import; dispatched via registered `beastmode:init-*` types instead of manual prompt assembly
