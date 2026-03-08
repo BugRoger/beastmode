@@ -9,6 +9,9 @@
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 - NEVER use @imports between hierarchy levels — convention-based paths only
 - Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains)
+- ALWAYS create a matching L3 directory for every L2 file — structural invariant for retro expansion
+- State has no L1 index files — only empty phase subdirs with .gitkeep as workflow containers
+- research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
 - Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 - NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 - Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale

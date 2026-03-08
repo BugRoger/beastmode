@@ -1,44 +1,13 @@
-# STACK - Technology Stack
-
-## Purpose
-
-Documents the technology stack, dependencies, and versions used in this project.
+# Tech Stack
 
 ## Core Stack
-
-**Platform:**
-- [Runtime/platform]
-
-**Language:**
-- [Primary language and version]
-
-**Framework:**
-- [Framework and version]
+[Platform, language, framework]
 
 ## Key Dependencies
-
-[List major dependencies with versions]
+[Major dependencies with versions]
 
 ## Development Tools
-
-**Build:**
-- [Build tool]
-
-**Testing:**
-- [Test framework]
-
-**Linting:**
-- [Linter configuration]
+[Build, test, lint tools]
 
 ## Commands
-
-```bash
-# Install dependencies
-[install command]
-
-# Run tests
-[test command]
-
-# Build
-[build command]
-```
+[Install, test, build commands]

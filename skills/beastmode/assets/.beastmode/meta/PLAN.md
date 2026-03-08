@@ -1,15 +1,11 @@
 # Plan Meta
 
-How to improve the plan phase.
+## Process
+[Populated by retro]
 
-## Defaults
+meta/plan/process.md
 
-<!-- From plugin -->
+## Workarounds
+[Populated by retro]
 
-## Project Overrides
-
-<!-- User additions -->
-
-## Learnings
-
-<!-- From /retro -->
+meta/plan/workarounds.md

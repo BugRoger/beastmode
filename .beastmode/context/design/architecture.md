@@ -16,6 +16,9 @@
 - Write protection: phases write `state/` only, retro promotes — prevents unauthorized knowledge edits
 - Meta has two L2 domains per phase: process.md and workarounds.md — separates process patterns from beastmode feedback
 - Meta L3 records are topic-clustered with confidence tags — no date prefixes, observations accumulate by topic
+- ALWAYS structure state/ as empty phase subdirs with .gitkeep only — no L1 index files in state/
+- NEVER put research under state/ — research/ lives at `.beastmode/research/` as reference material, not workflow state
+- ALWAYS create a matching L3 directory (with .gitkeep) for every L2 file — ready for retro expansion
 
 ## Sub-Phase Anatomy
 - Every phase follows: 0-prime, 1-execute, 2-validate, 3-checkpoint — standardized lifecycle

@@ -1,6 +1,11 @@
 # Implement Context
 
-Agent rules and testing strategy.
+## Agents
+[Populated by init or retro]
 
-@implement/agents.md
-@implement/testing.md
+context/implement/agents.md
+
+## Testing
+[Populated by init or retro]
+
+context/implement/testing.md

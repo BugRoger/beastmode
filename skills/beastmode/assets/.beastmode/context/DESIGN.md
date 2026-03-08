@@ -1,6 +1,16 @@
 # Design Context
 
-Architecture and technology decisions.
+## Product
+[Populated by init or retro]
 
-@design/architecture.md
-@design/tech-stack.md
+context/design/product.md
+
+## Architecture
+[Populated by init or retro]
+
+context/design/architecture.md
+
+## Tech Stack
+[Populated by init or retro]
+
+context/design/tech-stack.md

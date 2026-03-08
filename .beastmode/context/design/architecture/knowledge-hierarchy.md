@@ -4,7 +4,7 @@
 Need to balance comprehensive context with token efficiency across multi-session workflows.
 
 ## Decision
-Four-level progressive enhancement hierarchy: L0 (system manual, sole autoload), L1 (phase summaries, loaded at prime), L2 (full detail per topic, on-demand), L3 (records, linked from L2). No @imports between levels — convention-based paths only. Format standardized: L1 uses dense summaries + numbered rules grouped by L2 domains; L2 uses detailed summaries + domain-adapted rules grouped by L3 topics; L3 uses Context/Decision/Rationale/Source structure. L0 content scope: persona spec + high-level workflow map only. Operational details (hierarchy paths, write protection tables, gate mechanics, sub-phase anatomy) belong in skills, not L0.
+Four-level progressive enhancement hierarchy: L0 (system manual, sole autoload), L1 (phase summaries, loaded at prime), L2 (full detail per topic, on-demand), L3 (records, linked from L2). No @imports between levels — convention-based paths only. Format standardized: L1 uses dense summaries + numbered rules grouped by L2 domains; L2 uses detailed summaries + domain-adapted rules grouped by L3 topics; L3 uses Context/Decision/Rationale/Source structure. L0 content scope: persona spec + high-level workflow map only. Operational details (hierarchy paths, write protection tables, gate mechanics, sub-phase anatomy) belong in skills, not L0. Every L2 file has a matching L3 directory — structural invariant ensuring retro has expansion points from day one.
 
 ## Rationale
 - L1 summaries provide enough context for most tasks without loading full detail
@@ -18,3 +18,4 @@ state/design/2026-03-06-hierarchy-cleanup.md
 state/design/2026-03-06-knowledge-hierarchy-format.md
 state/design/2026-03-06-l0-rework.md
 state/design/2026-03-06-simplify-beastmode-md.md
+state/design/2026-03-08-init-assets.md

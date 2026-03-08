@@ -18,32 +18,32 @@
 - ALWAYS prefer inline over imported for execution-critical directives — @imported files lose priority against inline instructions
 
 ## Scope Management
-- Explicit deferral and per-instance enumeration improve scope management — prevents scope creep during design
-- Users need multiple rounds to formalize vision — don't rush to lock decisions
-- Deferred ideas should be challenged for inclusion — prevents feature bloat
+- ALWAYS use explicit deferral and per-instance enumeration for scope management — prevents scope creep during design
+- ALWAYS allow multiple rounds for vision formalization — don't rush to lock decisions
+- ALWAYS challenge deferred ideas for inclusion — prevents feature bloat
 
 ## Cross-Session State
-- Session boundaries are a hard reset — any state that subsequent phases need must be persisted to disk
-- State must be re-derivable from arguments or persisted artifacts — in-memory state vanishes across sessions
+- ALWAYS persist state needed by subsequent phases to disk — session boundaries are a hard reset
+- ALWAYS ensure state is re-derivable from arguments or persisted artifacts — in-memory state vanishes across sessions
 
 ## L0 Content Scope
-- L0 should be persona + map, not operational manual — operational details belong in skills
-- Pointer references beat content duplication — reduces drift between duplicated content
+- ALWAYS keep L0 as persona + map only — operational details belong in skills
+- ALWAYS use pointer references over content duplication — reduces drift
 
 ## Agent Organization
-- "Spawned = agent" is the simplest classification rule — avoids complex taxonomy debates
-- Naming conventions should encode workflow position — makes agent roles self-documenting
-- Dead code detection requires checking references, not existence — unreferenced code is dead code
+- ALWAYS classify spawned processes as agents — simplest classification rule
+- ALWAYS encode workflow position in naming conventions — makes agent roles self-documenting
+- ALWAYS check references for dead code detection, not existence alone — unreferenced code is dead code
 
 ## External Documentation Drift
-- External docs drift from internal knowledge hierarchy — the retro walker doesn't touch external docs
-- External-facing specs need periodic review — drift accumulates silently without scheduled checks
+- ALWAYS expect external docs to drift from internal knowledge hierarchy — retro walker doesn't touch external docs
+- ALWAYS review external-facing specs periodically — drift accumulates silently
 
 ## Miscellaneous Patterns
-- Root entry points should be pure wiring — keeps routing logic separate from behavior
-- Locked decisions can drift from implementation — periodic reconciliation catches drift
+- ALWAYS keep root entry points as pure wiring — separates routing from behavior
+- ALWAYS reconcile locked decisions against implementation periodically — drift accumulates
 - ALWAYS include shared files (_shared/) in phase-scoped sweeps — shared files are blind spots for phase-scoped refactors
-- Parsability constraints drive syntax design through multiple iterations — expect iteration on machine-readable formats
+- ALWAYS expect multiple iterations on machine-readable format design — parsability constraints drive syntax evolution
 
 ## Redundant Upstream Gatekeeping
-- Subjective upstream skip-checks are harmful when downstream components handle empty input gracefully — let the downstream agent decide there is nothing to do
+- NEVER add subjective upstream skip-checks when downstream components handle empty input gracefully — let the downstream agent decide

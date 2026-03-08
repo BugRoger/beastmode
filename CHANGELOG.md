@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.35 — The Init Rewrite (Mar 2026)
+
+- **Skeleton restructured** — Init assets now match evolved reality: BEASTMODE.md, config.yaml (all gates human), research/, full L3 directory tree with .gitkeep
+- **PRODUCT.md → context/design/product.md** — Root-level product file moved to proper hierarchy position
+- **State simplified** — No more L1 state files; just 5 phase subdirs with .gitkeep
+- **Meta L2 templates** — All 5 phases get process.md + workarounds.md + L3 record directories
+- **Context templates** — 12 files (5 L1 + 7 L2) with minimal domain-specific scaffolding
+- **Reality cleanup** — research/ moved from state/ to root, obsolete DESIGN.md deleted, meta L2 bullets migrated to ALWAYS/NEVER format
+
 ### v0.14.34 — The Handoff Fix (Mar 2026)
 
 - **Removed contradictory handoff spec** — Deleted "Next Step" section from `visual-language.md` that specified file-path format for handoff links, conflicting with checkpoint templates and worktree-manager's path rejection logic

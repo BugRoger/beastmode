@@ -1,11 +1,7 @@
 # Release Context
 
-Versioning and changelog format.
+## Versioning
+[Populated by init or retro]
 
-## Versioning Strategy
-
-[e.g., SemVer, CalVer, or custom]
-
-## Changelog Format
-
-[e.g., Keep a Changelog, Conventional Commits]
+## Changelog
+[Populated by init or retro]

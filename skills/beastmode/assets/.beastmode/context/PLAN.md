@@ -1,6 +1,11 @@
 # Plan Context
 
-Conventions and structure for implementation.
+## Conventions
+[Populated by init or retro]
 
-@plan/conventions.md
-@plan/structure.md
+context/plan/conventions.md
+
+## Structure
+[Populated by init or retro]
+
+context/plan/structure.md

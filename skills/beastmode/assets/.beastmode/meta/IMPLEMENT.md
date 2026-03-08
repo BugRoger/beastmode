@@ -1,15 +1,11 @@
 # Implement Meta
 
-How to improve the implement phase.
+## Process
+[Populated by retro]
 
-## Defaults
+meta/implement/process.md
 
-<!-- From plugin -->
+## Workarounds
+[Populated by retro]
 
-## Project Overrides
-
-<!-- User additions -->
-
-## Learnings
-
-<!-- From /retro -->
+meta/implement/workarounds.md

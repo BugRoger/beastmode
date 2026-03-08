@@ -1,30 +1,13 @@
-# TESTING - Test Strategy
-
-## Purpose
-
-Documents the testing approach, commands, and conventions.
+# Testing
 
 ## Test Commands
-
-```bash
-# Run all tests
-[test command]
-
-# Run specific test
-[test command pattern]
-
-# Run with coverage
-[coverage command]
-```
+[Run all, run specific, run with coverage]
 
 ## Test Structure
-
-[Describe test directory structure]
+[Test directory structure]
 
 ## Conventions
-
 [Testing conventions and patterns]
 
 ## Coverage
-
 [Coverage expectations and goals]

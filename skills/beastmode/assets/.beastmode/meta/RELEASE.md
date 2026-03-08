@@ -1,15 +1,11 @@
 # Release Meta
 
-How to improve the release phase.
+## Process
+[Populated by retro]
 
-## Defaults
+meta/release/process.md
 
-<!-- From plugin -->
+## Workarounds
+[Populated by retro]
 
-## Project Overrides
-
-<!-- User additions -->
-
-## Learnings
-
-<!-- From /retro -->
+meta/release/workarounds.md

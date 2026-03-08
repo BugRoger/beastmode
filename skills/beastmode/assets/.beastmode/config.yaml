@@ -1,0 +1,34 @@
+# .beastmode/config.yaml
+# Gate modes: human (stop for user) | auto (Claude decides)
+
+gates:
+  design:
+    existing-design-choice: human
+    intent-discussion: human
+    approach-selection: human
+    section-review: human
+    design-approval: human
+
+  plan:
+    plan-approval: human
+
+  implement:
+    architectural-deviation: human
+    blocked-task-decision: human
+    validation-failure: human
+
+  retro:
+    context-write: human
+    records: human
+    promotions: human
+
+  release:
+    version-confirmation: human
+    beastmode-md-approval: human
+
+transitions:
+  design-to-plan: human
+  plan-to-implement: human
+  implement-to-validate: human
+  validate-to-release: human
+  context_threshold: 20

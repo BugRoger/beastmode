@@ -1,35 +1,13 @@
-# CONVENTIONS - Code Conventions
-
-## Purpose
-
-Documents naming patterns, code style, and project-specific conventions.
+# Conventions
 
 ## Naming
-
-**Files:**
-- [File naming patterns]
-
-**Functions:**
-- [Function naming conventions]
-
-**Variables:**
-- [Variable naming conventions]
+[File, function, variable naming patterns]
 
 ## Code Style
-
-**Imports:**
-- [Import organization rules]
-
-**Exports:**
-- [Export patterns]
-
-**Error Handling:**
-- [Error handling conventions]
+[Import organization, export patterns, error handling]
 
 ## Patterns
-
-[Document common patterns used in the project]
+[Common patterns used in the project]
 
 ## Anti-Patterns
-
-[Document patterns to avoid]
+[Patterns to avoid]

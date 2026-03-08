@@ -1,15 +1,11 @@
 # Validate Meta
 
-How to improve the validate phase.
+## Process
+[Populated by retro]
 
-## Defaults
+meta/validate/process.md
 
-<!-- From plugin -->
+## Workarounds
+[Populated by retro]
 
-## Project Overrides
-
-<!-- User additions -->
-
-## Learnings
-
-<!-- From /retro -->
+meta/validate/workarounds.md
