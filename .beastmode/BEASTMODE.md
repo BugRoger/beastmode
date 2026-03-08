@@ -24,6 +24,7 @@
 ## Workflow
 
 - Five phases: design -> plan -> implement -> validate -> release
+- NEVER skip worktree creation — every task gets isolation, no exceptions
 
 ## Knowledge
 

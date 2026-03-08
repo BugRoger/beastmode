@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.31 — The Worktree Enforcer (Mar 2026)
+
+- **HARD-GATE worktree enforcement** — `<HARD-GATE>` blocks before worktree steps in all 5 phase files prevent Claude from rationalizing "lightweight" exceptions
+- **L0 worktree rule** — BEASTMODE.md Workflow section includes `NEVER skip worktree creation` as a prime directive
+- **Assert Worktree anti-rationalization** — worktree-manager.md documents the known failure mode where Claude skips worktree creation for "documentation-only" tasks
+
 ### v0.14.29 — The Deferred Ideas (Mar 2026)
 
 - **Unified /beastmode command** — Single entry point with `init`, `status`, `ideas` subcommands; flat depth, no flags

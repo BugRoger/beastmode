@@ -1,0 +1,13 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-08-worktree-enforcement.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add L0 worktree rule to BEASTMODE.md", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add HARD-GATE to design/phases/1-execute.md", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add HARD-GATE to plan/phases/0-prime.md", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Add HARD-GATE to implement/phases/0-prime.md", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Add HARD-GATE to validate/phases/0-prime.md", "status": "completed"},
+    {"id": 5, "subject": "Task 5: Add HARD-GATE to release/phases/0-prime.md", "status": "completed"},
+    {"id": 6, "subject": "Task 6: Add anti-rationalization context to worktree-manager.md", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-08T00:00:00Z"
+}

@@ -1,5 +1,11 @@
 # 1. Execute
 
+<HARD-GATE>
+All work happens in a worktree. No exceptions.
+Documentation, single-file edits, and "lightweight" tasks all require worktrees.
+If you judge the task as too small for a worktree, you are wrong.
+</HARD-GATE>
+
 ## 1. Create Feature Worktree
 
 **MANDATORY — do not skip this step.**

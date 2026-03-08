@@ -17,6 +17,12 @@ Read (if they exist):
 Follow L2 convention paths (`context/implement/{domain}.md`) when relevant to the current topic.
 Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
 
+<HARD-GATE>
+All work happens in a worktree. No exceptions.
+Documentation, single-file edits, and "lightweight" tasks all require worktrees.
+If you judge the task as too small for a worktree, you are wrong.
+</HARD-GATE>
+
 ## 3. Discover and Enter Feature Worktree
 
 **MANDATORY — do not skip this step.**

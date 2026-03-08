@@ -137,6 +137,8 @@ Report: "Working in worktree at `$worktree_path`"
 
 Guards against writing `.beastmode/` files from the main repo. Called before ANY write to `state/`, `context/`, or `meta/`.
 
+> **Known failure mode:** Claude sometimes judges a task as "lightweight" or "documentation-only" and skips worktree creation, then writes state files directly to the main repo. This assertion exists specifically to catch that. There are no lightweight exceptions. Every task gets a worktree.
+
 Used by: all `3-checkpoint.md` phases (before writes), `retro.md` (before spawning agents), `release/1-execute.md` (before pre-merge work)
 
 ```bash
