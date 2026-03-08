@@ -4,8 +4,6 @@
 
 Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
 
-Then print the phase indicator from @../_shared/visual-language.md showing **plan** as the current phase.
-
 @../_shared/persona.md
 
 ## 2. Load Project Context

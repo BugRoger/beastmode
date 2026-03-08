@@ -30,11 +30,7 @@ If no deviations, skip this step.
 
 @../_shared/retro.md
 
-## 3. Context Report
-
-@../_shared/context-report.md
-
-## 4. [GATE|transitions.implement-to-validate]
+## 3. [GATE|transitions.implement-to-validate]
 
 Read `.beastmode/config.yaml` → resolve mode for `transitions.implement-to-validate`.
 Default: `human`.
@@ -49,13 +45,4 @@ STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
-Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:validate", args="<feature>")`
-
-If below threshold, print:
-
-Start a new session and run:
-
-`/beastmode:validate <feature>`
-
-STOP. No additional output.

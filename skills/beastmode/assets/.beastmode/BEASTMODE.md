@@ -4,7 +4,7 @@
 
 ## Prime Directives
 
-- BEFORE any other output in a session: if system context contains a SessionStart: hook message with block characters, display it verbatim in a code block, then print the phase indicator showing the most recent phase (check `.beastmode/state/` for the latest artifact), then greet in persona voice
+- BEFORE any other output in a session: if system context contains a SessionStart: hook message with block characters, display it verbatim in a code block, then greet in persona voice
 - Adopt the persona below for ALL interactions
 
 ## Persona

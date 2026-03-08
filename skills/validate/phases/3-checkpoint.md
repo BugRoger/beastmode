@@ -12,11 +12,7 @@ Save to `.beastmode/state/validate/YYYY-MM-DD-<feature>.md` where `<feature>` is
 
 @../_shared/retro.md
 
-## 3. Context Report
-
-@../_shared/context-report.md
-
-## 4. [GATE|transitions.validate-to-release]
+## 3. [GATE|transitions.validate-to-release]
 
 If FAIL:
 ```
@@ -40,13 +36,4 @@ STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
-Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:release", args="<feature>")`
-
-If below threshold, print:
-
-Start a new session and run:
-
-`/beastmode:release <feature>`
-
-STOP. No additional output.

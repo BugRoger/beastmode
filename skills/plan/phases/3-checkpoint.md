@@ -27,11 +27,7 @@ Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.tasks.json`:
 
 @../_shared/retro.md
 
-## 4. Context Report
-
-@../_shared/context-report.md
-
-## 5. [GATE|transitions.plan-to-implement]
+## 4. [GATE|transitions.plan-to-implement]
 
 Read `.beastmode/config.yaml` → resolve mode for `transitions.plan-to-implement`.
 Default: `human`.
@@ -50,13 +46,4 @@ STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
-Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:implement", args="<feature>")`
-
-If below threshold, print:
-
-Start a new session and run:
-
-`/beastmode:implement <feature>`
-
-STOP. No additional output.

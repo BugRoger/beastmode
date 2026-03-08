@@ -31,5 +31,3 @@ transitions:
   plan-to-implement: auto            # TRANSITION
   implement-to-validate: auto        # TRANSITION
   validate-to-release: auto          # TRANSITION
-
-  context_threshold: 20              # % remaining context required to auto-advance

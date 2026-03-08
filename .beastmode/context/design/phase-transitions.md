@@ -5,11 +5,6 @@
 - ALWAYS pass the state artifact path as the argument to the next phase — maintains continuity
 - When set to `auto`, Claude calls `Skill(skill="beastmode:<next>", args="<artifact-path>")` — explicit chaining
 
-## Context Threshold
-- ALWAYS check context threshold before auto-advancing — low context causes degraded behavior
-- NEVER auto-advance below threshold — print restart instructions and STOP
-- Configurable percentage in config.yaml (`context_threshold`) — tunable per project
-
 ## Phase-to-Skill Mapping
 design -> plan -> implement -> validate -> release. Each transition gate is namespaced: `transitions.design-to-plan`, `transitions.plan-to-implement`, etc.
 
@@ -23,7 +18,6 @@ Standardized output format for all checkpoint transition gates. Both human and a
 3. Command format uses `<next-phase>` naming that matches skill names
 
 ## Guidance Authority
-Only the transition gate in the checkpoint phase may produce next-step commands. Retro agents, sub-agents, and context reports are banned from printing transition guidance, session-restart instructions, or next-step commands. Context report is an isolated concern (phase position + token usage) that never includes context-dependent transition messages.
+Only the transition gate in the checkpoint phase may produce next-step commands. Retro agents and sub-agents are banned from printing transition guidance, session-restart instructions, or next-step commands.
 
 1. NEVER print next-step commands from retro agents — transition gate is the sole authority
-2. NEVER include transition guidance in context reports — context report and transition gate are fully separated concerns

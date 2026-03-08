@@ -8,10 +8,6 @@
 
 @retro.md
 
-## 3. Context Report
-
-@context-report.md
-
-## 4. Suggest Next Step
+## 3. Suggest Next Step
 
 <!-- Each skill specifies the next command -->

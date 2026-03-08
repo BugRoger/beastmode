@@ -58,10 +58,6 @@ claude plugin marketplace update
 claude plugin update beastmode@beastmode-marketplace --scope project
 ```
 
-## 6. Context Report
-
-@../_shared/context-report.md
-
-## 7. Complete
+## 6. Complete
 
 "Release complete."

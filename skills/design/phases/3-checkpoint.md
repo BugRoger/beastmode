@@ -34,11 +34,7 @@ If no clear criteria emerged during discussion, include:
 
 @../_shared/retro.md
 
-## 4. Context Report
-
-@../_shared/context-report.md
-
-## 5. [GATE|transitions.design-to-plan]
+## 4. [GATE|transitions.design-to-plan]
 
 Read `.beastmode/config.yaml` → resolve mode for `transitions.design-to-plan`.
 Default: `human`.
@@ -53,13 +49,4 @@ STOP. No additional output.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
-Estimate context remaining. If >= threshold (default 60%):
 Call `Skill(skill="beastmode:plan", args="<feature>")`
-
-If below threshold, print:
-
-Start a new session and run:
-
-`/beastmode:plan <feature>`
-
-STOP. No additional output.

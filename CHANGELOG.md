@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.36 — The Great Deletion (Mar 2026)
+
+- **Context window handling removed** — Deleted `context-report.md`, `visual-language.md`, and all phase indicator / context report references from prime and checkpoint phases
+- **Context bridge removed** — Deleted `context-bridge-hook.sh`, `context-bridge-statusline.sh`, and PostToolUse hook from `hooks.json`
+- **Auto-transitions simplified** — All auto transition gates now chain unconditionally via `Skill()` calls; no more threshold estimation or low-context fallback
+- **Knowledge hierarchy updated** — L1/L2 context docs cleaned of stale threshold, context report, and context bridge references
+- **Config simplified** — Removed `context_threshold` from `config.yaml` and `BEASTMODE.md` phase indicator reference
+
 ### v0.14.35 — The Context Bridge (Mar 2026)
 
 - **Statusline context persistence** — New `context-bridge-statusline.sh` writes real context window metrics (used%, remaining%, window size) to `/tmp/beastmode-{session_id}.json` per session

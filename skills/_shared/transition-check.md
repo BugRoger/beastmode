@@ -12,19 +12,10 @@ Next step:
 ```
 
 ### auto mode
-1. Estimate context remaining (heuristic from conversation length)
-2. Read `transitions.context_threshold` (default: 60)
-3. If context remaining >= threshold:
-   - Call the Skill tool to invoke the next skill:
-     `Skill(skill="beastmode:<next-skill>", args="<artifact-path>")`
-   - The `<next-skill>` and `<artifact-path>` come from the Phase-to-Skill Mapping table below and the checkpoint's "Next skill" line
-4. If context remaining < threshold:
-   - Print:
-     ```
-     Context is low (~X% remaining). Start a new session and run:
-     /beastmode:<next-skill> <artifact-path>
-     ```
-   - STOP
+Call the Skill tool to invoke the next skill:
+`Skill(skill="beastmode:<next-skill>", args="<artifact-path>")`
+
+The `<next-skill>` and `<artifact-path>` come from the Phase-to-Skill Mapping table below and the checkpoint's "Next skill" line.
 
 ## Phase-to-Skill Mapping
 

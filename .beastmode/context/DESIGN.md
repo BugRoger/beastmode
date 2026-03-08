@@ -29,13 +29,11 @@
 - ALWAYS archive branch tip before squash merge
 
 ## Phase Transitions
-Self-chaining mechanism between phases. Auto-transitions use fully-qualified Skill tool calls with context threshold checks. Standardized transition gate output: single inline code with resolved artifact path. Only the transition gate may produce next-step commands; retro agents and context reports are banned from transition guidance.
+Self-chaining mechanism between phases. Auto-transitions use fully-qualified Skill tool calls. Standardized transition gate output: single inline code with resolved artifact path. Only the transition gate may produce next-step commands; retro agents are banned from transition guidance.
 
-1. ALWAYS check context threshold before auto-advancing
-2. NEVER auto-advance below threshold — print restart instructions and STOP
-3. ALWAYS produce a single copy-pasteable inline code command with the resolved artifact path at transition
-4. NEVER print transition guidance from retro agents or context reports — transition gate is the sole authority
-5. ALWAYS STOP after printing transition output — no additional output
+1. ALWAYS produce a single copy-pasteable inline code command with the resolved artifact path at transition
+2. NEVER print transition guidance from retro agents — transition gate is the sole authority
+3. ALWAYS STOP after printing transition output — no additional output
 
 ## Tech Stack
 - NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
