@@ -10,25 +10,14 @@ Determine current phase and feature:
 2. Read phase artifacts (design doc, plan doc) from `.beastmode/state/`
 3. Identify the most recent state artifact produced this phase (the reconciliation target)
 
-## 2. Always Run
+## 2. Quick-Exit Check
 
-Retro always runs. Context and meta walkers handle empty phases gracefully — context walker returns "No changes needed", meta walker returns "no findings". No skip logic.
+Skip retro entirely if session was trivial:
+- Phase had fewer than ~5 substantive tool calls
+- No new patterns, decisions, or discrepancies observed
+- Phase was a routine re-run
 
----
-
-## Pre-Flight
-
-### 2.5. Assert Worktree
-
-Before spawning any agents, call [worktree-manager.md](worktree-manager.md) → "Assert Worktree". If it fails, print "Retro skipped: not in a worktree." and proceed to next checkpoint step.
-
-Capture the worktree root as an absolute path:
-
-```bash
-worktree_root=$(pwd)
-```
-
-All agent writes MUST use `$worktree_root` as the base path for `.beastmode/context/` and `.beastmode/meta/` operations.
+If skipping, proceed to next checkpoint step.
 
 ---
 
@@ -48,8 +37,7 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **Artifact**: {path to new state artifact}
 - **L1 context path**: `.beastmode/context/{PHASE}.md`
-- **Worktree root**: {worktree_root absolute path}
-- **IMPORTANT**: All file writes MUST be relative to the worktree root path above. Do NOT write to paths outside this directory.
+- **Worktree root**: {current working directory}
 ```
 
 ### 4. [GATE|retro.context-write]
@@ -61,16 +49,27 @@ If the context walker returned "No changes needed", skip this gate.
 
 #### [GATE-OPTION|human] Review Context Changes
 
-Present all proposed changes (L2 edits + new L2 files):
+Present all proposed changes with actual content bullets:
 
 ```
-### Context Reconciliation Results
+### Context Changes ({N} edits, {N} new)
 
-**Proposed changes** ({N} total):
-- {change title} — {action: edit/create} {target file}
+~ {target file}
+  - "{old text}" → "{new text}"
+  + Section: "{new section title}"
+  + "{new content being added}"
 
-Apply these changes? [Y/n]
++ {target file} — new file
+  + Section: "{section title}"
+
+Apply context changes? [Y/n]
 ```
+
+**Prefix key:**
+- `~` = edit existing file
+- `+` = create new file / add content
+- `-` with `→` = content being replaced
+- Indented lines = actual content being written
 
 #### [GATE-OPTION|auto] Auto-Apply
 
@@ -112,23 +111,30 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **L1 meta path**: `.beastmode/meta/{PHASE}.md`
 - **Artifacts**: {list of state artifact paths}
-- **Worktree root**: {worktree_root absolute path}
-- **IMPORTANT**: All file writes MUST be relative to the worktree root path above. Do NOT write to paths outside this directory.
+- **Worktree root**: {current working directory}
 ```
 
 ### 7. Present Meta Findings
 
-Show user a summary:
+Show meta L2 edits inline, then flow into records and promotions sections.
+
+If L2 edits exist:
 
 ```
-### Meta Review Results
+### Retro: Meta Review
 
-**New records**: {N} ({process count} process, {workarounds count} workarounds)
-**L2 edits**: {N} proposed
-**Promotions**: {N} candidates ({HIGH count} immediate, {MED count} frequency-based)
+~ {target file}
+  - "{old text}" → "{new text}"
+  + Procedure: "{new rule text}"
 ```
 
-If no findings: "Meta review: no changes needed." and skip gates 8-9.
+If no L2 edits:
+
+```
+### Retro: Meta Review
+```
+
+If no findings at all (no L2 edits, no records, no promotions): print "Meta review: no changes needed." and skip gates 8-9.
 
 ### 8. [GATE|retro.records]
 
@@ -137,16 +143,26 @@ Default: `human`.
 
 #### [GATE-OPTION|human] Review Records
 
-Present all proposed L3 records (new files and appends):
+Present all proposed L3 records with one-sentence summaries:
 
 ```
-### Meta Records
+#### Records ({N} proposed)
 
-**Proposed records** ({N} total):
-- {record title} — {action: create/append} {target file} [{domain}] [{confidence}]
+>> {existing file} — Observation {N} [{domain}] [{confidence}]
+   {one-sentence summary}
 
-Apply these records? [Y/n]
++ {new file} [{domain}] [{confidence}]
+   {one-sentence summary}
+
+Apply records? [Y/n]
 ```
+
+**Prefix key:**
+- `>>` = append observation to existing record
+- `+` = create new record file
+- Indented line = one-sentence summary of the observation
+- `[domain]` = process | workarounds
+- `[confidence]` = LOW | MEDIUM | HIGH
 
 #### [GATE-OPTION|auto] Auto-Apply Records
 
@@ -162,16 +178,22 @@ If no promotion candidates, skip this gate.
 
 #### [GATE-OPTION|human] Review Promotions
 
-Present each proposed promotion:
+Present each proposed promotion with the actual rule:
 
 ```
-### Meta Promotions
+#### Promotions ({N} candidates)
 
-**Proposed promotions** ({N} total):
-- {entry title} — {current level} → {target level} ({basis})
+^ {entry title} — L3 → L1
+  + Procedure: "{ALWAYS/NEVER rule text}"
+  ({basis})
 
-Apply these promotions? [Y/n]
+Apply promotions? [Y/n]
 ```
+
+**Prefix key:**
+- `^` = promote up hierarchy
+- `+` = the rule being added to L1
+- Indented `({basis})` = why this qualifies for promotion
 
 #### [GATE-OPTION|auto] Auto-Apply Promotions
 

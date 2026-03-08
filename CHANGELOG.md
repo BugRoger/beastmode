@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.26 — The Readable Retro (Mar 2026)
+
+- **Context changes template** — Retro context section uses `~`/`+` prefixes with actual content bullets instead of opaque one-liners
+- **Meta review inline** — L2 edits shown with literal before/after content instead of count-heavy summary block
+- **Records template** — L3 records use `>>`/`+` prefixes with one-sentence summaries, domain and confidence tags
+- **Promotions template** — Shows actual ALWAYS/NEVER rules being promoted with `^` prefix and basis
+
 ### v0.14.25 — The Worktree Alignment Lock (Mar 2026)
 
 - **Centralized feature naming** — Single `Derive Feature Name` section in worktree-manager.md ensures worktree directory names and artifact filenames always match 1:1
