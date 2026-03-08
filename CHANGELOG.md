@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.35 — The Context Bridge (Mar 2026)
+
+- **Statusline context persistence** — New `context-bridge-statusline.sh` writes real context window metrics (used%, remaining%, window size) to `/tmp/beastmode-{session_id}.json` per session
+- **PostToolUse context injection** — New `context-bridge-hook.sh` reads persisted metrics and injects raw context data as `additionalContext`, replacing estimation with ground truth
+- **Plugin-managed hooks** — New `hooks/hooks.json` declares SessionStart and PostToolUse hooks with `${CLAUDE_PLUGIN_ROOT}` portable paths; migrated from project settings to plugin manifest
+- **Settings cleanup** — Removed hook declarations from `.claude/settings.local.json` (now plugin-managed via `plugin.json` hooks field)
+
+
 ### v0.14.34 — The Handoff Fix (Mar 2026)
 
 - **Removed contradictory handoff spec** — Deleted "Next Step" section from `visual-language.md` that specified file-path format for handoff links, conflicting with checkpoint templates and worktree-manager's path rejection logic
