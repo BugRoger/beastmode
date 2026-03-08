@@ -1,12 +1,12 @@
 # 1. Execute
 
-## 1. Enter Worktree
+## 0. Assert Worktree (Pre-Merge Phase)
 
-```bash
-if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
-  cd "$worktree_path"
-fi
-```
+All steps from here through step 8.5 (Phase Retro) MUST execute inside the worktree.
+
+Call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
+
+> **Transition boundary:** Steps 9-12 (Squash Merge through Plugin Marketplace Update) operate from the main repo, NOT the worktree. This is the only legitimate point where work leaves the worktree.
 
 ## 2. Stage Uncommitted Changes
 
@@ -141,6 +141,10 @@ If no changes to Capabilities or How It Works are needed, skip writing the propo
 ## 8.5. Phase Retro
 
 @../_shared/retro.md
+
+---
+
+> **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the worktree.**
 
 ## 9. Squash Merge to Main
 

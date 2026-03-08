@@ -1,8 +1,12 @@
 # 3. Checkpoint
 
+## 0. Assert Worktree
+
+Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
+
 ## 1. Save Deviation Log
 
-If deviations were tracked during execution, save to `.beastmode/state/implement/YYYY-MM-DD-<feature>-deviations.md`:
+If deviations were tracked during execution, save to `.beastmode/state/implement/YYYY-MM-DD-<feature>-deviations.md` where `<feature>` is the worktree directory name:
 
     # Implementation Deviations: <feature>
 

@@ -1,8 +1,12 @@
 # 3. Checkpoint
 
+## 0. Assert Worktree
+
+Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
+
 ## 1. Save Plan
 
-Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.md`
+Save to `.beastmode/state/plan/YYYY-MM-DD-<feature>.md` where `<feature>` is the worktree directory name.
 
 ## 2. Create Task Persistence File
 

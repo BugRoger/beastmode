@@ -21,6 +21,22 @@ If skipping, proceed to next checkpoint step.
 
 ---
 
+## Pre-Flight
+
+### 2.5. Assert Worktree
+
+Before spawning any agents, call [worktree-manager.md](worktree-manager.md) → "Assert Worktree". If it fails, print "Retro skipped: not in a worktree." and proceed to next checkpoint step.
+
+Capture the worktree root as an absolute path:
+
+```bash
+worktree_root=$(pwd)
+```
+
+All agent writes MUST use `$worktree_root` as the base path for `.beastmode/context/` and `.beastmode/meta/` operations.
+
+---
+
 ## Context Reconciliation
 
 ### 3. Spawn Context Walker
@@ -37,7 +53,8 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **Artifact**: {path to new state artifact}
 - **L1 context path**: `.beastmode/context/{PHASE}.md`
-- **Worktree root**: {current working directory}
+- **Worktree root**: {worktree_root absolute path}
+- **IMPORTANT**: All file writes MUST be relative to the worktree root path above. Do NOT write to paths outside this directory.
 ```
 
 ### 4. [GATE|retro.context-write]
@@ -100,7 +117,8 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **L1 meta path**: `.beastmode/meta/{PHASE}.md`
 - **Artifacts**: {list of state artifact paths}
-- **Worktree root**: {current working directory}
+- **Worktree root**: {worktree_root absolute path}
+- **IMPORTANT**: All file writes MUST be relative to the worktree root path above. Do NOT write to paths outside this directory.
 ```
 
 ### 7. Present Meta Findings

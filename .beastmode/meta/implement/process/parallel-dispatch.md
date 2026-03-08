@@ -10,7 +10,7 @@ The /plan file isolation analysis is the key enabler for parallel execution
 ### Source
 state/implement/2026-03-04-hitl-gate-config.md
 ### Confidence
-[MEDIUM] — recurring pattern across 2 features
+[HIGH] — promoted: confirmed across 4+ features
 
 ## Observation 2
 ### Context
@@ -22,7 +22,7 @@ Pattern: give exact surrounding context + exact content to insert = reliable res
 ### Source
 state/implement/2026-03-04-hitl-gate-config.md
 ### Confidence
-[MEDIUM] — recurring pattern across 2 features
+[HIGH] — promoted: confirmed across 4+ features
 
 ## Observation 3
 ### Context
@@ -34,7 +34,7 @@ Two keys to parallel dispatch: file isolation AND pattern uniformity
 ### Source
 state/implement/2026-03-05-hitl-adherence.md
 ### Confidence
-[MEDIUM] — confirmed across multiple features
+[HIGH] — promoted: confirmed across 4+ features
 
 ## Observation 4
 ### Context
@@ -46,4 +46,16 @@ Third independent confirmation across hitl-gate-config, hitl-adherence, and meta
 ### Source
 state/plan/2026-03-07-meta-retro-rework.md
 ### Confidence
-[MEDIUM] — recurring pattern confirmed across 3 features (4 total observations)
+[HIGH] — confirmed across 4 features (5 total observations)
+
+## Observation 5
+### Context
+During worktree-artifact-alignment implementation, 2026-03-08. 12 tasks across 4 waves with heavy subagent parallel dispatch.
+### Observation
+Fourth consecutive feature confirming parallel dispatch with file isolation. Wave 2 dispatched 9 tasks in parallel (Tasks 1-9), all touching disjoint files across design/, plan/, implement/, validate/, and release/ skill directories. Zero deviations from parallel dispatch. Wave 3 (Task 10) was dispatched individually because it modified two files within the same skill (release/0-prime.md and release/1-execute.md) that had content dependencies. Cross-file grep verification in Wave 4 confirmed consistency.
+### Rationale
+File isolation continues to hold as the primary enabler for parallel dispatch. When two files within a task have dependencies, that task should be a single-task wave, not split across parallel subagents. The wave structure in the plan correctly handled this.
+### Source
+.beastmode/state/implement/2026-03-08-worktree-artifact-alignment-deviations.md
+### Confidence
+[HIGH] — confirmed across 4 features (5 total observations)

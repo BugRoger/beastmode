@@ -21,24 +21,12 @@ Prior decisions, conventions, and learnings inform this phase — don't re-decid
 
 **MANDATORY — do not skip this step.**
 
-Resolve the feature name and enter the worktree:
+Follow [worktree-manager.md](../_shared/worktree-manager.md):
 
-1. If arguments contain a state file path → extract feature name from filename (strip date prefix and `.md`)
-2. If no arguments → scan `.beastmode/worktrees/` for directories:
-   - Exactly one → use it automatically
-   - Multiple → list with branch names, ask user to pick via `AskUserQuestion`
-   - Zero → print: "No active worktrees found. Run /design to start a new feature, or provide a state file path as argument." and STOP
-3. Enter the worktree:
+1. **Discover Feature** — resolve feature name from arguments or filesystem scan. Uses "Derive Feature Name" for extraction. Do NOT search for similarly named worktrees or artifacts.
+2. **Enter Worktree** — cd into the worktree and verify with pwd.
 
-    worktree_path=".beastmode/worktrees/$feature"
-    if [ ! -d "$worktree_path" ]; then
-      echo "Error: Worktree not found at $worktree_path"
-      exit 1
-    fi
-    cd "$worktree_path"
-    pwd  # confirm you are in the worktree
-
-See [worktree-manager.md](../_shared/worktree-manager.md) for full reference.
+The resolved `feature` name is used for all artifact paths in this phase.
 
 ## 4. Read Plan
 

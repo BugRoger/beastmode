@@ -17,16 +17,18 @@ Read (if they exist):
 Follow L2 convention paths (`context/release/{domain}.md`) when relevant to the current topic.
 Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
 
-## 3. Load Artifacts
+## 3. Discover and Enter Feature Worktree
 
-Find worktree path and branch from active worktrees:
-- Design doc path
-- Plan doc path
-- Validation report path
+**MANDATORY — do not skip this step.**
 
-```bash
-# Find active feature worktree
-worktree_line=$(git worktree list | grep ".beastmode/worktrees/" | head -1)
-worktree_path=$(echo "$worktree_line" | awk '{print $1}')
-worktree_branch=$(echo "$worktree_line" | grep -o '\[.*\]' | tr -d '[]')
-```
+Follow [worktree-manager.md](../_shared/worktree-manager.md):
+
+1. **Discover Feature** — resolve feature name from arguments or filesystem scan. Uses "Derive Feature Name" for extraction. Do NOT search for similarly named worktrees or artifacts.
+2. **Enter Worktree** — cd into the worktree and verify with pwd.
+
+## 4. Load Artifacts
+
+From the worktree, locate:
+- Design doc path (`.beastmode/state/design/YYYY-MM-DD-<feature>.md`)
+- Plan doc path (`.beastmode/state/plan/YYYY-MM-DD-<feature>.md`)
+- Validation report path (`.beastmode/state/validate/YYYY-MM-DD-<feature>.md`)

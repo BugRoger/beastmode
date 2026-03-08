@@ -2,19 +2,42 @@
 
 Shared worktree operations for all phases. @import this file; do not inline worktree logic.
 
+## Derive Feature Name
+
+Shared derivation used by ALL phases. Single source of truth for feature naming.
+
+Used by: `/design` (worktree creation), all checkpoints (artifact naming), `/plan`, `/implement`, `/validate` 0-prime (feature extraction from artifact paths)
+
+**From user topic** (design phase):
+
+```bash
+# Input: "Git Branching Strategy" or "git-branching-strategy"
+feature=$(echo "$input" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+```
+
+**From artifact path** (plan/implement/validate phases):
+
+```bash
+# Input: .beastmode/state/design/2026-03-08-worktree-artifact-alignment.md
+# Output: worktree-artifact-alignment
+feature=$(basename "$argument" .md | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
+```
+
+Both derivations MUST produce identical output for the same feature. The worktree directory name, branch name suffix, and artifact filename suffix are always the feature name from this section.
+
 ## Discover Feature
 
 Used by: `/plan`, `/implement`, `/validate` 0-prime — before entering worktree.
 
 Resolves the feature name from arguments or filesystem scan.
 
-**Case 1: Argument provided** — extract feature name from the state file path:
+**Case 1: Argument provided** — extract feature name using "Derive Feature Name" (from artifact path):
 
 ```bash
-# Input: .beastmode/state/design/2026-03-04-worktree-session-discovery.md
-# Output: worktree-session-discovery
 feature=$(basename "$argument" .md | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
 ```
+
+The extracted `feature` MUST match an existing worktree directory name exactly. If it doesn't, STOP — do not search for similar names or create a new worktree.
 
 **Case 2: No argument, worktrees exist** — scan and prompt:
 
@@ -37,10 +60,12 @@ After discovery, pass the resolved `feature` name to "Enter Worktree" below.
 
 ## Create Worktree
 
-Used by: `/design` 0-prime
+Used by: `/design` 1-execute
+
+Derive the feature name using "Derive Feature Name" (from user topic) above.
 
 ```bash
-feature="<feature-name-from-arguments>"
+feature="<derived-feature-name>"
 path=".beastmode/worktrees/$feature"
 branch="feature/$feature"
 
@@ -69,6 +94,23 @@ pwd
 ```
 
 Report: "Working in worktree at `$worktree_path`"
+
+## Assert Worktree
+
+Guards against writing `.beastmode/` files from the main repo. Called before ANY write to `state/`, `context/`, or `meta/`.
+
+Used by: all `3-checkpoint.md` phases (before writes), `retro.md` (before spawning agents), `release/1-execute.md` (before pre-merge work)
+
+```bash
+if [[ "$(pwd)" != *".beastmode/worktrees/"* ]]; then
+  echo "FATAL: Not in a worktree. Current dir: $(pwd)"
+  echo "All .beastmode/ writes must happen from inside a worktree."
+  echo "STOPPING — fix your working directory before continuing."
+  exit 1
+fi
+```
+
+If Assert Worktree fails, STOP immediately. Do not attempt to recover or create a worktree — the phase that should have entered the worktree failed to do so.
 
 ## Merge Options (Reference Only)
 

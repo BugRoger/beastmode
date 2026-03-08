@@ -4,18 +4,11 @@
 
 **MANDATORY — do not skip this step.**
 
-Derive `<feature>` from the user's topic (kebab-case, e.g. `git-branching-strategy`).
+Derive `<feature>` from the user's topic using [worktree-manager.md](../_shared/worktree-manager.md) → "Derive Feature Name" (from user topic).
 
-```bash
-mkdir -p .beastmode/worktrees
-git worktree add ".beastmode/worktrees/<feature>" -b "feature/<feature>"
-cd ".beastmode/worktrees/<feature>"
-pwd  # confirm you are in the worktree
-```
+Then create the worktree using [worktree-manager.md](../_shared/worktree-manager.md) → "Create Worktree".
 
 All subsequent work in this session MUST happen inside the worktree. If `cd` or `pwd` shows you are still in the main repo, STOP and fix it.
-
-See [worktree-manager.md](../_shared/worktree-manager.md) for full reference.
 
 ## 2. Scout Codebase
 

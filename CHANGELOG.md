@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.22 — The Worktree Alignment Lock (Mar 2026)
+
+- **Centralized feature naming** — Single `Derive Feature Name` section in worktree-manager.md ensures worktree directory names and artifact filenames always match 1:1
+- **Assert Worktree guard** — pwd-based check in worktree-manager.md prevents `.beastmode/` writes outside a worktree; called by all 5 checkpoint phases, retro, and release pre-merge
+- **Retro agent path injection** — Context Walker and Meta Walker receive absolute `worktree_root` path, eliminating relative-path drift
+- **Release two-phase split** — Explicit TRANSITION BOUNDARY separates pre-merge (worktree) from post-merge (main) operations
+- **Shared worktree operations** — All 0-prime phases reference Discover Feature + Enter Worktree from worktree-manager.md instead of inline logic
+
 ### v0.14.21 — The Meta Hierarchy Tightening (Mar 2026)
 
 - **Domain rename** — `insights.md` → `process.md`, `upstream.md` → `workarounds.md` across all 5 phases

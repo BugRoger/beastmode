@@ -1,8 +1,12 @@
 # 3. Checkpoint
 
+## 0. Assert Worktree
+
+Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
+
 ## 1. Write Design Doc
 
-Save to `.beastmode/state/design/YYYY-MM-DD-<topic>.md`
+Save to `.beastmode/state/design/YYYY-MM-DD-<feature>.md` where `<feature>` is the worktree directory name (from "Derive Feature Name").
 
 Include:
 - Goal statement
@@ -42,16 +46,16 @@ Default: `human`.
 ### [GATE-OPTION|human] Suggest Next Step
 
 Print and STOP:
-Next step: `/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+Next step: `/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<feature>.md`
 
 Do NOT invoke any implementation skill directly.
 
 ### [GATE-OPTION|auto] Chain to Next Phase
 
 Estimate context remaining. If >= threshold (default 60%):
-Call `Skill(skill="beastmode:plan", args=".beastmode/state/design/YYYY-MM-DD-<topic>.md")`
+Call `Skill(skill="beastmode:plan", args=".beastmode/state/design/YYYY-MM-DD-<feature>.md")`
 
 If below threshold, print:
 Context is low. Start a new session and run:
-`/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<topic>.md`
+`/beastmode:plan .beastmode/state/design/YYYY-MM-DD-<feature>.md`
 STOP.
