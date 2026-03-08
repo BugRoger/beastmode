@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.23 — The Retro Always Runs (Mar 2026)
+
+- **Quick-exit removal** — Removed subjective quick-exit check from `retro.md`; retro always runs, agents handle empty phases gracefully
+- **Release phase normalization** — Moved retro from execute (step 8.5) to checkpoint (step 1), consistent with all other phases
+- **Release checkpoint expansion** — Checkpoint now owns: retro, squash merge, commit, tag, marketplace update
+- **Release execute truncation** — Execute ends at step 8 (L0 proposal prep); steps 8.5-12 moved to checkpoint
+
+
 ### v0.14.22 — The Visual Language Lockdown (Mar 2026)
 
 - **Strict rendering spec** — Rewrites `visual-language.md` from descriptive guide to prescriptive specification with parameterized rules tables

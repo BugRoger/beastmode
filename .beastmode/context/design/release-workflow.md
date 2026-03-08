@@ -1,6 +1,6 @@
 # Release Workflow
 
-Release skill encompasses version detection, commit sequencing, changelog generation, and merge strategy. Retro runs inside execute (before commit) rather than checkpoint to ensure meta changes are included in the release commit.
+Release skill encompasses version detection, commit sequencing, changelog generation, and merge strategy. Retro runs from checkpoint (like all other phases). Execute handles prep work (version detection, release notes, changelog, version bump, L0 proposal). Checkpoint handles retro, squash merge, commit, tag, and marketplace update.
 
 ## Version Detection
 Conventional commit parsing determines version bump (feat = minor, fix = patch, breaking = major). `plugin.json` is the source of truth for current version.
@@ -9,9 +9,9 @@ Conventional commit parsing determines version bump (feat = minor, fix = patch, 
 2. NEVER bump version without conventional commit evidence
 
 ## Commit Sequence
-Sync with main, bump versions in plugin.json/marketplace.json/session-start.sh, run retro before commit, squash-merge to main. No interim commits during feature work — single commit at release.
+Execute preps versions (plugin.json/marketplace.json/session-start.sh) and L0 proposal. Checkpoint runs retro first (while still in worktree), then squash-merges to main, commits, tags, and updates marketplace. No interim commits during feature work — single commit at release.
 
-1. ALWAYS run retro before the release commit — ensures meta changes are included
+1. ALWAYS run retro from checkpoint before merge — retro needs the worktree intact
 2. NEVER make interim commits during design/plan/implement — all commits deferred to release
 3. ALWAYS use GitHub release style commit messages
 

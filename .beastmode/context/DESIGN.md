@@ -19,6 +19,7 @@ System design with L0/L1/L2/L3 knowledge hierarchy, standardized format per leve
 5. NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 6. Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
 7. Meta walker mirrors context walker algorithm — L1 quick-check, L2 deep-check, L3 record management with confidence-gated promotion
+8. NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating
 
 ## Task Runner
 Shared utility that parses markdown skill files into hierarchical tasks and enforces step completion through a depth-first execution loop. Lazy expansion, structural gate enforcement, validation auto-reset.
@@ -28,9 +29,9 @@ Shared utility that parses markdown skill files into hierarchical tasks and enfo
 3. Gate steps (`## N. [GATE|...]`) are structural — cannot be bypassed
 
 ## Release Workflow
-Version detection, commit sequencing, changelog generation, and merge strategy. Retro runs inside execute before commit to ensure meta changes are included.
+Version detection, commit sequencing, changelog generation, and merge strategy. Retro runs from checkpoint (like all other phases), followed by merge, commit, tag, and marketplace steps.
 
-1. ALWAYS run retro before the release commit
+1. ALWAYS run retro from checkpoint before merge — consistent across all five phases
 2. NEVER make interim commits during feature work — single commit at release
 3. ALWAYS archive branch tip before squash merge
 

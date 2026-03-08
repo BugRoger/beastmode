@@ -10,14 +10,9 @@ Determine current phase and feature:
 2. Read phase artifacts (design doc, plan doc) from `.beastmode/state/`
 3. Identify the most recent state artifact produced this phase (the reconciliation target)
 
-## 2. Quick-Exit Check
+## 2. Always Run
 
-Skip retro entirely if session was trivial:
-- Phase had fewer than ~5 substantive tool calls
-- No new patterns, decisions, or discrepancies observed
-- Phase was a routine re-run
-
-If skipping, proceed to next checkpoint step.
+Retro always runs. Context and meta walkers handle empty phases gracefully — context walker returns "No changes needed", meta walker returns "no findings". No skip logic.
 
 ---
 

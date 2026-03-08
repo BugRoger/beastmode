@@ -53,7 +53,7 @@ Two-tier: unconditional gates (always enforced, embedded as structural task-runn
 4. NEVER place competing gate mechanisms on the same decision point
 
 ## Retro Knowledge Promotion
-Artifact-scoped reconciliation: context walker quick-checks L1, deep-checks L2 only when stale, recognizes new areas without confidence scoring. Meta walker mirrors the context walker algorithm with L1 quick-check, L2 deep-check, L3 record management, and confidence-gated promotion. Two retro gates: `retro.records` (L3 record creation/appends) and `retro.promotions` (L1/L2 upgrades). Single `retro.context-write` gate covers context doc writes. Promotion thresholds: [HIGH] promotes immediately, [MEDIUM] + 3 observations promotes to L1, [LOW] + 3 observations upgrades to [MEDIUM]. Retro owns L2->L1 propagation; release owns L1->L0 via rollup step.
+Retro always runs at checkpoint — walkers handle empty phases gracefully (context walker returns "No changes needed", meta walker returns "no findings"). Artifact-scoped reconciliation: context walker quick-checks L1, deep-checks L2 only when stale, recognizes new areas without confidence scoring. Meta walker mirrors the context walker algorithm with L1 quick-check, L2 deep-check, L3 record management, and confidence-gated promotion. Two retro gates: `retro.records` (L3 record creation/appends) and `retro.promotions` (L1/L2 upgrades). Single `retro.context-write` gate covers context doc writes. Promotion thresholds: [HIGH] promotes immediately, [MEDIUM] + 3 observations promotes to L1, [LOW] + 3 observations upgrades to [MEDIUM]. Retro owns L2->L1 propagation; release owns L1->L0 via rollup step.
 
 1. ALWAYS run retro before release commit — context walker + meta walker in parallel
 2. Retro reconciliation is artifact-scoped — only checks docs relevant to the new state artifact
@@ -61,3 +61,4 @@ Artifact-scoped reconciliation: context walker quick-checks L1, deep-checks L2 o
 4. NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
 5. Meta promotion is confidence-gated: [HIGH] immediate, [MEDIUM]+3 to L1, [LOW]+3 to [MEDIUM]
 6. Two meta retro gates: retro.records (L3 writes) and retro.promotions (L1/L2 upgrades)
+7. NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating

@@ -1,6 +1,6 @@
 # Design Process
 
-Emerging process patterns from design phases. Ten topic clusters spanning competitive analysis, fractal consistency, HITL gate design, cross-session state, instruction visibility, scope management, L0 content scoping, agent organization, external documentation drift, and miscellaneous design patterns.
+Emerging process patterns from design phases. Eleven topic clusters spanning competitive analysis, fractal consistency, HITL gate design, cross-session state, instruction visibility, scope management, L0 content scoping, agent organization, external documentation drift, miscellaneous design patterns, and redundant upstream gatekeeping.
 
 ## Competitive Analysis
 Research-informed design outperforms brainstorming. External reference points constrain the solution space and reveal integration gaps that internal review misses.
@@ -41,3 +41,6 @@ External docs drift from internal knowledge hierarchy. The retro walker doesn't 
 ## Miscellaneous Patterns
 Root entry points should be pure wiring. Locked decisions can drift from implementation. Shared files are blind spots for phase-scoped refactors. Parsability constraints drive syntax design through multiple iterations.
 1. ALWAYS include shared files (_shared/) in phase-scoped sweeps
+
+## Redundant Upstream Gatekeeping
+Subjective upstream skip-checks are harmful when downstream components handle empty input gracefully. Let the downstream agent decide there is nothing to do rather than preventing it from running.

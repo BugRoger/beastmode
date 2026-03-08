@@ -47,3 +47,15 @@ Start from existing algorithms when building structurally analogous subsystems
 state/design/2026-03-07-meta-retro-rework.md
 ### Confidence
 [HIGH] — promoted to SOP: "Mirror existing patterns before designing from scratch"
+
+## Observation 5
+### Context
+During retro-quick-exit design, 2026-03-08
+### Observation
+Release phase had retro in execute step 8.5 while all other phases had retro in checkpoint. The inconsistency went unnoticed until an explicit phase-by-phase audit. Structural steps that apply to all phases must live in the same phase location across all five phases.
+### Rationale
+Fractal consistency violations hide in phases that "work fine" — only cross-phase comparison reveals them
+### Source
+state/design/2026-03-08-retro-quick-exit.md
+### Confidence
+[LOW] — first observation of this specific class (cross-phase step placement)
