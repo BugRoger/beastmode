@@ -1,22 +1,17 @@
 # Tech Stack
 
-Claude Code plugin platform. Markdown + YAML frontmatter for skill definitions. No runtime dependencies — pure agentic workflow system interpreted directly by Claude Code. Distributed via Claude Code marketplace.
-
 ## Platform
-Claude Code is the host environment. Skills execute as agentic workflows. Multi-step workflow with parallel agent spawning.
-
-1. NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
-2. ALWAYS distribute via Claude Code marketplace
-3. Claude Code CLI provides skill execution runtime and subagent spawning
+- NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
+- ALWAYS distribute via Claude Code marketplace — standard distribution channel
+- Claude Code CLI provides skill execution runtime and subagent spawning — host environment
+- Multi-step workflow with parallel agent spawning — execution model
 
 ## Dependencies
-No traditional package dependencies. Core components: Claude Code CLI (runtime), Anthropic Claude API (LLM backend), Git (version control + worktrees), Markdown + YAML (documentation + metadata).
-
-1. ALWAYS use Git for version control and worktree isolation
-2. NEVER introduce package managers — there's nothing to package
+- ALWAYS use Git for version control and worktree isolation — core dependency
+- NEVER introduce package managers — there's nothing to package
+- Core components: Claude Code CLI (runtime), Anthropic Claude API (LLM backend), Git (VCS + worktrees), Markdown + YAML (docs + metadata) — minimal stack
 
 ## Development
-No build step. Manual testing via skill invocation. No automated linting.
-
-1. Testing is manual — invoke skills and verify behavior
-2. Install via: `claude plugin marketplace update` then `claude plugin update beastmode@beastmode-marketplace --scope project`
+- Testing is manual — invoke skills and verify behavior
+- Install via: `claude plugin marketplace update` then `claude plugin update beastmode@beastmode-marketplace --scope project` — two-step install
+- No build step, no automated linting — zero build infrastructure

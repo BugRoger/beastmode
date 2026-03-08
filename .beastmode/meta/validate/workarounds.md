@@ -1,3 +1,3 @@
 # Validate Workarounds
 
-No workarounds recorded for validation phases.
+- None recorded.

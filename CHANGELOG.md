@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.24 — The Hierarchy Format v2 (Mar 2026)
+
+- **L0 bullet conversion** — BEASTMODE.md converted to pure bullet format under `##` section headers
+- **L1 bullet conversion** — All 10 L1 files (5 Context + 5 Meta) stripped of prose paragraphs, rules converted to dash bullets
+- **L2 bullet conversion** — All 27 L2 files converted to bullets with em dash rationale
+- **Format parity** — Meta and Context domains now use identical structure at L1 and L2
+- **L3 unchanged** — Record format preserved; 2 new observations appended during design retro
+
+
 ### v0.14.23 — The Retro Always Runs (Mar 2026)
 
 - **Quick-exit removal** — Removed subjective quick-exit check from `retro.md`; retro always runs, agents handle empty phases gracefully

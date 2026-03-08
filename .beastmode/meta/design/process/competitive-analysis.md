@@ -47,3 +47,15 @@ Invest in cross-domain research before narrowing to mechanism design
 state/design/2026-03-06-l2-domain-expansion.md
 ### Confidence
 [HIGH] — promoted to SOP: "Research before structural design decisions"
+
+## Observation 5
+### Context
+During hierarchy-format-v2 design, 2026-03-08
+### Observation
+Visual reference (screenshot of target format) proved more effective than prose descriptions for format decisions. User brought concrete example of another CLAUDE.md; reference point resolved all 4 format decisions in single pass each with no iteration.
+### Rationale
+Concrete visual example beats abstract description for format/layout decisions; reduces decision cycles
+### Source
+state/design/2026-03-08-hierarchy-format-v2.md
+### Confidence
+[MEDIUM] — single session, but aligns with existing pattern that external reference outperforms brainstorming

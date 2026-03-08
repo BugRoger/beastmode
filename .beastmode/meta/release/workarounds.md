@@ -1,3 +1,3 @@
 # Release Workarounds
 
-No workarounds recorded for release phases.
+- None recorded.

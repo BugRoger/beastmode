@@ -1,3 +1,3 @@
 # Design Workarounds
 
-No workarounds recorded for design phases.
+- None recorded.
