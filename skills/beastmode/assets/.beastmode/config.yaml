@@ -3,32 +3,33 @@
 
 gates:
   design:
-    existing-design-choice: human
-    intent-discussion: human
-    approach-selection: human
-    section-review: human
-    design-approval: human
+    existing-design-choice: human    # INTERACTIVE — prior design found, ask what to do
+    intent-discussion: human         # INTERACTIVE — conversational intent + gray area loop
+    approach-selection: human        # INTERACTIVE — pick from proposed approaches
+    section-review: human            # INTERACTIVE — section-by-section review
+    design-approval: human           # APPROVAL — approve before documenting
 
   plan:
-    plan-approval: human
+    plan-approval: auto              # APPROVAL — approve before saving
 
   implement:
-    architectural-deviation: human
-    blocked-task-decision: human
-    validation-failure: human
+    architectural-deviation: auto    # CONDITIONAL — tier 3 deviation decision
+    blocked-task-decision: auto      # CONDITIONAL — blocked task with dependents
+    validation-failure: auto         # CONDITIONAL — fix loop exhausted
 
   retro:
-    context-write: human
-    records: human
-    promotions: human
+    records: auto                   # APPROVAL — L3 observation creation/appends
+    context: auto                   # APPROVAL — L2 context/meta doc edits + new docs
+    phase:  auto                    # APPROVAL — L1 phase summary rewrites + promotions
+    beastmode: human                # APPROVAL — L0 BEASTMODE.md updates
 
   release:
-    version-confirmation: human
-    beastmode-md-approval: human
+    version-confirmation: human       # APPROVAL — version bump override
 
 transitions:
-  design-to-plan: human
-  plan-to-implement: human
-  implement-to-validate: human
-  validate-to-release: human
-  context_threshold: 20
+  design-to-plan: human               # TRANSITION
+  plan-to-implement: human            # TRANSITION
+  implement-to-validate: human        # TRANSITION
+  validate-to-release: human          # TRANSITION
+
+  context_threshold: 20              # % remaining context required to auto-advance

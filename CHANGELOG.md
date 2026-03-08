@@ -4,12 +4,23 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.35 — The Context Bridge (Mar 2026)
+
+- **Statusline context persistence** — New `context-bridge-statusline.sh` writes real context window metrics (used%, remaining%, window size) to `/tmp/beastmode-{session_id}.json` per session
+- **PostToolUse context injection** — New `context-bridge-hook.sh` reads persisted metrics and injects raw context data as `additionalContext`, replacing estimation with ground truth
+- **Plugin-managed hooks** — New `hooks/hooks.json` declares SessionStart and PostToolUse hooks with `${CLAUDE_PLUGIN_ROOT}` portable paths; migrated from project settings to plugin manifest
+- **Settings cleanup** — Removed hook declarations from `.claude/settings.local.json` (now plugin-managed via `plugin.json` hooks field)
+
 ### v0.14.34 — The Task-Runner Enforcer (Mar 2026)
 
 - **Tightened HARD-GATE contract** — All 5 skill HARD-GATE blocks now require TodoWrite as the first tool call, making task-runner execution verifiable
 - **Anti-freestyle enforcement** — "Do not output anything else first" prevents agents from skipping the framework and running sessions conversationally
 - **Anti-rationalization line** — "Do not skip this for simple tasks" preempts the "this is too lightweight" excuse
-
+- **Init skeleton restructured** — Init assets now match evolved reality: BEASTMODE.md, config.yaml, research/, full L3 directory tree with .gitkeep
+- **PRODUCT.md → context/design/product.md** — Root-level product file moved to proper hierarchy position
+- **State simplified** — No more L1 state files; just 5 phase subdirs with .gitkeep
+- **Meta L2 templates** — All 5 phases get process.md + workarounds.md + L3 record directories
+- **Reality cleanup** — research/ moved from state/ to root, obsolete DESIGN.md deleted, meta L2 bullets migrated to ALWAYS/NEVER format
 
 ### v0.14.33 — The Hierarchy Gates (Mar 2026)
 
