@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.37 — The Gate Tightener (Mar 2026)
+
+- **Structural HARD-GATE enforcement** — Worktree entry/creation sections wrapped in `<HARD-GATE>` tags with numbered procedure bullets, replacing verbose prose enforcement
+- **Design worktree placement** — Worktree creation moved from design/1-execute to design/3-checkpoint (step 0), matching the phase's actual needs
+- **Prime-first worktree entry** — plan/implement/validate/release enter worktree as step 1 of 0-prime, before announce or context load
+- **Bare assert pattern** — validate/release 1-execute slimmed to one-line worktree-manager assert calls
+- **Redundant prose removal** — Eliminated "MANDATORY", "no exceptions", "lightweight" enforcement language; gate tags handle enforcement
+
 ### v0.14.35 — The Context Bridge (Mar 2026)
 
 - **Statusline context persistence** — New `context-bridge-statusline.sh` writes real context window metrics (used%, remaining%, window size) to `/tmp/beastmode-{session_id}.json` per session
