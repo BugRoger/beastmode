@@ -91,7 +91,7 @@ Beastmode places human-in-the-loop gates at every decision point: design approva
 # .beastmode/config.yaml
 gates:
   design:
-    gray-area-discussion: human   # start supervised
+    intent-discussion: human      # start supervised
     design-approval: human
   plan:
     plan-approval: auto           # trust the plan phase

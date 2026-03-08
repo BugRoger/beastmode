@@ -1,0 +1,10 @@
+{
+  "planPath": ".beastmode/state/plan/2026-03-08-design-execute-v2.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Rewrite 1-execute.md", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Update config.yaml gate names", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Update docs/configurable-gates.md", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Update README.md gate example", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-08T11:25:00Z"
+}

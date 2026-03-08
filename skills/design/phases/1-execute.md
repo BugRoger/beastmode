@@ -10,85 +10,66 @@ Then create the worktree using [worktree-manager.md](../_shared/worktree-manager
 
 All subsequent work in this session MUST happen inside the worktree. If `cd` or `pwd` shows you are still in the main repo, STOP and fix it.
 
-## 2. Scout Codebase
+## 2. [GATE|design.intent-discussion]
 
-Lightweight scan of existing code related to the topic (~10% of context budget):
-
-- Identify reusable components, hooks, utilities
-- Note established patterns (state management, styling, data fetching)
-- Find integration points (where new code would connect)
-- Store findings internally as `<codebase_context>` for annotating gray areas
-
-This is NOT a deep dive. Read 3-5 relevant files max.
-
-## 3. Identify Gray Areas
-
-Analyze the topic to find decisions that would change the outcome:
-
-1. Determine domain type: visual | API | CLI | docs | infrastructure | workflow
-2. Generate 3-5 specific decision points for THIS topic (not generic categories)
-3. Skip areas already decided in prior designs (from prime's prior_decisions)
-4. Include "Claude's Discretion" — areas where delegation is reasonable
-
-Bad: "UI", "UX", "Behavior"
-Good: "Layout style", "Loading pattern", "Empty state handling", "Error recovery approach"
-
-## 4. [GATE|design.gray-area-selection]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.gray-area-selection`.
+Read `.beastmode/config.yaml` → resolve mode for `design.intent-discussion`.
 Default: `human`.
 
-### [GATE-OPTION|human] Ask User
+### [GATE-OPTION|human] Conversational Intent + Gray Areas
 
-Use `AskUserQuestion` with `multiSelect: true`:
+**Phase A — Understand Intent:**
 
-- header: "Discuss"
-- question: "Which areas do you want to discuss for [topic]?"
-- Each option: specific area label + 1-2 sentence description
-- Annotate with codebase context: "(Card component exists with variants)"
-- Annotate with prior decisions: "(You chose X in the Y design)"
+1. Ask "What are you trying to build?" (or derive from arguments if clear)
+2. Follow-up questions one at a time, multiple choice preferred
+3. Read code ON DEMAND as questions arise (replaces separate scout step)
+4. Honor prior decisions from L2 context and L3 records
+5. Build mental model of purpose, constraints, success criteria
+6. Summarize understanding back to user for confirmation
 
-At least 1 area must be discussed. Do NOT include "skip all."
+**Phase B — Gray Area Loop:**
 
-### [GATE-OPTION|auto] Select All
-
-Select all areas for internal analysis without asking.
-Log: "Gate `design.gray-area-selection` → auto: all areas selected"
-Proceed to discuss each using Claude's judgment.
-
-## 5. [GATE|design.gray-area-discussion]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.gray-area-discussion`.
-Default: `human`.
-
-### [GATE-OPTION|human] Interactive Discussion
-
-For each selected area:
-
-1. Ask up to 4 questions using `AskUserQuestion`
-   - Include "You decide" as a valid option on every question
+1. Analyze topic to find decisions that would change the outcome
+2. Present the 3 most unclear areas + "Claude's Discretion" bucket + "Other"
+   - Use `AskUserQuestion` with `multiSelect: true`
    - Annotate options with codebase context when relevant
-2. After 4 questions, check: "More questions about [area], or next?"
-   - If "More" → 4 more questions, then check again
-   - If "Next" → move to next area
-3. Track "Claude's Discretion" items separately
-4. **Scope guardrail**: If user suggests a new capability (not clarifying current design):
-   "That sounds like its own feature — I'll note it as a deferred idea. Back to [area]."
-5. Maintain running "Deferred Ideas" list internally
+3. User multi-selects which to discuss
+4. Per selected area: one question at a time, multiple choice preferred
+   - "You decide" option on every question (explicit discretion opt-in)
+   - "Other" always available
+   - Scope guardrail: new capabilities get deferred
+     "That sounds like its own feature — I'll note it as a deferred idea. Back to [area]."
+5. After batch resolved: "3 more areas, or satisfied with the level of detail?"
+   - "3 more" → loop back with next 3 most unclear
+   - "Satisfied" → exit loop
+6. Track deferred ideas internally
 
-### [GATE-OPTION|auto] Claude Decides
+### [GATE-OPTION|auto] Derive All Silently
 
-Make reasonable decisions for each area based on codebase context and prior decisions.
-Log each decision inline. No AskUserQuestion calls.
+- Derive intent from arguments + codebase scan
+- Decide all gray areas based on context and prior decisions
+- Log decisions inline
+- No questions asked
 
-## 6. Propose Approaches
+## 3. [GATE|design.approach-selection]
+
+Read `.beastmode/config.yaml` → resolve mode for `design.approach-selection`.
+Default: `human`.
+
+### [GATE-OPTION|human] Present Approaches
 
 - Present 2-3 different approaches with trade-offs
 - Lead with recommended option and explain why
 - Annotate with codebase context: "Approach A reuses existing X"
-- Informed by gray area discussions — don't re-ask decided points
+- Informed by gray area decisions — don't re-ask decided points
+- User picks
 
-## 7. [GATE|design.section-review]
+### [GATE-OPTION|auto] Claude Picks
+
+- Select recommended approach
+- Log rationale
+- Proceed without asking
+
+## 4. [GATE|design.section-review]
 
 Read `.beastmode/config.yaml` → resolve mode for `design.section-review`.
 Default: `human`.
@@ -106,7 +87,7 @@ Present the full design without per-section approval pauses.
 Proceed directly to validation.
 Log: "Gate `design.section-review` → auto: full design presented"
 
-## 8. Iterate Until Ready for Validation
+## 5. Iterate Until Ready for Validation
 
 - Go back and clarify as needed
 - Keep YAGNI in mind — remove unnecessary features

@@ -39,11 +39,11 @@ Gates sit at specific positions in the five-phase workflow:
  DESIGN        PLAN         IMPLEMENT      VALIDATE      RELEASE
  ──────        ────         ─────────      ────────      ───────
  |             |            |              |             |
- * gray-area   * plan       * deviation    |             * version
-   selection     approval     handling     |               confirm
+ * intent      * plan       * deviation    |             * version
+   discussion    approval     handling     |               confirm
  |             |            |              |             |
- * gray-area                * blocked      |             * L0 update
-   discussion                 task         |               approval
+ * approach                 * blocked      |             * L0 update
+   selection                  task         |               approval
  |                          |              |
  * section                  * validation   |
    review                     failure      |
@@ -64,10 +64,10 @@ Each `*` is a gate. Each gate has a mode: `human` or `auto`.
 
 Gates aren't just approval checkpoints. They fall into three categories:
 
-**Interactive gates** control dialogue flow. The design phase's gray-area
-discussion gate determines whether Claude asks clarifying questions or
-makes reasonable assumptions. On `human`, you get a collaborative design
-session. On `auto`, you get a design proposal.
+**Interactive gates** control dialogue flow. The design phase's intent-discussion
+gate determines whether Claude asks clarifying questions one at a time or
+derives intent silently from arguments and codebase. On `human`, you get a
+conversational design session. On `auto`, you get a design proposal.
 
 **Approval gates** control quality checkpoints. The plan-approval gate
 determines whether you review the plan before implementation starts. On
@@ -93,8 +93,8 @@ A fresh project starts fully supervised:
 ```yaml
 gates:
   design:
-    gray-area-selection: human
-    gray-area-discussion: human
+    intent-discussion: human
+    approach-selection: human
     section-review: human
     design-approval: human
   plan:
@@ -112,8 +112,8 @@ gates:
 ```yaml
 gates:
   design:
-    gray-area-selection: human     # still want to choose what to discuss
-    gray-area-discussion: human    # still want the dialogue
+    intent-discussion: human       # still want the conversational flow
+    approach-selection: human      # still want to pick the approach
     section-review: auto           # trusting section-level output now
     design-approval: human         # still approving final designs
   plan:

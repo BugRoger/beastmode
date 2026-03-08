@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.28 — The Conversational Design (Mar 2026)
+
+- **Conversational intent flow** — Design execute phase collapsed from 8 steps to 5, replacing batch-question mechanics with one-question-at-a-time conversational flow
+- **On-demand codebase reading** — Scout step merged into intent understanding; code is read as questions arise rather than upfront
+- **Gray area batches of 3** — Users multi-select from 3 most unclear areas with "Claude's Discretion" bucket, loop until satisfied
+- **Approach-selection gate** — New `design.approach-selection` gate separates approach choice from gray area discussion
+- **Scope guardrail** — Out-of-scope suggestions captured as deferred ideas, not lost
+- **Gate rename** — `gray-area-selection` + `gray-area-discussion` replaced by `intent-discussion` + `approach-selection`
+
 ### v0.14.27 — The One True Next Step (Mar 2026)
 
 - **Next Step spec** — Added "Next Step" visual language element with strict rendering rules (inline code only, single authority)
