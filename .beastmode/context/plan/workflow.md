@@ -40,3 +40,6 @@ Config.yaml transitions section controls phase-to-phase chaining. Transition gat
 1. ALWAYS respect gate mode from config.yaml — never skip gates
 2. ALWAYS use inline code (single backticks) for next-step commands — never code blocks
 3. ALWAYS end transition gate output with STOP — no additional output after the command
+
+## Related Decisions
+- Init L2 expansion with retro-compatible format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)

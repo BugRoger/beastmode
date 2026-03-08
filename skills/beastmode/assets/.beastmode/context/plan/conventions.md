@@ -1,13 +1,13 @@
 # Conventions
 
 ## Naming
-[File, function, variable naming patterns]
+[Populated by init or retro]
 
 ## Code Style
-[Import organization, export patterns, error handling]
+[Populated by init or retro]
 
 ## Patterns
-[Common patterns used in the project]
+[Populated by init or retro]
 
 ## Anti-Patterns
-[Patterns to avoid]
+[Populated by init or retro]

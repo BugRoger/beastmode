@@ -37,8 +37,15 @@ Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gate
 - NEVER commit during implement phase — /release owns the merge
 - NEVER use @ in flowing prose — use markdown links for inline references, reserve @ for standalone mandatory imports
 
+## Context Document Format
+- ALWAYS use `[Populated by init or retro]` as placeholder text in skeleton L2 files — signals ownership
+- ALWAYS use `- ALWAYS [rule] — [rationale]` / `- NEVER [rule] — [rationale]` bullet format in L2 files — retro-compatible output
+- ALWAYS pair every L2 file with a matching L3 directory containing `.gitkeep` — structural invariant
+- ALWAYS use L3 records with Context/Decision/Rationale/Source/Confidence structure — standardized evidence
+
 ## Related Decisions
 - Skill anatomy standardized to 4 sub-phases — see [skill-anatomy-refactor](../../state/plan/2026-03-04-skill-anatomy-refactor.md)
 - Lean prime refactor — 0-prime read-only, see [lean-prime-refactor](../../state/plan/2026-03-04-lean-prime-refactor.md)
 - Git branching with feature/<feature> convention — see [git-branching-strategy](../../state/plan/2026-03-04-git-branching-strategy.md)
 - HITL gate configuration system — see [hitl-gate-config](../../state/plan/2026-03-04-hitl-gate-config.md)
+- Init L2 expansion and context doc format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)

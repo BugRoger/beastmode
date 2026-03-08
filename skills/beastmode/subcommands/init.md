@@ -13,7 +13,7 @@ If `.beastmode/` directory doesn't exist, run the install step automatically:
 ## Mode Detection
 
 Examine the project:
-- If the project has existing source files (beyond `.beastmode/`) → run full 3-phase discovery
+- If the project has existing source files (beyond `.beastmode/`) → run full 5-phase discovery
 - If the project is empty or only has `.beastmode/` → report "Empty project — skeleton installed. Start with /design." and STOP
 
 No `--greenfield` or `--brownfield` flags. Empty projects evolve through /design sessions.
@@ -51,9 +51,20 @@ Topics found:
 - product: {N} items
 - architecture: {N} items
 - tech-stack: {N} items
+- domain-model: {N} items
 - conventions: {N} items
 - structure: {N} items
+- error-handling: {N} items
+- workflow: {N} items
+- agents: {N} items
 - testing: {N} items
+- build: {N} items
+- quality-gates: {N} items
+- validation-patterns: {N} items
+- versioning: {N} items
+- changelog: {N} items
+- deployment: {N} items
+- distribution: {N} items
 [- dynamic-topic: {N} items]
 ```
 
@@ -105,7 +116,53 @@ If any writer agent fails:
 - Continue with remaining topics
 - Do not abort the entire init
 
-## Phase 3: Synthesize (Single Agent)
+## Phase 3: Retro (Parallel Per-Phase)
+
+### 1. Announce
+
+"Running retro pass on existing artifacts."
+
+### 2. Scan for state artifacts
+
+For each phase with state/ artifacts:
+
+```bash
+ls .beastmode/state/design/*.md .beastmode/state/plan/*.md .beastmode/state/implement/*.md .beastmode/state/validate/*.md .beastmode/state/release/*.md 2>/dev/null
+```
+
+### 3. Spawn retro agents per phase
+
+For each phase that has state artifacts OR L2 files were just written:
+
+```yaml
+Agent:
+  subagent_type: "beastmode:retro-context"
+  description: "Init retro for {phase} phase"
+  prompt: |
+    Read agents/retro-context.md and follow its algorithm.
+
+    ## Session Context
+    - **Phase**: {phase}
+    - **Feature**: init
+    - **Artifact**: {list of state artifacts for this phase, or "none"}
+    - **L1 context path**: .beastmode/context/{PHASE}.md
+    - **Worktree root**: {project root}
+
+    Focus on:
+    1. Validating L2 files just written by init writers
+    2. Processing any existing state/ artifacts
+    3. Populating meta/{phase}/process.md and meta/{phase}/workarounds.md
+```
+
+Launch all 5 retro agents in parallel.
+
+### 4. Handle errors
+
+If any retro agent fails:
+- Log warning: "Retro for {phase} encountered issues — L2 files preserved"
+- Continue with remaining phases
+
+## Phase 4: Synthesize (Single Agent)
 
 ### 1. Announce
 
@@ -131,12 +188,13 @@ Agent:
 Confirm L1 files were generated:
 
 ```bash
-for f in DESIGN PLAN IMPLEMENT; do
-  test -s .beastmode/context/$f.md && echo "OK: $f.md" || echo "WARN: $f.md empty"
+for f in DESIGN PLAN IMPLEMENT VALIDATE RELEASE; do
+  test -s .beastmode/context/$f.md && echo "OK: context/$f.md" || echo "WARN: context/$f.md empty"
+  test -s .beastmode/meta/$f.md && echo "OK: meta/$f.md" || echo "WARN: meta/$f.md empty"
 done
 ```
 
-## Report
+## Phase 5: Report
 
 Print final summary:
 
@@ -147,12 +205,30 @@ Files created/updated:
 - .beastmode/context/DESIGN.md
 - .beastmode/context/PLAN.md
 - .beastmode/context/IMPLEMENT.md
+- .beastmode/context/VALIDATE.md
+- .beastmode/context/RELEASE.md
+- .beastmode/meta/DESIGN.md
+- .beastmode/meta/PLAN.md
+- .beastmode/meta/IMPLEMENT.md
+- .beastmode/meta/VALIDATE.md
+- .beastmode/meta/RELEASE.md
 - .beastmode/context/design/product.md ({N} L3 records)
 - .beastmode/context/design/architecture.md ({N} L3 records)
 - .beastmode/context/design/tech-stack.md ({N} L3 records)
+- .beastmode/context/design/domain-model.md ({N} L3 records)
 - .beastmode/context/plan/conventions.md ({N} L3 records)
 - .beastmode/context/plan/structure.md ({N} L3 records)
+- .beastmode/context/plan/error-handling.md ({N} L3 records)
+- .beastmode/context/plan/workflow.md ({N} L3 records)
+- .beastmode/context/implement/agents.md ({N} L3 records)
 - .beastmode/context/implement/testing.md ({N} L3 records)
+- .beastmode/context/implement/build.md ({N} L3 records)
+- .beastmode/context/validate/quality-gates.md ({N} L3 records)
+- .beastmode/context/validate/validation-patterns.md ({N} L3 records)
+- .beastmode/context/release/versioning.md ({N} L3 records)
+- .beastmode/context/release/changelog.md ({N} L3 records)
+- .beastmode/context/release/deployment.md ({N} L3 records)
+- .beastmode/context/release/distribution.md ({N} L3 records)
 [- .beastmode/context/<phase>/<dynamic-topic>.md ({N} L3 records)]
 - CLAUDE.md (rewritten)
 

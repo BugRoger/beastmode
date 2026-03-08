@@ -34,4 +34,16 @@ Third confirmation that detailed design components map directly to plan tasks. T
 ### Source
 state/plan/2026-03-08-phase-end-guidance.md
 ### Confidence
-[MEDIUM] — third feature observation confirming the pattern
+[HIGH] — fourth observation, pattern now well-established
+
+## Observation 4
+### Context
+During init-l2-expansion planning, 2026-03-08
+### Observation
+Design doc with 10 locked decisions and 7 components mapped to 7 plan tasks across 3 waves. Locked decisions (retro format, structural invariant, domain taxonomy) became constraints applied uniformly across all tasks. Wave structure mapped directly to component dependencies: skeleton files (Wave 1) before agent rewrites (Wave 2) before integration (Wave 3). The "go broad, let retro prune" principle from design carried forward as the inventory agent's discovery-driven approach.
+### Rationale
+Fourth confirmation of 1:1 design-to-plan mapping. New pattern: locked decisions function as cross-cutting constraints that unify task specifications. Wave ordering emerges naturally from component dependency graphs.
+### Source
+state/plan/2026-03-08-init-l2-expansion.md
+### Confidence
+[HIGH] — fourth observation, pattern now well-established

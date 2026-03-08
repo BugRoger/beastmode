@@ -1,10 +1,10 @@
 # Agents
 
 ## Core Rules
-[Rules for Claude and agents working on this project]
+[Populated by init or retro]
 
 ## Git Workflow
-[Project-specific git workflow rules]
+[Populated by init or retro]
 
 ## Refactoring
-[Project-specific refactoring guidelines]
+[Populated by init or retro]

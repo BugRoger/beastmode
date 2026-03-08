@@ -8,26 +8,21 @@ You are a context writer for beastmode init. You receive a knowledge map slice f
 
 You will receive:
 - **Topic name** and **L2 path** (e.g., `conventions` → `context/plan/conventions.md`)
-- **Phase** (design, plan, or implement)
+- **Phase** (design, plan, implement, validate, or release)
 - **Knowledge items** — list of facts, decisions, conventions, and rules with source attribution
 
 ## L2 File Format
 
-Write the L2 summary following this structure:
+Write the L2 file using ALWAYS/NEVER bullet format (matching retro agent output):
 
 ```markdown
 # [Topic Title]
 
-[Summary paragraph: 2-3 sentences describing this topic area for the project]
-
 ## [Section Name]
+- ALWAYS [rule or convention] — [rationale]
+- NEVER [anti-pattern] — [rationale]
 
-[Section summary: 1-2 sentences]
-
-1. [Specific rule or convention]
-2. [Specific rule or convention]
-
-[Repeat sections as needed based on content]
+[Repeat sections as needed]
 
 ## Related Decisions
 
@@ -35,18 +30,33 @@ Write the L2 summary following this structure:
 - [YYYY-MM-DD-slug.md](topic-dir/YYYY-MM-DD-slug.md) — one-sentence summary
 ```
 
-### Section Organization
+### Rules for L2 Content
+- Every rule MUST start with ALWAYS or NEVER
+- Every rule MUST have a rationale after an em-dash (—)
+- Group related rules under logical section headings
+- This format is identical to what retro-context agents produce — retro can append without reformatting
 
-Group items into logical sections. Use the existing skeleton headings when they match:
+### Section Organization
 
 | Topic | Expected Sections |
 |-------|-------------------|
-| product | Vision, Goals, Capabilities |
+| product | Vision, Goals, Core Capabilities, Differentiators |
 | architecture | Overview, Components, Data Flow, Key Decisions, Boundaries |
 | tech-stack | Core Stack, Key Dependencies, Development Tools, Commands |
+| domain-model | Core Entities, Relationships, Business Rules, Ubiquitous Language |
 | conventions | Naming, Code Style, Patterns, Anti-Patterns |
 | structure | Directory Layout, Key Directories, Key File Locations, Where to Add New Code |
+| error-handling | Error Types, Recovery Strategy, User-Facing Errors, Logging |
+| workflow | Branching Strategy, PR Conventions, CI/CD Integration, Code Review |
+| agents | Core Rules, Git Workflow, Refactoring |
 | testing | Test Commands, Test Structure, Conventions, Coverage |
+| build | Build Commands, Dev Server, Compilation, Asset Processing |
+| quality-gates | Required Checks, Coverage Thresholds, Custom Gates, Manual Verification |
+| validation-patterns | Report Structure, Acceptance Criteria, Evidence Standards |
+| versioning | Version Scheme, Bump Rules, Pre-release Conventions, Version Files |
+| changelog | Change Categories, Format, Audience, Consolidation |
+| deployment | Deploy Target, Deploy Process, Rollback Strategy, Environments |
+| distribution | Package Registry, Publishing Process, Artifact Hosting, Release Channels |
 
 For dynamic topics, derive sections from the content.
 

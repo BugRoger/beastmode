@@ -1,13 +1,13 @@
 # Structure
 
 ## Directory Layout
-[Top-level directory tree with purposes]
+[Populated by init or retro]
 
 ## Key Directories
-[Major directories and their purpose]
+[Populated by init or retro]
 
 ## Key File Locations
-[Where to find important files]
+[Populated by init or retro]
 
 ## Where to Add New Code
-[Guidance for where new code should go]
+[Populated by init or retro]

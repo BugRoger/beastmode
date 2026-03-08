@@ -119,3 +119,15 @@ Follows "Walk every instance" SOP and validates the new structure
 state/design/2026-03-07-meta-retro-rework.md
 ### Confidence
 [LOW] — single application
+
+## Observation 11
+### Context
+During init-l2-expansion design, 2026-03-08
+### Observation
+"Go broad, let retro prune" as a scope strategy. Instead of deferring uncertain domains, the design included all 17 L2 domains (Tier 1 + Tier 2 universal) with the explicit rationale that retro would prune empty L2s over time. This is proactive over-inclusion with a structural prune mechanism, rather than conservative deferral.
+### Rationale
+When a prune mechanism already exists (retro), over-inclusion is cheaper than under-inclusion — under-inclusion requires future expansion designs, over-inclusion just needs cleanup
+### Source
+state/design/2026-03-08-init-l2-expansion.md
+### Confidence
+[LOW] — first observation of this specific scope strategy (over-include with prune vs. defer)

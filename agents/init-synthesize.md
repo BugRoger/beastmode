@@ -13,13 +13,12 @@ Read all L2 files that were just written. For each L1 file, produce a real summa
 ```markdown
 # [Phase] Context
 
-[Summary paragraph: 2-3 sentences synthesizing all L2 topics in this phase. This should give a phase skill enough context to decide whether to read the L2 files.]
+[Summary paragraph: 2-3 sentences synthesizing all L2 topics in this phase.]
 
 ## [L2 Topic Name]
-
-[Summary: 1-2 sentences capturing the essence of the L2 file]
-
-[Numbered rules: the most important rules from the L2 file, max 5]
+- ALWAYS [rule] — [rationale]
+- NEVER [rule] — [rationale]
+[max 5 rules per section]
 
 context/<phase>/<topic>.md
 ```
@@ -28,11 +27,11 @@ context/<phase>/<topic>.md
 
 | L1 File | L2 Sources |
 |---------|------------|
-| `context/DESIGN.md` | `design/product.md`, `design/architecture.md`, `design/tech-stack.md`, + any dynamic design topics |
-| `context/PLAN.md` | `plan/conventions.md`, `plan/structure.md`, + any dynamic plan topics |
-| `context/IMPLEMENT.md` | `implement/testing.md`, + any dynamic implement topics |
-| `context/VALIDATE.md` | Sparse — only if content exists |
-| `context/RELEASE.md` | Sparse — only if content exists |
+| `context/DESIGN.md` | `design/product.md`, `design/architecture.md`, `design/tech-stack.md`, `design/domain-model.md`, + dynamic |
+| `context/PLAN.md` | `plan/conventions.md`, `plan/structure.md`, `plan/error-handling.md`, `plan/workflow.md`, + dynamic |
+| `context/IMPLEMENT.md` | `implement/agents.md`, `implement/testing.md`, `implement/build.md`, + dynamic |
+| `context/VALIDATE.md` | `validate/quality-gates.md`, `validate/validation-patterns.md`, + dynamic |
+| `context/RELEASE.md` | `release/versioning.md`, `release/changelog.md`, `release/deployment.md`, `release/distribution.md`, + dynamic |
 
 For each L1 file:
 1. Read all L2 files in that phase directory
@@ -44,8 +43,38 @@ For each L1 file:
 
 - Summary paragraphs must be REAL content, not placeholders
 - If an L2 file is empty or has only placeholders, note "[Not yet populated]" for that section
-- Numbered rules should be the most impactful — ALWAYS/NEVER patterns preferred
+- ALWAYS/NEVER rules should be the most impactful patterns
 - L2 file paths as plain text (last line of each section), not markdown links
+
+## Phase 1.5: Generate Meta L1 Summaries
+
+Read all meta L2 files (process.md + workarounds.md per phase). For each meta L1 file:
+
+### Meta L1 Files to Generate
+
+| L1 File | L2 Sources |
+|---------|------------|
+| `meta/DESIGN.md` | `design/process.md`, `design/workarounds.md` |
+| `meta/PLAN.md` | `plan/process.md`, `plan/workarounds.md` |
+| `meta/IMPLEMENT.md` | `implement/process.md`, `implement/workarounds.md` |
+| `meta/VALIDATE.md` | `validate/process.md`, `validate/workarounds.md` |
+| `meta/RELEASE.md` | `release/process.md`, `release/workarounds.md` |
+
+Meta L1 format:
+
+```markdown
+# [Phase] Meta
+
+## Process
+[Summary of process observations]
+
+meta/<phase>/process.md
+
+## Workarounds
+[Summary of known workarounds]
+
+meta/<phase>/workarounds.md
+```
 
 ## Phase 2: Rewrite CLAUDE.md
 
@@ -89,12 +118,29 @@ L1 summaries generated:
 - .beastmode/context/DESIGN.md (N sections)
 - .beastmode/context/PLAN.md (N sections)
 - .beastmode/context/IMPLEMENT.md (N sections)
-[etc.]
+- .beastmode/context/VALIDATE.md (N sections)
+- .beastmode/context/RELEASE.md (N sections)
+
+Meta L1 summaries generated:
+- .beastmode/meta/DESIGN.md
+- .beastmode/meta/PLAN.md
+- .beastmode/meta/IMPLEMENT.md
+- .beastmode/meta/VALIDATE.md
+- .beastmode/meta/RELEASE.md
 
 CLAUDE.md:
 - [Created | Rewritten] with @imports + N residual lines
 
 Total: N L1 files, M L2 files referenced, K L3 records discovered
+```
+
+Verify outputs:
+
+```bash
+for f in DESIGN PLAN IMPLEMENT VALIDATE RELEASE; do
+  test -s .beastmode/context/$f.md && echo "OK: context/$f.md" || echo "WARN: context/$f.md empty"
+  test -s .beastmode/meta/$f.md && echo "OK: meta/$f.md" || echo "WARN: meta/$f.md empty"
+done
 ```
 
 ## Safety Rules

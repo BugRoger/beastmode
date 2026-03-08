@@ -20,6 +20,7 @@
 - Session-start hook with version banner — orientation
 - Unified /beastmode command (init, status, ideas) — single entry point with flat subcommands, no flags
 - Deferred ideas capture — walks design docs at read time, LLM reconciliation against skill files, strikethrough marking for resolved ideas
+- Expanded init system with 5-phase flow (skeleton, inventory, write, retro, synthesize) and 17-domain detection — bootstraps full L2/L3/meta hierarchy in retro-compatible format
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval

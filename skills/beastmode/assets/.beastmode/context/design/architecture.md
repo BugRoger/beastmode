@@ -1,16 +1,16 @@
 # Architecture
 
 ## Overview
-[High-level system description]
+[Populated by init or retro]
 
 ## Components
-[Major components and their responsibilities]
+[Populated by init or retro]
 
 ## Data Flow
-[How data moves through the system]
+[Populated by init or retro]
 
 ## Key Decisions
-[Architectural decisions with rationale]
+[Populated by init or retro]
 
 ## Boundaries
-[System boundaries and external interfaces]
+[Populated by init or retro]

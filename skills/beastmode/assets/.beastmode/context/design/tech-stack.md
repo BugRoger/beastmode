@@ -1,13 +1,13 @@
 # Tech Stack
 
 ## Core Stack
-[Platform, language, framework]
+[Populated by init or retro]
 
 ## Key Dependencies
-[Major dependencies with versions]
+[Populated by init or retro]
 
 ## Development Tools
-[Build, test, lint tools]
+[Populated by init or retro]
 
 ## Commands
-[Install, test, build commands]
+[Populated by init or retro]

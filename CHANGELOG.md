@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.17.0 — The Full Spectrum Init (Mar 2026)
+
+- **17-domain skeleton** — Skeleton assets expanded from 7 to 17 L2 files covering design (4), plan (4), implement (3), validate (2), release (4), each with matching L3 directories and `.gitkeep`
+- **Inventory agent expansion** — Detects all 17 domains with specific detection signals for 10 new domains (domain-model, error-handling, workflow, build, quality-gates, validation-patterns, versioning, changelog, deployment, distribution)
+- **Writer agent retro-format** — L2 output switched from prose paragraphs to ALWAYS/NEVER bullets with em-dash rationale; L3 records use Context/Decision/Rationale format matching retro agents
+- **Init retro phase** — New phase spawns retro-context agents (one per phase) after writers complete, processing state/ artifacts and populating meta/ files
+- **Synthesize agent expansion** — Generates all 10 L1 files (5 context + 5 meta) instead of only context; meta L1 format mirrors context L1
+- **5-phase init flow** — Init restructured from 3 phases (inventory → populate → synthesize) to 5 (skeleton → inventory → write → retro → synthesize)
+
 ### v0.16.0 — The Discovery Engine (Mar 2026)
 
 - **Init system redesigned** — Replaced 5 narrow init agents + greenfield wizard with 3-phase layered discovery: Inventory (orchestrator reads all project knowledge) → Populate (parallel writers create L2 summaries + L3 records) → Synthesize (generates L1 summaries, rewrites CLAUDE.md)
