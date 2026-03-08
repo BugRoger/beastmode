@@ -1,7 +1,13 @@
 # Product
 
 ## Vision
-[What problem this solves and how]
+[Populated by init or retro]
 
 ## Goals
-[Project goals]
+[Populated by init or retro]
+
+## Core Capabilities
+[Populated by init or retro]
+
+## Differentiators
+[Populated by init or retro]

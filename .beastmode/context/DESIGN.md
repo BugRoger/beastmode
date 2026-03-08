@@ -3,7 +3,7 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
@@ -39,3 +39,13 @@ Self-chaining mechanism between phases. Auto-transitions use fully-qualified Ski
 - NEVER add runtime dependencies — beastmode is markdown interpreted by Claude Code
 - ALWAYS use markdown + YAML frontmatter for skill definitions
 - Distribution via Claude Code marketplace
+
+## Init System
+5-phase bootstrapping system (skeleton, inventory, write, retro, synthesize) that detects 17 L2 domains and produces retro-compatible output. Writers and retros run in parallel. Greenfield mode installs skeleton only.
+
+1. ALWAYS follow 5-phase init order: skeleton install -> inventory -> write -> retro -> synthesize
+2. ALWAYS produce ALWAYS/NEVER format in L2 and Context/Decision/Rationale in L3 — unified with retro output
+3. NEVER include beastmode-specific domains in skeleton — retro creates those
+4. ALWAYS run retro pass after writers even on empty state/ — no conditional gating
+
+context/design/init-system.md

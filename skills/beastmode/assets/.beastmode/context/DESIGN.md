@@ -14,3 +14,8 @@ context/design/architecture.md
 [Populated by init or retro]
 
 context/design/tech-stack.md
+
+## Domain Model
+[Populated by init or retro]
+
+context/design/domain-model.md

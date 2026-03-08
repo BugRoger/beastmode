@@ -1,13 +1,13 @@
 # Testing
 
 ## Test Commands
-[Run all, run specific, run with coverage]
+[Populated by init or retro]
 
 ## Test Structure
-[Test directory structure]
+[Populated by init or retro]
 
 ## Conventions
-[Testing conventions and patterns]
+[Populated by init or retro]
 
 ## Coverage
-[Coverage expectations and goals]
+[Populated by init or retro]
