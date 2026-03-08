@@ -1,3 +1,30 @@
+# Visual Language Enforcement Implementation Plan
+
+> **For Claude:** Use /implement to execute this plan task-by-task.
+
+**Goal:** Rewrite `visual-language.md` as a strict rendering specification that Claude follows literally.
+
+**Architecture:** Single file replacement. The existing `visual-language.md` gets rewritten with parameterized formulas, enforcement warnings, and bad/good examples. No new files, no structural changes to imports.
+
+**Tech Stack:** Markdown
+
+**Design Doc:** `.beastmode/state/design/2026-03-08-visual-language-enforcement.md`
+
+---
+
+### Task 1: Rewrite visual-language.md
+
+**Wave:** 1
+**Depends on:** -
+
+**Files:**
+- Modify: `skills/_shared/visual-language.md:1-62`
+
+**Step 1: Replace the entire file content**
+
+Replace the full contents of `skills/_shared/visual-language.md` with:
+
+````markdown
 # Visual Language
 
 Strict rendering specification for progress and status displays. All visual elements use the Unicode block family, cohesive with the session banner.
@@ -150,3 +177,13 @@ Print as plain text AFTER the code block. Use one of these three strings EXACTLY
 | Below 60% used | `Context is fresh. Safe to continue.` |
 | 60-80% used | `Context is moderate. One more phase is reasonable.` |
 | Above 80% used | `Context is heavy. Start a new session for the next phase.` |
+````
+
+**Step 2: Verify the file was written correctly**
+
+Read the file back and confirm:
+1. Character vocabulary table is present and unchanged from original meaning
+2. Phase indicator section has Rules table, DO NOT warnings, 3 correct examples, 4 bad examples
+3. Context bar section has Rules table, exact format, DO NOT warnings, 1 correct example, 4 bad examples
+4. Handoff guidance section has exact strings table with DO NOT warning
+5. No new files were created

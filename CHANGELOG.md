@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.14.22 — The Visual Language Lockdown (Mar 2026)
+
+- **Strict rendering spec** — Rewrites `visual-language.md` from descriptive guide to prescriptive specification with parameterized rules tables
+- **Enforcement warnings** — "DO NOT" directives on every visual element (phase indicator, context bar, handoff text)
+- **Bad/good examples** — Common violations catalogued alongside correct output for pattern-matching anchors
+- **Literal handoff text** — Three exact strings, no paraphrasing allowed
+
+
 ### v0.14.21 — The Meta Hierarchy Tightening (Mar 2026)
 
 - **Domain rename** — `insights.md` → `process.md`, `upstream.md` → `workarounds.md` across all 5 phases
