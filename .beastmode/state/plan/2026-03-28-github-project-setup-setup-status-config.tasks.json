@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-github-project-setup-setup-status-config.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-github-project-setup.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add Status field configuration to setup-github", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add cache file write to setup-github", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add manual instructions and update summary", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-28T18:00:00Z"
+}

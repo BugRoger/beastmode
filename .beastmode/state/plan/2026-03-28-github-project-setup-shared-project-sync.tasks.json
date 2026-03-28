@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-github-project-setup-shared-project-sync.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-github-project-setup.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add Error Handling Convention section to github.md", "wave": 1, "dependsOn": [], "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add 'Add to Project + Set Status' operation to github.md", "wave": 1, "dependsOn": [0], "status": "completed"},
+    {"id": 2, "subject": "Task 2: Verify github.md completeness against acceptance criteria", "wave": 2, "dependsOn": [0, 1], "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-28T17:01:00Z"
+}

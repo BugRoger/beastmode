@@ -134,6 +134,21 @@ gh api graphql -f query='
 ' -f owner="$owner" -f repo="$repo" -F number=<epic-number>
 ```
 
+## Error Handling Convention
+
+All GitHub operations use **warn-and-continue**: if a `gh` or GraphQL call fails, print a warning and continue the workflow. Never block a phase on a GitHub sync failure.
+
+```bash
+# Pattern: wrap calls, warn on failure
+if ! result=$(gh ...command... 2>&1); then
+  echo "WARNING: <operation> failed: $result"
+  echo "GitHub sync skipped — workflow continues."
+  # return/continue — do not block
+fi
+```
+
+Callers should treat GitHub state as best-effort. The manifest is always the source of truth.
+
 ## Projects V2 Operations
 
 ### Create Project
@@ -184,4 +199,67 @@ gh api graphql -f query='
     }
   }
 ' -f projectId="$project_id" -f repoId="$repo_id"
+```
+
+### Add to Project + Set Status
+
+Two-step operation: add an issue to the project board, then set its Status field. Callers pass the issue URL and target status name. Uses the cache file written by `/beastmode setup-github`.
+
+**Parameters:**
+- `issue_url` — full GitHub issue URL (e.g., `https://github.com/owner/repo/issues/7`)
+- `target_status` — status name to set (e.g., `Design`, `Plan`, `Implement`, `Validate`, `Done`)
+
+**Step 1 — Read Cache:**
+
+```bash
+cache_file=".beastmode/state/github-project.cache.json"
+if [ ! -f "$cache_file" ]; then
+  echo "WARNING: GitHub project cache not found. Run \`/beastmode setup-github\` to configure."
+  echo "GitHub project sync skipped — workflow continues."
+  # Skip Steps 2 and 3
+  return 0 2>/dev/null || true
+fi
+
+project_number=$(jq -r '.projectNumber' "$cache_file")
+project_id=$(jq -r '.projectId' "$cache_file")
+status_field_id=$(jq -r '.statusField.id' "$cache_file")
+option_id=$(jq -r --arg name "$target_status" '.statusField.options[$name]' "$cache_file")
+
+if [ "$option_id" = "null" ] || [ -z "$option_id" ]; then
+  echo "WARNING: Status option '$target_status' not found in cache. Run \`/beastmode setup-github\` to refresh."
+  echo "GitHub project sync skipped — workflow continues."
+  return 0 2>/dev/null || true
+fi
+```
+
+**Step 2 — Add to Project (idempotent):**
+
+```bash
+if ! item_id=$(gh project item-add "$project_number" --owner "$owner" --url "$issue_url" --format json | jq -r '.id' 2>&1); then
+  echo "WARNING: Failed to add issue to project: $item_id"
+  echo "GitHub project sync skipped — workflow continues."
+  return 0 2>/dev/null || true
+fi
+```
+
+`gh project item-add` is idempotent — returns the existing item ID if already present.
+
+**Step 3 — Set Status Field:**
+
+```bash
+if ! gh api graphql -f query='
+  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }
+' -f projectId="$project_id" -f itemId="$item_id" -f fieldId="$status_field_id" -f optionId="$option_id" 2>&1; then
+  echo "WARNING: GitHub project sync failed — cache may be stale. Rerun \`/beastmode setup-github\` to refresh."
+  echo "Status set skipped — workflow continues."
+fi
 ```

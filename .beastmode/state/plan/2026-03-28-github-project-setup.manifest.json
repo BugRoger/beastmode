@@ -12,7 +12,7 @@
     {
       "slug": "setup-status-config",
       "plan": "2026-03-28-github-project-setup-setup-status-config.md",
-      "status": "pending",
+      "status": "in-progress",
       "github": {"issue": 5}
     },
     {
@@ -24,13 +24,13 @@
     {
       "slug": "shared-project-sync",
       "plan": "2026-03-28-github-project-setup-shared-project-sync.md",
-      "status": "pending",
+      "status": "completed",
       "github": {"issue": 7}
     },
     {
       "slug": "checkpoint-project-sync",
       "plan": "2026-03-28-github-project-setup-checkpoint-project-sync.md",
-      "status": "pending",
+      "status": "in-progress",
       "github": {"issue": 8}
     }
   ],
@@ -38,5 +38,5 @@
     "epic": 4,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-28T14:50:00Z"
+  "lastUpdated": "2026-03-28T18:00:00Z"
 }
