@@ -42,9 +42,7 @@ Use warn-and-continue for all GitHub calls (see Error Handling Convention in git
 gh issue close <feature-issue-number>
 ```
 
-2. **Add Feature to Project** — call the "Add to Project + Set Status" operation from github.md with the feature URL and status `"Done"`.
-
-3. **Check Epic Completion** — use the "Check Epic Completion" operation from github.md:
+2. **Check Epic Completion** — use the "Check Epic Completion" operation from github.md:
 
 ```bash
 gh api graphql -f query='
@@ -62,13 +60,13 @@ gh api graphql -f query='
 ' -f owner="$owner" -f repo="$repo" -F number=<epic-number>
 ```
 
-4. **Advance Epic** — if `percentCompleted` == 100 (all features done), advance Epic to `phase/validate`:
+3. **Advance Epic** — if `percentCompleted` == 100 (all features done), advance Epic to `phase/validate`:
 
 ```bash
 gh issue edit <epic-number> --remove-label "phase/implement" --add-label "phase/validate"
 ```
 
-5. **Add Epic to Project** — if all features are complete, call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Validate"`.
+4. **Add Epic to Project** — if all features are complete, call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Validate"`.
 
 If GitHub sync fails, the manifest status (`completed`) is the authority. GitHub catches up at the next checkpoint.
 

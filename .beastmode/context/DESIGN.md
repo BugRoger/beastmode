@@ -55,7 +55,7 @@ External orchestrator drives phase transitions via Justfile recipes. Each phase 
 context/design/init-system.md
 
 ## GitHub State Model
-Manifest JSON is the operational authority for feature lifecycle. GitHub is a synced mirror updated at checkpoint boundaries when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Subagents are GitHub-unaware; only checkpoints read/write manifests and sync GitHub. GitHub API failures warn and continue without blocking.
+Manifest JSON is the operational authority for feature lifecycle. GitHub is a synced mirror updated at checkpoint boundaries when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Only Epics appear on the Projects V2 board — Features retain labels and sub-issue linkage but are not board items. Subagents are GitHub-unaware; only checkpoints read/write manifests and sync GitHub. GitHub API failures warn and continue without blocking.
 
 1. ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) with label-based type/phase/status encoding
 2. ALWAYS use manifest JSON as operational authority — GitHub is a synced mirror, not the source of truth

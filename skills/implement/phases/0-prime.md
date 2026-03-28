@@ -49,15 +49,13 @@ Use warn-and-continue for all GitHub calls (see Error Handling Convention in git
 gh issue edit <feature-issue> --remove-label "status/ready" --add-label "status/in-progress"
 ```
 
-2. **Add Feature to Project** — call the "Add to Project + Set Status" operation from github.md with the feature URL and status `"Implement"`.
-
-3. **Advance Epic Phase** — if not already at `phase/implement`, set the Epic's phase label:
+2. **Advance Epic Phase** — if not already at `phase/implement`, set the Epic's phase label:
 
 ```bash
 gh issue edit <epic-number> --remove-label "phase/plan" --add-label "phase/implement"
 ```
 
-4. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Implement"`.
+3. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Implement"`.
 
 If GitHub sync fails, the manifest status update (`in-progress`) still applies — GitHub will catch up at the next sync point.
 

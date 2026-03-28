@@ -56,9 +56,7 @@ gh issue edit <epic-number> --remove-label "phase/design" --add-label "phase/pla
    - Link as sub-issue of the Epic
    - Write the issue number into the manifest feature entry as `github.issue`
 
-4. **Add Features to Project** — for each created feature, call the "Add to Project + Set Status" operation from github.md with the feature URL and status `"Plan"`.
-
-5. **Update Manifest** — write the enriched manifest with feature issue numbers:
+4. **Update Manifest** — write the enriched manifest with feature issue numbers:
 
 ```json
 {

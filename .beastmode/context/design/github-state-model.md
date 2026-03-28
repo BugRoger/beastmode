@@ -14,6 +14,7 @@
 - ALWAYS track Feature status via mutually exclusive `status/*` labels: ready, in-progress, blocked — status/review is dropped (no per-feature PRs in squash-at-release model)
 - ALWAYS use four manifest statuses: pending, in-progress, blocked, completed — manifest tracks feature lifecycle locally
 - ALWAYS roll up Feature completion to parent Epic: all Features closed triggers Epic advance from implement to validate
+- NEVER add Feature issues to the Projects V2 board — only Epics are board items. Features retain labels, sub-issue linkage, and manifest tracking but are not project board cards
 
 ## Source of Truth Split
 - ALWAYS use manifest JSON as operational authority for feature lifecycle — GitHub is a synced mirror, not the source of truth
