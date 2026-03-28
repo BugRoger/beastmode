@@ -1,30 +1,34 @@
 # Pipeline Orchestration
 
 ## Execution Model
-- ALWAYS use CronCreate with 1-minute recurring interval for the poll loop — session-scoped, expires after 7 days
+- ALWAYS use `beastmode watch` as the pipeline entry point — foreground process, Ctrl+C to stop
 - ALWAYS scan local state files to determine next action per epic — local files are the authority, not GitHub labels
 - NEVER orchestrate the design phase — design is interactive and requires human collaboration
 - Orchestrator picks up epics with a design artifact but no release artifact — scope is plan through release only
+- Event-driven re-scan on session completion — 60-second poll interval (configurable via `cli.interval`) is the safety net
+- No concurrency cap — parallel epics, parallel features within epics, API rate limits are the natural governor
 
-## Agent Spawning
-- ALWAYS spawn one agent per phase per epic, except implement which fans out one agent per feature — parallelism at every level
-- ALWAYS use `isolation: "worktree"`, `mode: "bypassPermissions"`, `run_in_background: true` for spawned agents — full isolation
-- Agent prompts include role, task claim, skill invocation via Skill tool, and team-lead messaging — standardized agent protocol
+## Agent Dispatching
+- ALWAYS dispatch one SDK session per phase per epic, except implement which fans out one session per feature — parallelism at every level
+- ALWAYS use CLI-owned worktrees for agent isolation — CLI creates worktree, points SDK session at it via `cwd`, merges after completion, removes when done
+- Phase invocation via SDK `query()` with prompt invoking the skill, `permissionMode: 'bypassPermissions'` — typed session management with streaming
 
-## Team Organization
-- ALWAYS create one team per epic with naming convention `pipeline-<epic-slug>` — scoped communication
-- ALWAYS clean up team when epic reaches release — no orphaned teams
-
-## Manifest Convergence
+## Merge Strategy
 - ALWAYS merge implement worktrees sequentially after all agents for an epic finish — ordering prevents conflicts
+- ALWAYS run pre-merge conflict simulation via `git merge-tree` to determine optimal merge order — avoids preventable conflicts
 - ALWAYS verify manifest completeness after merging — all features must show completed
-- When merge conflicts arise, spawn a conflict-resolution agent to auto-resolve — no manual intervention for trivial conflicts
+- When merge conflicts arise, spawn a dedicated Claude session to resolve — automated conflict resolution
 
 ## Gate Handling
 - ALWAYS respect config.yaml gate settings during orchestration — human gates still pause
-- When a gate is `human`, agent blocks and messages orchestrator which relays to user — gate integrity preserved
+- When a gate is `human`, epic pauses and logs to stdout — user runs `beastmode run <phase> <slug>` manually to proceed
+
+## Recovery
+- State files are the recovery point, not sessions — on startup, scan for existing worktrees with uncommitted changes
+- ALWAYS re-dispatch from last committed state on recovery — no session persistence required
+- Lockfile (`cli/.beastmode-watch.lock`) prevents duplicate watch instances — single orchestrator guarantee
 
 ## Lifecycle
-- Start via `/beastmode orchestrate start`, stop via `/beastmode orchestrate stop` — explicit control
+- Start via `beastmode watch`, stop via Ctrl+C — foreground process with explicit control
 - NEVER auto-drain or idle-timeout — manual stop only
-- CronCreate jobs are session-scoped — orchestrator naturally stops if session ends
+- Cost tracking per dispatch in `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp

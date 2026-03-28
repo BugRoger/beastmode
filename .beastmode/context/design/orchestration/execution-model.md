@@ -1,16 +1,11 @@
-# Execution Model
-
 ## Context
-Beastmode needs a way to automatically advance multiple epics through the pipeline without manual phase invocations per epic.
+The pipeline poll loop needs to transition from CronCreate (session-scoped, 7-day max) to a durable external process.
 
 ## Decision
-CronCreate recurring poll loop at 1-minute interval. Scans `.beastmode/state/` directories to determine next action per epic. Local state files are the sole authority for orchestration decisions. Design phase is excluded — the orchestrator picks up epics that have a design artifact but no release artifact.
+`beastmode watch` as foreground process with event-driven re-scan on session completion and 60-second configurable poll interval as safety net. No concurrency cap — API rate limits are the natural governor.
 
 ## Rationale
-- CronCreate is session-scoped and expires after 7 days, providing natural cleanup
-- Polling at 1-minute intervals balances responsiveness with resource usage
-- Local file authority avoids GitHub API rate limiting and keeps the orchestrator self-contained
-- Excluding design preserves the interactive, human-collaborative nature of the design phase
+External process eliminates session-scoped lifetime limits. Event-driven re-scan provides immediate progression; poll interval catches edge cases. No artificial concurrency cap avoids premature bottlenecking.
 
 ## Source
-state/design/2026-03-28-orchestrator.md
+`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`

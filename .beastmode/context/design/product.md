@@ -18,11 +18,11 @@
 - Self-improving retro loop — knowledge compounds
 - Squash-per-release commits — clean main history
 - Session-start hook with version banner — orientation
-- Unified /beastmode command (init, status, ideas) — single entry point with flat subcommands, no flags
+- Unified /beastmode skill command (init, ideas) — single entry point with flat subcommands; status moved to CLI (`beastmode status`)
 - Deferred ideas capture — walks design docs at read time, LLM reconciliation against skill files, strikethrough marking for resolved ideas
 - Expanded init system with 5-phase flow (skeleton, inventory, write, retro, synthesize) and 17-domain detection — bootstraps full L2/L3/meta hierarchy in retro-compatible format
 - GitHub state externalization with Epic > Feature issue hierarchy, label-based state machines, and project board visibility — enables autonomous daemon operation and human observability
-- Pipeline orchestration via `/beastmode orchestrate` — CronCreate poll loop drives epics through plan -> release with parallel agent spawning, per-feature implement fan-out, and manifest convergence
+- Pipeline orchestration via `beastmode watch` — TypeScript CLI watch loop drives epics through plan -> release with parallel SDK session dispatching, per-feature implement fan-out, pre-merge conflict simulation, and cost tracking
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval

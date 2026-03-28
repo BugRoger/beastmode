@@ -3,7 +3,7 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via external Justfile orchestrator, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, status, ideas, orchestrate subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, WorktreeCreate hook for feature branch detection, pipeline orchestration with CronCreate polling, multi-epic parallelism, and per-feature agent fan-out
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, and `beastmode status` for state and cost visibility
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
@@ -31,19 +31,20 @@
 - ALWAYS archive branch tip before squash merge
 
 ## Phase Transitions
-External orchestrator drives phase transitions via Justfile recipes. Each phase is a separate `claude` invocation with a fresh session. Skills are pure content processors with no worktree or transition logic. Checkpoint prints the `just` command for the next phase. Only the checkpoint may produce next-step commands; retro agents are banned from transition guidance. The pipeline orchestrator provides a second advancement path: CronCreate poll loop scans state files and spawns worktree-isolated agents to drive epics through plan -> release automatically.
+TypeScript CLI (`beastmode`) drives phase transitions via `beastmode run <phase> <slug>`. Each phase is a separate Claude Agent SDK session. Skills are pure content processors with no worktree or transition logic. Checkpoint prints the `beastmode run` command for the next phase. Only the checkpoint may produce next-step commands; retro agents are banned from transition guidance. The watch loop (`beastmode watch`) provides automated advancement: event-driven re-scan on session completion drives epics through plan -> release. Justfile is retained as a thin alias layer.
 
-1. ALWAYS use Justfile recipes to invoke phases — `just <phase> <slug>` is the entry point
+1. ALWAYS use `beastmode run <phase> <slug>` as the phase entry point — Justfile aliases (`just <phase> <slug>`) are convenience wrappers
 2. NEVER embed worktree or transition logic in skills — skills assume correct working directory
-3. ALWAYS print `just <next-phase> <slug>` at checkpoint — human runs next step explicitly
-4. NEVER auto-chain phases — each phase is a separate session
+3. ALWAYS print `beastmode run <next-phase> <slug>` at checkpoint — human copies and runs (or watch loop auto-advances)
+4. NEVER auto-chain phases — each phase is a separate SDK session
 5. NEVER print transition guidance from retro agents — checkpoint is the sole authority
 6. ALWAYS STOP after printing transition output — no additional output
 
 ## Tech Stack
-- NEVER add package runtime dependencies — beastmode is markdown interpreted by Claude Code. GitHub API via `gh` CLI is an infrastructure dependency
+- Skills remain dependency-free markdown interpreted by Claude Code — no runtime dependencies in the plugin
+- CLI (`cli/`) is a separate package with its own `package.json` — Bun runtime, Claude Agent SDK, independent dependency story
 - ALWAYS use markdown + YAML frontmatter for skill definitions
-- Distribution via Claude Code marketplace
+- Plugin distribution via Claude Code marketplace; CLI distribution via `bun link`
 
 ## Init System
 5-phase bootstrapping system (skeleton, inventory, write, retro, synthesize) that detects 17 L2 domains and produces retro-compatible output. Writers and retros run in parallel. Greenfield mode installs skeleton only.
@@ -69,12 +70,24 @@ Manifest JSON is the operational authority for feature lifecycle. GitHub is a sy
 context/design/github-state-model.md
 
 ## Pipeline Orchestration
-CronCreate-based poll loop that scans local state files and spawns worktree-isolated agents to drive epics through plan -> release in parallel. One team per epic, one agent per phase, fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates and relays blocked agents to the user.
+TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispatches Claude Agent SDK sessions in CLI-owned worktrees to drive epics through plan -> release in parallel. No concurrency cap — API rate limits are the natural governor. Fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates, pauses epic and logs to stdout on human gates. Event-driven re-scan on session completion with 60-second poll as safety net.
 
 1. ALWAYS use local state files as the authority for orchestration decisions — not GitHub labels
 2. NEVER orchestrate design phase — interactive by nature, requires human collaboration
-3. ALWAYS merge implement worktrees sequentially and verify manifest completeness before advancing to validate
-4. ALWAYS respect config.yaml gate settings — human gates pause the agent and relay to user
-5. ALWAYS spawn agents with worktree isolation — skills inside agents detect existing worktree and skip their own creation
+3. ALWAYS merge implement worktrees sequentially with pre-merge conflict simulation via `git merge-tree` — optimized merge order
+4. ALWAYS respect config.yaml gate settings — human gates pause the epic and log to stdout
+5. ALWAYS use CLI-owned worktrees — CLI creates before, merges after, removes when done
 
 context/design/orchestration.md
+
+## CLI Architecture
+TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode run`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle, replaces both the Justfile orchestrator and the CronCreate-based pipeline.
+
+1. ALWAYS use CLI for phase execution and pipeline orchestration — Justfile is a thin alias layer only
+2. ALWAYS use SDK `query()` for non-interactive phases — design phase uses `Bun.spawn` for interactive stdio
+3. ALWAYS own worktree lifecycle in the CLI — create before, merge after, remove when done
+4. ALWAYS reuse `.beastmode/config.yaml` with `cli:` section — no separate config file
+5. ALWAYS track per-dispatch costs in `.beastmode-runs.json` — observability without running Claude
+6. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
+
+context/design/cli.md

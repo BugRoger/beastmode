@@ -143,3 +143,27 @@ Splitting a prerequisite into a separate design creates coordination overhead be
 state/design/2026-03-28-github-phase-integration.md
 ### Confidence
 [LOW] — first observation of prerequisite-absorption as a scope strategy (related to Obs 3 challenge-deferrals and Obs 11 over-include-with-prune, but distinct: this is about missing dependencies, not optional features)
+
+## Observation 13
+### Context
+During typescript-pipeline-orchestrator design, 2026-03-28
+### Observation
+When a new design supersedes prior designs in the same problem space, explicitly naming the superseded documents in the PRD prevents confusion about which document is authoritative. The PRD stated "Both existing orchestrator PRDs (2026-03-28-external-orchestrator.md, 2026-03-28-orchestrator.md) are superseded by this design" — naming files, not just describing the relationship.
+### Rationale
+Without explicit supersession, multiple PRDs for the same problem space coexist as peers, and downstream phases may reference the wrong one. Naming the specific files makes the deprecation grep-able.
+### Source
+.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md
+### Confidence
+[LOW] — first-time observation; related to Obs 3 (challenge deferrals) and Obs 12 (prerequisite absorption) as another design decision lifecycle pattern
+
+## Observation 14
+### Context
+During typescript-pipeline-orchestrator design, 2026-03-28
+### Observation
+When a design explicitly breaks a previously locked project constraint, documenting the override with rationale in the PRD prevents silent contradictions. The PRD stated "Prior decision #6 (no runtime dependencies) is explicitly overridden: the CLI is a separate package with its own dependency story." This names the specific decision number and provides the justification.
+### Rationale
+Locked decisions are treated as contracts. When a design intentionally breaks the contract, the override should be as explicit as the original lock — otherwise future sessions may flag the contradiction as a bug rather than a deliberate choice.
+### Source
+.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md
+### Confidence
+[LOW] — first-time observation; extends the "locked decisions can drift" pattern into proactive override documentation

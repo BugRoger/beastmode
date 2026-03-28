@@ -1,0 +1,10 @@
+{
+  "design": ".beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md",
+  "architecturalDecisions": [],
+  "features": [],
+  "github": {
+    "epic": 12,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-28T17:45:00Z"
+}

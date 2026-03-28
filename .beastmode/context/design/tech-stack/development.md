@@ -1,15 +1,11 @@
-# Development
-
 ## Context
-Need a development workflow for iterating on beastmode itself.
+Development workflow needs to accommodate CLI testing alongside manual skill testing.
 
 ## Decision
-No build step. Manual testing via skill invocation. No automated linting. Install via `claude plugin marketplace update` then `claude plugin update beastmode@beastmode-marketplace --scope project`.
+Plugin testing remains manual (invoke skills and verify). CLI testing via Bun test runner covering: state scanner, merge ordering, worktree manager, config parsing, argument parser. Plugin install via marketplace commands; CLI install via `cd cli && bun install && bun link`.
 
 ## Rationale
-- Testing is inherently manual — invoke skills and verify behavior
-- No build step because there's no compiled code — just markdown
-- Plugin update commands handle distribution
+CLI has enough logic to warrant automated tests. Skills remain thin enough that manual testing suffices.
 
 ## Source
-state/design/2026-03-04-agents-to-beastmode-migration.md
+`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`

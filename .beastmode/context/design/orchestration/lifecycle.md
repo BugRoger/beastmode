@@ -1,15 +1,11 @@
-# Lifecycle
-
 ## Context
-The orchestrator needs explicit start/stop semantics and a natural cleanup mechanism for abandoned sessions.
+Pipeline lifecycle management needs to move from skill subcommands to CLI commands.
 
 ## Decision
-Start via `/beastmode orchestrate start`, stop via `/beastmode orchestrate stop` which calls CronDelete. No auto-drain or idle-timeout. CronCreate jobs are session-scoped and expire after 7 days.
+Start via `beastmode watch` (foreground, Ctrl+C to stop). Cost tracking per dispatch in `.beastmode-runs.json`. Lockfile prevents duplicate instances. No auto-drain or idle-timeout.
 
 ## Rationale
-- Explicit start/stop gives the developer full control over when orchestration is active
-- No auto-drain avoids premature shutdown when the developer steps away temporarily
-- Session-scoped CronCreate provides natural cleanup without orphaned background processes
+Foreground process is simpler than background daemon and provides immediate visibility. Lockfile prevents the accidental double-dispatch failure mode.
 
 ## Source
-state/design/2026-03-28-orchestrator.md
+`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`

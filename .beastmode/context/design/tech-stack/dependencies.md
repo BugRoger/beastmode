@@ -1,15 +1,11 @@
-# Dependencies
-
 ## Context
-Traditional software projects accumulate package dependencies. Need to decide what beastmode depends on.
+The CLI introduces new dependencies that need to be documented alongside existing plugin dependencies.
 
 ## Decision
-No traditional package dependencies. Core components: Claude Code CLI (runtime), Anthropic Claude API (LLM backend), Git (version control + worktrees), Markdown + YAML (documentation + metadata). Zero npm/pip/cargo packages.
+Plugin stack: Claude Code CLI, Claude API, Git, Markdown + YAML, GitHub API via `gh` CLI. CLI stack: Bun (runtime), Claude Agent SDK (session management), Git (worktree lifecycle). Two separate dependency stories.
 
 ## Rationale
-- Beastmode is markdown interpreted by Claude Code — there's nothing to package
-- Git provides worktree isolation without additional tooling
-- Fewer dependencies means fewer breakage points
+Clean separation — plugin users don't need Bun or the Agent SDK. CLI users get typed session management and streaming that the raw CLI approach lacks.
 
 ## Source
-state/design/2026-03-03-vision-alignment.md
+`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`

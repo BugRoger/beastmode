@@ -1,14 +1,14 @@
 # Phase Transitions
 
 ## Transition Mechanism
-- ALWAYS use Justfile recipes as phase entry points — `just <phase> <slug>` invokes `claude --worktree`
-- ALWAYS use fresh session per phase — state files are the contract between phases, not conversation history
-- NEVER auto-chain phases from within skills — human runs each phase recipe explicitly
-- WorktreeCreate hook detects feature branches: if `feature/<slug>` exists, worktree branches from it; otherwise falls through to origin/HEAD
+- ALWAYS use `beastmode run <phase> <slug>` as the phase entry point — CLI owns worktree lifecycle and SDK session management
+- Justfile recipes are retained as thin aliases (`just <phase> <slug>` -> `beastmode run <phase> <slug>`) — backward compatibility
+- ALWAYS use fresh SDK session per phase — state files are the contract between phases, not conversation history
+- NEVER auto-chain phases from within skills — human runs each command explicitly (or watch loop auto-advances)
+- CLI-owned worktree lifecycle: creates worktree with `feature/<slug>` branch detection, points SDK session at it via `cwd`, merges after completion, removes when done
 - Worktree directory is `.claude/worktrees/` (Claude Code default) — not `.beastmode/worktrees/`
-- Design uses auto-generated worktree name (new feature); plan+ uses feature slug
-- Orchestrator provides automated advancement: CronCreate poll loop (1-minute interval) scans state files, spawns worktree-isolated agents per phase per epic — parallel pipeline execution without manual invocation
-- Orchestrator skips design phase (interactive) and picks up epics with design artifact but no release artifact — design remains human-driven
+- Design uses `Bun.spawn` with inherited stdio for interactive Claude (not SDK) — design requires human interaction
+- Watch loop (`beastmode watch`) provides automated advancement: event-driven re-scan on session completion drives epics through plan -> release
 
 ## Phase-to-Skill Mapping
 design -> plan -> implement -> validate -> release. Each transition gate is namespaced: `transitions.design-to-plan`, `transitions.plan-to-implement`, etc.
@@ -16,11 +16,11 @@ design -> plan -> implement -> validate -> release. Each transition gate is name
 1. ALWAYS follow the five-phase order — no skipping phases
 
 ## Transition Gate Output
-Checkpoint prints the Justfile command for the next phase. Format: `just <next-phase> <slug>`. No Skill() calls, no auto-chaining. STOP after printing — no additional output.
+Checkpoint prints the CLI command for the next phase. Format: `beastmode run <next-phase> <slug>`. No Skill() calls, no auto-chaining. STOP after printing — no additional output.
 
-1. ALWAYS print `just <next-phase> <slug>` at checkpoint — human copies and runs
+1. ALWAYS print `beastmode run <next-phase> <slug>` at checkpoint — human copies and runs
 2. ALWAYS STOP after transition output — no additional output follows the checkpoint
-3. NEVER produce Skill() calls from checkpoint — external orchestrator handles invocation
+3. NEVER produce Skill() calls from checkpoint — CLI handles invocation
 
 ## Guidance Authority
 Only the transition gate in the checkpoint phase may produce next-step commands. Retro agents and sub-agents are banned from printing transition guidance, session-restart instructions, or next-step commands.

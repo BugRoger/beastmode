@@ -38,11 +38,11 @@
 - ALWAYS archive branch tips before deletion: `archive/feature/<name>` — preserves history
 - NEVER modify main branch during feature work — worktree provides isolation
 - Worktrees are ephemeral per-session — feature branches are the durable handoff mechanism between sessions
-- WorktreeCreate hook branches from `feature/<slug>` if it exists, otherwise from origin/HEAD — smart branch detection
-- Worktree directory is `.claude/worktrees/` (Claude Code default) — skills do not manage worktree lifecycle
-- Human controls worktree cleanup via Claude's interactive prompt at session end — commits are on the branch, worktree is disposable
+- CLI-owned worktree lifecycle: branches from `feature/<slug>` if it exists, otherwise from origin/HEAD — smart branch detection rewritten in TypeScript
+- Worktree directory is `.claude/worktrees/` (Claude Code default) — CLI manages full lifecycle (create, merge, remove)
+- CLI cleans up worktrees after merge — no manual cleanup required
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
-- After parallel implement agents complete, orchestrator merges worktrees sequentially then verifies manifest completeness — convergence before validation
+- After parallel implement agents complete, CLI merges worktrees sequentially with pre-merge conflict simulation via `git merge-tree` then verifies manifest completeness — convergence before validation
 
 ## HITL Gate System
 - NEVER skip gate steps — `## N. [GATE|...]` steps are structural task-runner items that cannot be bypassed
@@ -50,7 +50,7 @@
 - Gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections — standardized format
 - NEVER place competing gate mechanisms on the same decision point — avoids ambiguity
 - GitHub gates use comment-based approval for pre-code phases and PR reviews for code phases — gate mechanism matches artifact type
-- Phase transitions are externally orchestrated via Justfile — no in-skill auto-chaining
+- Phase transitions are externally orchestrated via TypeScript CLI (`beastmode run`) — Justfile retained as thin alias, no in-skill auto-chaining
 - Transition gates removed from config.yaml — checkpoint prints `just <next-phase> <slug>` instead
 
 ## Retro Knowledge Promotion
