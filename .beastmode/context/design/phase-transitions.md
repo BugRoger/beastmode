@@ -4,6 +4,7 @@
 - ALWAYS use fully-qualified skill names for transitions — `beastmode:plan`, not `plan`
 - ALWAYS pass the state artifact path as the argument to the next phase — maintains continuity
 - When set to `auto`, Claude calls `Skill(skill="beastmode:<next>", args="<artifact-path>")` — explicit chaining
+- GitHub state model extends transitions with label-based state machines: config.yaml `transitions:` block maps phase pairs to human/auto/automatic modes — GitHub labels are updated alongside skill chaining
 
 ## Phase-to-Skill Mapping
 design -> plan -> implement -> validate -> release. Each transition gate is namespaced: `transitions.design-to-plan`, `transitions.plan-to-implement`, etc.

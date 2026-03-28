@@ -13,6 +13,7 @@
 ## Data Domains
 - NEVER mix domain concerns — State tracks features, Context documents knowledge, Meta captures process knowledge
 - ALWAYS write phase artifacts to `state/` — retro promotes to `context/` and `meta/`
+- GitHub supplements State as external status authority — repo files remain the content store, GitHub tracks lifecycle and gates
 - Write protection: phases write `state/` only, retro promotes — prevents unauthorized knowledge edits
 - Meta has two L2 domains per phase: process.md and workarounds.md — separates process patterns from beastmode feedback
 - Meta L3 records are topic-clustered with confidence tags — no date prefixes, observations accumulate by topic
@@ -44,6 +45,7 @@
 - Configurable gates resolve from `.beastmode/config.yaml` at runtime — flexibility without hardcoding
 - Gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections — standardized format
 - NEVER place competing gate mechanisms on the same decision point — avoids ambiguity
+- GitHub gates use comment-based approval for pre-code phases and PR reviews for code phases — gate mechanism matches artifact type
 - Auto-transitions use `Skill(skill="beastmode:<next>", args="<artifact>")` with fully-qualified names — explicit chaining
 - Context threshold checks determine whether to auto-advance or print session-restart instructions — prevents degraded behavior
 

@@ -38,3 +38,14 @@ Phase lifecycle (design -> plan -> implement -> validate -> release), session tr
 - ONLY transition gates in checkpoint sub-phases may print next-step commands
 
 context/plan/workflow.md
+
+## GitHub Integration
+GitHub state model externalizes workflow lifecycle to GitHub Issues and Projects V2. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Setup bootstrapped via `/beastmode setup-github` subcommand. Shared GitHub utility in `skills/_shared/github.md` provides reusable API operations. Config extended with `github:` section and phase `transitions:` block.
+
+1. ALWAYS use `gh` CLI (REST + GraphQL) for all GitHub API operations -- never raw curl
+2. ALWAYS make label and project creation idempotent -- `--force` for labels, existence check for projects
+3. ALWAYS use the shared utility (`skills/_shared/github.md`) for GitHub operations -- never inline API calls in individual skills
+4. NEVER store lifecycle status in repo files when GitHub issue labels are available -- GitHub is the status source of truth
+5. ALWAYS extend config.yaml `transitions:` block for new phase transition modes -- centralized gate configuration
+
+context/plan/github-integration.md

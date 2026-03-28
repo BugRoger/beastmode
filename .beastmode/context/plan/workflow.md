@@ -35,7 +35,7 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 - Context-aware greetings factor in time of day and project state — situational awareness
 
 ## Autonomous Chaining
-Config.yaml transitions section controls phase-to-phase chaining. Transition gates use standardized output format: human mode prints `Next:` with inline-code command; auto mode chains via Skill() calls. All gates end with STOP. All retro gates must be configurable for fully autonomous cycles.
+Config.yaml transitions section controls phase-to-phase chaining. Transition gates use standardized output format: human mode prints `Next:` with inline-code command; auto mode chains via Skill() calls. All gates end with STOP. All retro gates must be configurable for fully autonomous cycles. GitHub state model extends transitions with label-based phase advancement on Epic issues, enabling external visibility and daemon-driven pipeline progression.
 
 1. ALWAYS respect gate mode from config.yaml — never skip gates
 2. ALWAYS use inline code (single backticks) for next-step commands — never code blocks

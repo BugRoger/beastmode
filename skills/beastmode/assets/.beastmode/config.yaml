@@ -27,7 +27,12 @@ gates:
     version-confirmation: human       # APPROVAL — version bump override
 
 transitions:
+  backlog-to-design: human            # TRANSITION — who picks from backlog
   design-to-plan: human               # TRANSITION
   plan-to-implement: human            # TRANSITION
-  implement-to-validate: human        # TRANSITION
+  implement-to-validate: auto         # TRANSITION — automatic: all Features closed
   validate-to-release: human          # TRANSITION
+  release-to-done: auto               # TRANSITION — PR merged
+
+github:
+  project-name: "Beastmode Pipeline"  # Projects V2 board name

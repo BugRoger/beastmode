@@ -47,3 +47,15 @@ Fourth confirmation of 1:1 design-to-plan mapping. New pattern: locked decisions
 state/plan/2026-03-08-init-l2-expansion.md
 ### Confidence
 [HIGH] — fourth observation, pattern now well-established
+
+## Observation 5
+### Context
+During github-state-model planning, 2026-03-28
+### Observation
+Design doc's 4 components (shared GitHub utility, setup subcommand, routing update, config extension) mapped 1:1 to plan tasks 0-3, with Task 4 as config and Task 5 as verification. Design's locked decisions (label taxonomy with specific colors, GraphQL for hierarchy operations, idempotency via `--force`) became constraints applied uniformly across setup and utility tasks.
+### Rationale
+Fifth confirmation of 1:1 design-to-plan mapping. Locked decisions continue to function as cross-cutting constraints.
+### Source
+state/plan/2026-03-28-github-state-model.md
+### Confidence
+[HIGH] — fifth observation, pattern firmly established

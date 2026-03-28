@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.18.0 — The GitHub State Model (Mar 2026)
+
+- **GitHub state model** — Two-level issue hierarchy (Epic > Feature) with label-based state machines externalizes workflow lifecycle to GitHub Issues and Projects V2
+- **Shared GitHub utility** — `skills/_shared/github.md` provides reusable API operations: auth check, repo detection, label CRUD, issue CRUD (create epic, create feature as sub-issue, close, check completion via GraphQL), Projects V2 operations
+- **Setup subcommand** — `/beastmode setup-github` bootstraps labels (type/, phase/, status/, gate/), Projects V2 board, column configuration, and repo linking — idempotent
+- **Config extension** — Asset template extended with `backlog-to-design` and `release-to-done` transitions, `github.project-name` setting
+
 ### v0.17.0 — The Full Spectrum Init (Mar 2026)
 
 - **17-domain skeleton** — Skeleton assets expanded from 7 to 17 L2 files covering design (4), plan (4), implement (3), validate (2), release (4), each with matching L3 directories and `.gitkeep`
