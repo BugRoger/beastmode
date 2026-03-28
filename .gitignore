@@ -1,5 +1,6 @@
 # Beastmode session state and worktrees
 .beastmode/sessions/
 .beastmode/worktrees/
+.claude/worktrees/
 .claude/settings.local.json
 .DS_Store
