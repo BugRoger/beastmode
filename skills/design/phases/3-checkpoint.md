@@ -59,11 +59,25 @@ Do NOT include specific file paths or code snippets — they may become outdated
 [Ideas that came up during the interview but were deferred as separate features, or "None"]
 ```
 
-## 2. Phase Retro
+## 2. Sync GitHub
+
+Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, skip this step.
+
+@../_shared/github.md
+
+Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
+
+1. **Create Epic** — using the "Create Epic" operation from github.md. Set the title from the PRD's problem statement. Store the epic URL and number.
+
+2. **Add to Manifest** — save the epic number to the manifest's `github.epic` field.
+
+3. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Design"`.
+
+## 3. Phase Retro
 
 @../_shared/retro.md
 
-## 3. [GATE|transitions.design-to-plan]
+## 4. [GATE|transitions.design-to-plan]
 
 Read `.beastmode/config.yaml` → resolve mode for `transitions.design-to-plan`.
 Default: `human`.

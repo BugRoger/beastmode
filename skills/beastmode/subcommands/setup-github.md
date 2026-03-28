@@ -82,9 +82,9 @@ else
 fi
 ```
 
-### 5. Configure Board Columns
+### 5. Configure Pipeline Field
 
-The Projects V2 Status field needs custom options matching the pipeline phases.
+Discover the project ID, then create a custom "Pipeline" single-select field with the 7 beastmode phase columns.
 
 ```bash
 project_number=$(gh project list --owner "$owner" --format json | jq -r '.projects[] | select(.title == "Beastmode Pipeline") | .number')
@@ -108,29 +108,101 @@ gh api graphql -f query='
 echo "Project ID: $project_id"
 ```
 
-Get the Status field and update options:
+Check if a "Pipeline" field already exists:
 
 ```bash
-# Get Status field ID
-status_field_id=$(gh api graphql -f query='
+existing_field=$(gh api graphql -f query='
   query($projectId: ID!) {
     node(id: $projectId) {
       ... on ProjectV2 {
-        field(name: "Status") {
+        field(name: "Pipeline") {
           ... on ProjectV2SingleSelectField {
             id
-            options { id name }
           }
         }
       }
     }
   }
-' -F projectId="$project_id" -q '.data.node.field')
+' -F projectId="$project_id" -q '.data.node.field.id' 2>/dev/null)
 ```
 
-Note: The exact GraphQL mutations for updating Status field options may vary by GitHub version. If the above fails, report the project was created and columns need manual configuration via the GitHub UI.
+If the field exists, delete it first (idempotent reset):
 
-### 6. Link Repo to Project
+```bash
+if [ -n "$existing_field" ]; then
+  gh api graphql -f query='
+    mutation($fieldId: ID!) {
+      deleteProjectV2Field(input: {fieldId: $fieldId}) {
+        projectV2Field { id }
+      }
+    }
+  ' -f fieldId="$existing_field"
+  echo "Deleted existing Pipeline field for idempotent reset."
+fi
+```
+
+Create the Pipeline field with 7 phase columns:
+
+```bash
+pipeline_field=$(gh api graphql -f query='
+  mutation($projectId: ID!) {
+    createProjectV2Field(input: {
+      projectId: $projectId
+      dataType: SINGLE_SELECT
+      name: "Pipeline"
+      singleSelectOptions: [
+        {name: "Backlog", color: GRAY, description: "Not yet started"}
+        {name: "Design", color: PURPLE, description: "Design in progress"}
+        {name: "Plan", color: BLUE, description: "Planning in progress"}
+        {name: "Implement", color: YELLOW, description: "Implementation in progress"}
+        {name: "Validate", color: ORANGE, description: "Validation in progress"}
+        {name: "Release", color: GREEN, description: "Release in progress"}
+        {name: "Done", color: GREEN, description: "Shipped"}
+      ]
+    }) {
+      projectV2Field {
+        ... on ProjectV2SingleSelectField {
+          id
+          options { id name color }
+        }
+      }
+    }
+  }
+' -f projectId="$project_id")
+
+echo "Pipeline field created: $pipeline_field"
+```
+
+### 6. Write Project Cache
+
+Parse the Pipeline field response and write a local cache for checkpoint sync:
+
+```bash
+# Extract field ID and options from the createProjectV2Field response
+pipeline_field_id=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.id')
+pipeline_options=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.options')
+
+# Build options map: { "Backlog": "option-id", "Design": "option-id", ... }
+options_map=$(echo "$pipeline_options" | jq 'map({(.name): .id}) | add')
+
+# Write cache file
+mkdir -p .beastmode/state
+cat > .beastmode/state/github-project.cache.json <<CACHE
+{
+  "projectId": "$project_id",
+  "projectNumber": $project_number,
+  "pipelineField": {
+    "id": "$pipeline_field_id",
+    "options": $options_map
+  },
+  "cachedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+CACHE
+
+echo "Cache written: .beastmode/state/github-project.cache.json"
+```
+
+### 7. Link Repo to Project
 
 ```bash
 repo_id=$(gh api repos/$owner/$repo --jq '.node_id')
@@ -143,7 +215,7 @@ gh api graphql -f query='
 ' -f projectId="$project_id" -f repoId="$repo_id"
 ```
 
-### 7. Print Summary
+### 8. Print Summary
 
 ```
 GitHub State Model Setup Complete

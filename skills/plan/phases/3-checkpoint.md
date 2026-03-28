@@ -23,11 +23,31 @@ Save to `.beastmode/state/plan/YYYY-MM-DD-<feature-name>.tasks.json`:
 }
 ```
 
-## 3. Phase Retro
+## 3. Sync GitHub
+
+Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, or the manifest has no `github` block, skip this step.
+
+@../_shared/github.md
+
+Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
+
+1. **Advance Epic Phase** — set the Epic's phase label to `phase/plan`:
+
+```bash
+gh issue edit <epic-number> --remove-label "phase/design" --add-label "phase/plan"
+```
+
+2. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Plan"`.
+
+3. **Create Feature Issues** — for each feature in the manifest, use the "Create Feature" operation from github.md. Store feature issue numbers in the manifest.
+
+4. **Add Features to Project** — for each created feature, call the "Add to Project + Set Status" operation from github.md with the feature URL and status `"Plan"`.
+
+## 4. Phase Retro
 
 @../_shared/retro.md
 
-## 4. [GATE|transitions.plan-to-implement]
+## 5. [GATE|transitions.plan-to-implement]
 
 Read `.beastmode/config.yaml` → resolve mode for `transitions.plan-to-implement`.
 Default: `human`.
