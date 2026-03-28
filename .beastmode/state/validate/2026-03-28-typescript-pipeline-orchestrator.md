@@ -32,7 +32,7 @@ bun x tsc --noEmit
 Exit code: 0 (clean)
 ```
 
-Note: Fixed unused `targetBranch` variable in `cli/src/merge-coordinator.ts:180` — renamed to `_targetBranch` to satisfy `noUnusedLocals`.
+Note: Fixed unused `targetBranch` destructuring in `cli/src/merge-coordinator.ts:180` — removed from destructuring entirely since `executeMerge` does not use it (`coordinateMerges` uses it separately).
 
 ## Lint
 
