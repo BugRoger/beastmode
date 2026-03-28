@@ -1,0 +1,14 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-typescript-pipeline-orchestrator-run-command.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-typescript-pipeline-orchestrator.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create run command types and interfaces", "status": "completed", "wave": 1},
+    {"id": 1, "subject": "Task 1: Create run-log module for .beastmode-runs.json", "status": "completed", "wave": 1},
+    {"id": 2, "subject": "Task 2: Create SDK phase runner (non-design phases)", "status": "completed", "wave": 2},
+    {"id": 3, "subject": "Task 3: Create interactive design runner (Bun.spawn)", "status": "completed", "wave": 2},
+    {"id": 4, "subject": "Task 4: Create run command handler — orchestrate worktree + runner + logging", "status": "completed", "wave": 3},
+    {"id": 5, "subject": "Task 5: Create run command tests", "status": "completed", "wave": 4},
+    {"id": 6, "subject": "Task 6: Verify implementation", "status": "completed", "wave": 4}
+  ],
+  "lastUpdated": "2026-03-28T20:05:00Z"
+}
