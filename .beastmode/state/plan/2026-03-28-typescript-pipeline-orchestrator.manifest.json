@@ -1,10 +1,64 @@
 {
   "design": ".beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md",
-  "architecturalDecisions": [],
-  "features": [],
+  "architecturalDecisions": [
+    {"decision": "CLI framework", "choice": "Bun native CLI with process.argv parsing, no framework dependency"},
+    {"decision": "SDK integration", "choice": "@anthropic-ai/claude-agent-sdk for query(), streaming, cost tracking, AbortController cancellation"},
+    {"decision": "Project structure", "choice": "cli/ with own package.json, src/ subdirectory, Bun-native TypeScript"},
+    {"decision": "Worktree lifecycle", "choice": "CLI-owned via git worktree commands, TypeScript rewrite of worktree-create.sh"},
+    {"decision": "Phase invocation", "choice": "SDK query() with /beastmode:<phase> prompts, permissionMode bypassPermissions"},
+    {"decision": "State authority", "choice": "Manifest JSON is source of truth, GitHub is synced mirror"},
+    {"decision": "Watch concurrency", "choice": "No cap — parallel epics, parallel features, API rate limits as natural governor"},
+    {"decision": "Merge strategy", "choice": "git merge-tree simulation for conflict detection, sequential merge in optimized order"},
+    {"decision": "Config extension", "choice": "Reuse .beastmode/config.yaml with new cli: section for poll interval"},
+    {"decision": "Cost tracking", "choice": "Per-dispatch run log in .beastmode-runs.json"}
+  ],
+  "features": [
+    {
+      "slug": "cli-scaffold",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-cli-scaffold.md",
+      "status": "pending",
+      "github": {"issue": 13}
+    },
+    {
+      "slug": "worktree-manager",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-worktree-manager.md",
+      "status": "pending",
+      "github": {"issue": 14}
+    },
+    {
+      "slug": "run-command",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-run-command.md",
+      "status": "pending",
+      "github": {"issue": 15}
+    },
+    {
+      "slug": "state-scanner",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-state-scanner.md",
+      "status": "pending",
+      "github": {"issue": 16}
+    },
+    {
+      "slug": "watch-loop",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-watch-loop.md",
+      "status": "pending",
+      "github": {"issue": 17}
+    },
+    {
+      "slug": "merge-coordinator",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-merge-coordinator.md",
+      "status": "pending",
+      "github": {"issue": 18}
+    },
+    {
+      "slug": "status-command",
+      "plan": "2026-03-28-typescript-pipeline-orchestrator-status-command.md",
+      "status": "pending",
+      "github": {"issue": 19}
+    }
+  ],
   "github": {
     "epic": 12,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-28T17:45:00Z"
+  "lastUpdated": "2026-03-28T18:55:00Z"
 }
