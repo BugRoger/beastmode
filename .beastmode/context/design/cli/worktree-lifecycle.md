@@ -1,11 +1,12 @@
 ## Context
-Worktree management was previously split between a shell hook and Claude Code's native worktree features, causing reliability issues (60-80% reliability).
+Worktree management was fragmented across Justfile, WorktreeCreate hook, and CLI module. Needed consolidation into a single authority.
 
 ## Decision
-CLI owns full worktree lifecycle in TypeScript: create with `feature/<slug>` branch detection, point SDK session at it via `cwd`, merge after completion, remove when done. Shell hook removed.
+CLI owns full worktree lifecycle: create at first phase encounter with `feature/<slug>` branch detection, persist through all intermediate phases, squash-merge to main and remove at release. Justfile deleted. WorktreeCreate hook deleted. Failed phases leave worktree dirty for retry. Watch loop uses the same worktree functions as manual execution.
 
 ## Rationale
-External harness ownership of worktrees eliminates the session-scoped lifetime problem and worktree data-loss bugs in Claude Code. TypeScript rewrite of branch detection logic is more maintainable than shell scripts.
+Single-authority worktree management eliminates fragile indirection. Persist-across-phases (instead of per-session ephemeral) removes the need for repeated worktree creation. Error recovery is simple: retry the same phase in the same dirty worktree.
 
 ## Source
 `.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/state/design/2026-03-28-cli-worktree-management.md`

@@ -10,7 +10,7 @@ gates:
     prd-approval: human               # APPROVAL — approve before documenting
 
   plan:
-    feature-set-approval: human          # APPROVAL — approve the full set of features
+    feature-set-approval: auto           # APPROVAL — approve the full set of features
     feature-approval: auto               # APPROVAL — approve each feature individually
 
   implement:

@@ -31,11 +31,11 @@
 - ALWAYS archive branch tip before squash merge
 
 ## Phase Transitions
-TypeScript CLI (`beastmode`) drives phase transitions via `beastmode run <phase> <slug>`. Each phase is a separate Claude Agent SDK session. Skills are pure content processors with no worktree or transition logic. Checkpoint prints the `beastmode run` command for the next phase. Only the checkpoint may produce next-step commands; retro agents are banned from transition guidance. The watch loop (`beastmode watch`) provides automated advancement: event-driven re-scan on session completion drives epics through plan -> release. Justfile is retained as a thin alias layer.
+TypeScript CLI (`beastmode`) drives phase transitions via `beastmode <phase> <slug>`. Each phase is a separate Claude Agent SDK session. Skills are pure content processors with no worktree or transition logic. Checkpoint prints the `beastmode` command for the next phase. Only the checkpoint may produce next-step commands; retro agents are banned from transition guidance. The watch loop (`beastmode watch`) provides automated advancement: event-driven re-scan on session completion drives epics through plan -> release. Justfile is deleted — CLI is the sole orchestration entry point.
 
-1. ALWAYS use `beastmode run <phase> <slug>` as the phase entry point — Justfile aliases (`just <phase> <slug>`) are convenience wrappers
+1. ALWAYS use `beastmode <phase> <slug>` as the phase entry point — no Justfile aliases, CLI is the sole orchestrator
 2. NEVER embed worktree or transition logic in skills — skills assume correct working directory
-3. ALWAYS print `beastmode run <next-phase> <slug>` at checkpoint — human copies and runs (or watch loop auto-advances)
+3. ALWAYS print `beastmode <next-phase> <slug>` at checkpoint — human copies and runs (or watch loop auto-advances)
 4. NEVER auto-chain phases — each phase is a separate SDK session
 5. NEVER print transition guidance from retro agents — checkpoint is the sole authority
 6. ALWAYS STOP after printing transition output — no additional output
@@ -75,7 +75,7 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 1. ALWAYS use local state files as the authority for orchestration decisions — not GitHub labels
 2. NEVER orchestrate design phase — interactive by nature, requires human collaboration
 3. ALWAYS merge implement worktrees sequentially with pre-merge conflict simulation via `git merge-tree` — optimized merge order
-4. ALWAYS respect config.yaml gate settings — human gates pause the epic and log to stdout
+4. ALWAYS respect config.yaml gate settings — human gates pause the epic and log to stdout, user runs `beastmode <phase> <slug>` manually to proceed
 5. ALWAYS use CLI-owned worktrees — CLI creates before, merges after, removes when done
 6. ALWAYS use `DispatchedSession` interface for dispatch — `SessionFactory` returns `SdkSession` or `CmuxSession` based on runtime state and config
 7. ALWAYS reconcile cmux state on startup — adopt live surfaces, close dead ones, remove empty workspaces
@@ -83,11 +83,11 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 context/design/orchestration.md
 
 ## CLI Architecture
-TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode run`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle, replaces both the Justfile orchestrator and the CronCreate-based pipeline. Optional cmux integration provides live terminal visibility when cmux is available.
+TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle: create at first phase, persist through intermediate phases, squash-merge and remove at release. Justfile and WorktreeCreate hook are deleted. Optional cmux integration provides live terminal visibility when cmux is available.
 
-1. ALWAYS use CLI for phase execution and pipeline orchestration — Justfile is a thin alias layer only
+1. ALWAYS use CLI for phase execution and pipeline orchestration — no Justfile, CLI is the sole entry point
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
-3. ALWAYS own worktree lifecycle in the CLI — create before, merge after, remove when done
+3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
 4. ALWAYS reuse `.beastmode/config.yaml` with `cli:` and `cmux:` sections — no separate config file
 5. ALWAYS track per-dispatch costs in `.beastmode-runs.json` — observability without running Claude
 6. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee

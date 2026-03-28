@@ -1,24 +1,26 @@
 # CLI Architecture
 
 ## Command Structure
-- CLI name: `beastmode` with three commands: `run <phase> <args>`, `watch`, `status`
-- `beastmode run` executes a single phase in a CLI-owned worktree with streaming output
+- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch` and `status`
+- `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
 - `beastmode status` shows epic state and cost-to-date without running Claude
-- Design phase exception: `beastmode run design` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
+- Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
 - ALWAYS use `DispatchedSession` interface for phase dispatch — strategy pattern decouples dispatch mechanism from orchestration logic
 - `SdkSession`: uses `@anthropic-ai/claude-agent-sdk` `query()` with `prompt: "/beastmode:<phase> <args>"`, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming, cost tracking
-- `CmuxSession`: creates cmux terminal surface via JSON-RPC over Unix socket, sends `beastmode run <phase> <slug>` via `surface.send-text` — cmux owns the shell process, agents get full interactive terminal capability
+- `CmuxSession`: creates cmux terminal surface via JSON-RPC over Unix socket, sends `beastmode <phase> <slug>` via `surface.send-text` — cmux owns the shell process, agents get full interactive terminal capability
 - `SessionFactory` reads config + runtime state (cmux availability) to return the right session type — `auto` mode checks socket + ping
 - AbortController for cancellation — clean shutdown on Ctrl+C
-- Design phase exception: `beastmode run design` always spawns interactive Claude via `Bun.spawn` with inherited stdio — not dispatched through `SessionFactory`
+- Design phase exception: `beastmode design <topic>` always spawns interactive Claude via `Bun.spawn` with inherited stdio — not dispatched through `SessionFactory`
 
 ## Worktree Lifecycle
-- CLI owns full worktree lifecycle: create before session, point SDK at it via `cwd`, merge after completion, remove when done
+- CLI owns full worktree lifecycle: create at first phase encounter, persist through all intermediate phases, squash-merge to main and remove at release
 - Branch detection rewritten in TypeScript — `feature/<slug>` branch reuse or creation from origin/HEAD
-- Shell hook (`hooks/worktree-create.sh`) removed — functionality absorbed into CLI
+- Shell hook (`hooks/worktree-create.sh`) deleted — functionality absorbed into CLI
+- Justfile deleted entirely — CLI is the sole orchestration layer
+- Error recovery: failed phases leave worktree dirty, next run picks up and overwrites
 
 ## Configuration
 - ALWAYS reuse `.beastmode/config.yaml` with `cli:` and `cmux:` sections — no separate config file
