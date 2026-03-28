@@ -4,6 +4,22 @@ All notable changes to beastmode.
 
 ---
 
+### v0.27.0 — The Epics-Only Board (Mar 2026)
+
+- **Epics-only board model** — Removed `gh project item-add` calls for Feature issues from plan checkpoint, implement prime, and implement checkpoint; only Epics are added to the Projects V2 board
+- **Existing feature cleanup** — Removed all existing Feature issues from the project board via `deleteProjectV2Item` GraphQL mutation (one-time ad-hoc cleanup)
+- **Context doc updates** — `github-state-model.md` gains NEVER rule for Feature board-add; `DESIGN.md` summary updated to reflect epics-only model
+- **Orchestrator revert** — Reverted TypeScript CLI orchestrator (v0.25.0) in favor of Justfile + CronCreate architecture; updated context docs to reflect current model
+
+### v0.26.0 — The Orchestrator Blueprint (Mar 2026)
+
+- **Orchestrator PRD** — CronCreate-based poll loop, worktree-isolated agents, per-epic teams, manifest convergence
+- **Orchestration L2 context** — domain rules for local-first state, worktree isolation, config.yaml gates
+
+### v0.25.0 — The TypeScript Pipeline (Mar 2026)
+
+- **TypeScript CLI orchestrator** — `beastmode` CLI built with Bun and Claude Agent SDK for phase execution and pipeline orchestration (reverted in v0.27.0)
+
 ### v0.24.0 — The Epics-Only Board (Mar 2026)
 
 - **Epics-only board model** — Removed `gh project item-add` calls for Feature issues from plan checkpoint, implement prime, and implement checkpoint; only Epics are added to the Projects V2 board
