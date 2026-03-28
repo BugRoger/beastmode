@@ -4,15 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.26.0 — The Epics-Only Board (Mar 2026)
+
+- **Epics-only board model** — Removed `gh project item-add` calls for Feature issues from plan checkpoint, implement prime, and implement checkpoint; only Epics are added to the Projects V2 board
+- **Existing feature cleanup** — Removed all existing Feature issues from the project board via `deleteProjectV2Item` GraphQL mutation (one-time ad-hoc cleanup)
+- **Context doc updates** — `github-state-model.md` gains NEVER rule for Feature board-add; `DESIGN.md` summary updated to reflect epics-only model
+- **Orchestrator revert** — Reverted TypeScript CLI orchestrator (v0.25.0) in favor of Justfile + CronCreate architecture; updated context docs to reflect current model
+
 ### v0.25.0 — The TypeScript Pipeline (Mar 2026)
 
-- **CLI scaffold** — Bun-native TypeScript CLI (`beastmode`) with `run`, `watch`, and `status` commands, argument parsing, and config loading
-- **Worktree manager** — CLI-owned worktree lifecycle: create with `feature/<slug>` branch detection, cleanup on completion
-- **Run command** — Single-phase execution via Claude Agent SDK with streaming output and worktree isolation
-- **State scanner** — Manifest-based next-action derivation per epic, phase completion detection, human gate identification
-- **Watch loop** — Autonomous multi-epic pipeline: 60s poll with event-driven re-scan, parallel dispatch, human gate pause
-- **Merge coordinator** — Pre-merge conflict simulation via `git merge-tree`, optimized merge ordering, Claude-assisted conflict resolution
-- **Status command** — Fast state scan showing epic progress and cost-to-date without spawning Claude
+- **TypeScript CLI orchestrator** — `beastmode` CLI built with Bun and Claude Agent SDK for phase execution and pipeline orchestration (reverted in v0.26.0)
 
 ### v0.24.0 — The Epics-Only Board (Mar 2026)
 

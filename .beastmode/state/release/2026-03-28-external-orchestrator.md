@@ -1,26 +1,26 @@
 # Release: external-orchestrator
 
-**Version:** v0.22.0
+**Version:** v0.26.0
 **Date:** 2026-03-28
 
 ## Highlights
 
-Extracts worktree management and phase transitions into an external orchestrator (Justfile + WorktreeCreate hook), turning skills into pure content processors. Each phase is now a separate `claude` invocation with no auto-chaining.
+Reverses the v0.25.0 TypeScript CLI pipeline experiment and re-establishes through a full design process that the Justfile is the canonical orchestrator. The TypeScript CLI (5,300+ lines) is removed; skills remain pure content processors.
 
 ## Features
 
-- **Justfile orchestrator** — Thin CLI shell with recipes for each phase (`just design`, `just plan`, `just implement`, `just validate`, `just release`). Each recipe invokes `claude --worktree` interactively.
-- **WorktreeCreate hook** — Smart branch detection: if `feature/<slug>` exists, branch from it; otherwise fall through to default `origin/HEAD` behavior.
-- **Skill purification** — Removed all worktree creation/entry/assertion logic and phase transition gates from every skill. Skills now assume they're running in the correct directory.
-- **Checkpoint handoff** — All 5 phase checkpoints now print `just <next-phase> <slug>` instead of auto-chaining via `Skill()` calls.
-- **Commit-per-phase strategy** — Each phase commits to the feature branch at checkpoint. Release squash-merges to main.
+- **External orchestrator PRD** — Full design document formalizing Justfile as canonical orchestrator with phase-per-session model, commit-per-phase strategy, and WorktreeCreate hook for smart branch detection
+- **Orchestration context refresh** — Updated context docs for agent-spawning, manifest-convergence, team-organization, execution-model, and lifecycle to reflect Justfile-only model
 
 ## Chores
 
-- Removed `transitions` section from `.beastmode/config.yaml`
-- Updated 8 context/design docs to reflect external orchestrator model
-- Cleaned worktree-manager.md down to reference-only merge options
+- **Remove TypeScript CLI pipeline** — Deleted entire `cli/` directory (pipeline orchestrator, watch loop, merge coordinator, state scanner, worktree manager, and all tests)
+- **Remove CLI context docs** — Deleted `context/design/cli/` hierarchy (command-structure, configuration, cost-tracking, recovery-model, sdk-integration, worktree-lifecycle)
+- **Remove pipeline orchestrator artifacts** — Deleted design/plan/validate state files for `typescript-pipeline-orchestrator`
 
 ## Full Changelog
 
-- `7a24da3` validate(external-orchestrator): checkpoint
+- `31a5727` design(orchestrator): checkpoint
+- `46d8b1d` fix: remove accidentally staged worktree
+- Removed 5,309 lines of TypeScript CLI code and related artifacts
+- Updated 8 context docs to reflect Justfile-based orchestration model

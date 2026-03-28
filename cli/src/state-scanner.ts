@@ -61,6 +61,22 @@ export function slugFromDesign(filename: string): string {
 }
 
 /**
+ * Extract date prefix from a design artifact filename.
+ * Input: "2026-03-28-typescript-pipeline-orchestrator.md"
+ * Output: "2026-03-28"
+ */
+function dateFromDesign(filename: string): string | undefined {
+  const match = basename(filename).match(/^(\d{4}-\d{2}-\d{2})-/);
+  return match ? match[1] : undefined;
+}
+
+/**
+ * The manifest system was introduced on this date. Design artifacts before
+ * this date that lack a manifest are pre-manifest completed epics.
+ */
+const MANIFEST_EPOCH = "2026-03-28";
+
+/**
  * Find the manifest for a given design slug.
  * Convention: .beastmode/state/plan/*-<slug>.manifest.json
  */
@@ -110,20 +126,36 @@ function aggregateCost(entries: RunLogEntry[], epicSlug: string): number {
 }
 
 /**
- * Derive the current phase from manifest state.
- * - No manifest → design (just a design doc, needs plan)
+ * Derive the current phase from manifest state and design artifact date.
+ * - No manifest + release artifact exists → release (already shipped)
+ * - No manifest + pre-MANIFEST_EPOCH date → release (pre-manifest completed epic)
+ * - No manifest + post-MANIFEST_EPOCH date → design (new epic needs plan)
  * - Manifest with no features → plan (empty manifest, needs feature decomposition)
- * - All features completed → validate
- * - Has validate artifact → release
- * - Has release artifact → completed (release)
+ * - All features completed → validate/release based on artifacts
  * - Otherwise → implement (features need work)
  */
 function derivePhase(
   slug: string,
   manifest: Manifest | undefined,
   stateDir: string,
+  designFilename: string,
 ): Phase {
-  if (!manifest) return "design";
+  if (!manifest) {
+    // No manifest — check if a release artifact exists for this slug
+    const releaseDir = resolve(stateDir, "release");
+    if (
+      existsSync(releaseDir) &&
+      readdirSync(releaseDir).some((f) => f.includes(slug))
+    ) {
+      return "release";
+    }
+    // Pre-manifest epics are completed — they shipped through the old workflow
+    const date = dateFromDesign(designFilename);
+    if (date && date < MANIFEST_EPOCH) {
+      return "release";
+    }
+    return "design";
+  }
   if (!manifest.features || manifest.features.length === 0) return "plan";
 
   const allCompleted = manifest.features.every(
@@ -185,7 +217,8 @@ function deriveNextAction(
       return { phase: "validate", args: [slug], type: "single" };
 
     case "release":
-      // Check if this is "needs release" or "already released"
+      // No manifest means this was a pre-manifest epic that already shipped
+      if (!manifest) return null;
       return { phase: "release", args: [slug], type: "single" };
 
     default:
@@ -259,7 +292,7 @@ export async function scanEpics(projectRoot: string): Promise<EpicState[]> {
       : undefined;
     const manifest = manifestPath ? readManifest(manifestPath) : undefined;
 
-    const phase = derivePhase(slug, manifest, stateDir);
+    const phase = derivePhase(slug, manifest, stateDir, designFile);
     const nextAction = deriveNextAction(slug, phase, manifest);
     const { blocked, gateName } = checkGateBlocked(phase, manifest, projectRoot);
     const features = extractFeatures(manifest);

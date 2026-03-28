@@ -23,6 +23,9 @@ function setupTestRoot(): void {
   );
 }
 
+// Post-epoch date so scanner treats these as new epics (not pre-manifest completed)
+const TEST_DATE = "2026-03-29";
+
 function writeDesign(slug: string): void {
   writeFileSync(
     resolve(
@@ -30,7 +33,7 @@ function writeDesign(slug: string): void {
       ".beastmode",
       "state",
       "design",
-      `2026-01-01-${slug}.md`,
+      `${TEST_DATE}-${slug}.md`,
     ),
     `# ${slug}\n`,
   );
@@ -42,15 +45,15 @@ function writeManifest(
   github?: { epic: number; repo: string },
 ): void {
   const manifest = {
-    design: `.beastmode/state/design/2026-01-01-${slug}.md`,
+    design: `.beastmode/state/design/${TEST_DATE}-${slug}.md`,
     architecturalDecisions: [],
     features: features.map((f) => ({
       slug: f.slug,
-      plan: `2026-01-01-${slug}-${f.slug}.md`,
+      plan: `${TEST_DATE}-${slug}-${f.slug}.md`,
       status: f.status,
     })),
     github,
-    lastUpdated: "2026-01-01T00:00:00Z",
+    lastUpdated: `${TEST_DATE}T00:00:00Z`,
   };
   writeFileSync(
     resolve(
@@ -58,7 +61,7 @@ function writeManifest(
       ".beastmode",
       "state",
       "plan",
-      `2026-01-01-${slug}.manifest.json`,
+      `${TEST_DATE}-${slug}.manifest.json`,
     ),
     JSON.stringify(manifest, null, 2),
   );
@@ -76,7 +79,7 @@ function writeRunLog(
     ...e,
     feature: null,
     exit_status: "success" as const,
-    timestamp: "2026-01-01T00:00:00Z",
+    timestamp: `${TEST_DATE}T00:00:00Z`,
     session_id: null,
   }));
   writeFileSync(
@@ -129,6 +132,25 @@ describe("scanEpics", () => {
       args: ["my-epic"],
       type: "single",
     });
+  });
+
+  test("pre-manifest design with no manifest is treated as completed", async () => {
+    // Pre-epoch date — scanner should recognize this as already shipped
+    writeFileSync(
+      resolve(
+        TEST_ROOT,
+        ".beastmode",
+        "state",
+        "design",
+        "2026-03-01-old-epic.md",
+      ),
+      "# old-epic\n",
+    );
+    const epics = await scanEpics(TEST_ROOT);
+
+    const old = epics.find((e) => e.slug === "old-epic")!;
+    expect(old.phase).toBe("release");
+    expect(old.nextAction).toBeNull();
   });
 
   test("manifest with empty features returns phase plan", async () => {
@@ -284,7 +306,7 @@ describe("scanEpics", () => {
         ".beastmode",
         "state",
         "design",
-        "2026-01-01-my-epic.md",
+        `${TEST_DATE}-my-epic.md`,
       ),
     ).lastModified;
     const manifestBefore = Bun.file(
@@ -293,7 +315,7 @@ describe("scanEpics", () => {
         ".beastmode",
         "state",
         "plan",
-        "2026-01-01-my-epic.manifest.json",
+        `${TEST_DATE}-my-epic.manifest.json`,
       ),
     ).lastModified;
 
@@ -306,7 +328,7 @@ describe("scanEpics", () => {
         ".beastmode",
         "state",
         "design",
-        "2026-01-01-my-epic.md",
+        `${TEST_DATE}-my-epic.md`,
       ),
     ).lastModified;
     const manifestAfter = Bun.file(
@@ -315,7 +337,7 @@ describe("scanEpics", () => {
         ".beastmode",
         "state",
         "plan",
-        "2026-01-01-my-epic.manifest.json",
+        `${TEST_DATE}-my-epic.manifest.json`,
       ),
     ).lastModified;
 
