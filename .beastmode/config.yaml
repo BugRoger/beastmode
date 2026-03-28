@@ -3,11 +3,11 @@
 
 gates:
   design:
-    existing-design-choice: human     # INTERACTIVE — prior design found, ask what to do
-    intent-discussion: human         # INTERACTIVE — conversational intent + gray area loop
-    approach-selection: human        # INTERACTIVE — pick from proposed approaches
-    section-review: human            # INTERACTIVE — section-by-section review
-    design-approval: human           # APPROVAL — approve before documenting
+    existing-design-choice: human     # INTERACTIVE — prior PRD found, ask what to do
+    prior-decisions: auto             # INTERACTIVE — apply prior decisions from context/meta
+    decision-tree: human              # INTERACTIVE — walk every branch of the design tree
+    gray-areas: human                 # INTERACTIVE — second pass for big-picture blind spots
+    prd-approval: human               # APPROVAL — approve before documenting
 
   plan:
     plan-approval: auto              # APPROVAL — approve before saving

@@ -13,33 +13,32 @@ Read (if they exist):
 - `.beastmode/meta/DESIGN.md`
 
 Follow L2 convention paths (`context/design/{domain}.md`) when relevant to the current topic.
-Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
 
-## 3. Check Research Trigger
+## 3. [GATE|design.prior-decisions]
 
-Research triggers if ANY:
+Read `.beastmode/config.yaml` → resolve mode for `design.prior-decisions`.
+Default: `auto`.
 
-**Keyword Detection** — arguments contain:
-- "research", "investigate", "explore first"
-- "what's SOTA", "best practices", "how do people"
+Collect prior decisions from context/meta docs that are relevant to the current topic.
 
-**Complexity Assessment** — topic involves:
-- Unfamiliar technology or domain
-- External API/service integration
-- User expresses uncertainty
+### [GATE-OPTION|human] Present Prior Decisions
 
-If triggered:
-1. Extract topic from arguments
-2. Spawn Explore agent with `@../../agents/common-researcher.md`
-3. Save findings to `.beastmode/state/research/YYYY-MM-DD-<topic>.md`
-4. Summarize findings to user and continue to next step
+If prior decisions were found:
+- Present each as a one-liner with source reference
+- Ask: "These prior decisions apply. Accept all, or review individually?"
+- Options: Accept all / Review individually / Ignore all
+
+### [GATE-OPTION|auto] Apply Silently
+
+Apply all relevant prior decisions as constraints for the interview.
+Log: "Gate `design.prior-decisions` → auto: applied {N} prior decisions"
 
 ## 4. Express Path Check
 
 If arguments point to an existing PRD, spec, or requirements document (not a `.beastmode/state/design/` file):
 1. Read the document
-2. Skip gray area identification in execute
-3. Jump directly to "Propose Approaches" with the doc as input
+2. Skip decision tree walk in execute
+3. Jump directly to "Module Sketch" with the doc as input
 
 ## 5. [GATE|design.existing-design-choice]
 
@@ -48,11 +47,11 @@ Default: `human`.
 
 ### [GATE-OPTION|human] Ask User
 
-If a prior design doc exists for the same topic (matching feature name):
-- Ask: "Found existing design for this topic. What do you want to do?"
+If a prior PRD exists for the same topic (matching feature name):
+- Ask: "Found existing PRD for this topic. What do you want to do?"
 - Options: Update existing / View first / Start fresh
 
 ### [GATE-OPTION|auto] Claude Decides
 
-Read the existing design and decide whether to update or start fresh based on how different the new requirements are.
+Read the existing PRD and decide whether to update or start fresh based on how different the new requirements are.
 Log: "Gate `design.existing-design-choice` → auto: <decision>"

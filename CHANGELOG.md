@@ -4,12 +4,22 @@ All notable changes to beastmode.
 
 ---
 
+### v0.19.0 — The PRD Pivot (Mar 2026)
+
+- **Decision tree interviews** — /design now walks every branch of the design tree one question at a time with Claude's recommendation, replacing the old gray-area-first batch loop
+- **Two-pass flow** — Full decision tree walk first, then gray area sweep as a second pass to catch big-picture blind spots the tree missed
+- **Inline exploration** — Codebase reads and research happen during the interview instead of requiring separate triggers in prime
+- **Module sketch step** — New step between interview and PRD writing identifies deep modules (encapsulate complexity behind simple testable interfaces)
+- **Prior decisions gate** — New `design.prior-decisions` gate (default: auto) applies context/meta decisions silently so settled questions don't get re-asked
+- **PRD output format** — Design artifacts now follow standardized PRD template: Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope, Further Notes, Deferred Ideas
+- **New gate set** — Replaced 4 old design gates (intent-discussion, approach-selection, section-review, design-approval) with 4 new ones (decision-tree, gray-areas, prior-decisions, prd-approval)
+
 ### v0.18.0 — The GitHub State Model (Mar 2026)
 
-- **GitHub state model** — Two-level issue hierarchy (Epic > Feature) with label-based state machines externalizes workflow lifecycle to GitHub Issues and Projects V2
-- **Shared GitHub utility** — `skills/_shared/github.md` provides reusable API operations: auth check, repo detection, label CRUD, issue CRUD (create epic, create feature as sub-issue, close, check completion via GraphQL), Projects V2 operations
-- **Setup subcommand** — `/beastmode setup-github` bootstraps labels (type/, phase/, status/, gate/), Projects V2 board, column configuration, and repo linking — idempotent
-- **Config extension** — Asset template extended with `backlog-to-design` and `release-to-done` transitions, `github.project-name` setting
+- **GitHub state model** — Two-level issue hierarchy (Epic > Feature) with label-based state machines, externalizing workflow lifecycle to GitHub Issues and Projects V2
+- **Shared GitHub utility** — Reusable API operations for auth, labels, issues, sub-issues, and Projects V2
+- **Setup subcommand** — `/beastmode setup-github` bootstraps labels, project board, columns, repo linking (idempotent)
+- **Config extension** — backlog-to-design and release-to-done transitions, github.project-name setting
 
 ### v0.17.0 — The Full Spectrum Init (Mar 2026)
 

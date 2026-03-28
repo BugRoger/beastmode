@@ -2,42 +2,40 @@
 
 ## 1. Completeness Check
 
-Verify design covers:
-- [ ] Goal statement
-- [ ] Approach summary
-- [ ] Key decisions with rationale
-- [ ] Component breakdown
-- [ ] Files affected
-- [ ] Testing strategy (if applicable)
-- [ ] Locked decisions clearly marked
-- [ ] Claude's Discretion areas identified
-- [ ] Acceptance criteria present
+Verify PRD covers all required sections:
+- [ ] Problem Statement
+- [ ] Solution
+- [ ] User Stories (3+ items)
+- [ ] Implementation Decisions
+- [ ] Testing Decisions
+- [ ] Out of Scope
+- [ ] Further Notes (or "none")
 - [ ] Deferred ideas captured (or "none")
 
 If missing sections, go back to Execute phase.
 
 ## 2. Anti-Pattern Check
 
-If the design produced fewer than 3 decisions, print:
+If the PRD produced fewer than 3 user stories, print:
 
-"This is a lightweight design — that's fine. Even simple designs benefit from explicit approval to prevent wasted implementation."
+"This is a lightweight PRD — that's fine. Even simple features benefit from explicit approval to prevent wasted implementation."
 
-Do NOT skip approval. Short designs still need the gate.
+Do NOT skip approval. Short PRDs still need the gate.
 
 ## 3. Executive Summary
 
-Before asking for approval, present a consolidated executive summary of the design so the user can review the full picture in one place.
+Before asking for approval, present a consolidated executive summary so the user can review the full picture in one place.
 
 Print:
 
 ```
 ### Executive Summary
 
-**Goal**: [one-sentence goal from the design]
+**Problem**: [one-sentence problem statement]
 
-**Approach**: [one-sentence approach summary]
+**Solution**: [one-sentence solution summary]
 
-**Locked Decisions:**
+**Key Decisions:**
 
 | Decision | Choice |
 |----------|--------|
@@ -45,22 +43,23 @@ Print:
 | [decision 2] | [choice] |
 | ... | ... |
 
-**Acceptance Criteria:**
-- [ ] [criterion 1]
-- [ ] [criterion 2]
-- [ ] ...
+**Modules:**
+- [module 1] — [one-sentence description]
+- [module 2] — [one-sentence description]
+
+**User Stories:** [count] stories covering [summary of scope]
 ```
 
-Render this from the decisions and criteria gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
+Render this from the decisions, modules, and stories gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
 
-## 4. [GATE|design.design-approval]
+## 4. [GATE|design.prd-approval]
 
-Read `.beastmode/config.yaml` → resolve mode for `design.design-approval`.
+Read `.beastmode/config.yaml` → resolve mode for `design.prd-approval`.
 Default: `human`.
 
 ### [GATE-OPTION|human] User Approval
 
-Ask: "Does this design look complete? Ready to document?"
+Ask: "Does this PRD look complete? Ready to document?"
 
 Options:
 - Yes, document it
@@ -70,5 +69,5 @@ Wait for user response before continuing.
 
 ### [GATE-OPTION|auto] Self-Approve
 
-Log: "Gate `design.design-approval` → auto: approved"
+Log: "Gate `design.prd-approval` → auto: approved"
 Proceed to checkpoint.

@@ -1,11 +1,11 @@
 ---
 name: design
-description: Brainstorm and create designs — designing, speccing, ideating. Use when you have an idea to flesh out. Asks questions, proposes approaches, writes design doc.
+description: Create PRDs through structured decision-tree interviews — designing, speccing, scoping. Walks every branch of the design tree, sweeps for gray areas, sketches modules, writes a PRD.
 ---
 
 # /design
 
-Help turn ideas into fully formed designs through collaborative dialogue.
+Create PRDs through structured decision-tree interviews and collaborative dialogue.
 
 <HARD-GATE>
 Execute @_shared/task-runner.md now.
@@ -14,12 +14,12 @@ Your FIRST tool call MUST be TodoWrite with parsed phases from below.
 Do not output anything else first.
 Do not skip this for "simple" tasks.
 
-No implementation until design is approved. [→ Why](references/constraints.md)
+No implementation until PRD is approved. [→ Why](references/constraints.md)
 </HARD-GATE>
 
 ## Phases
 
-0. [Prime](phases/0-prime.md) — Load context, research if needed
-1. [Execute](phases/1-execute.md) — Propose approaches, iterate design
-2. [Validate](phases/2-validate.md) — Completeness check, user approval
-3. [Checkpoint](phases/3-checkpoint.md) — Save doc, update status, suggest /plan
+0. [Prime](phases/0-prime.md) — Load context, check prior decisions
+1. [Execute](phases/1-execute.md) — Decision tree walk, gray areas, module sketch
+2. [Validate](phases/2-validate.md) — PRD completeness check, user approval
+3. [Checkpoint](phases/3-checkpoint.md) — Save PRD, update status, suggest /plan
