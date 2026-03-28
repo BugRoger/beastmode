@@ -131,3 +131,15 @@ When a prune mechanism already exists (retro), over-inclusion is cheaper than un
 state/design/2026-03-08-init-l2-expansion.md
 ### Confidence
 [LOW] — first observation of this specific scope strategy (over-include with prune vs. defer)
+
+## Observation 12
+### Context
+During github-phase-integration design, 2026-03-28
+### Observation
+When a design discovers that a prerequisite system doesn't exist (manifest system needed for GitHub integration), absorbing it into the current PRD scope rather than splitting into a separate design effort keeps the design coherent. The PRD explicitly noted "The manifest system is a prerequisite that doesn't exist yet. This PRD includes building it as part of the implementation, not as a separate effort."
+### Rationale
+Splitting a prerequisite into a separate design creates coordination overhead between two PRDs and risks the dependent design becoming stale while waiting. Absorption keeps the authority model and prerequisite in one coherent document.
+### Source
+state/design/2026-03-28-github-phase-integration.md
+### Confidence
+[LOW] — first observation of prerequisite-absorption as a scope strategy (related to Obs 3 challenge-deferrals and Obs 11 over-include-with-prune, but distinct: this is about missing dependencies, not optional features)

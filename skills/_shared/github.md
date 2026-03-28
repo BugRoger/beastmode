@@ -2,6 +2,25 @@
 
 Shared GitHub API operations for the state model. @import this file; do not inline GitHub logic.
 
+## Error Handling Convention
+
+All GitHub API calls in checkpoint sync steps MUST use warn-and-continue:
+
+```bash
+# Wrap every gh CLI call in this pattern
+if ! gh <command> 2>/tmp/gh-error.log; then
+  echo "WARNING: GitHub sync failed: $(cat /tmp/gh-error.log). Continuing with local state."
+  # Do NOT exit or stop — continue to next step
+fi
+```
+
+Contract:
+- Print a warning with the error details
+- Skip the failed GitHub operation
+- Continue execution — never block the local workflow
+- The manifest is written without `github` blocks if sync fails
+- Next checkpoint retries all GitHub operations
+
 ## Prerequisites
 
 Verify `gh` CLI is authenticated:
@@ -48,6 +67,16 @@ done
 # 2. Add new phase label
 gh issue edit <number> --remove-label "<old-phase-labels>" --add-label "phase/<phase>"
 ```
+
+### Set Status Label
+
+```bash
+# 1. Remove existing status/* labels
+# 2. Add new status label
+gh issue edit <number> --remove-label "<old-status-labels>" --add-label "status/<status>"
+```
+
+Valid status labels: `status/ready`, `status/in-progress`, `status/blocked` (3 total — `status/review` dropped).
 
 ## Issue Operations
 

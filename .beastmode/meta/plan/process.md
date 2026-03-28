@@ -1,6 +1,6 @@
 # Plan Process
 
-## Design-to-Plan Mapping
+## Design-to-Plan Mapping (6 observations, HIGH)
 - ALWAYS produce detailed design documents with component breakdowns — enables direct 1:1 mapping to plan tasks
 - ALWAYS accept research artifacts as design doc substitutes when they contain comprehensive analysis and concrete recommendations — substance matters more than document type
 - ALWAYS use design locked decisions as cross-cutting constraints applied uniformly across all plan tasks — they function as the standardization layer

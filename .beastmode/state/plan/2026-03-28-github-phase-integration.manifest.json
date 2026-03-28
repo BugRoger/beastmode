@@ -1,0 +1,49 @@
+{
+  "design": ".beastmode/state/design/2026-03-28-github-phase-integration.md",
+  "architecturalDecisions": [
+    {"decision": "Manifest JSON schema", "choice": "JSON with optional github blocks, 4 statuses (pending, in-progress, blocked, completed)"},
+    {"decision": "Config structure", "choice": "github.enabled (bool, default false) + github.project-name (string)"},
+    {"decision": "GitHub sync pattern", "choice": "One step per checkpoint between artifact-save and retro, skip when disabled"},
+    {"decision": "Error handling", "choice": "Warn-and-continue: try/catch gh CLI calls, print warning on failure, continue"},
+    {"decision": "Label taxonomy", "choice": "12 labels: type/2, phase/7, status/3 (dropped status/review), gate/1"},
+    {"decision": "API boundary", "choice": "All GitHub ops through _shared/github.md, gh CLI only"}
+  ],
+  "features": [
+    {
+      "slug": "config-and-setup",
+      "plan": "2026-03-28-github-phase-integration-config-and-setup.md",
+      "status": "completed"
+    },
+    {
+      "slug": "shared-github-update",
+      "plan": "2026-03-28-github-phase-integration-shared-github-update.md",
+      "status": "completed"
+    },
+    {
+      "slug": "design-checkpoint-manifest",
+      "plan": "2026-03-28-github-phase-integration-design-checkpoint-manifest.md",
+      "status": "completed"
+    },
+    {
+      "slug": "plan-checkpoint-sync",
+      "plan": "2026-03-28-github-phase-integration-plan-checkpoint-sync.md",
+      "status": "completed"
+    },
+    {
+      "slug": "implement-sync",
+      "plan": "2026-03-28-github-phase-integration-implement-sync.md",
+      "status": "completed"
+    },
+    {
+      "slug": "validate-release-sync",
+      "plan": "2026-03-28-github-phase-integration-validate-release-sync.md",
+      "status": "completed"
+    },
+    {
+      "slug": "status-rewrite",
+      "plan": "2026-03-28-github-phase-integration-status-rewrite.md",
+      "status": "completed"
+    }
+  ],
+  "lastUpdated": "2026-03-28T17:50:00Z"
+}

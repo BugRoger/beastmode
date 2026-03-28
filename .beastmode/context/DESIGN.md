@@ -3,12 +3,12 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, GitHub state externalization with issue-based lifecycle tracking
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 - NEVER use @imports between hierarchy levels — convention-based paths only
-- Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains). GitHub supplements State as status/lifecycle authority while repo remains content authority
+- Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains). Manifest JSON is the operational authority for feature lifecycle; GitHub is a synced mirror updated at checkpoint boundaries when enabled
 - ALWAYS create a matching L3 directory for every L2 file — structural invariant for retro expansion
 - State has no L1 index files — only empty phase subdirs with .gitkeep as workflow containers
 - research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
@@ -51,12 +51,14 @@ Self-chaining mechanism between phases. Auto-transitions use fully-qualified Ski
 context/design/init-system.md
 
 ## GitHub State Model
-GitHub Issues externalize beastmode's workflow state so features are visible on a project board and an autonomous daemon can drive the pipeline. Two-level issue hierarchy (Epic > Feature) with label-based state machines. GitHub tracks lifecycle and gates; repo files remain the content store.
+Manifest JSON is the operational authority for feature lifecycle. GitHub is a synced mirror updated at checkpoint boundaries when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Subagents are GitHub-unaware; only checkpoints read/write manifests and sync GitHub. GitHub API failures warn and continue without blocking.
 
 1. ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) with label-based type/phase/status encoding
-2. ALWAYS keep GitHub as status authority and repo as content authority — no duplication
-3. ALWAYS write to GitHub alongside existing state files during migration — additive first, subtractive later
-4. NEVER store design docs or plans in issue bodies — link to repo artifacts instead
-5. ALWAYS define transition modes in config.yaml — human (gated), auto (self-advance), automatic (roll-up)
+2. ALWAYS use manifest JSON as operational authority — GitHub is a synced mirror, not the source of truth
+3. ALWAYS sync GitHub at checkpoint boundaries only — one sync step per phase between artifact-save and retro
+4. NEVER let GitHub API failures block workflow — warn and continue, next checkpoint retries
+5. NEVER make subagents GitHub-aware — only the checkpoint (main conversation) handles manifest and GitHub sync
+6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — status/review is dropped
+7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
 
 context/design/github-state-model.md

@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-github-phase-integration-status-rewrite.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Rewrite status subcommand to read manifests, show per-feature status, include GitHub issue links when enabled", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-28T17:50:00Z"
+}

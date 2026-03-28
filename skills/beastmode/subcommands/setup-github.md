@@ -57,7 +57,6 @@ gh label create "phase/done" --description "Shipped" --color "0E8A16" --force
 gh label create "status/ready" --description "Ready for implementation — dependencies met" --color "0E8A16" --force
 gh label create "status/in-progress" --description "Currently being implemented" --color "1D76DB" --force
 gh label create "status/blocked" --description "Waiting on another feature" --color "E4E669" --force
-gh label create "status/review" --description "Implementation done, PR needs review" --color "D93F0B" --force
 ```
 
 **Gate label:**
@@ -143,19 +142,39 @@ gh api graphql -f query='
 ' -f projectId="$project_id" -f repoId="$repo_id"
 ```
 
-### 7. Print Summary
+### 7. Enable GitHub in Config
+
+Write `github.enabled: true` to `.beastmode/config.yaml`:
+
+```bash
+# Read current config, update github.enabled to true
+# Use sed for portability (config.yaml is simple enough for sed)
+sed -i '' 's/^  enabled: false/  enabled: true/' .beastmode/config.yaml
+```
+
+Verify the write succeeded:
+
+```bash
+grep 'enabled: true' .beastmode/config.yaml
+```
+
+If verification fails, print warning but do not STOP — labels and board are already created.
+
+### 8. Print Summary
 
 ```
 GitHub State Model Setup Complete
 
-Labels created:
+Labels created (12):
   Type:    type/epic, type/feature
   Phase:   phase/backlog, phase/design, phase/plan, phase/implement, phase/validate, phase/release, phase/done
-  Status:  status/ready, status/in-progress, status/blocked, status/review
+  Status:  status/ready, status/in-progress, status/blocked
   Gate:    gate/awaiting-approval
 
 Project: Beastmode Pipeline (#<number>)
 Columns: Backlog | Design | Plan | Implement | Validate | Release | Done
+
+Config: github.enabled set to true in .beastmode/config.yaml
 
 Next: Use /beastmode:design to create your first Epic.
 ```

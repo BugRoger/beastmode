@@ -59,3 +59,15 @@ Fifth confirmation of 1:1 design-to-plan mapping. Locked decisions continue to f
 state/plan/2026-03-28-github-state-model.md
 ### Confidence
 [HIGH] — fifth observation, pattern firmly established
+
+## Observation 6
+### Context
+During github-phase-integration planning, 2026-03-28
+### Observation
+Design doc's 6 architectural decisions (manifest schema, config structure, sync pattern, error handling, label taxonomy, API boundary) and component breakdown (config, shared utility, design checkpoint, plan checkpoint, implement sync, validate/release sync, status rewrite) mapped to 7 independent feature plans. Locked decisions (warn-and-continue error handling, 12-label taxonomy, gh CLI only) became constraints applied uniformly across all feature plans.
+### Rationale
+Sixth confirmation of 1:1 design-to-plan mapping. Additionally demonstrates the pattern works equally well with the new feature-decomposition approach (N feature plans + manifest) as it did with monolithic plans.
+### Source
+state/plan/2026-03-28-github-phase-integration.manifest.json
+### Confidence
+[HIGH] -- sixth observation, pattern firmly established

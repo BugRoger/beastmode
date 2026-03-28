@@ -1,12 +1,32 @@
 # status
 
-Show features grouped by current workflow phase.
+Show features grouped by current workflow phase. Reads manifest JSON files for per-feature status and (when GitHub is enabled) shows issue links.
 
 ## Steps
 
-### 1. Scan State Directory
+### 1. Scan Worktrees and Manifests
 
-Walk `.beastmode/state/` subdirectories (design, plan, implement, validate, release):
+List all active worktrees and look for manifest files:
+
+```bash
+ls -d .beastmode/worktrees/*/ 2>/dev/null
+```
+
+For each worktree, scan for manifest files:
+
+```bash
+ls .beastmode/worktrees/*/\.beastmode/state/plan/*.manifest.json 2>/dev/null
+```
+
+Also check the main repo for manifests (in case of completed releases):
+
+```bash
+ls .beastmode/state/plan/*.manifest.json 2>/dev/null
+```
+
+### 2. Scan State Directory (Fallback)
+
+For designs without manifests, fall back to scanning state directories:
 
 ```bash
 ls .beastmode/state/design/*.md 2>/dev/null
@@ -15,44 +35,62 @@ ls .beastmode/state/validate/*.md 2>/dev/null
 ls .beastmode/state/release/*.md 2>/dev/null
 ```
 
-### 2. Extract Feature Names
-
-For each state file, extract the feature name from the filename pattern `YYYY-MM-DD-<feature>.md`.
-Strip date prefix and `.md` suffix. Strip `.tasks.json` suffix for plan task files.
+Extract feature names from `YYYY-MM-DD-<feature>.md` pattern. Strip date prefix and suffix.
 
 ### 3. Determine Current Phase
 
-For each unique feature name, find the most advanced phase with a state file:
-- release > validate > plan > design
+For each unique design:
+- If a release artifact exists → **completed**, show in "Completed" section
+- Otherwise, determine phase from the most advanced state artifact: validate > implement > plan > design
 
-Features with release artifacts are considered complete — exclude them from the active display.
+### 4. Read Manifest Details
 
-### 4. Check Active Worktrees
+For each manifest JSON found:
+- Parse `features` array for per-feature statuses
+- Parse `github` block for Epic issue number (if present)
+- Parse per-feature `github.issue` for feature issue numbers (if present)
+
+### 5. Read GitHub Config
 
 ```bash
-ls -d .beastmode/worktrees/*/ 2>/dev/null
+grep 'enabled: true' .beastmode/config.yaml 2>/dev/null
 ```
 
-Map worktree directory names to feature names.
+If `github.enabled` is true and manifests have `github` blocks, include issue references in output.
 
-### 5. Display Output
+### 6. Display Output
 
-Group features by their current phase:
+**With manifests (preferred):**
 
 ```
-## Active Features
+## Active Designs
 
-### Design
+### <design-name> (feature/<design-name>)
+Phase: <current-phase> | Epic: #<epic-number>
+
+Features:
+  ✓ <feature-slug> — completed
+  ● <feature-slug> — in-progress (#<issue>)
+  ○ <feature-slug> — pending (#<issue>)
+  ✗ <feature-slug> — blocked (#<issue>)
+```
+
+Status symbols: `✓` completed, `●` in-progress, `○` pending, `✗` blocked.
+
+GitHub issue numbers shown only when the manifest has `github` blocks.
+
+**Without manifests (fallback — legacy designs):**
+
+```
+### <phase>
 - <feature> (worktree: .beastmode/worktrees/<feature>)
-
-### Plan
-- <feature>
-
-### Implement
-- <feature> (worktree: .beastmode/worktrees/<feature>)
-
-### Validate
-- <feature>
 ```
 
-If no active features, display: "No active features."
+**Completed designs:**
+
+```
+## Completed
+- <design-name> (released YYYY-MM-DD)
+```
+
+If no active designs and no completed designs: "No active features."

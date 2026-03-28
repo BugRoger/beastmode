@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-github-phase-integration-validate-release-sync.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Insert Sync GitHub step into validate checkpoint (advance Epic to phase/validate)", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Insert Sync GitHub step into release checkpoint (advance Epic to phase/done, close Epic), fix step numbering", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-28T17:45:00Z"
+}

@@ -1,13 +1,14 @@
 # Feature State Machine
 
 ## Context
-Features are implementable work units within an Epic. A daemon or human needs to identify which Features are ready for pickup and track them through implementation.
+Features are implementable work units within an Epic. Local manifest and GitHub labels need aligned but distinct status models.
 
 ## Decision
-Feature status tracked via mutually exclusive `status/*` labels: ready, in-progress, blocked, review. Roll-up rule: when a Feature closes, check parent Epic's SubIssuesSummary -- if percentCompleted == 100, advance Epic from phase/implement to phase/validate.
+Manifest tracks four feature statuses: pending, in-progress, blocked, completed. GitHub labels track three statuses: status/ready, status/in-progress, status/blocked (status/review dropped — no per-feature PRs in beastmode's squash-at-release model). Feature closure on GitHub triggers roll-up check on parent Epic.
 
 ## Rationale
-Daemon needs `type/feature` + `status/ready` as a machine-readable signal. SubIssuesSummary API provides percentCompleted for free, eliminating manual roll-up tracking.
+Manifest needs a terminal state (completed) that GitHub handles via issue closure. Dropping status/review aligns with squash-at-release model where no per-feature PRs exist. Roll-up from Feature closure to Epic advancement is handled at checkpoint, not by GitHub automation.
 
 ## Source
 .beastmode/state/design/2026-03-28-github-state-model.md
+.beastmode/state/design/2026-03-28-github-phase-integration.md

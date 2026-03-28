@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-github-phase-integration-plan-checkpoint-sync.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Modify Write Manifest step to enrich existing manifest, insert Sync GitHub step, renumber Phase Retro and Gate", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-28T17:35:00Z"
+}

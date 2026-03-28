@@ -18,3 +18,15 @@
 
 ## Cross-File Verification
 - ALWAYS use grep-based cross-file verification after parallel implementation — confirms consistency across all modified files
+
+## Meta-Implementation
+- The implement phase works for self-referential changes (editing beastmode's own skill definitions) without workflow modifications
+
+## Cross-Phase Edit Scope
+- Cross-cutting features spanning all 5 phases need per-phase feature decomposition to maintain file isolation
+
+## Template Extraction Signals
+- When the same block is replicated 3+ times in a single feature, flag as shared template candidate during plan review
+
+## Step Renumbering Friction
+- Plans that insert steps between existing numbered steps should explicitly include renumbering instructions for downstream steps

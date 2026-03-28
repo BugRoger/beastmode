@@ -40,12 +40,13 @@ Phase lifecycle (design -> plan -> implement -> validate -> release), session tr
 context/plan/workflow.md
 
 ## GitHub Integration
-GitHub state model externalizes workflow lifecycle to GitHub Issues and Projects V2. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Setup bootstrapped via `/beastmode setup-github` subcommand. Shared GitHub utility in `skills/_shared/github.md` provides reusable API operations. Config extended with `github:` section and phase `transitions:` block.
+Manifest-based local state system with optional GitHub mirroring. Manifest JSON is the operational authority for feature lifecycle (per-branch, per-design). When GitHub is enabled, each phase checkpoint syncs state to GitHub Issues and a Projects V2 board, providing a global dashboard. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Setup bootstrapped via `/beastmode setup-github` subcommand. Shared GitHub utility in `skills/_shared/github.md` provides reusable API operations. Warn-and-continue error handling ensures GitHub failures never block local workflow.
 
 1. ALWAYS use `gh` CLI (REST + GraphQL) for all GitHub API operations -- never raw curl
 2. ALWAYS make label and project creation idempotent -- `--force` for labels, existence check for projects
 3. ALWAYS use the shared utility (`skills/_shared/github.md`) for GitHub operations -- never inline API calls in individual skills
-4. NEVER store lifecycle status in repo files when GitHub issue labels are available -- GitHub is the status source of truth
+4. ALWAYS treat manifest JSON as the operational authority -- GitHub is a synced mirror, never the source of truth
 5. ALWAYS extend config.yaml `transitions:` block for new phase transition modes -- centralized gate configuration
+6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
 
 context/plan/github-integration.md

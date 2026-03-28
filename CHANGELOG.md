@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.21.0 — The GitHub Phase Integration (Mar 2026)
+
+- **Manifest-based state tracking** — JSON manifest created at design checkpoint, enriched at plan (features array + architectural decisions), updated at implement (feature status transitions). Local authority for feature lifecycle.
+- **GitHub sync at checkpoints** — Optional "Sync GitHub" step in all 5 phase checkpoints creates/advances/closes Epic and Feature issues at checkpoint boundaries. Gated on `github.enabled` config toggle.
+- **Setup subcommand update** — `/beastmode setup-github` now creates 12 labels (dropped status/review), Projects V2 board, and writes `github.enabled: true` to config
+- **Warn-and-continue error handling** — All GitHub API calls wrapped in try/catch pattern: print warning, skip sync, continue with local state. Workflow never blocked by GitHub.
+- **Status rewrite** — `/beastmode status` reads manifests from worktrees, shows per-feature status (pending/in-progress/blocked/completed) with GitHub issue links when enabled
+- **Config extension** — New `github.enabled` (default: false) and `github.project-name` keys in `.beastmode/config.yaml`
+- **Shared GitHub utility update** — Added error handling convention section and set-status-label operation to `_shared/github.md`
+
 ### v0.20.0 — The Feature Decomposition (Mar 2026)
 
 - **PRD-to-features** — /plan now decomposes PRDs into independent architectural feature plans (vertical slices) instead of monolithic implementation plans

@@ -1,13 +1,14 @@
 # Configuration
 
 ## Context
-Phase transitions need configurable modes (human-gated vs auto-advance) that map to GitHub label operations.
+GitHub sync must be optional and controllable without code changes.
 
 ## Decision
-Extend config.yaml with `transitions:` block mapping each phase transition to a mode: human (requires gate/awaiting-approval + approval), auto (self-advance), or automatic (triggered by Feature roll-up).
+New config key github.enabled (default: false) controls whether GitHub sync happens at checkpoints. New config key github.project-name names the Projects V2 board. Setup-github subcommand sets github.enabled to true. When disabled, all GitHub steps are silently skipped and manifests are written without github blocks.
 
 ## Rationale
-config.yaml already controls gate behavior. Extending it maintains the single-source principle for transition configuration. Runtime resolution means behavior can change without skill edits.
+Config toggle ensures GitHub integration is opt-in. Default-off means beastmode works fully local out of the box. Config-driven rather than flag-driven keeps the control surface in one place.
 
 ## Source
 .beastmode/state/design/2026-03-28-github-state-model.md
+.beastmode/state/design/2026-03-28-github-phase-integration.md

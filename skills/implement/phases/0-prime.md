@@ -38,7 +38,35 @@ Prior decisions, conventions, and learnings inform this phase — don't re-decid
 
 If the feature's status in the manifest is already `completed`, print a warning and STOP.
 
-## 5. Capture Baseline Snapshot
+## 5. Set Feature In-Progress
+
+Update the current feature's status in the manifest to `in-progress`. Write the manifest back.
+
+### Sync GitHub (when enabled)
+
+Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, or the manifest has no `github` block, skip GitHub sync.
+
+When `github.enabled` is `true` and the feature has a `github.issue` number:
+
+@../_shared/github.md
+
+Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
+
+1. **Set Feature Status** — update the feature issue label to `status/in-progress`:
+
+```bash
+gh issue edit <feature-issue> --remove-label "status/ready" --add-label "status/in-progress"
+```
+
+2. **Advance Epic Phase** — if not already at `phase/implement`, set the Epic's phase label:
+
+```bash
+gh issue edit <epic-number> --remove-label "phase/plan" --add-label "phase/implement"
+```
+
+If GitHub sync fails, the manifest status update (`in-progress`) still applies — GitHub will catch up at the next sync point.
+
+## 6. Capture Baseline Snapshot
 
 Before any implementation begins, capture the current state of changed files:
 
@@ -48,7 +76,7 @@ git diff --name-only HEAD > /tmp/beastmode-baseline-$(date +%s).txt
 
 Store the baseline file list. Spec checks in execute will diff against this baseline to avoid flagging files from prior feature implementations.
 
-## 6. Prepare Environment
+## 7. Prepare Environment
 
     # Install dependencies if needed
     npm install  # or appropriate command from .beastmode/context/
