@@ -30,9 +30,3 @@ gates:
 github:
   enabled: false                     # Set to true by /beastmode setup-github
   project-name: "Beastmode Pipeline" # Projects V2 board name
-
-transitions:
-  design-to-plan: auto               # TRANSITION
-  plan-to-implement: auto            # TRANSITION
-  implement-to-validate: auto        # TRANSITION
-  validate-to-release: auto          # TRANSITION

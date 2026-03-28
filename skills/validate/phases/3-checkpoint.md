@@ -1,9 +1,5 @@
 # 3. Checkpoint
 
-## 0. Assert Worktree
-
-Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
-
 ## 1. Save Report
 
 Save to `.beastmode/state/validate/YYYY-MM-DD-<feature>.md` where `<feature>` is the worktree directory name.
@@ -30,28 +26,28 @@ If the label is already set, this is a no-op. If GitHub sync fails, continue —
 
 @../_shared/retro.md
 
-## 4. [GATE|transitions.validate-to-release]
+## 4. Commit and Handoff
 
 If FAIL:
 ```
 Validation failed. Fix issues and re-run:
-`/beastmode:validate`
+just validate <feature>
 ```
-STOP — do not proceed to transition check.
+STOP — do not proceed to commit.
 
 If PASS:
 
-Read `.beastmode/config.yaml` → resolve mode for `transitions.validate-to-release`.
-Default: `human`.
+Commit all work to the feature branch:
 
-### [GATE-OPTION|human] Suggest Next Step
+```bash
+git add -A
+git commit -m "validate(<feature>): checkpoint"
+```
 
 Print:
 
-Next: `/beastmode:release <feature>`
+```
+Next: just release <feature>
+```
 
 STOP. No additional output.
-
-### [GATE-OPTION|auto] Chain to Next Phase
-
-Call `Skill(skill="beastmode:release", args="<feature>")`

@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.22.0 — The External Orchestrator (Mar 2026)
+
+- **Justfile orchestrator** — Thin CLI shell with recipes for each phase (`just design`, `just plan`, `just implement`, `just validate`, `just release`). Invokes `claude --worktree` interactively.
+- **WorktreeCreate hook** — Smart branch detection: if `feature/<slug>` exists, branch from it; otherwise default `origin/HEAD` behavior
+- **Skill purification** — Removed all worktree creation/entry/assertion logic and phase transition gates from every skill. Skills are now pure content processors.
+- **Checkpoint handoff** — All 5 phase checkpoints print `just <next-phase> <slug>` instead of auto-chaining via `Skill()` calls
+- **Commit-per-phase** — Each phase commits to the feature branch at checkpoint. Release squash-merges to main.
+- **Config cleanup** — Removed `transitions` section from `.beastmode/config.yaml`
+
 ### v0.21.0 — The GitHub Phase Integration (Mar 2026)
 
 - **Manifest-based state tracking** — JSON manifest created at design checkpoint, enriched at plan (features array + architectural decisions), updated at implement (feature status transitions). Local authority for feature lifecycle.

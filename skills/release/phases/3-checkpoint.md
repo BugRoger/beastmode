@@ -1,9 +1,5 @@
 # 3. Checkpoint
 
-## 0. Assert Worktree
-
-Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
-
 ## 1. Phase Retro
 
 @../_shared/retro.md
@@ -36,13 +32,32 @@ If GitHub sync fails, continue — the release proceeds regardless.
 
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the worktree.**
 
-## 3. Squash Merge to Main
+## 3. Commit to Feature Branch
 
-@../_shared/worktree-manager.md#Merge Options
+Before merging to main, commit all release artifacts to the feature branch:
 
-**Important:** For "Merge locally", the squash merge stages changes but does NOT commit. Proceed to step 4 to create the commit.
+```bash
+git add -A
+git commit -m "release(<feature>): checkpoint"
+```
 
-## 4. Commit Release
+## 4. Squash Merge to Main
+
+```bash
+worktree_abs=$(pwd)
+feature_branch=$(git branch --show-current)
+main_repo=$(git rev-parse --show-toplevel)/..
+
+cd "$main_repo"
+git checkout main
+git pull
+git tag "archive/$feature_branch"
+git merge --squash "$feature_branch"
+```
+
+**Important:** The squash merge stages changes but does NOT commit. Proceed to step 5 to create the commit.
+
+## 5. Commit Release
 
 Create the single commit with GitHub release style message:
 
@@ -64,9 +79,9 @@ git commit -m "Release vX.Y.Z — <Title from CHANGELOG>
 "
 ```
 
-Use the release notes generated in execute step 5 and categorized commits from execute step 4 as the commit body. Omit empty sections (no Fixes if none exist).
+Use the release notes generated in execute step 4 and categorized commits from execute step 3 as the commit body. Omit empty sections (no Fixes if none exist).
 
-## 5. Git Tagging
+## 6. Git Tagging
 
 ```bash
 git tag -a vX.Y.Z -m "Release X.Y.Z"
@@ -74,7 +89,7 @@ git tag -a vX.Y.Z -m "Release X.Y.Z"
 
 Suggest: `git push origin vX.Y.Z`
 
-## 6. Plugin Marketplace Update
+## 7. Plugin Marketplace Update
 
 Suggest running:
 ```bash
@@ -82,6 +97,6 @@ claude plugin marketplace update
 claude plugin update beastmode@beastmode-marketplace --scope project
 ```
 
-## 7. Complete
+## 8. Complete
 
 "Release complete."

@@ -1,9 +1,5 @@
 # 3. Checkpoint
 
-## 0. Assert Worktree
-
-Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
-
 ## 1. Write Feature Plan Files
 
 For each feature, save to `.beastmode/state/plan/YYYY-MM-DD-<design>-<feature-slug>.md` using the template from [feature-format.md](../references/feature-format.md).
@@ -79,28 +75,22 @@ If any GitHub call fails (warn-and-continue), the manifest retains the features 
 
 @../_shared/retro.md
 
-## 5. [GATE|transitions.plan-to-implement]
+## 5. Commit and Handoff
 
-Read `.beastmode/config.yaml` → resolve mode for `transitions.plan-to-implement`.
-Default: `human`.
+Commit all work to the feature branch:
 
-<HARD-GATE>
-DO NOT call EnterPlanMode or ExitPlanMode.
-</HARD-GATE>
-
-### [GATE-OPTION|human] Suggest Next Step
+```bash
+git add -A
+git commit -m "plan(<feature>): checkpoint"
+```
 
 Print features and their implement commands:
 
 ```
 Features ready for implementation:
 
-1. <feature-1> → `/beastmode:implement <design>-<feature-1>`
-2. <feature-2> → `/beastmode:implement <design>-<feature-2>`
+1. <feature-1> → just implement <design> <feature-1>
+2. <feature-2> → just implement <design> <feature-2>
 ```
 
 STOP. No additional output.
-
-### [GATE-OPTION|auto] Chain to Next Phase
-
-Call `Skill(skill="beastmode:implement", args="<design>-<first-feature>")` for the first feature only. User runs subsequent features manually.

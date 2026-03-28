@@ -1,13 +1,8 @@
 # 0. Prime
 
-<HARD-GATE>
-## 1. Discover and Enter Feature Worktree
+## 1. Resolve Feature Name
 
-1. **Discover Feature** — resolve feature name from arguments or filesystem scan via [worktree-manager.md](../_shared/worktree-manager.md). Do NOT search for similarly named worktrees or artifacts.
-2. **Enter Worktree** — cd into the worktree and verify with pwd.
-
-The resolved `feature` name is used for all artifact paths in this phase.
-</HARD-GATE>
+The feature name comes from the skill arguments. Use it directly for all artifact paths in this phase.
 
 ## 2. Announce Skill
 

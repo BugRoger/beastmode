@@ -9,13 +9,13 @@ Show features grouped by current workflow phase. Reads manifest JSON files for p
 List all active worktrees and look for manifest files:
 
 ```bash
-ls -d .beastmode/worktrees/*/ 2>/dev/null
+ls -d .claude/worktrees/*/ 2>/dev/null
 ```
 
 For each worktree, scan for manifest files:
 
 ```bash
-ls .beastmode/worktrees/*/\.beastmode/state/plan/*.manifest.json 2>/dev/null
+ls .claude/worktrees/*/\.beastmode/state/plan/*.manifest.json 2>/dev/null
 ```
 
 Also check the main repo for manifests (in case of completed releases):
@@ -83,7 +83,7 @@ GitHub issue numbers shown only when the manifest has `github` blocks.
 
 ```
 ### <phase>
-- <feature> (worktree: .beastmode/worktrees/<feature>)
+- <feature> (worktree: .claude/worktrees/<feature>)
 ```
 
 **Completed designs:**

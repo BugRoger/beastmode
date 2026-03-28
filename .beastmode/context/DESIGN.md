@@ -3,7 +3,7 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, squash-per-release commits, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via external Justfile orchestrator, brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, status, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, WorktreeCreate hook for feature branch detection
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
@@ -25,15 +25,19 @@
 
 ## Release Workflow
 - ALWAYS run retro from checkpoint before merge — consistent across all five phases
-- NEVER make interim commits during feature work — single commit at release
+- ALWAYS commit per phase on the feature branch — each phase persists work at checkpoint for cross-session durability
+- ALWAYS squash-merge feature branch at release — per-phase commits collapse to one clean commit on main
 - ALWAYS archive branch tip before squash merge
 
 ## Phase Transitions
-Self-chaining mechanism between phases. Auto-transitions use fully-qualified Skill tool calls. Standardized transition gate output: single inline code with resolved artifact path. Only the transition gate may produce next-step commands; retro agents are banned from transition guidance.
+External orchestrator drives phase transitions via Justfile recipes. Each phase is a separate `claude` invocation with a fresh session. Skills are pure content processors with no worktree or transition logic. Checkpoint prints the `just` command for the next phase. Only the checkpoint may produce next-step commands; retro agents are banned from transition guidance.
 
-1. ALWAYS produce a single copy-pasteable inline code command with the resolved artifact path at transition
-2. NEVER print transition guidance from retro agents — transition gate is the sole authority
-3. ALWAYS STOP after printing transition output — no additional output
+1. ALWAYS use Justfile recipes to invoke phases — `just <phase> <slug>` is the entry point
+2. NEVER embed worktree or transition logic in skills — skills assume correct working directory
+3. ALWAYS print `just <next-phase> <slug>` at checkpoint — human runs next step explicitly
+4. NEVER auto-chain phases — each phase is a separate session
+5. NEVER print transition guidance from retro agents — checkpoint is the sole authority
+6. ALWAYS STOP after printing transition output — no additional output
 
 ## Tech Stack
 - NEVER add package runtime dependencies — beastmode is markdown interpreted by Claude Code. GitHub API via `gh` CLI is an infrastructure dependency

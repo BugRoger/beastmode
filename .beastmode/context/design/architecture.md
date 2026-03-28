@@ -37,8 +37,10 @@
 - ALWAYS use `git merge --squash` for releases — one commit per version on main
 - ALWAYS archive branch tips before deletion: `archive/feature/<name>` — preserves history
 - NEVER modify main branch during feature work — worktree provides isolation
-- Cross-session discovery: phases resolve feature worktree from explicit argument or fallback scan — multi-session continuity
-- Created at /design, inherited through plan/implement/validate, squash-merged by /release — full lifecycle
+- Worktrees are ephemeral per-session — feature branches are the durable handoff mechanism between sessions
+- WorktreeCreate hook branches from `feature/<slug>` if it exists, otherwise from origin/HEAD — smart branch detection
+- Worktree directory is `.claude/worktrees/` (Claude Code default) — skills do not manage worktree lifecycle
+- Human controls worktree cleanup via Claude's interactive prompt at session end — commits are on the branch, worktree is disposable
 
 ## HITL Gate System
 - NEVER skip gate steps — `## N. [GATE|...]` steps are structural task-runner items that cannot be bypassed
@@ -46,8 +48,8 @@
 - Gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections — standardized format
 - NEVER place competing gate mechanisms on the same decision point — avoids ambiguity
 - GitHub gates use comment-based approval for pre-code phases and PR reviews for code phases — gate mechanism matches artifact type
-- Auto-transitions use `Skill(skill="beastmode:<next>", args="<artifact>")` with fully-qualified names — explicit chaining
-- Context threshold checks determine whether to auto-advance or print session-restart instructions — prevents degraded behavior
+- Phase transitions are externally orchestrated via Justfile — no in-skill auto-chaining
+- Transition gates removed from config.yaml — checkpoint prints `just <next-phase> <slug>` instead
 
 ## Retro Knowledge Promotion
 - Retro always runs at checkpoint — walkers handle empty phases gracefully, no quick-exit gating

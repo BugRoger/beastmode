@@ -7,7 +7,8 @@
 ## Worktree Isolation
 
 - Never work directly on main/master branch
-- All work happens in isolated worktree at `.beastmode/worktrees/`
+- All work happens in isolated worktree (managed by external Justfile orchestrator)
+- Each phase commits to the feature branch at checkpoint
 - Merge happens only at /release
 
 ## Subagent Safety

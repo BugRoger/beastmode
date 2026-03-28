@@ -1,13 +1,10 @@
 # 3. Checkpoint
 
-<HARD-GATE>
-## 0. Create Feature Worktree
+## 0. Derive Feature Name
 
-1. **Derive Feature** — from the resolved topic using [worktree-manager.md](../_shared/worktree-manager.md) → "Derive Feature Name".
-2. **Create Worktree** — using [worktree-manager.md](../_shared/worktree-manager.md) → "Create Worktree".
+Derive the feature slug from the topic using [worktree-manager.md](../_shared/worktree-manager.md) → "Derive Feature Name" (from user topic).
 
-All subsequent work MUST happen inside the worktree.
-</HARD-GATE>
+The derived feature name is used for all artifact file paths below.
 
 ## 1. Write PRD
 
@@ -117,19 +114,19 @@ If any GitHub call fails (warn-and-continue), the manifest is written **without*
 
 @../_shared/retro.md
 
-## 5. [GATE|transitions.design-to-plan]
+## 5. Commit and Handoff
 
-Read `.beastmode/config.yaml` → resolve mode for `transitions.design-to-plan`.
-Default: `human`.
+Commit all work to the feature branch:
 
-### [GATE-OPTION|human] Suggest Next Step
+```bash
+git add -A
+git commit -m "design(<feature>): checkpoint"
+```
 
 Print:
 
-Next: `/beastmode:plan <feature>`
+```
+Next: just plan <feature>
+```
 
 STOP. No additional output.
-
-### [GATE-OPTION|auto] Chain to Next Phase
-
-Call `Skill(skill="beastmode:plan", args="<feature>")`

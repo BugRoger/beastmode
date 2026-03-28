@@ -1,0 +1,14 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-28-external-orchestrator-skill-purification.md",
+  "manifest": ".beastmode/state/plan/2026-03-28-external-orchestrator.manifest.json",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Slim worktree-manager.md to artifact resolution only", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Purify design skill (0-prime + 3-checkpoint)", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Purify plan skill (0-prime + 3-checkpoint)", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Purify implement skill (0-prime + 3-checkpoint + constraints)", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Purify validate skill (0-prime + 1-execute + 3-checkpoint)", "status": "completed"},
+    {"id": 5, "subject": "Task 5: Purify release skill (0-prime + 1-execute + 3-checkpoint)", "status": "completed"},
+    {"id": 6, "subject": "Task 6: Update config.yaml, BEASTMODE.md, and status subcommand", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-28T18:00:00Z"
+}

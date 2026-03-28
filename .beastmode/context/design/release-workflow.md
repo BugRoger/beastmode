@@ -6,7 +6,8 @@
 
 ## Commit Sequence
 - ALWAYS run retro from checkpoint before merge — retro needs the worktree intact, consistent across all five phases
-- NEVER make interim commits during design/plan/implement — all commits deferred to release
+- ALWAYS commit at each phase checkpoint on the feature branch — work persists across ephemeral per-session worktrees
+- ALWAYS squash-merge at release — per-phase commits on the feature branch collapse to one clean commit on main
 - ALWAYS use GitHub release style commit messages — consistency
 - Execute preps versions and L0 proposal, checkpoint runs retro then squash-merges, commits, tags — phase separation
 

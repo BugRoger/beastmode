@@ -1,9 +1,5 @@
 # 3. Checkpoint
 
-## 0. Assert Worktree
-
-Before any writes, call [worktree-manager.md](../_shared/worktree-manager.md) → "Assert Worktree". If it fails, STOP.
-
 ## 1. Save Deviation Log
 
 If deviations were tracked during execution, save to `.beastmode/state/implement/YYYY-MM-DD-<design>-<feature-slug>-deviations.md`:
@@ -76,12 +72,14 @@ If GitHub sync fails, the manifest status (`completed`) is the authority. GitHub
 
 @../_shared/retro.md
 
-## 5. [GATE|transitions.implement-to-validate]
+## 5. Commit and Handoff
 
-Read `.beastmode/config.yaml` → resolve mode for `transitions.implement-to-validate`.
-Default: `human`.
+Commit all work to the feature branch:
 
-### [GATE-OPTION|human] Suggest Next Step
+```bash
+git add -A
+git commit -m "implement(<feature>): checkpoint"
+```
 
 Check manifest for remaining pending features. Print status:
 
@@ -91,18 +89,12 @@ Feature Status:
   ○ feature-2 — pending
   ○ feature-3 — pending
 
-Next pending: `/beastmode:implement <design>-<feature-2>`
+Next pending: just implement <design> <feature-2>
 ```
 
 If ALL features completed:
 ```
-All features implemented. Next: `/beastmode:validate <design>`
+All features implemented. Next: just validate <design>
 ```
 
 STOP. No additional output.
-
-### [GATE-OPTION|auto] Chain to Next Phase
-
-If pending features remain: call `Skill(skill="beastmode:implement", args="<design>-<next-pending-feature>")`
-
-If ALL features completed: call `Skill(skill="beastmode:validate", args="<design>")`

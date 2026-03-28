@@ -25,18 +25,9 @@ Research triggers if ANY:
 
 If triggered, spawn Explore agent with `@../../agents/common-researcher.md`.
 
-## 4. Enter Cycle Worktree (if applicable)
+## 4. Resolve Feature Name
 
-```bash
-# Derive feature from design/plan doc filename or arguments
-feature="<feature-name>"
-worktree_path=".beastmode/worktrees/$feature"
-
-if [ -n "$worktree_path" ] && [ -d "$worktree_path" ]; then
-  cd "$worktree_path"
-  echo "Working in cycle worktree at $worktree_path"
-fi
-```
+The feature name comes from the skill arguments. Use it directly for all artifact paths.
 
 ## 5. Phase-Specific Setup
 
