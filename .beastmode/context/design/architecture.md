@@ -37,7 +37,7 @@
 - ALWAYS use `git merge --squash` for releases — one commit per version on main
 - ALWAYS archive branch tips before deletion: `archive/feature/<name>` — preserves history
 - NEVER modify main branch during feature work — worktree provides isolation
-- Worktrees are ephemeral per-session — feature branches are the durable handoff mechanism between sessions
+- Worktrees persist across phases (create-once at first phase, squash-merge and remove at release) — not ephemeral per-session
 - CLI-owned worktree lifecycle: branches from `feature/<slug>` if it exists, otherwise from origin/HEAD — smart branch detection rewritten in TypeScript
 - Worktree directory is `.claude/worktrees/` (Claude Code default) — CLI manages full lifecycle (create, merge, remove)
 - CLI cleans up worktrees after merge — no manual cleanup required
@@ -50,8 +50,8 @@
 - Gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections — standardized format
 - NEVER place competing gate mechanisms on the same decision point — avoids ambiguity
 - GitHub gates use comment-based approval for pre-code phases and PR reviews for code phases — gate mechanism matches artifact type
-- Phase transitions are externally orchestrated via TypeScript CLI (`beastmode run`) — Justfile retained as thin alias, no in-skill auto-chaining
-- Transition gates removed from config.yaml — checkpoint prints `just <next-phase> <slug>` instead
+- Phase transitions are externally orchestrated via TypeScript CLI (`beastmode <phase> <slug>`) — Justfile deleted, CLI is sole entry point, no in-skill auto-chaining
+- Transition gates removed from config.yaml — checkpoint prints `beastmode <next-phase> <slug>` instead
 
 ## Retro Knowledge Promotion
 - Retro always runs at checkpoint — walkers handle empty phases gracefully, no quick-exit gating

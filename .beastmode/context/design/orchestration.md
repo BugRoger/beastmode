@@ -12,7 +12,7 @@
 - ALWAYS dispatch one session per phase per epic via `DispatchedSession` interface, except implement which fans out one session per feature — parallelism at every level
 - ALWAYS use CLI-owned worktrees for agent isolation — CLI creates worktree, points session at it via `cwd`, merges after completion, removes when done
 - `SdkSession` invokes via SDK `query()` with prompt invoking the skill, `permissionMode: 'bypassPermissions'` — typed session management with streaming
-- `CmuxSession` creates a cmux terminal surface and sends `beastmode run <phase> <slug>` via `surface.send-text` — cmux owns the shell process
+- `CmuxSession` creates a cmux terminal surface and sends `beastmode <phase> <slug>` via `surface.send-text` — cmux owns the shell process
 - `SessionFactory` returns `CmuxSession` when cmux is available and config enables it, `SdkSession` otherwise — strategy pattern with automatic fallback
 - Completion detection is implementation-agnostic — both session types check `.beastmode-runs.json` for run entries
 
@@ -24,7 +24,7 @@
 
 ## Gate Handling
 - ALWAYS respect config.yaml gate settings during orchestration — human gates still pause
-- When a gate is `human`, epic pauses and logs to stdout — user runs `beastmode run <phase> <slug>` manually to proceed
+- When a gate is `human`, epic pauses and logs to stdout — user runs `beastmode <phase> <slug>` manually to proceed
 
 ## Recovery
 - State files are the recovery point, not sessions — on startup, scan for existing worktrees with uncommitted changes
