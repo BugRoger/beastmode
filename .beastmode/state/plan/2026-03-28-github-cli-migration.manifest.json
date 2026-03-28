@@ -1,0 +1,10 @@
+{
+  "design": ".beastmode/state/design/2026-03-28-github-cli-migration.md",
+  "architecturalDecisions": [],
+  "features": [],
+  "github": {
+    "epic": 33,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-28T00:00:00Z"
+}
