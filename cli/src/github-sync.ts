@@ -4,8 +4,8 @@
  * Reads the manifest and makes GitHub match. One-way sync:
  * manifest is the source of truth, GitHub is a mirror.
  *
- * Bootstrap write-back: when creating issues, writes numbers back
- * to the manifest (the sole exception to one-way sync).
+ * Returns mutations instead of mutating the manifest in-place.
+ * The caller applies mutations via manifest.ts functions and calls store.save().
  */
 
 import type { PipelineManifest, ManifestFeature } from "./manifest";
@@ -20,6 +20,11 @@ import {
   ghSubIssueAdd,
 } from "./gh";
 
+/** A mutation to apply to the manifest after sync. */
+export type SyncMutation =
+  | { type: "setEpic"; epicNumber: number; repo: string }
+  | { type: "setFeatureIssue"; featureSlug: string; issueNumber: number };
+
 /** Result of a sync operation — informational, never throws. */
 export interface SyncResult {
   epicCreated: boolean;
@@ -30,6 +35,8 @@ export interface SyncResult {
   projectUpdated: boolean;
   epicClosed: boolean;
   warnings: string[];
+  /** Mutations to apply to the manifest after sync. */
+  mutations: SyncMutation[];
 }
 
 /** Map manifest phase to the project board status name. */
@@ -64,10 +71,7 @@ const ALL_PHASE_LABELS = [
 
 /**
  * Sync GitHub state to match the manifest. Stateless — reads manifest,
- * makes GitHub match. Returns SyncResult for logging.
- *
- * Mutates `manifest` in-place for bootstrap write-back (epic/feature issue numbers).
- * Caller is responsible for persisting the manifest after sync.
+ * makes GitHub match. Returns SyncResult with mutations for the caller to apply.
  */
 export async function syncGitHub(
   manifest: PipelineManifest,
@@ -81,6 +85,7 @@ export async function syncGitHub(
     projectUpdated: false,
     epicClosed: false,
     warnings: [],
+    mutations: [],
   };
 
   // Guard: GitHub must be enabled
@@ -100,20 +105,18 @@ export async function syncGitHub(
 
   // --- Epic Sync ---
 
-  // Create epic if missing
-  if (!manifest.github?.epic) {
-    const epicNumber = await ghIssueCreate(
+  // Resolve or create the epic number — track locally, never mutate manifest
+  let epicNumber = manifest.github?.epic;
+
+  if (!epicNumber) {
+    epicNumber = await ghIssueCreate(
       repo,
       manifest.slug,
       `## ${manifest.slug}\n\n**Phase:** ${manifest.phase}`,
       ["type/epic", `phase/${manifest.phase}`],
     );
     if (epicNumber) {
-      if (!manifest.github) {
-        manifest.github = { epic: epicNumber, repo };
-      } else {
-        manifest.github.epic = epicNumber;
-      }
+      result.mutations.push({ type: "setEpic", epicNumber, repo });
       result.epicCreated = true;
       result.epicNumber = epicNumber;
     } else {
@@ -122,7 +125,6 @@ export async function syncGitHub(
     }
   }
 
-  const epicNumber = manifest.github.epic;
   result.epicNumber = epicNumber;
 
   // Blast-replace phase label on epic
@@ -179,7 +181,7 @@ export async function syncGitHub(
 }
 
 /**
- * Sync a single feature to GitHub.
+ * Sync a single feature to GitHub. Pushes mutations instead of mutating in-place.
  */
 async function syncFeature(
   repo: string,
@@ -189,27 +191,31 @@ async function syncFeature(
   githubConfig: GitHubConfig,
   result: SyncResult,
 ): Promise<void> {
-  // Create feature issue if missing
-  if (!feature.github?.issue) {
-    const issueNumber = await ghIssueCreate(
+  // Resolve or create the feature issue number — track locally, never mutate feature
+  let featureNumber = feature.github?.issue;
+
+  if (!featureNumber) {
+    featureNumber = await ghIssueCreate(
       repo,
       feature.slug,
       `## ${feature.slug}\n\n**Epic:** #${epicNumber}`,
       ["type/feature", STATUS_TO_LABEL[feature.status] ?? "status/ready"],
     );
-    if (issueNumber) {
-      feature.github = { issue: issueNumber };
+    if (featureNumber) {
+      result.mutations.push({
+        type: "setFeatureIssue",
+        featureSlug: feature.slug,
+        issueNumber: featureNumber,
+      });
       result.featuresCreated++;
 
       // Link as sub-issue of epic
-      await ghSubIssueAdd(repo, epicNumber, issueNumber);
+      await ghSubIssueAdd(repo, epicNumber, featureNumber);
     } else {
       result.warnings.push(`Failed to create issue for feature ${feature.slug}`);
       return;
     }
   }
-
-  const featureNumber = feature.github.issue;
 
   // Handle completed features — close them
   if (feature.status === "completed") {

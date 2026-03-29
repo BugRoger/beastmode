@@ -8,4 +8,4 @@ Pre-merge conflict simulation via `git merge-tree` to determine optimal merge or
 `git merge-tree` simulation is cheap (no working directory needed) and identifies conflicts before committing to a merge order. Dedicated conflict-resolution session keeps the merge pipeline moving without human intervention.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`

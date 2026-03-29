@@ -1,11 +1,12 @@
 ## Context
-Two competing EpicState type definitions existed: one in state-scanner.ts and one in watch-types.ts. They silently diverged — the scanner added fields the watch type didn't have, and vice versa. The blocked state was spread across four fields (blocked, gateBlocked, blockedGate, gateName) that were always identical or redundant.
+Multiple competing type definitions existed: EpicState in state-scanner.ts, Manifest in state-scanner.ts, FeatureProgress, ScanResult. The blocked state was a boolean collapsing multiple fields.
 
 ## Decision
-Single EpicState interface in state-scanner.ts. Delete watch-types.ts entirely — watch command imports types from state-scanner. Collapse blocked/gateBlocked/blockedGate/gateName into single blocked: boolean field. When blocked is true, status output shows actionable instruction: "run beastmode <phase> <slug>". Remove costUsd from EpicState.
+PipelineManifest is the sole manifest type, exported from manifest-store.ts. EpicState, FeatureProgress, ScanResult, and the old Manifest interface are all deleted. watch-types.ts is deleted — watch command imports from manifest-store.ts. Blocked is a structured field: `{ gate: string; reason: string } | null` (not boolean), enabling status display of block reason. costUsd removed from all types.
 
 ## Rationale
-One type, one truth. The watch command consuming the scanner's type ensures they can never diverge again. Collapsing blocked fields eliminates the impossible states where they disagree. Removing cost from the type simplifies the scanner's responsibility to pure state reporting.
+One type, one truth. PipelineManifest unifies all consumers. Structured blocked field provides actionable information in status output without requiring additional lookups. Deleting competing types eliminates silent divergence.
 
 ## Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

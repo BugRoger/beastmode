@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { buildStatusRows, formatTable, formatFeatures, formatStatus } from "../commands/status";
-import type { EpicState } from "../state-scanner";
+import type { EnrichedManifest } from "../state-scanner";
 
 /**
  * Strip ANSI escape codes for assertion on visible text.
@@ -10,16 +10,18 @@ function stripAnsi(str: string): string {
 }
 
 /**
- * Build a minimal EpicState with sensible defaults.
+ * Build a minimal EnrichedManifest with sensible defaults.
  */
-function makeEpic(overrides: Partial<EpicState> = {}): EpicState {
+function makeEpic(overrides: Partial<EnrichedManifest> = {}): EnrichedManifest {
   return {
     slug: "test-epic",
     manifestPath: "/tmp/test.manifest.json",
     phase: "design",
     nextAction: null,
     features: [],
-    blocked: false,
+    blocked: null,
+    artifacts: {},
+    lastUpdated: "2026-03-29T00:00:00Z",
     ...overrides,
   };
 }
@@ -66,8 +68,8 @@ describe("formatTable", () => {
         slug: "beta",
         phase: "implement",
         features: [
-          { slug: "feat-1", status: "completed" },
-          { slug: "feat-2", status: "pending" },
+          { slug: "feat-1", plan: "plan.md", status: "completed" },
+          { slug: "feat-2", plan: "plan.md", status: "pending" },
         ],
       }),
     ];
@@ -94,9 +96,9 @@ describe("formatFeatures", () => {
     const epic = makeEpic({
       phase: "implement",
       features: [
-        { slug: "a", status: "completed" },
-        { slug: "b", status: "completed" },
-        { slug: "c", status: "pending" },
+        { slug: "a", plan: "plan.md", status: "completed" },
+        { slug: "b", plan: "plan.md", status: "completed" },
+        { slug: "c", plan: "plan.md", status: "pending" },
       ],
     });
     expect(formatFeatures(epic)).toBe("2/3");
@@ -107,8 +109,8 @@ describe("formatFeatures", () => {
     const epic = makeEpic({
       phase: "design",
       features: [
-        { slug: "x", status: "completed" },
-        { slug: "y", status: "pending" },
+        { slug: "x", plan: "plan.md", status: "completed" },
+        { slug: "y", plan: "plan.md", status: "pending" },
       ],
     });
     expect(formatFeatures(epic)).toBe("1/2");
@@ -124,7 +126,7 @@ describe("formatStatus", () => {
     const epic = makeEpic({
       slug: "my-epic",
       phase: "implement",
-      blocked: true,
+      blocked: { gate: "feature", reason: "blocked" },
     });
     const result = stripAnsi(formatStatus(epic));
     expect(result).toContain("blocked");
@@ -143,7 +145,7 @@ describe("formatStatus", () => {
   test("returns phase name when not blocked and not done", () => {
     const epic = makeEpic({
       phase: "implement",
-      blocked: false,
+      blocked: null,
       nextAction: { phase: "implement", args: ["test-epic"], type: "single" },
     });
     expect(formatStatus(epic)).toBe("implement");
@@ -155,14 +157,14 @@ describe("formatStatus", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildStatusRows", () => {
-  test("maps EpicState to StatusRow with correct fields", () => {
+  test("maps EnrichedManifest to StatusRow with correct fields", () => {
     const epic = makeEpic({
       slug: "my-feature",
       phase: "implement",
       features: [
-        { slug: "feat-a", status: "completed" },
-        { slug: "feat-b", status: "completed" },
-        { slug: "feat-c", status: "pending" },
+        { slug: "feat-a", plan: "plan.md", status: "completed" },
+        { slug: "feat-b", plan: "plan.md", status: "completed" },
+        { slug: "feat-c", plan: "plan.md", status: "pending" },
       ],
     });
     const rows = buildStatusRows([epic]);
@@ -186,7 +188,7 @@ describe("buildStatusRows", () => {
     const epic = makeEpic({
       slug: "stuck",
       phase: "implement",
-      blocked: true,
+      blocked: { gate: "feature", reason: "blocked" },
     });
     const rows = buildStatusRows([epic]);
     const status = stripAnsi(rows[0].status);
@@ -198,7 +200,7 @@ describe("buildStatusRows", () => {
     const epic = makeEpic({
       slug: "moving",
       phase: "validate",
-      blocked: false,
+      blocked: null,
       nextAction: { phase: "validate", args: ["moving"], type: "single" },
     });
     const rows = buildStatusRows([epic]);

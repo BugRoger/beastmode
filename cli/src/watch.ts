@@ -5,7 +5,7 @@
  * handles implement fan-out, human gate pausing, and graceful shutdown.
  */
 
-import type { EpicState, ScanResult } from "./state-scanner.js";
+import type { EnrichedManifest, ScanResult } from "./state-scanner.js";
 import type {
   DispatchedSession,
   SessionResult,
@@ -18,7 +18,7 @@ import { acquireLock, releaseLock } from "./lockfile.js";
 /** Injected dependencies — allows testing without real SDK/scanner. */
 export interface WatchDeps {
   /** Scan state to determine epic states. */
-  scanEpics: (projectRoot: string) => Promise<ScanResult | EpicState[]>;
+  scanEpics: (projectRoot: string) => Promise<ScanResult | EnrichedManifest[]>;
   /** Factory for creating phase sessions. */
   sessionFactory: SessionFactory;
   /** Log a run entry to .beastmode-runs.json. */
@@ -109,7 +109,7 @@ export class WatchLoop {
   /** Run a single scan-and-dispatch cycle. */
   async tick(): Promise<void> {
 
-    let epics: EpicState[];
+    let epics: EnrichedManifest[];
     try {
       const result = await this.deps.scanEpics(this.config.projectRoot);
       epics = Array.isArray(result) ? result : result.epics;
@@ -123,7 +123,7 @@ export class WatchLoop {
     }
   }
 
-  private async processEpic(epic: EpicState): Promise<void> {
+  private async processEpic(epic: EnrichedManifest): Promise<void> {
     // Skip epics blocked on human gates
     if (epic.blocked) {
       console.log(
@@ -149,7 +149,7 @@ export class WatchLoop {
     }
   }
 
-  private async dispatchSingle(epic: EpicState): Promise<void> {
+  private async dispatchSingle(epic: EnrichedManifest): Promise<void> {
     const action = epic.nextAction!;
 
     // Don't dispatch if the epic worktree is already in use by another phase
@@ -192,7 +192,7 @@ export class WatchLoop {
   }
 
   private async dispatchFanOut(
-    epic: EpicState,
+    epic: EnrichedManifest,
     features: string[],
   ): Promise<void> {
     for (const featureSlug of features) {

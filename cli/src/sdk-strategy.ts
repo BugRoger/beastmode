@@ -11,8 +11,6 @@ import type {
   DispatchHandle,
 } from "./session-strategy.js";
 import type { SessionResult } from "./watch-types.js";
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
 import * as worktree from "./worktree.js";
 
 export class SdkStrategy implements SessionStrategy {
@@ -102,23 +100,6 @@ export class SdkStrategy implements SessionStrategy {
           costUsd,
           durationMs: Date.now() - startTime,
         };
-      }
-
-      // Write universal completion marker
-      try {
-        const marker = {
-          exitCode: sessionResult.exitCode,
-          costUsd: sessionResult.costUsd,
-          durationMs: sessionResult.durationMs,
-          sessionId: null,
-          timestamp: new Date().toISOString(),
-        };
-        writeFileSync(
-          resolve(wt.path, ".dispatch-done.json"),
-          JSON.stringify(marker, null, 2),
-        );
-      } catch (err) {
-        console.warn("[sdk-strategy] Failed to write .dispatch-done.json:", err);
       }
 
       // Release teardown: archive, merge, remove on success

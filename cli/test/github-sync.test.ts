@@ -209,8 +209,10 @@ describe("syncGitHub", () => {
       expect(result.epicCreated).toBe(true);
       expect(result.epicNumber).toBe(99);
 
-      // Verify write-back to manifest
-      expect(manifest2.github!.epic).toBe(99);
+      // Verify mutation returned for caller to apply
+      const epicMutation = result.mutations.find(m => m.type === "setEpic");
+      expect(epicMutation).toBeDefined();
+      expect(epicMutation!.type === "setEpic" && epicMutation!.epicNumber).toBe(99);
 
       // Verify the create call with correct args
       const createCalls = callsTo("ghIssueCreate");
@@ -235,7 +237,9 @@ describe("syncGitHub", () => {
       const result = await syncGitHub(manifest, config);
 
       expect(result.epicCreated).toBe(true);
-      expect(manifest.github!.epic).toBe(55);
+      const epicMutation = result.mutations.find(m => m.type === "setEpic");
+      expect(epicMutation).toBeDefined();
+      expect(epicMutation!.type === "setEpic" && epicMutation!.epicNumber).toBe(55);
     });
 
     test("initializes manifest.github when it is undefined and repo comes from... wait, repo is required", async () => {
@@ -370,8 +374,10 @@ describe("syncGitHub", () => {
       const result = await syncGitHub(manifest, config);
 
       expect(result.featuresCreated).toBe(1);
-      // Write-back: feature should now have github.issue
-      expect(feature.github?.issue).toBe(50);
+      // Verify mutation returned for caller to apply
+      const featureMutation = result.mutations.find(m => m.type === "setFeatureIssue");
+      expect(featureMutation).toBeDefined();
+      expect(featureMutation!.type === "setFeatureIssue" && featureMutation!.issueNumber).toBe(50);
 
       // Verify create call for the feature
       const createCalls = callsTo("ghIssueCreate");

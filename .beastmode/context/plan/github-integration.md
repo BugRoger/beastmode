@@ -21,7 +21,7 @@
 
 ## Sync Engine
 - ALWAYS use the CLI-owned `syncGitHub(manifest, config)` TypeScript module for all GitHub operations -- replaces skills/_shared/github.md
-- Sync is stateless and post-only: reads manifest, makes GitHub match, writes back bootstrap data (new issue numbers)
+- Sync returns mutation objects (e.g., new issue numbers) -- caller applies via manifest.ts functions and saves through manifest-store.ts
 - ALWAYS call sync after every phase dispatch via the post-dispatch hook -- same code path for manual and watch
 - ALWAYS use `gh` CLI via `Bun.spawn` wrapped in try/catch with warn-and-continue -- never raw API calls from skills
 - Reconciliation: blast-replace `phase/*` labels on epic, create-if-missing issues, set `status/*` labels on features, close completed
@@ -34,13 +34,16 @@
 - Transition modes: human (requires approval), auto (self-advancing) -- matches existing gate system
 
 ## State Authority Model
-- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/pipeline/<slug>/manifest.json`, gitignored, local-only
+- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/state/<slug>/manifest.json`, gitignored, local-only
 - CLI is the sole manifest mutator: seed at first dispatch, enrich from phase output files, advance phase, reconstruct from branch scanning on cold start
-- Skills write phase output files (`state/<phase>/YYYY-MM-DD-<slug>.output.json`) -- CLI reads these, skills never touch the manifest
+- Manifest managed through two modules: manifest-store.ts (filesystem boundary, sole disk accessor) and manifest.ts (pure state machine functions, no fs imports, all functions immutable)
+- Skills are pure artifact producers -- write artifacts with YAML frontmatter to `artifacts/<phase>/`, never touch manifests or output.json
+- Stop hook auto-generates output.json from artifact frontmatter as sole completion signal (replaces .dispatch-done.json)
+- github-sync.ts returns mutation objects -- caller applies via manifest.ts functions and saves through manifest-store.ts
 - GitHub is a synced mirror updated post-dispatch -- provides the global view across designs
-- State files (.beastmode/state/) remain the content store (PRDs, plans, validation reports)
-- `/beastmode status` bridges both: scans pipeline directories for local manifest state, queries GitHub for the board view when enabled
-- Manifest schema is pure pipeline state: slug, phase, features array, artifacts, worktree info, optional github block -- no architectural decisions or content concerns
+- Artifact files (.beastmode/artifacts/) are the committed content store (PRDs, plans, validation reports)
+- `/beastmode status` bridges both: scans state directories for local manifest state, queries GitHub for the board view when enabled
+- Manifest schema is pure pipeline state: slug, phase, features array, artifacts, worktree info, optional github block, structured blocked field ({ gate, reason } | null) -- no architectural decisions or content concerns
 - Four feature statuses: pending, in-progress, blocked, completed
 - GitHub API failures: warn and continue -- absence of `github` data is the signal
 
@@ -51,3 +54,5 @@
 - GitHub phase integration plan manifest — see [github-phase-integration manifest](../../state/plan/2026-03-28-github-phase-integration.manifest.json)
 - GitHub CLI migration manifest — see [github-cli-migration manifest](../../state/plan/2026-03-28-github-cli-migration.manifest.json)
 - GitHub CLI migration design — see [github-cli-migration design](../../state/design/2026-03-29-github-cli-migration.md)
+- Manifest file management design — see [manifest-file-management design](../../state/design/2026-03-29-manifest-file-management.md)
+- Manifest file management plan — see [manifest-file-management manifest](../../state/plan/2026-03-29-manifest-file-management.manifest.json)

@@ -122,12 +122,12 @@ If any writer agent fails:
 
 "Running retro pass on existing artifacts."
 
-### 2. Scan for state artifacts
+### 2. Scan for phase artifacts
 
-For each phase with state/ artifacts:
+For each phase with artifacts/ files:
 
 ```bash
-ls .beastmode/state/design/*.md .beastmode/state/plan/*.md .beastmode/state/implement/*.md .beastmode/state/validate/*.md .beastmode/state/release/*.md 2>/dev/null
+ls .beastmode/artifacts/design/*.md .beastmode/artifacts/plan/*.md .beastmode/artifacts/implement/*.md .beastmode/artifacts/validate/*.md .beastmode/artifacts/release/*.md 2>/dev/null
 ```
 
 ### 3. Spawn retro agents per phase

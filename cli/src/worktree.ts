@@ -1,11 +1,13 @@
 /**
- * Worktree lifecycle manager — create, enter, exists, remove.
+ * Worktree lifecycle manager — create, enter, exists, archive, merge, remove.
  *
  * Provides lifecycle operations only:
  *   create        — git worktree at .claude/worktrees/<slug> with feature/<slug> branch
  *   enter         — returns absolute path for use as cwd
  *   ensureWorktree — idempotent create-or-reuse
  *   exists        — checks if worktree exists for slug
+ *   archive       — tag feature branch HEAD as archive/<slug>
+ *   merge         — squash-merge feature branch into main
  *   remove        — cleans up worktree directory and optionally deletes branch
  */
 
@@ -190,6 +192,46 @@ export function enter(
   opts: { cwd?: string } = {},
 ): string {
   return resolve(opts.cwd ?? process.cwd(), `${WORKTREE_DIR}/${slug}`);
+}
+
+/**
+ * Archive a feature branch as a tag before cleanup.
+ * Creates a tag `archive/<slug>` pointing at the branch HEAD.
+ * Returns the tag name.
+ */
+export async function archive(
+  slug: string,
+  opts: { cwd?: string } = {},
+): Promise<string> {
+  const cwd = opts.cwd;
+  const branch = `feature/${slug}`;
+  const tagName = `archive/${slug}`;
+
+  // Get the branch HEAD
+  const headResult = await git(["rev-parse", branch], { cwd });
+  const sha = headResult.stdout;
+
+  // Create the archive tag
+  await git(["tag", tagName, sha], { cwd, allowFailure: true });
+
+  return tagName;
+}
+
+/**
+ * Squash-merge a feature branch into main.
+ */
+export async function merge(
+  slug: string,
+  opts: { cwd?: string } = {},
+): Promise<void> {
+  const cwd = opts.cwd;
+  const branch = `feature/${slug}`;
+  const mainBranch = await resolveMainBranch({ cwd });
+
+  // Squash-merge into main (from project root, not worktree)
+  await git(["checkout", mainBranch], { cwd });
+  await git(["merge", "--squash", branch], { cwd });
+  await git(["commit", "--no-edit"], { cwd, allowFailure: true });
 }
 
 /**

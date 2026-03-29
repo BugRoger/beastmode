@@ -152,7 +152,7 @@ When a new design supersedes prior designs in the same problem space, explicitly
 ### Rationale
 Without explicit supersession, multiple PRDs for the same problem space coexist as peers, and downstream phases may reference the wrong one. Naming the specific files makes the deprecation grep-able.
 ### Source
-.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md
+.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md
 ### Confidence
 [LOW] — first-time observation; related to Obs 3 (challenge deferrals) and Obs 12 (prerequisite absorption) as another design decision lifecycle pattern
 
@@ -164,7 +164,7 @@ When a design explicitly breaks a previously locked project constraint, document
 ### Rationale
 Locked decisions are treated as contracts. When a design intentionally breaks the contract, the override should be as explicit as the original lock — otherwise future sessions may flag the contradiction as a bug rather than a deliberate choice.
 ### Source
-.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md
+.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md
 ### Confidence
 [LOW] — first-time observation; extends the "locked decisions can drift" pattern into proactive override documentation
 
@@ -176,6 +176,18 @@ The v1 design (status-unfuckery) shipped as v0.35.0 but left critical bugs inclu
 ### Rationale
 When a shipped v1 leaves critical bugs, the question is whether to patch incrementally or overhaul. The indicator for overhaul is when the bug count is high and the bugs span multiple subsystem boundaries (scanner, command, types, watch). Incremental patches compound into spaghetti when the root cause is structural.
 ### Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
 ### Confidence
 [LOW] -- first observation; related to Obs 3 (challenge deferrals) and Obs 12 (prerequisite absorption) as a scope lifecycle pattern
+
+## Observation 16
+### Context
+During manifest-file-management design, 2026-03-29
+### Observation
+The design absorbed the directory rename (state/ to artifacts/, pipeline/ to state/) and .gitignore updates into the same PRD as the module architecture refactor, rather than splitting the rename into a prerequisite PR. The rationale was "Big bang -- one atomic commit" covering both structural changes and code changes. The 49 context docs needing vocabulary updates were also scoped into the same migration.
+### Rationale
+Confirms the prerequisite-absorption pattern from Obs 12. When a prerequisite (directory rename, vocabulary update) is structurally coupled to the main design (module architecture that depends on the new directory layout), absorbing it prevents the prerequisite from becoming a coordination bottleneck. The coupling indicator is: "would the main design need to reference the prerequisite's output paths?" If yes, absorb.
+### Source
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md
+### Confidence
+[LOW] -- second observation of prerequisite-absorption (see Obs 12), but in a closely related problem space (same codebase subsystem)

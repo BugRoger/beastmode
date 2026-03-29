@@ -20,6 +20,6 @@ Subagent changes did not persist to the main worktree. The orchestrator expected
 ### Rationale
 Worktree isolation affects both state coordination (Observation 1) and code artifact flow. Post-hoc reconciliation must cover code changes, not just status tracking. For sequential tasks with dependencies, the orchestrator must merge or cherry-pick between dispatches.
 ### Source
-.beastmode/state/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
+.beastmode/artifacts/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
 ### Confidence
 [MEDIUM] -- second observation, extends Observation 1 to code artifacts

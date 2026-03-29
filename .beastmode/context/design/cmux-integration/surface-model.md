@@ -8,4 +8,4 @@ One cmux workspace per active epic, one surface per dispatched phase or feature 
 Workspace-per-epic maps naturally to the mental model: switching workspaces = switching epics. CLI-in-surface means agents get real terminals (better than SDK path where interactive input is impossible) and phaseCommand owns the full lifecycle.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

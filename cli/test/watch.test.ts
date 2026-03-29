@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node
 import { resolve } from "node:path";
 import { WatchLoop } from "../src/watch.js";
 import type { WatchDeps } from "../src/watch.js";
-import type { EpicState } from "../src/state-scanner.js";
+import type { EnrichedManifest } from "../src/state-scanner.js";
 import type { SessionResult } from "../src/watch-types.js";
 import { SdkSessionFactory } from "../src/session.js";
 import { DispatchTracker } from "../src/dispatch-tracker.js";
@@ -172,13 +172,15 @@ describe("WatchLoop", () => {
     const dispatched: string[] = [];
     let scanCount = 0;
 
-    const readyEpic: EpicState = {
+    const readyEpic: EnrichedManifest = {
       slug: "my-epic",
       manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      blocked: false,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -221,7 +223,7 @@ describe("WatchLoop", () => {
     const dispatched: string[] = [];
     let scanCount = 0;
 
-    const implementEpic: EpicState = {
+    const implementEpic: EnrichedManifest = {
       slug: "my-epic",
       manifestPath: "pipeline/my-epic.manifest.json",
       phase: "implement",
@@ -232,11 +234,13 @@ describe("WatchLoop", () => {
         features: ["feat-a", "feat-b", "feat-c"],
       },
       features: [
-        { slug: "feat-a", status: "pending" },
-        { slug: "feat-b", status: "pending" },
-        { slug: "feat-c", status: "pending" },
+        { slug: "feat-a", plan: "feat-a.md", status: "pending" },
+        { slug: "feat-b", plan: "feat-b.md", status: "pending" },
+        { slug: "feat-c", plan: "feat-c.md", status: "pending" },
       ],
-      blocked: false,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -283,8 +287,9 @@ describe("WatchLoop", () => {
     const worktreeSlugs: string[] = [];
     let scanCount = 0;
 
-    const implementEpic: EpicState = {
+    const implementEpic: EnrichedManifest = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "implement",
       nextAction: {
         phase: "implement",
@@ -293,11 +298,12 @@ describe("WatchLoop", () => {
         features: ["feat-a", "feat-b"],
       },
       features: [
-        { slug: "feat-a", status: "pending" },
-        { slug: "feat-b", status: "pending" },
+        { slug: "feat-a", plan: "feat-a.md", status: "pending" },
+        { slug: "feat-b", plan: "feat-b.md", status: "pending" },
       ],
-      gateBlocked: false,
-      costUsd: 0,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -340,8 +346,9 @@ describe("WatchLoop", () => {
     let scanCount = 0;
     const loggedRuns: Array<{ phase: string; featureSlug?: string }> = [];
 
-    const implementEpic: EpicState = {
+    const implementEpic: EnrichedManifest = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "implement",
       nextAction: {
         phase: "implement",
@@ -350,11 +357,12 @@ describe("WatchLoop", () => {
         features: ["feat-a", "feat-b"],
       },
       features: [
-        { slug: "feat-a", status: "pending" },
-        { slug: "feat-b", status: "pending" },
+        { slug: "feat-a", plan: "feat-a.md", status: "pending" },
+        { slug: "feat-b", plan: "feat-b.md", status: "pending" },
       ],
-      gateBlocked: false,
-      costUsd: 0,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -402,17 +410,15 @@ describe("WatchLoop", () => {
   it("pauses epics blocked on human gates", async () => {
     const dispatched: string[] = [];
 
-    const gatedEpic: EpicState = {
+    const gatedEpic: EnrichedManifest = {
       slug: "gated-epic",
       manifestPath: "pipeline/gated-epic.manifest.json",
       phase: "implement",
-      nextAction: {
-        phase: "implement",
-        args: ["gated-epic"],
-        type: "single",
-      },
-      features: [{ slug: "feat-a", status: "pending" }],
-      blocked: true,
+      nextAction: null,
+      features: [{ slug: "feat-a", plan: "feat-a.md", status: "pending" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: { gate: "test-gate", reason: "Test gate" },
     };
 
     const deps = mockDeps({
@@ -448,13 +454,15 @@ describe("WatchLoop", () => {
   it("does not double-dispatch the same phase", async () => {
     let dispatchCount = 0;
 
-    const readyEpic: EpicState = {
+    const readyEpic: EnrichedManifest = {
       slug: "my-epic",
       manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      blocked: false,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -489,14 +497,16 @@ describe("WatchLoop", () => {
     const dispatched: string[] = [];
     let scanCount = 0;
 
-    const epics: EpicState[] = [
+    const epics: EnrichedManifest[] = [
       {
         slug: "epic-a",
         manifestPath: "pipeline/epic-a.manifest.json",
         phase: "design",
         nextAction: { phase: "plan", args: ["epic-a"], type: "single" },
         features: [],
-        blocked: false,
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+        blocked: null,
       },
       {
         slug: "epic-b",
@@ -504,7 +514,9 @@ describe("WatchLoop", () => {
         phase: "design",
         nextAction: { phase: "plan", args: ["epic-b"], type: "single" },
         features: [],
-        blocked: false,
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+        blocked: null,
       },
     ];
 
@@ -552,13 +564,15 @@ describe("WatchLoop", () => {
     }> = [];
     let scanCount = 0;
 
-    const readyEpic: EpicState = {
+    const readyEpic: EnrichedManifest = {
       slug: "my-epic",
       manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      blocked: false,
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -597,13 +611,15 @@ describe("WatchLoop", () => {
   it("skips epics with no next action", async () => {
     const dispatched: string[] = [];
 
-    const completedEpic: EpicState = {
+    const completedEpic: EnrichedManifest = {
       slug: "done-epic",
       manifestPath: "pipeline/done-epic.manifest.json",
       phase: "release",
       nextAction: null,
-      features: [{ slug: "f1", status: "completed" }],
-      blocked: false,
+      features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -638,13 +654,15 @@ describe("WatchLoop", () => {
     const loggedRuns: Array<{ phase: string; epicSlug: string }> = [];
     let scanCount = 0;
 
-    const releaseEpic: EpicState = {
+    const releaseEpic: EnrichedManifest = {
       slug: "release-epic",
       manifestPath: "pipeline/release-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["release-epic"], type: "single" },
-      features: [{ slug: "f1", status: "completed" }],
-      blocked: false,
+      features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -693,25 +711,19 @@ describe("WatchLoop", () => {
   });
 
   it("calls strategy cleanup after successful release teardown", async () => {
-    // This tests the integration point: dispatchPhase calls strategy.cleanup() on release success
+    // This tests the integration point: release session completes successfully
     const cleanedUpEpics: string[] = [];
     let scanCount = 0;
 
-    const mockStrategy = {
-      dispatch: async () => { throw new Error("not implemented"); },
-      isComplete: () => false,
-      cleanup: async (epicSlug: string) => { cleanedUpEpics.push(epicSlug); },
-    };
-
-    // dispatchPhase is not exported — test through WatchLoop by providing
-    // a dispatchPhase mock that simulates the real cleanup call.
-    const releaseEpic: EpicState = {
+    const releaseEpic: EnrichedManifest = {
       slug: "cleanup-epic",
+      manifestPath: "pipeline/cleanup-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["cleanup-epic"], type: "single" },
-      features: [{ slug: "f1", status: "completed" }],
-      gateBlocked: false,
-      costUsd: 3.0,
+      features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -720,14 +732,14 @@ describe("WatchLoop", () => {
         if (scanCount === 1) return [releaseEpic];
         return [{ ...releaseEpic, nextAction: null }];
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         return {
           id: `release-${Date.now()}`,
           worktreeSlug: `cleanup-epic-release`,
           promise: (async () => {
-            // Simulate what the real dispatchPhase does: call cleanup on release success
+            // Simulate cleanup on release success
             if (opts.phase === "release") {
-              await mockStrategy.cleanup(opts.epicSlug);
+              cleanedUpEpics.push(opts.epicSlug);
             }
             return {
               success: true,
@@ -737,7 +749,7 @@ describe("WatchLoop", () => {
             };
           })(),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -761,13 +773,15 @@ describe("WatchLoop", () => {
       throw new Error("cmux is down");
     };
 
-    const releaseEpic: EpicState = {
+    const releaseEpic: EnrichedManifest = {
       slug: "fragile-epic",
+      manifestPath: "pipeline/fragile-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["fragile-epic"], type: "single" },
-      features: [{ slug: "f1", status: "completed" }],
-      gateBlocked: false,
-      costUsd: 2.0,
+      features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({
@@ -776,7 +790,7 @@ describe("WatchLoop", () => {
         if (scanCount === 1) return [releaseEpic];
         return [{ ...releaseEpic, nextAction: null }];
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         return {
           id: `release-${Date.now()}`,
           worktreeSlug: `fragile-epic-release`,
@@ -796,7 +810,7 @@ describe("WatchLoop", () => {
             };
           })(),
         };
-      },
+      }),
       logRun: async (opts) => {
         loggedRuns.push({ phase: opts.phase, result: opts.result });
       },
@@ -822,13 +836,15 @@ describe("WatchLoop", () => {
     const loggedRuns: Array<{ phase: string; result: { success: boolean } }> = [];
     let scanCount = 0;
 
-    const releaseEpic: EpicState = {
+    const releaseEpic: EnrichedManifest = {
       slug: "fail-epic",
       manifestPath: "pipeline/fail-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["fail-epic"], type: "single" },
-      features: [{ slug: "f1", status: "completed" }],
-      blocked: false,
+      features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+      artifacts: {},
+      lastUpdated: "2026-03-29T00:00:00Z",
+      blocked: null,
     };
 
     const deps = mockDeps({

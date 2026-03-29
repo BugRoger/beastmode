@@ -4,6 +4,20 @@ All notable changes to beastmode.
 
 ---
 
+### v0.42.0 — Manifest File Management (Mar 2026)
+
+- **Pure manifest state machine** — Split `manifest.ts` into pure state transitions and new `manifest-store.ts` filesystem boundary; pipeline logic is fully testable without disk IO
+- **Consumer migration** — All CLI modules (watch, status, cancel, phase, github-sync, reconcile-startup, post-dispatch) rewritten against new manifest API
+- **Directory restructure** — Historical state artifacts moved from `.beastmode/state/` to `.beastmode/artifacts/`; pipeline manifests live in `.beastmode/pipeline/`
+- **Stop hook** — Graceful agent termination via `.claude/settings.json` hook; agents can be stopped mid-phase without corruption
+- **Structured blocked state** — `blocked` field upgraded from boolean to `{ gate, reason } | null` with full context
+- **Phase regression** — `regressPhase()` allows stepping backward on validate failure instead of manual restart
+- **EnrichedManifest type** — Replaces legacy `EpicState`, `FeatureProgress`, `SkippedManifest` with single canonical type
+- **Skill checkpoint contracts** — Implement tasks write `.output.json` files for downstream phase consumption
+- **Release worktree ops** — `archive()` and `merge()` exports restored in `worktree.ts` for release teardown
+- **Immutable github-sync** — Returns mutations instead of mutating manifest in-place
+- **Release version deferral** — Version bumping moved to post-merge checkpoint on main; worktree no longer touches version files
+
 ### v0.41.0 — The Status Unfuckery, Part II (Mar 2026)
 
 - **Pipeline-only discovery** — Scanner reads pipeline/ manifests exclusively; design-file discovery removed, dropping ~118 zombie epics from status output

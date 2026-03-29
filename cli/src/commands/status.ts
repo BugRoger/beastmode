@@ -1,5 +1,6 @@
 import type { BeastmodeConfig } from "../config";
-import { scanEpics, type EpicState, type SkippedManifest } from "../state-scanner";
+import type { EnrichedManifest } from "../state-scanner";
+import { scanEpics } from "../state-scanner";
 import { findProjectRoot } from "../project-root";
 
 export interface StatusRow {
@@ -48,14 +49,14 @@ function colorPhase(phase: string): string {
 // Formatters
 // ---------------------------------------------------------------------------
 
-export function formatFeatures(epic: EpicState): string {
+export function formatFeatures(epic: EnrichedManifest): string {
   const total = epic.features.length;
   if (total === 0) return "-";
   const completed = epic.features.filter(f => f.status === "completed").length;
   return `${completed}/${total}`;
 }
 
-export function formatStatus(epic: EpicState): string {
+export function formatStatus(epic: EnrichedManifest): string {
   if (epic.blocked) {
     return color(`blocked: run beastmode ${epic.phase} ${epic.slug}`, ANSI.red);
   }
@@ -78,7 +79,7 @@ const PHASE_ORDER: Record<string, number> = {
   release: 4,
 };
 
-export function buildStatusRows(epics: EpicState[]): StatusRow[] {
+export function buildStatusRows(epics: EnrichedManifest[]): StatusRow[] {
   return epics
     .sort((a, b) => {
       const aPhase = PHASE_ORDER[a.phase] ?? 99;
@@ -135,27 +136,12 @@ export function formatTable(rows: StatusRow[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Verbose: skipped manifests
-// ---------------------------------------------------------------------------
-
-function formatSkipped(skipped: SkippedManifest[]): string {
-  if (skipped.length === 0) return "";
-  const lines = skipped.map(s => `  ${s.path}: ${s.reason}`);
-  return `\n${color("Skipped manifests:", ANSI.dim)}\n${lines.join("\n")}`;
-}
-
-// ---------------------------------------------------------------------------
 // Command entry point
 // ---------------------------------------------------------------------------
 
-export async function statusCommand(_config: BeastmodeConfig, args: string[] = []): Promise<void> {
-  const verbose = args.includes("--verbose");
+export async function statusCommand(_config: BeastmodeConfig, _args: string[] = []): Promise<void> {
   const projectRoot = findProjectRoot();
-  const { epics, skipped } = await scanEpics(projectRoot);
+  const { epics } = await scanEpics(projectRoot);
   const rows = buildStatusRows(epics);
   console.log(formatTable(rows));
-  if (verbose) {
-    const skippedOutput = formatSkipped(skipped);
-    if (skippedOutput) console.log(skippedOutput);
-  }
 }

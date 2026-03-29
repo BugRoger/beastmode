@@ -8,5 +8,5 @@ The pipeline poll loop needs to transition from CronCreate (session-scoped, 7-da
 External process eliminates session-scoped lifetime limits. Event-driven re-scan provides immediate progression; poll interval catches edge cases. No artificial concurrency cap avoids premature bottlenecking.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md`

@@ -14,9 +14,10 @@
 ## Knowledge Directories
 - ALWAYS organize context by phase: `context/{phase}/{domain}.md` — phase-scoped knowledge
 - ALWAYS organize meta by phase: `meta/{phase}/{type}.md` (sops, overrides, learnings) — categorized process knowledge
-- ALWAYS organize state by phase: `state/{phase}/YYYY-MM-DD-{feature}.md` — date-prefixed artifacts
+- ALWAYS organize artifacts by phase: `artifacts/{phase}/YYYY-MM-DD-{feature}.md` — date-prefixed committed skill outputs
+- ALWAYS use `state/` for gitignored pipeline manifests (`state/<slug>/manifest.json`) — CLI-owned mutable state
 - L3 records live at: `context/{phase}/{domain}/{record}.md` — subdirectory per domain
-- Write protection: phases write only to state/, retro promotes to context/ and meta/ — enforced boundaries
+- Write protection: phases write only to artifacts/, retro promotes to context/ and meta/ — enforced boundaries
 
 ## Entry Points
 - ALWAYS wire CLAUDE.md -> BEASTMODE.md as sole autoload — minimal L0
@@ -29,3 +30,4 @@
 - Worktree session discovery — see [worktree-session-discovery](../../state/plan/2026-03-04-worktree-session-discovery.md)
 - Progressive L1 docs restructure — see [progressive-l1-docs](../../state/plan/2026-03-04-progressive-l1-docs.md)
 - CLI-owned worktree lifecycle — see [epic-worktree-lifecycle](../../state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json)
+- Directory rename (state/ to artifacts/, pipeline/ to state/) — see [manifest-file-management design](../../state/design/2026-03-29-manifest-file-management.md)

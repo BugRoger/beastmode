@@ -35,3 +35,15 @@ Third production use of the manifest-based decomposition approach. Confirms this
 state/plan/2026-03-28-github-cli-migration.manifest.json
 ### Confidence
 [HIGH] -- third observation, upgraded from MEDIUM; pattern confirmed across three epics
+
+## Observation 4
+### Context
+During manifest-file-management planning, 2026-03-29
+### Observation
+The plan phase produced a manifest JSON plus 5 independent feature plans (manifest-modules, directory-rename, consumer-migration, skill-checkpoint, stop-hook) from a 12-user-story PRD. Each feature plan is self-contained with user stories referencing specific design story numbers (e.g., stories 1-3, story 5), providing explicit design-to-plan traceability. The manifest records architectural decisions, feature slugs, plan file paths, and statuses. This was an infrastructure replacement epic where features touch overlapping modules -- the decomposition sliced by responsibility boundary rather than by module.
+### Rationale
+Fourth confirmation of the manifest-based decomposition approach. New variant: infrastructure replacement epics require slicing by responsibility boundary (not module boundary) to avoid features that conflict during implementation. Story-level traceability back to the design is a useful addition to the feature plan format.
+### Source
+.beastmode/artifacts/plan/2026-03-29-manifest-file-management.manifest.json
+### Confidence
+[HIGH] -- fourth observation, pattern confirmed across four epics

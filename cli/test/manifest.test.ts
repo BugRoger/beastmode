@@ -1,20 +1,21 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from "fs";
+import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import {
-  seed,
-  enrich,
-  advancePhase,
-  reconstruct,
-  readManifest,
-  writeManifest,
-  loadManifest,
-  manifestExists,
   manifestPath,
-  getPendingFeatures,
+  manifestExists,
+  create,
+  get,
+  load,
+  save,
   findLegacyManifestPath,
   readLegacyManifest,
   type PipelineManifest,
+} from "../src/manifest-store";
+import {
+  enrich,
+  advancePhase,
+  getPendingFeatures,
 } from "../src/manifest";
 
 const TEST_ROOT = resolve(import.meta.dir, "../.test-manifest");
@@ -48,12 +49,12 @@ describe("manifestPath", () => {
   });
 });
 
-describe("seed", () => {
+describe("create (seed)", () => {
   beforeEach(setupTestRoot);
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("creates manifest with design phase", () => {
-    const manifest = seed(TEST_ROOT, "test-epic");
+    const manifest = create(TEST_ROOT, "test-epic");
     expect(manifest.slug).toBe("test-epic");
     expect(manifest.phase).toBe("design");
     expect(manifest.features).toEqual([]);
@@ -66,7 +67,7 @@ describe("seed", () => {
   });
 
   test("creates manifest with worktree and github options", () => {
-    const manifest = seed(TEST_ROOT, "test-epic", {
+    const manifest = create(TEST_ROOT, "test-epic", {
       worktree: { branch: "feature/test-epic", path: "/tmp/worktree" },
       github: { epic: 42, repo: "org/repo" },
     });
@@ -80,7 +81,7 @@ describe("seed", () => {
   test("creates pipeline directory if missing", () => {
     const dir = resolve(TEST_ROOT, ".beastmode/pipeline");
     expect(existsSync(dir)).toBe(false);
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
     expect(existsSync(dir)).toBe(true);
   });
 });
@@ -88,44 +89,52 @@ describe("seed", () => {
 describe("enrich", () => {
   beforeEach(() => {
     setupTestRoot();
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
   });
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("adds features from phase output", () => {
-    const manifest = enrich(TEST_ROOT, "test-epic", {
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "plan",
       features: [
         { slug: "feature-a", plan: "plan-a.md", status: "pending" },
         { slug: "feature-b", plan: "plan-b.md", status: "pending" },
       ],
     });
+    save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.features).toHaveLength(2);
     expect(manifest.features[0].slug).toBe("feature-a");
   });
 
   test("accumulates artifacts under phase key", () => {
-    const manifest = enrich(TEST_ROOT, "test-epic", {
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "design",
       artifacts: ["design.md", "prd.md"],
     });
+    save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.artifacts.design).toEqual(["design.md", "prd.md"]);
   });
 
   test("merges features preserving github info", () => {
-    enrich(TEST_ROOT, "test-epic", {
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "plan",
       features: [
         { slug: "feat-a", plan: "plan-a.md", status: "pending", github: { issue: 10 } },
       ],
     });
+    save(TEST_ROOT, "test-epic", manifest);
 
-    const manifest = enrich(TEST_ROOT, "test-epic", {
+    manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "plan",
       features: [
         { slug: "feat-a", plan: "plan-a-v2.md", status: "in-progress" },
       ],
     });
+    save(TEST_ROOT, "test-epic", manifest);
 
     expect(manifest.features).toHaveLength(1);
     expect(manifest.features[0].plan).toBe("plan-a-v2.md");
@@ -134,28 +143,37 @@ describe("enrich", () => {
   });
 
   test("appends new features without removing existing", () => {
-    enrich(TEST_ROOT, "test-epic", {
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "plan",
       features: [{ slug: "feat-a", plan: "plan-a.md", status: "pending" }],
     });
+    save(TEST_ROOT, "test-epic", manifest);
 
-    const manifest = enrich(TEST_ROOT, "test-epic", {
+    manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "plan",
       features: [{ slug: "feat-b", plan: "plan-b.md", status: "pending" }],
     });
+    save(TEST_ROOT, "test-epic", manifest);
 
     expect(manifest.features).toHaveLength(2);
   });
 
   test("accumulates artifacts across multiple enrichments", () => {
-    enrich(TEST_ROOT, "test-epic", {
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "design",
       artifacts: ["file1.md"],
     });
-    const manifest = enrich(TEST_ROOT, "test-epic", {
+    save(TEST_ROOT, "test-epic", manifest);
+
+    manifest = get(TEST_ROOT, "test-epic");
+    manifest = enrich(manifest, {
       phase: "design",
       artifacts: ["file2.md"],
     });
+    save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.artifacts.design).toEqual(["file1.md", "file2.md"]);
   });
 });
@@ -163,134 +181,67 @@ describe("enrich", () => {
 describe("advancePhase", () => {
   beforeEach(() => {
     setupTestRoot();
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
   });
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("advances phase and persists", () => {
-    const manifest = advancePhase(TEST_ROOT, "test-epic", "plan");
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = advancePhase(manifest, "plan");
+    save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.phase).toBe("plan");
 
-    const reread = readManifest(TEST_ROOT, "test-epic");
+    const reread = get(TEST_ROOT, "test-epic");
     expect(reread.phase).toBe("plan");
   });
 
   test("can advance through all phases", () => {
-    advancePhase(TEST_ROOT, "test-epic", "plan");
-    advancePhase(TEST_ROOT, "test-epic", "implement");
-    advancePhase(TEST_ROOT, "test-epic", "validate");
-    const manifest = advancePhase(TEST_ROOT, "test-epic", "release");
+    let manifest = get(TEST_ROOT, "test-epic");
+    manifest = advancePhase(manifest, "plan");
+    save(TEST_ROOT, "test-epic", manifest);
+    manifest = advancePhase(manifest, "implement");
+    save(TEST_ROOT, "test-epic", manifest);
+    manifest = advancePhase(manifest, "validate");
+    save(TEST_ROOT, "test-epic", manifest);
+    manifest = advancePhase(manifest, "release");
+    save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.phase).toBe("release");
   });
 });
 
-describe("reconstruct", () => {
-  beforeEach(setupTestRoot);
-  afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
-
-  test("returns undefined when no design artifact exists", () => {
-    const manifest = reconstruct(TEST_ROOT, "nonexistent");
-    expect(manifest).toBeUndefined();
-  });
-
-  test("reconstructs design-only manifest", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
-      "# Test Epic",
-    );
-
-    const manifest = reconstruct(TEST_ROOT, "test-epic");
-    expect(manifest).toBeDefined();
-    expect(manifest!.slug).toBe("test-epic");
-    expect(manifest!.phase).toBe("design");
-    expect(manifest!.features).toEqual([]);
-  });
-
-  test("reconstructs with features from plan dir", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
-      "# Test",
-    );
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-29-test-epic-feat-a.md"),
-      "# Feature A",
-    );
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-29-test-epic-feat-b.md"),
-      "# Feature B",
-    );
-
-    const manifest = reconstruct(TEST_ROOT, "test-epic");
-    expect(manifest).toBeDefined();
-    expect(manifest!.phase).toBe("plan");
-    expect(manifest!.features).toHaveLength(2);
-    expect(manifest!.features.map((f) => f.slug).sort()).toEqual(["feat-a", "feat-b"]);
-  });
-
-  test("detects implement phase from state markers", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/implement"), { recursive: true });
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
-      "# Test",
-    );
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/implement/2026-03-29-test-epic.md"),
-      "# Implement",
-    );
-
-    const manifest = reconstruct(TEST_ROOT, "test-epic");
-    expect(manifest!.phase).toBe("implement");
-  });
-
-  test("writes reconstructed manifest to pipeline dir", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
-    writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
-      "# Test",
-    );
-
-    reconstruct(TEST_ROOT, "test-epic");
-    expect(manifestExists(TEST_ROOT, "test-epic")).toBe(true);
-  });
-});
-
-describe("readManifest", () => {
+describe("get (readManifest)", () => {
   beforeEach(() => {
     setupTestRoot();
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
   });
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("reads and parses valid manifest", () => {
-    const manifest = readManifest(TEST_ROOT, "test-epic");
+    const manifest = get(TEST_ROOT, "test-epic");
     expect(manifest.slug).toBe("test-epic");
     expect(manifest.phase).toBe("design");
   });
 
   test("throws on missing manifest", () => {
-    expect(() => readManifest(TEST_ROOT, "nonexistent")).toThrow(/Manifest not found/);
+    expect(() => get(TEST_ROOT, "nonexistent")).toThrow(/Manifest not found/);
   });
 });
 
-describe("loadManifest", () => {
+describe("load (loadManifest)", () => {
   beforeEach(() => {
     setupTestRoot();
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
   });
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("loads existing manifest", () => {
-    const manifest = loadManifest(TEST_ROOT, "test-epic");
+    const manifest = load(TEST_ROOT, "test-epic");
     expect(manifest).toBeDefined();
     expect(manifest!.slug).toBe("test-epic");
   });
 
   test("returns undefined for missing manifest", () => {
-    const manifest = loadManifest(TEST_ROOT, "nonexistent");
+    const manifest = load(TEST_ROOT, "nonexistent");
     expect(manifest).toBeUndefined();
   });
 });
@@ -300,7 +251,7 @@ describe("manifestExists", () => {
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("returns true for existing manifest", () => {
-    seed(TEST_ROOT, "test-epic");
+    create(TEST_ROOT, "test-epic");
     expect(manifestExists(TEST_ROOT, "test-epic")).toBe(true);
   });
 
@@ -309,7 +260,7 @@ describe("manifestExists", () => {
   });
 });
 
-describe("writeManifest", () => {
+describe("save (writeManifest)", () => {
   beforeEach(setupTestRoot);
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
@@ -322,8 +273,8 @@ describe("writeManifest", () => {
       lastUpdated: "2026-03-29T00:00:00Z",
     };
 
-    writeManifest(TEST_ROOT, "write-test", manifest);
-    const reread = readManifest(TEST_ROOT, "write-test");
+    save(TEST_ROOT, "write-test", manifest);
+    const reread = get(TEST_ROOT, "write-test");
     expect(reread.slug).toBe("write-test");
     expect(reread.phase).toBe("implement");
     expect(reread.features).toHaveLength(1);
@@ -369,9 +320,9 @@ describe("findLegacyManifestPath", () => {
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
   test("finds legacy manifest by slug", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
+    mkdirSync(resolve(TEST_ROOT, ".beastmode/artifacts/plan"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-28-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-28-test-epic.manifest.json"),
       "{}",
     );
     const path = findLegacyManifestPath(TEST_ROOT, "test-epic");
@@ -380,13 +331,13 @@ describe("findLegacyManifestPath", () => {
   });
 
   test("returns latest when multiple exist", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
+    mkdirSync(resolve(TEST_ROOT, ".beastmode/artifacts/plan"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-27-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-27-test-epic.manifest.json"),
       "{}",
     );
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-28-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-28-test-epic.manifest.json"),
       "{}",
     );
     const path = findLegacyManifestPath(TEST_ROOT, "test-epic");

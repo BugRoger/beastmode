@@ -10,4 +10,4 @@ Add a single "Sync GitHub" step to each phase checkpoint, positioned between art
 Checkpoint boundaries are natural sync points — the local state has just been committed, so GitHub gets a consistent snapshot. One step per checkpoint keeps the pattern uniform and auditable.
 
 ## Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json

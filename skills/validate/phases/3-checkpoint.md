@@ -2,25 +2,19 @@
 
 ## 1. Save Report
 
-Save to `.beastmode/state/validate/YYYY-MM-DD-<feature>.md` where `<feature>` is the epic slug.
+Save to `.beastmode/artifacts/validate/YYYY-MM-DD-<feature>.md` where `<feature>` is the epic slug.
 
-## 1.5. Write Phase Output
+The validation report must begin with YAML frontmatter:
 
-Write the phase output contract file to `.beastmode/state/validate/YYYY-MM-DD-<feature>.output.json`:
-
-```json
-{
-  "status": "completed",
-  "artifacts": {
-    "report": ".beastmode/state/validate/YYYY-MM-DD-<feature>.md",
-    "passed": true
-  }
-}
+```
+---
+phase: validate
+slug: <feature>
+status: passed
+---
 ```
 
-- Set `status` to `"completed"` if validation passed, `"error"` if it failed
-- Set `passed` to `true` or `false` matching the validation result
-- The `report` path matches the report written in Step 1
+Set `status` to `passed` or `failed` matching the validation result.
 
 ## 2. Phase Retro
 

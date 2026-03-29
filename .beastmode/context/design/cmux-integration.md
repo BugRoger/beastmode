@@ -30,16 +30,16 @@
 - When cmux is unavailable or not configured, existing SDK dispatch path runs unchanged via `SdkStrategy`
 
 ## Completion Detection
-- `phaseCommand` ALWAYS writes `.dispatch-done.json` to the worktree path on exit — universal marker regardless of how phaseCommand was launched
-- Marker contains session result data: exit status, cost, duration
-- `CmuxStrategy` detects completion via `fs.watch` on the worktrees directory — near-instant, no polling
-- `SdkStrategy` resolves the in-process promise and also writes the marker — dual signal
+- Stop hook ALWAYS generates output.json from artifact frontmatter when Claude finishes — universal completion signal regardless of dispatch strategy
+- output.json is the sole completion marker — `.dispatch-done.json` is deleted
+- `CmuxStrategy` detects completion via `fs.watch` on `artifacts/<phase>/` for `*.output.json` — near-instant, no polling
+- `SdkStrategy` reads output.json after query() iterator completes
 
 ## State Reconciliation
 - State reconciliation is strategy-scoped — each strategy handles its own completion path
-- `SdkStrategy` reconciles state inline (existing behavior) and writes the completion marker
+- `SdkStrategy` reconciles state inline after query() completes — reads output.json, enriches manifest via manifest.ts
 - `CmuxStrategy` relies on `phaseCommand` running inside the surface to handle its own lifecycle
-- The watch loop detects completion via the marker file and re-scans the epic
+- The watch loop detects completion via output.json and re-scans the epic
 
 context/design/cmux-integration/communication-protocol.md
 context/design/cmux-integration/surface-model.md

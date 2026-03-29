@@ -10,4 +10,4 @@ Mutually exclusive `phase/*` labels encode Epic lifecycle: backlog -> design -> 
 Labels are the most visible and queryable mechanism for lifecycle state. Comment-based gates match pre-code artifacts (design docs, plans). PR-based gates match code artifacts. implement-to-validate is automatic (all Features closed) because no human judgment is needed for a rollup check.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-state-model.md
+.beastmode/artifacts/design/2026-03-28-github-state-model.md

@@ -4,26 +4,6 @@
 
 @../_shared/retro.md
 
-## 1.5. Write Phase Output
-
-Write the phase output contract file to `.beastmode/state/release/YYYY-MM-DD-<feature>.output.json`:
-
-```json
-{
-  "status": "completed",
-  "artifacts": {
-    "bump": "minor",
-    "changelog": ".beastmode/state/release/YYYY-MM-DD-<feature>.md"
-  }
-}
-```
-
-- The `bump` is the bump type (major/minor/patch) determined during execute
-- The `changelog` path points to the release notes file (if one was generated)
-- If no changelog was written, omit the `changelog` field from artifacts
-
----
-
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 
 ## 2. Commit to Feature Branch
@@ -69,7 +49,17 @@ current_version=$(grep -o '"version": "[^"]*"' .claude-plugin/plugin.json | head
 echo "Current version on main: $current_version"
 ```
 
-Read the bump type from the release notes (or output.json). Apply:
+Read the bump type from the release notes YAML frontmatter (written during execute):
+
+```yaml
+---
+phase: release
+slug: <feature>
+bump: minor
+---
+```
+
+Apply:
 - **major**: increment major, reset minor and patch to 0
 - **minor**: increment minor, reset patch to 0
 - **patch**: increment patch
@@ -87,9 +77,8 @@ Update version in all files **on main**:
 
 ## 7. Update Release Artifacts
 
-Update the release notes and output.json **on main** to include the actual computed version:
-- `.beastmode/state/release/YYYY-MM-DD-<feature>.md` → replace `**Bump:** type` with `**Version:** vX.Y.Z`
-- `.beastmode/state/release/YYYY-MM-DD-<feature>.output.json` → replace `"bump": "type"` with `"version": "vX.Y.Z"`
+Update the release notes **on main** to include the actual computed version:
+- `.beastmode/artifacts/release/YYYY-MM-DD-<feature>.md` → replace `**Bump:** type` with `**Version:** vX.Y.Z`
 
 ## 8. Commit Release
 
@@ -107,9 +96,9 @@ git commit -m "Release vX.Y.Z — <Title from CHANGELOG>
 - <fix 1>
 
 ## Artifacts
-- Design: .beastmode/state/design/YYYY-MM-DD-<feature>.md
-- Plan: .beastmode/state/plan/YYYY-MM-DD-<feature>.md
-- Release: .beastmode/state/release/YYYY-MM-DD-<feature>.md
+- Design: .beastmode/artifacts/design/YYYY-MM-DD-<feature>.md
+- Plan: .beastmode/artifacts/plan/YYYY-MM-DD-<feature>.md
+- Release: .beastmode/artifacts/release/YYYY-MM-DD-<feature>.md
 "
 ```
 

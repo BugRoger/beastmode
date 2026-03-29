@@ -8,4 +8,4 @@ Scanner errors skip the tick and retry on next poll. No retry limit — infinite
 Infinite retry with logging lets the human see the problem and intervene. Graceful degradation for edge cases (empty dirs, missing fields, collisions) prevents cascading failures.
 
 ## Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md

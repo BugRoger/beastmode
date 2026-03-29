@@ -10,5 +10,5 @@ New config key github.enabled (default: false) controls whether GitHub sync happ
 Config toggle ensures GitHub integration is opt-in. Default-off means beastmode works fully local out of the box. Config-driven rather than flag-driven keeps the control surface in one place.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-state-model.md
-.beastmode/state/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-28-github-state-model.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md

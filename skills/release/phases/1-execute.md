@@ -55,7 +55,7 @@ Group commits by type:
 
 ## 4. Generate Release Notes
 
-Save to `.beastmode/state/release/YYYY-MM-DD-<feature>.md`:
+Save to `.beastmode/artifacts/release/YYYY-MM-DD-<feature>.md`:
 
 ```markdown
 # Release: <feature>

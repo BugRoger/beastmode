@@ -8,5 +8,5 @@ Remove costUsd from EpicState and remove cost reporting from both the scanner an
 Scanner's job is to report epic state for orchestration decisions. Cost reporting is neither a scanner concern nor a status command concern — it was adding complexity to both without clear user value. Run log is preserved for programmatic or external tooling consumption.
 
 ## Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md

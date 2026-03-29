@@ -8,5 +8,5 @@ CLI owns full worktree lifecycle: create at first phase encounter with `feature/
 Single-authority worktree management eliminates fragile indirection. Persist-across-phases (instead of per-session ephemeral) removes the need for repeated worktree creation. Error recovery is simple: retry the same phase in the same dirty worktree.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-28-cli-worktree-management.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-cli-worktree-management.md`

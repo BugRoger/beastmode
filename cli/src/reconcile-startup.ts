@@ -7,12 +7,8 @@
 
 import { watch } from "node:fs";
 import { resolve } from "node:path";
-import { readFileSync, existsSync } from "node:fs";
-import type {
-  CmuxClientLike,
-  CmuxWorkspace,
-  DispatchDoneMarker,
-} from "./cmux-types.js";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import type { CmuxClientLike, CmuxWorkspace } from "./cmux-types.js";
 import type { DispatchedSession, SessionResult } from "./watch-types.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 
@@ -56,19 +52,24 @@ export function parseSurfaceTitle(title: string): {
 }
 
 /**
- * Read and parse a dispatch-done marker file.
- * Returns null if the file doesn't exist or is corrupted.
+ * Find and read the most recent output.json in an artifact directory.
+ * Returns null if no output.json exists or the file is corrupted.
  */
-function readMarker(markerPath: string): SessionResult | null {
+function findAndReadOutput(artifactDir: string): SessionResult | null {
   try {
-    const marker: DispatchDoneMarker = JSON.parse(
-      readFileSync(markerPath, "utf-8"),
-    );
+    if (!existsSync(artifactDir)) return null;
+    const files = readdirSync(artifactDir)
+      .filter((f) => f.endsWith(".output.json"))
+      .sort();
+    if (files.length === 0) return null;
+    const filePath = resolve(artifactDir, files[files.length - 1]);
+    const output = JSON.parse(readFileSync(filePath, "utf-8"));
+    if (!output.status || !output.artifacts) return null;
     return {
-      success: marker.exitCode === 0,
-      exitCode: marker.exitCode,
-      costUsd: marker.costUsd,
-      durationMs: marker.durationMs,
+      success: output.status === "completed",
+      exitCode: output.status === "completed" ? 0 : 1,
+      costUsd: 0,
+      durationMs: 0,
     };
   } catch {
     return null;
@@ -76,29 +77,30 @@ function readMarker(markerPath: string): SessionResult | null {
 }
 
 /**
- * Create a session promise that resolves when the .dispatch-done.json
- * marker file appears in the worktree directory.
+ * Create a session promise that resolves when an *.output.json file
+ * appears in the artifact directory for the given phase.
  *
  * Uses fs.watch for near-instant detection with a poll fallback.
  */
-function watchForMarker(
+function watchForOutput(
   worktreePath: string,
+  phase: string,
   signal: AbortSignal,
 ): Promise<SessionResult> {
-  const markerPath = resolve(worktreePath, ".dispatch-done.json");
+  const artifactDir = resolve(worktreePath, ".beastmode", "artifacts", phase);
 
   return new Promise<SessionResult>((resolvePromise, reject) => {
-    // Check if marker already exists (completed while we were starting up)
-    if (existsSync(markerPath)) {
-      const result = readMarker(markerPath);
-      if (result) {
-        resolvePromise(result);
-        return;
-      }
-      // Corrupted marker — fall through to watching
+    // Check if output already exists
+    const existing = findAndReadOutput(artifactDir);
+    if (existing) {
+      resolvePromise(existing);
+      return;
     }
 
-    // Watch for marker file creation
+    // Ensure directory exists for watching
+    const { mkdirSync } = require("node:fs");
+    try { mkdirSync(artifactDir, { recursive: true }); } catch {}
+
     let watcher: ReturnType<typeof watch> | null = null;
 
     const cleanup = () => {
@@ -114,33 +116,29 @@ function watchForMarker(
     });
 
     try {
-      watcher = watch(worktreePath, (_eventType, filename) => {
-        if (filename === ".dispatch-done.json") {
+      watcher = watch(artifactDir, (_eventType, filename) => {
+        if (filename && filename.endsWith(".output.json")) {
           cleanup();
-          const result = readMarker(markerPath);
+          const result = findAndReadOutput(artifactDir);
           if (result) {
             resolvePromise(result);
           } else {
-            reject(new Error(`Failed to parse marker at ${markerPath}`));
+            reject(new Error(`Failed to parse output.json in ${artifactDir}`));
           }
         }
       });
     } catch {
-      // fs.watch may fail on some systems — fall back to polling
+      // fs.watch may fail — fall back to polling
       const pollInterval = setInterval(() => {
         if (signal.aborted) {
           clearInterval(pollInterval);
           reject(new DOMException("Aborted", "AbortError"));
           return;
         }
-        if (existsSync(markerPath)) {
+        const result = findAndReadOutput(artifactDir);
+        if (result) {
           clearInterval(pollInterval);
-          const result = readMarker(markerPath);
-          if (result) {
-            resolvePromise(result);
-          } else {
-            reject(new Error(`Failed to parse marker at ${markerPath}`));
-          }
+          resolvePromise(result);
         }
       }, 2000);
     }
@@ -154,7 +152,7 @@ function watchForMarker(
  * 2. Match workspace names to known epic slugs
  * 3. For matching workspaces:
  *    - Live surfaces → adopt into DispatchTracker with fs.watch
- *    - Dead surfaces (no marker) → close via client
+ *    - Dead surfaces (no output) → close via client
  * 4. Empty workspaces after cleanup → remove
  * 5. Non-matching workspaces → leave untouched
  */
@@ -206,7 +204,7 @@ export async function reconcileStartup(opts: {
         );
 
         const abortController = new AbortController();
-        const promise = watchForMarker(worktreePath, abortController.signal);
+        const promise = watchForOutput(worktreePath, parsed.phase, abortController.signal);
 
         const session: DispatchedSession = {
           id: `adopted-${surface.id}-${Date.now()}`,

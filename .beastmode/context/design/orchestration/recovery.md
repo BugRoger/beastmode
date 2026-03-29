@@ -8,5 +8,5 @@ State files are the recovery point. On startup, scan for existing worktrees with
 Stateless recovery model — the filesystem is the checkpoint. cmux reconciliation prevents double-dispatch of agents that survived a watch loop restart while keeping the recovery model simple: check what exists, adopt or clean up.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-28-cmux-integration.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-cmux-integration.md`

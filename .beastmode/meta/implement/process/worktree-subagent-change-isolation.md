@@ -8,6 +8,6 @@ Subagent worktree isolation means later sequential tasks cannot see earlier task
 ### Rationale
 When tasks have API-level dependencies (Task N changes an interface, Task N+1 consumes that interface), worktree isolation breaks the contract. Either dependent tasks must run in the same worktree, or the orchestrator must merge intermediate results before dispatching dependent tasks.
 ### Source
-.beastmode/state/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
+.beastmode/artifacts/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
 ### Confidence
 [LOW] -- first observation

@@ -8,5 +8,5 @@ Start via `beastmode watch` (foreground, Ctrl+C to stop). Per-dispatch run log i
 Foreground process is simpler than background daemon and provides immediate visibility. Lockfile prevents the accidental double-dispatch failure mode.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md

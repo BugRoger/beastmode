@@ -75,7 +75,7 @@ Mark findings in output: `[HIGH]`, `[MEDIUM]`, `[LOW]`
 Extract topic name from the prompt for filename:
 - Use kebab-case: "Phase Research" → "phase-research"
 - Keep it short: max 3-4 words
-- Output path format: `.beastmode/state/research/YYYY-MM-DD-<topic>.md`
+- Output path format: `.beastmode/artifacts/research/YYYY-MM-DD-<topic>.md`
 
 ## Investigation Protocol
 

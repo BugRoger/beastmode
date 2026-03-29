@@ -8,4 +8,4 @@ Desktop notifications via `cmux notify` fire only on phase failures and blocked 
 No news is good news. Operators should only be interrupted when action is needed. Fixed policy reduces configuration surface area. Verbosity config can be added later if users request it.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

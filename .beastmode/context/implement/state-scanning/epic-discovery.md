@@ -10,4 +10,4 @@ Pivot epic discovery entirely on manifest files. Scan state/plan/ directory for 
 Manifests are the single source of truth for epic state. Design files may not exist (e.g., epics created via pipeline). Date heuristics and legacy code (MANIFEST_EPOCH, dateFromDesign, hasPhaseMarker, hasLegacyArtifact, readRunLog, aggregateCost, findManifest) were dead weight that coupled discovery to filesystem conventions instead of structured data.
 
 ## Source
-.beastmode/state/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
+.beastmode/artifacts/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json

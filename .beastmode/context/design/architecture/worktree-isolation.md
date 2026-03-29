@@ -17,4 +17,4 @@ state/design/2026-03-04-git-branching-strategy.md
 state/design/2026-03-04-worktree-session-discovery.md
 state/design/2026-03-28-external-orchestrator.md
 state/design/2026-03-28-orchestrator.md
-.beastmode/state/design/2026-03-28-cli-worktree-management.md
+.beastmode/artifacts/design/2026-03-28-cli-worktree-management.md

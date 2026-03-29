@@ -24,7 +24,7 @@ Prior decisions, conventions, and learnings inform this phase — don't re-decid
 1. Locate the feature plan by convention glob:
 
 ```bash
-matches=$(ls .beastmode/state/plan/*-$design-$feature.md 2>/dev/null)
+matches=$(ls .beastmode/artifacts/plan/*-$design-$feature.md 2>/dev/null)
 ```
 
 If no matches, error: "No feature plan found for '$design/$feature'". If multiple, take the latest (date prefix sorts chronologically).

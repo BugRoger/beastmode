@@ -8,6 +8,6 @@ The research artifact included an explicit "SOTA vs Training" comparison table t
 ### Rationale
 When AI agents produce research artifacts, the reliability of claims varies by topic recency. Explicitly documenting the gap between training knowledge and verified current state prevents downstream phases from treating stale training-data claims with the same confidence as live-verified API behavior. This is especially important for fast-moving platform APIs (GitHub sub-issues, issue types, issue fields) where capabilities change quarterly.
 ### Source
-.beastmode/state/research/2026-03-28-github-issue-hierarchy.md
+.beastmode/artifacts/research/2026-03-28-github-issue-hierarchy.md
 ### Confidence
 [LOW] -- first-time observation; the technique is novel but only applied once

@@ -13,7 +13,7 @@ Rules:
 1. Ask questions one at a time
 2. For each question, provide your recommended answer
 3. If a question can be answered by exploring the codebase, explore the codebase instead of asking
-4. If a question requires research (unfamiliar technology, external APIs, best practices), research inline using Explore agent with `@../../agents/common-researcher.md` — save findings to `.beastmode/state/research/YYYY-MM-DD-<topic>.md`
+4. If a question requires research (unfamiliar technology, external APIs, best practices), research inline using Explore agent with `@../../agents/common-researcher.md` — save findings to `.beastmode/artifacts/research/YYYY-MM-DD-<topic>.md`
 5. Honor prior decisions from prime — don't re-ask settled questions
 6. Scope guardrail: new capabilities get deferred
    "That sounds like its own feature — I'll note it as a deferred idea. Back to the current branch."

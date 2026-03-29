@@ -95,3 +95,15 @@ Eighth confirmation of 1:1 design-to-plan mapping. Largest set of architectural 
 state/plan/2026-03-28-github-cli-migration.manifest.json
 ### Confidence
 [HIGH] -- eighth observation, pattern firmly established
+
+## Observation 9
+### Context
+During manifest-file-management planning, 2026-03-29
+### Observation
+Design doc's 8 architectural decisions (manifest filesystem boundary, state machine purity, directory restructure, type consolidation, completion signal, stop hook, skill purity, GitHub sync contract) mapped to 5 independent feature plans via manifest decomposition. Locked decisions became constraints applied uniformly across all feature plans. Notably, this was an "infrastructure replacement" epic where all 5 features touch overlapping modules (manifest.ts, state paths, output.json) but from different responsibility angles, yet the decomposition remained clean with no story overlap.
+### Rationale
+Ninth confirmation of 1:1 design-to-plan mapping. Demonstrates the pattern holds even for infrastructure replacement work where features share module targets -- the responsibility-boundary slicing prevents conflicts.
+### Source
+.beastmode/artifacts/plan/2026-03-29-manifest-file-management.manifest.json
+### Confidence
+[HIGH] -- ninth observation, pattern firmly established

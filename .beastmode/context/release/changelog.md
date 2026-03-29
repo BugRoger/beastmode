@@ -8,7 +8,7 @@
 - ALWAYS include Full Changelog as the final section with commit hashes or compare links — traceability
 - NEVER include empty category sections — only sections with content
 - Include Cycle/State Artifacts links when design/plan docs exist — cross-referencing
-- Per-release state docs live at `.beastmode/state/release/YYYY-MM-DD-vX.Y.Z.md` — standard path
+- Per-release state docs live at `.beastmode/artifacts/release/YYYY-MM-DD-vX.Y.Z.md` — standard path
 - Migration releases may include a Migration table — special case
 
 ## Consolidated Changelog

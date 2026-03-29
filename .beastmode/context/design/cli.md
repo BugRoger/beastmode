@@ -9,8 +9,8 @@
 
 ## Dispatch Abstraction
 - ALWAYS use `SessionStrategy` interface for phase dispatch — `dispatch()`, `isComplete()`, `cleanup()` methods decouple dispatch mechanism from orchestration logic
-- `SdkStrategy`: uses `@anthropic-ai/claude-agent-sdk` with `query()` invocation, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming, cost tracking; reconciles state inline and writes `.dispatch-done.json` marker
-- `CmuxStrategy`: creates cmux terminal surface via `cmux` CLI with `--json` flag, sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution, agents get full interactive terminal capability; detects completion via `fs.watch` on `.dispatch-done.json`
+- `SdkStrategy`: uses `@anthropic-ai/claude-agent-sdk` with `query()` invocation, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming, cost tracking; reads output.json after query() iterator completes
+- `CmuxStrategy`: creates cmux terminal surface via `cmux` CLI with `--json` flag, sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution, agents get full interactive terminal capability; detects completion via `fs.watch` on `artifacts/<phase>/` for `*.output.json`
 - `SessionFactory` reads `cli.dispatch-strategy` config (sdk | cmux | auto) + runtime state (cmux availability) to return the right strategy
 - AbortController for cancellation — clean shutdown on Ctrl+C
 - Design phase exception: `beastmode design <topic>` always spawns interactive Claude via `Bun.spawn` with inherited stdio — not dispatched through `SessionFactory`
@@ -39,19 +39,21 @@
 - Lockfile (`cli/.beastmode-watch.lock`) prevents duplicate watch instances
 
 ## Manifest Lifecycle
-- CLI creates manifest at first phase dispatch (design) with slug, phase, and worktree info
-- ALWAYS enrich manifest from phase output files after each dispatch — CLI reads `state/<phase>/YYYY-MM-DD-<slug>.output.json`
-- CLI is the sole manifest mutator — skills never read or write the manifest
-- Manifest location: `.beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
+- CLI creates manifest at first phase dispatch (design) via store.create(slug) before dispatching — manifest exists throughout the entire skill session
+- ALWAYS enrich manifest from output.json after each dispatch — Stop hook auto-generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json` from artifact frontmatter
+- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- Manifest location: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
 ## Post-Dispatch Pipeline
-- After every phase dispatch: read phase output from worktree `state/`, update manifest (advance phase, record artifacts, update feature statuses), run `syncGitHub(manifest, config)`
+- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions, runs `syncGitHub(manifest, config)`
+- github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save()
 - Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
 - ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
 
 ## Phase Output Contract
-- Skills write structured output to `state/<phase>/YYYY-MM-DD-<slug>.output.json` at checkpoint
-- Universal schema: `{ "status": "completed", "artifacts": { ... } }` — features listed in artifacts
-- Output files committed on feature branch alongside skill artifacts — audit trail
-- CLI reads output files from the worktree's `state/` directory after dispatch
+- Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
+- A Stop hook (configured in `.claude/settings.json`) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
+- output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
+- Artifact frontmatter schema per phase: design (phase, slug), plan (phase, epic, feature), implement (phase, epic, feature, status), validate (phase, slug, status), release (phase, slug, bump)
+- CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch

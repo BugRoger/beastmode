@@ -8,6 +8,6 @@ Cross-cutting features that add a consistent step to every phase's checkpoint re
 ### Rationale
 Cross-phase features need explicit decomposition strategy in the plan phase. Without per-phase feature boundaries, a single feature touching 10+ files across 5 directories would be difficult to parallelize and verify. The per-phase decomposition preserved the file-isolation invariant.
 ### Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
 [LOW] — first observation

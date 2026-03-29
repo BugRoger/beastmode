@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
-import { CmuxSessionFactory, type DispatchDoneMarker } from "../cmux-session";
+import { CmuxSessionFactory } from "../cmux-session";
 import type { ICmuxClient } from "../cmux-client";
 import type { SessionCreateOpts } from "../session";
 
@@ -62,10 +62,24 @@ function makeOpts(overrides?: Partial<SessionCreateOpts>): SessionCreateOpts {
   };
 }
 
-function writeMarker(worktreeSlug: string, marker: DispatchDoneMarker): void {
-  const dir = resolve(TEST_ROOT, ".claude", "worktrees", worktreeSlug);
+/** Write an output.json artifact file for a given worktree slug and phase. */
+function writeOutputJson(
+  worktreeSlug: string,
+  phase: string,
+  output: { status: string; artifacts: Record<string, unknown> },
+): void {
+  const dir = resolve(
+    TEST_ROOT,
+    ".claude",
+    "worktrees",
+    worktreeSlug,
+    ".beastmode",
+    "artifacts",
+    phase,
+  );
   mkdirSync(dir, { recursive: true });
-  writeFileSync(resolve(dir, ".dispatch-done.json"), JSON.stringify(marker));
+  const filename = `2026-03-29-test.output.json`;
+  writeFileSync(resolve(dir, filename), JSON.stringify(output));
 }
 
 describe("CmuxSessionFactory", () => {
@@ -83,8 +97,7 @@ describe("CmuxSessionFactory", () => {
 
   test("creates workspace named bm-{epicSlug}", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    // Pre-write marker so promise resolves immediately
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     const handle = await factory.create(makeOpts());
     await handle.promise;
@@ -96,11 +109,11 @@ describe("CmuxSessionFactory", () => {
 
   test("reuses existing workspace for same epic", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     await (await factory.create(makeOpts({ phase: "plan" }))).promise;
     // Write marker for second dispatch too
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "validate", { status: "completed", artifacts: {} });
     await (await factory.create(makeOpts({ phase: "validate" }))).promise;
 
     const createWsCalls = mockClient.calls.filter(c => c.method === "createWorkspace");
@@ -109,7 +122,7 @@ describe("CmuxSessionFactory", () => {
 
   test("creates surface named {phase} for single phases", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     await (await factory.create(makeOpts({ phase: "plan" }))).promise;
 
@@ -120,7 +133,7 @@ describe("CmuxSessionFactory", () => {
 
   test("creates surface named {phase}-{featureSlug} for fan-out", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic-feat-a", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic-feat-a", "implement", { status: "completed", artifacts: {} });
 
     await (await factory.create(makeOpts({
       phase: "implement",
@@ -134,7 +147,7 @@ describe("CmuxSessionFactory", () => {
 
   test("sends correct beastmode command to surface", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     await (await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }))).promise;
 
@@ -143,22 +156,20 @@ describe("CmuxSessionFactory", () => {
     expect(sendText!.args[2]).toBe("beastmode plan my-epic");
   });
 
-  test("resolves session when marker file exists", async () => {
+  test("resolves session when output.json file exists", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 1.23, durationMs: 5000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: { prd: "path/to/prd.md" } });
 
     const handle = await factory.create(makeOpts());
     const result = await handle.promise;
 
     expect(result.success).toBe(true);
     expect(result.exitCode).toBe(0);
-    expect(result.costUsd).toBe(1.23);
-    expect(result.durationMs).toBe(5000);
   });
 
-  test("resolves with failure when marker indicates non-zero exit", async () => {
+  test("resolves with failure when output.json indicates error status", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeMarker("my-epic", { exitCode: 1, costUsd: 0.5, durationMs: 3000, error: "phase failed" });
+    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
 
     const handle = await factory.create(makeOpts());
     const result = await handle.promise;
@@ -169,7 +180,7 @@ describe("CmuxSessionFactory", () => {
 
   test("fires notification on failure", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeMarker("my-epic", { exitCode: 1, costUsd: 0, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
 
     const handle = await factory.create(makeOpts());
     await handle.promise;
@@ -181,7 +192,7 @@ describe("CmuxSessionFactory", () => {
 
   test("does not fire notification on success", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     const handle = await factory.create(makeOpts());
     await handle.promise;
@@ -191,7 +202,7 @@ describe("CmuxSessionFactory", () => {
 
   test("closes surface after session completes", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     const handle = await factory.create(makeOpts({ phase: "plan" }));
     await handle.promise;
@@ -203,7 +214,7 @@ describe("CmuxSessionFactory", () => {
 
   test("cleanup closes workspace for epic", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0, durationMs: 100 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     // Create a session first to register the workspace
     await (await factory.create(makeOpts())).promise;
@@ -217,7 +228,7 @@ describe("CmuxSessionFactory", () => {
 
   test("handle has correct worktreeSlug for single phase", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic", { exitCode: 0, costUsd: 0, durationMs: 100 });
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
 
     const handle = await factory.create(makeOpts({ phase: "plan" }));
     expect(handle.worktreeSlug).toBe("my-epic");
@@ -226,7 +237,7 @@ describe("CmuxSessionFactory", () => {
 
   test("handle has correct worktreeSlug for feature fan-out", async () => {
     const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeMarker("my-epic-feat-a", { exitCode: 0, costUsd: 0, durationMs: 100 });
+    writeOutputJson("my-epic-feat-a", "implement", { status: "completed", artifacts: {} });
 
     const handle = await factory.create(makeOpts({
       phase: "implement",

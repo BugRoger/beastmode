@@ -8,6 +8,6 @@ The Edit and Write tools refused to modify release phase files even after the fi
 ### Rationale
 Tool-level file write restrictions can silently block the normal Edit/Write workflow. When this occurs, Bash heredoc writes are a reliable fallback. The refusal pattern may be related to specific file paths or content patterns.
 ### Source
-.beastmode/state/implement/2026-03-08-worktree-artifact-alignment-deviations.md
+.beastmode/artifacts/implement/2026-03-08-worktree-artifact-alignment-deviations.md
 ### Confidence
 [LOW] — first observation

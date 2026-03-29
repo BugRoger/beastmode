@@ -18,7 +18,7 @@
 
 ## Source of Truth Split
 - ALWAYS use manifest JSON as operational authority for feature lifecycle — GitHub is a one-way mirror, CLI never reads GitHub to update the manifest
-- ALWAYS use repo files for content — design docs, plans, validation reports remain in state/
+- ALWAYS use repo files for content — design docs, plans, validation reports remain in artifacts/
 - NEVER duplicate content between issue bodies and state files — issue bodies link to repo artifacts
 - ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` is a post-dispatch step, not a skill checkpoint step
 - Bootstrap write-back is the sole exception to one-way sync — when sync creates an Epic or Feature issue, it writes the issue number back to the manifest github block
@@ -26,7 +26,7 @@
 ## Migration Strategy
 - Clean cut, no backward compatibility — delete old manifests in `state/plan/*.manifest.json`, rewrite CLI manifest module, no old schema support
 - NEVER backfill existing in-flight features — all state can be recreated from the repo
-- Skill cleanup: delete `skills/_shared/github.md`, remove GitHub sync sections from checkpoint skills, remove manifest creation/mutation from all skills, add output file writing to each checkpoint
+- Skill cleanup: delete `skills/_shared/github.md`, remove GitHub sync sections from checkpoint skills, remove manifest creation/mutation from all skills, remove output.json writing from checkpoints (Stop hook handles it)
 
 ## Configuration
 - ALWAYS use github.enabled config toggle (default: false) to control GitHub sync — setup-github sets it to true
@@ -43,13 +43,13 @@
 - ALWAYS retry GitHub operations at next checkpoint — eventual consistency without workflow blocking
 
 ## Subagent Boundary
-- NEVER make skills or subagents GitHub-aware or manifest-aware — skills are pure content processors that write phase output files only
+- NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
 - ALWAYS centralize GitHub sync and manifest mutation in the CLI — the `syncGitHub(manifest, config)` function in the TypeScript CLI is the sole sync entry point
 
 ## Manifest Schema
-- Manifest is pure pipeline state at `.beastmode/pipeline/<slug>/manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start
-- ALWAYS include: single epic with top-level `phase` field, features array with `slug`, `status`, and `plan` path, artifact references accumulated across phases, worktree info (branch, path), optional `github` block for issue numbers
-- ALWAYS create manifest at first phase dispatch (design) — CLI creates with slug, phase: "design", and worktree info
-- ALWAYS enrich manifest from phase output files at each checkpoint — CLI reads `state/<phase>/YYYY-MM-DD-<slug>.output.json`
-- CLI is the sole manifest mutator — skills never read or write the manifest
+- PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start
+- Schema: slug, phase (Phase), features (ManifestFeature[]), artifacts (Record<string, string[]>), worktree? ({ branch, path }), github? ({ epic, repo }), blocked? ({ gate, reason } | null), lastUpdated (ISO-8601)
+- ALWAYS create manifest at first phase dispatch (design) via store.create(slug) — manifest exists before skill session starts
+- ALWAYS enrich manifest from output.json at each checkpoint — Stop hook generates output.json from artifact frontmatter
+- CLI is the sole manifest mutator via manifest-store.ts + manifest.ts — github-sync.ts returns mutations instead of mutating in-place
 - ALWAYS include optional github blocks (epic/repo at root, issue numbers per feature) only when github.enabled is true

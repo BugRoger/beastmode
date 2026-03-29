@@ -68,7 +68,7 @@ Dispatching 4 parallel research agents — each covering a different angle of th
 ### Rationale
 Research breadth scales with parallel agents, not session duration. When the target ecosystem has multiple independent facets, dispatching one agent per facet is more efficient than one agent covering all sequentially.
 ### Source
-.beastmode/state/design/2026-03-28-cmux-integration.md
+.beastmode/artifacts/design/2026-03-28-cmux-integration.md
 ### Confidence
 [LOW] — first-time observation; extends existing research-before-design pattern (Obs 1-4) with a specific parallelization strategy
 
@@ -80,6 +80,6 @@ When revisiting a design that already had comprehensive parallel research from a
 ### Rationale
 Research investment should be proportional to knowledge staleness. When prior research exists and the external API has not changed, inline verification is cheaper and faster than full parallel research dispatch. The research-before-design rule (Obs 1-4) still holds — but the research depth scales with how much has changed since the last investigation.
 ### Source
-.beastmode/state/design/2026-03-29-cmux-integration-revisited.md
+.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md
 ### Confidence
 [LOW] — first-time observation; extends Obs 6 (parallel research) with the complementary pattern of lightweight delta research when prior work exists

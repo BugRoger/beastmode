@@ -140,14 +140,13 @@ describe("appendRunLog", () => {
 });
 
 describe("release teardown integration", () => {
-  test("worktree module exports create, enter, and remove", async () => {
+  test("worktree module exports create, enter, remove, archive, and merge", async () => {
     const wt = await import("../worktree");
     expect(typeof wt.create).toBe("function");
     expect(typeof wt.enter).toBe("function");
     expect(typeof wt.remove).toBe("function");
-    // archive and merge are no longer exported
-    expect(wt).not.toHaveProperty("archive");
-    expect(wt).not.toHaveProperty("merge");
+    expect(typeof wt.archive).toBe("function");
+    expect(typeof wt.merge).toBe("function");
   });
 
   test("slugify produces consistent results for release path", () => {

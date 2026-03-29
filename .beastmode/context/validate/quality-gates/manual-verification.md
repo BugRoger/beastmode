@@ -10,5 +10,5 @@ Manual verification gates are explicitly listed alongside automated checks. Defe
 Honest reporting of what was and was not verified prevents false confidence. DEFER status tracks items that need follow-up without blocking the release.
 
 ## Source
-- .beastmode/state/validate/2026-03-06-banner-visibility-fix.md
-- .beastmode/state/validate/2026-03-06-skill-cleanup.md
+- .beastmode/artifacts/validate/2026-03-06-banner-visibility-fix.md
+- .beastmode/artifacts/validate/2026-03-06-skill-cleanup.md

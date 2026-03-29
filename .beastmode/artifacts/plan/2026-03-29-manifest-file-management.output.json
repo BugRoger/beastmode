@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "manifest-modules", "plan": "2026-03-29-manifest-file-management-manifest-modules.md"},
+      {"slug": "directory-rename", "plan": "2026-03-29-manifest-file-management-directory-rename.md"},
+      {"slug": "consumer-migration", "plan": "2026-03-29-manifest-file-management-consumer-migration.md"},
+      {"slug": "skill-checkpoint", "plan": "2026-03-29-manifest-file-management-skill-checkpoint.md"},
+      {"slug": "stop-hook", "plan": "2026-03-29-manifest-file-management-stop-hook.md"}
+    ]
+  }
+}

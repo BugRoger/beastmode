@@ -8,4 +8,4 @@ cmux is never a hard dependency. `cmuxAvailable()` pings the cmux CLI to gate al
 Zero regression risk. The existing SDK path is the `SdkStrategy` implementation, fully preserved. The strategy pattern extraction has standalone value for testability regardless of cmux.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

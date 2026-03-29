@@ -6,16 +6,17 @@ import {
   formatStatus,
   type StatusRow,
 } from "../src/commands/status";
-import type { EpicState } from "../src/state-scanner";
+import type { EnrichedManifest } from "../src/state-scanner";
 
-function makeEpic(overrides: Partial<EpicState> = {}): EpicState {
+function makeEpic(overrides: Partial<EnrichedManifest> = {}): EnrichedManifest {
   return {
     slug: "test-epic",
     manifestPath: "/tmp/test.manifest.json",
     phase: "implement",
     nextAction: null,
     features: [],
-    blocked: false,
+    artifacts: {},
+    lastUpdated: "2026-03-29T00:00:00Z",
     ...overrides,
   };
 }
@@ -37,8 +38,8 @@ describe("formatFeatures", () => {
   test("returns 0/2 for epic with 2 pending features", () => {
     const epic = makeEpic({
       features: [
-        { slug: "f1", status: "pending" },
-        { slug: "f2", status: "pending" },
+        { slug: "f1", plan: "f1.md", status: "pending" },
+        { slug: "f2", plan: "f2.md", status: "pending" },
       ],
     });
     expect(formatFeatures(epic)).toBe("0/2");
@@ -47,9 +48,9 @@ describe("formatFeatures", () => {
   test("returns 2/3 for epic with 2 completed and 1 pending", () => {
     const epic = makeEpic({
       features: [
-        { slug: "f1", status: "completed" },
-        { slug: "f2", status: "completed" },
-        { slug: "f3", status: "pending" },
+        { slug: "f1", plan: "f1.md", status: "completed" },
+        { slug: "f2", plan: "f2.md", status: "completed" },
+        { slug: "f3", plan: "f3.md", status: "pending" },
       ],
     });
     expect(formatFeatures(epic)).toBe("2/3");
@@ -61,8 +62,8 @@ describe("formatFeatures", () => {
       const epic = makeEpic({
         phase,
         features: [
-          { slug: "f1", status: "completed" },
-          { slug: "f2", status: "pending" },
+          { slug: "f1", plan: "f1.md", status: "completed" },
+          { slug: "f2", plan: "f2.md", status: "pending" },
         ],
       });
       expect(formatFeatures(epic)).toBe("1/2");
@@ -79,7 +80,7 @@ describe("formatStatus", () => {
     const epic = makeEpic({
       slug: "my-epic",
       phase: "implement",
-      blocked: true,
+      blocked: { gate: "feature", reason: "blocked" },
     });
     const result = formatStatus(epic);
     const visible = stripAnsi(result);
@@ -103,7 +104,7 @@ describe("formatStatus", () => {
   test("non-blocked implement epic shows implement", () => {
     const epic = makeEpic({
       phase: "implement",
-      blocked: false,
+      blocked: null,
     });
     expect(formatStatus(epic)).toBe("implement");
   });
@@ -111,7 +112,7 @@ describe("formatStatus", () => {
   test("non-blocked design epic shows design", () => {
     const epic = makeEpic({
       phase: "design",
-      blocked: false,
+      blocked: null,
     });
     expect(formatStatus(epic)).toBe("design");
   });
@@ -123,7 +124,7 @@ describe("formatStatus", () => {
 
 describe("buildStatusRows", () => {
   test("sorts by phase lifecycle, furthest first", () => {
-    const epics: EpicState[] = [
+    const epics: EnrichedManifest[] = [
       makeEpic({ slug: "a-design", phase: "design" }),
       makeEpic({ slug: "b-release", phase: "release", nextAction: null }),
       makeEpic({ slug: "c-implement", phase: "implement" }),
@@ -142,7 +143,7 @@ describe("buildStatusRows", () => {
   });
 
   test("same phase sorts alphabetically", () => {
-    const epics: EpicState[] = [
+    const epics: EnrichedManifest[] = [
       makeEpic({ slug: "z-epic", phase: "implement" }),
       makeEpic({ slug: "a-epic", phase: "implement" }),
       makeEpic({ slug: "m-epic", phase: "implement" }),
@@ -157,10 +158,10 @@ describe("buildStatusRows", () => {
       slug: "my-epic",
       phase: "implement",
       features: [
-        { slug: "f1", status: "completed" },
-        { slug: "f2", status: "pending" },
+        { slug: "f1", plan: "f1.md", status: "completed" },
+        { slug: "f2", plan: "f2.md", status: "pending" },
       ],
-      blocked: false,
+      blocked: null,
     });
 
     const rows = buildStatusRows([epic]);
@@ -246,8 +247,6 @@ describe("formatTable", () => {
     const table = formatTable(rows);
     const lines = table.split("\n");
     expect(lines).toHaveLength(4); // header + separator + 2 data rows
-    // Visible lengths of data rows should match header length
-    // (ANSI codes don't affect visible width thanks to padDisplay)
     const headerVisibleLen = stripAnsi(lines[0]).length;
     const row1VisibleLen = stripAnsi(lines[2]).length;
     const row2VisibleLen = stripAnsi(lines[3]).length;

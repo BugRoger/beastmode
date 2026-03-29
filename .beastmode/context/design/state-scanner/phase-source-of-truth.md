@@ -8,4 +8,4 @@ Add a top-level manifest.phase field with values: plan | implement | validate | 
 Single field eliminates ambiguity. The reconciler as sole writer creates a clear ownership boundary. Marker files and the phases map were redundant mechanisms for the same information.
 
 ## Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md

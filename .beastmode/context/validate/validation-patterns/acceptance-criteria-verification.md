@@ -10,6 +10,6 @@ Acceptance criteria from design are the source of truth for validation gates. Ea
 Traceability from design to validation closes the loop. Individual criterion reporting (not aggregate) catches partial implementations. DEFER prevents false PASSes without blocking release.
 
 ## Source
-- .beastmode/state/validate/2026-03-05-key-differentiators.md
-- .beastmode/state/validate/2026-03-06-knowledge-hierarchy-format.md
-- .beastmode/state/validate/20260306-context-write-protection.md
+- .beastmode/artifacts/validate/2026-03-05-key-differentiators.md
+- .beastmode/artifacts/validate/2026-03-06-knowledge-hierarchy-format.md
+- .beastmode/artifacts/validate/20260306-context-write-protection.md

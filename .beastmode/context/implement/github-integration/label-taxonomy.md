@@ -10,4 +10,4 @@ GitHub issues need labels to reflect beastmode's phase and status model. Labels 
 Maps directly to beastmode's 5-phase workflow plus backlog/done bookends. Three status labels cover the feature lifecycle without the ambiguity of a "review" state (validate phase handles that). Mutual exclusivity prevents stale label accumulation.
 
 ## Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json

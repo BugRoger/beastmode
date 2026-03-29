@@ -8,6 +8,18 @@ The design made three independent decisions that all enforced the same principle
 ### Rationale
 Dual sources of truth create divergence that compounds silently. The design pattern is: when discovering dual sources, kill the secondary rather than adding reconciliation logic. Reconciliation adds complexity and still permits transient disagreement. A single source is simpler, fails loudly, and is easier to debug.
 ### Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
 ### Confidence
-[LOW] — first observation; pattern appeared three times within a single design but needs cross-session confirmation
+[MEDIUM] — first observation; pattern appeared three times within a single design but needs cross-session confirmation
+
+## Observation 2
+### Context
+During manifest-file-management design, 2026-03-29
+### Observation
+The design made 4 independent single-source-of-truth decisions: (1) kill EpicState, FeatureProgress, ScanResult types in favor of one PipelineManifest, (2) consolidate all filesystem access into manifest-store.ts as the sole fs-touching module, (3) unify completion signals from two markers (.dispatch-done.json + output.json) to one (output.json only), (4) eliminate dual directory naming confusion by renaming state/ to artifacts/ and pipeline/ to state/ so names match semantics. Each decision independently eliminated a competing source rather than reconciling duplicates.
+### Rationale
+Confirms the Obs 1 pattern across a different subsystem. The manifest refactor is a different codebase area (manifest handling vs. state scanner) but applies the identical principle: when two sources exist, kill the secondary rather than adding reconciliation logic. Four independent applications within a single design strengthens the pattern.
+### Source
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md
+### Confidence
+[MEDIUM] -- second observation across different subsystems; same pattern (kill secondary source) applied 4 times within this design

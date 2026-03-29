@@ -14,7 +14,7 @@
 - `SdkStrategy` invokes via SDK `query()` with prompt invoking the skill, `permissionMode: 'bypassPermissions'` — typed session management with streaming
 - `CmuxStrategy` creates a cmux terminal surface and sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution model
 - `SessionFactory` returns `CmuxStrategy` when `cli.dispatch-strategy` config enables it and cmux is available, `SdkStrategy` otherwise — strategy pattern with automatic fallback
-- Completion detection via `.dispatch-done.json` marker file — `phaseCommand` always writes it on exit, each strategy detects it per its own mechanism (SDK resolves promise + writes marker, cmux watches via `fs.watch`)
+- Completion detection via output.json — Stop hook generates it from artifact frontmatter on session exit; SDK strategy reads it after query() completes, cmux strategy watches `artifacts/<phase>/` for `*.output.json` via `fs.watch`
 
 ## Merge Strategy
 - ALWAYS merge implement worktrees sequentially after all agents for an epic finish — ordering prevents conflicts

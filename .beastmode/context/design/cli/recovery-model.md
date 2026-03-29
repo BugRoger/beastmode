@@ -8,4 +8,4 @@ State files are the recovery point. On startup, scan for existing worktrees with
 Stateless recovery model — the filesystem is the checkpoint. No need for session persistence, transaction logs, or complex recovery protocols.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`

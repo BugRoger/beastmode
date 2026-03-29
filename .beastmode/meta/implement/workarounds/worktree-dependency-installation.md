@@ -8,6 +8,6 @@ bun install was required in the worktree before tests could run. Git worktrees s
 ### Rationale
 Worktree setup should include dependency installation as a standard step. Without it, any task requiring test execution or type checking will fail with missing module errors.
 ### Source
-.beastmode/state/implement/2026-03-29-cmux-integration-revisited-cmux-client.output.json
+.beastmode/artifacts/implement/2026-03-29-cmux-integration-revisited-cmux-client.output.json
 ### Confidence
 [LOW] — first-time observation, single feature

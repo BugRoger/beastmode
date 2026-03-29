@@ -8,4 +8,4 @@ Dual-track model: skills remain dependency-free markdown interpreted by Claude C
 Explicit override of prior "no runtime dependencies" rule. The CLI is a separate package with a separate dependency story — skills remain pure markdown. This preserves the zero-dependency plugin while enabling typed orchestration.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`

@@ -1,332 +1,319 @@
 /**
- * Manifest module — typed access to pipeline manifests.
+ * Pure manifest state machine — zero filesystem imports.
  *
- * Schema: pure pipeline state.
- * Location: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json (flat file)
- * Lifecycle: CLI creates, enriches, advances, reconstructs.
+ * Every function takes a PipelineManifest and returns a NEW PipelineManifest.
+ * No mutation. No side effects. No fs. No path.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
-import { resolve } from "path";
-import type { Phase } from "./types";
+import type {
+  PipelineManifest,
+  ManifestFeature,
+} from "./manifest-store";
+import type { Phase, PhaseOutput } from "./types";
+import type { GatesConfig } from "./config";
 
-// --- Types ---
+// Re-export types so consumers can import from either module
+export type { PipelineManifest, ManifestFeature, ManifestGitHub } from "./manifest-store";
 
-export interface ManifestFeature {
-  slug: string;
-  plan: string;
-  status: "pending" | "in-progress" | "completed" | "blocked";
-  github?: { issue: number };
+/** A dispatchable action derived from manifest state. */
+export interface NextAction {
+  phase: string;
+  args: string[];
+  type: "single" | "fan-out";
+  features?: string[];
 }
 
-export interface ManifestGitHub {
-  epic: number;
-  repo: string;
+// --- Timestamp helper ---
+
+function now(): string {
+  return new Date().toISOString();
 }
 
-export interface PipelineManifest {
-  slug: string;
-  phase: Phase;
-  features: ManifestFeature[];
-  artifacts: Record<string, string[]>;
-  worktree?: { branch: string; path: string };
-  github?: ManifestGitHub;
-  lastUpdated: string;
-}
-
-// --- Paths ---
+// --- Pure state transitions ---
 
 /**
- * Resolve the pipeline directory.
- * Convention: .beastmode/pipeline/
- */
-function pipelineDir(projectRoot: string): string {
-  return resolve(projectRoot, ".beastmode", "pipeline");
-}
-
-/**
- * Find the manifest file path for a given slug.
- * Convention: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json
- * Returns the latest match (date prefix sorts chronologically).
- */
-export function manifestPath(projectRoot: string, slug: string): string | undefined {
-  const dir = pipelineDir(projectRoot);
-  if (!existsSync(dir)) return undefined;
-  const files = readdirSync(dir)
-    .filter((f) => f.endsWith(`-${slug}.manifest.json`))
-    .sort();
-  if (files.length === 0) return undefined;
-  return resolve(dir, files[files.length - 1]);
-}
-
-/**
- * Generate a new manifest file path with today's date.
- */
-function newManifestPath(projectRoot: string, slug: string): string {
-  const dir = pipelineDir(projectRoot);
-  const date = new Date().toISOString().slice(0, 10);
-  return resolve(dir, `${date}-${slug}.manifest.json`);
-}
-
-// --- Core Operations ---
-
-/**
- * Seed a new manifest at design dispatch.
- * Creates the pipeline directory and writes initial manifest.
- */
-export function seed(
-  projectRoot: string,
-  slug: string,
-  opts?: {
-    worktree?: { branch: string; path: string };
-    github?: ManifestGitHub;
-  },
-): PipelineManifest {
-  const dir = pipelineDir(projectRoot);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-
-  const manifest: PipelineManifest = {
-    slug,
-    phase: "design",
-    features: [],
-    artifacts: {},
-    worktree: opts?.worktree,
-    github: opts?.github,
-    lastUpdated: new Date().toISOString(),
-  };
-
-  const path = manifestPath(projectRoot, slug) ?? newManifestPath(projectRoot, slug);
-  writeFileSync(path, JSON.stringify(manifest, null, 2));
-  return manifest;
-}
-
-/**
- * Enrich a manifest from a phase output.
- * Merges features, artifacts, and advances phase if output indicates completion.
+ * Enrich a manifest with phase output data.
+ * Merges features (preserving existing github info), accumulates artifacts.
  */
 export function enrich(
-  projectRoot: string,
-  slug: string,
+  manifest: PipelineManifest,
   phaseOutput: {
     phase: Phase;
     features?: ManifestFeature[];
     artifacts?: string[];
   },
 ): PipelineManifest {
-  const manifest = readManifest(projectRoot, slug);
+  let features = [...manifest.features];
 
-  // Merge features if provided
   if (phaseOutput.features) {
-    const existingBySlug = new Map(manifest.features.map((f) => [f.slug, f]));
-    for (const feature of phaseOutput.features) {
-      const existing = existingBySlug.get(feature.slug);
+    const existingBySlug = new Map(features.map((f) => [f.slug, f]));
+    for (const incoming of phaseOutput.features) {
+      const existing = existingBySlug.get(incoming.slug);
       if (existing) {
-        // Preserve github info from existing, update rest
-        existing.plan = feature.plan;
-        existing.status = feature.status;
-        if (feature.github) existing.github = feature.github;
+        // Preserve github info from existing, update plan and status
+        const merged: ManifestFeature = {
+          ...existing,
+          plan: incoming.plan,
+          status: incoming.status,
+        };
+        if (incoming.github) {
+          merged.github = incoming.github;
+        }
+        features = features.map((f) =>
+          f.slug === incoming.slug ? merged : f,
+        );
       } else {
-        manifest.features.push(feature);
+        features = [...features, incoming];
       }
     }
   }
 
-  // Accumulate artifacts under the phase key
+  const artifacts = { ...manifest.artifacts };
   if (phaseOutput.artifacts && phaseOutput.artifacts.length > 0) {
-    if (!manifest.artifacts[phaseOutput.phase]) {
-      manifest.artifacts[phaseOutput.phase] = [];
-    }
-    manifest.artifacts[phaseOutput.phase].push(...phaseOutput.artifacts);
+    const existing = artifacts[phaseOutput.phase] ?? [];
+    artifacts[phaseOutput.phase] = [...existing, ...phaseOutput.artifacts];
   }
 
-  manifest.lastUpdated = new Date().toISOString();
-  writeManifest(projectRoot, slug, manifest);
-  return manifest;
+  return {
+    ...manifest,
+    features,
+    artifacts,
+    lastUpdated: now(),
+  };
 }
 
 /**
- * Advance the manifest to the next phase.
+ * Advance the manifest to a new phase.
  */
 export function advancePhase(
-  projectRoot: string,
-  slug: string,
+  manifest: PipelineManifest,
   newPhase: Phase,
 ): PipelineManifest {
-  const manifest = readManifest(projectRoot, slug);
-  manifest.phase = newPhase;
-  manifest.lastUpdated = new Date().toISOString();
-  writeManifest(projectRoot, slug, manifest);
-  return manifest;
-}
-
-/**
- * Reconstruct a manifest from worktree branch scanning.
- * Used for cold-start when the manifest file is missing.
- */
-export function reconstruct(
-  projectRoot: string,
-  slug: string,
-): PipelineManifest | undefined {
-  // Scan for design artifact
-  const designDir = resolve(projectRoot, ".beastmode", "state", "design");
-  if (!existsSync(designDir)) return undefined;
-
-  const designFiles = readdirSync(designDir).filter((f) =>
-    f.endsWith(`-${slug}.md`),
-  );
-  if (designFiles.length === 0) return undefined;
-
-  // Scan for feature plans
-  const planDir = resolve(projectRoot, ".beastmode", "state", "plan");
-  const features: ManifestFeature[] = [];
-  if (existsSync(planDir)) {
-    const featurePlanPattern = new RegExp(
-      `^\\d{4}-\\d{2}-\\d{2}-${escapeRegExp(slug)}-(.+)\\.md$`,
-    );
-    const planFiles = readdirSync(planDir).filter((f) =>
-      featurePlanPattern.test(f),
-    );
-    for (const f of planFiles) {
-      const match = f.match(featurePlanPattern)!;
-      features.push({
-        slug: match[1],
-        plan: f,
-        status: "pending",
-      });
-    }
-  }
-
-  // Determine phase from available state
-  let phase: Phase = "design";
-  if (features.length > 0) phase = "plan";
-
-  // Check for implement/validate/release state markers
-  for (const p of ["implement", "validate", "release"] as Phase[]) {
-    const phaseDir = resolve(projectRoot, ".beastmode", "state", p);
-    if (existsSync(phaseDir)) {
-      const hasMarker = readdirSync(phaseDir).some((f) => f.includes(slug));
-      if (hasMarker) phase = p;
-    }
-  }
-
-  const manifest: PipelineManifest = {
-    slug,
-    phase,
-    features,
-    artifacts: {},
-    lastUpdated: new Date().toISOString(),
+  return {
+    ...manifest,
+    phase: newPhase,
+    lastUpdated: now(),
   };
-
-  // Write the reconstructed manifest
-  const dir = pipelineDir(projectRoot);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const path = newManifestPath(projectRoot, slug);
-  writeFileSync(path, JSON.stringify(manifest, null, 2));
-
-  return manifest;
-}
-
-// --- Read/Write ---
-
-/**
- * Read and parse a manifest for a slug. Throws if missing or corrupt.
- */
-export function readManifest(
-  projectRoot: string,
-  slug: string,
-): PipelineManifest {
-  const path = manifestPath(projectRoot, slug);
-  if (!path || !existsSync(path)) {
-    throw new Error(`Manifest not found for slug: ${slug}`);
-  }
-  const raw = readFileSync(path, "utf-8");
-  return JSON.parse(raw) as PipelineManifest;
 }
 
 /**
- * Write a manifest back to disk.
+ * Regress the manifest to a prior phase. Resets ALL features to "pending".
  */
-export function writeManifest(
-  projectRoot: string,
-  slug: string,
+export function regressPhase(
   manifest: PipelineManifest,
-): void {
-  const dir = pipelineDir(projectRoot);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const path = manifestPath(projectRoot, slug) ?? newManifestPath(projectRoot, slug);
-  writeFileSync(path, JSON.stringify(manifest, null, 2));
+  phase: Phase,
+): PipelineManifest {
+  return {
+    ...manifest,
+    phase,
+    features: manifest.features.map((f) => ({ ...f, status: "pending" as const })),
+    lastUpdated: now(),
+  };
 }
 
 /**
- * Load a manifest, returning undefined if it doesn't exist.
+ * Mark a single feature's status by slug.
+ * Returns the manifest unchanged if the feature is not found.
  */
-export function loadManifest(
-  projectRoot: string,
+export function markFeature(
+  manifest: PipelineManifest,
   slug: string,
-): PipelineManifest | undefined {
-  try {
-    return readManifest(projectRoot, slug);
-  } catch {
-    return undefined;
+  status: ManifestFeature["status"],
+): PipelineManifest {
+  const idx = manifest.features.findIndex((f) => f.slug === slug);
+  if (idx === -1) return manifest;
+
+  const features = manifest.features.map((f, i) =>
+    i === idx ? { ...f, status } : f,
+  );
+
+  return {
+    ...manifest,
+    features,
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Cancel the pipeline. Sets phase to "cancelled".
+ */
+export function cancel(manifest: PipelineManifest): PipelineManifest {
+  return {
+    ...manifest,
+    phase: "cancelled" as Phase,
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Set the GitHub epic reference on the manifest.
+ */
+export function setGitHubEpic(
+  manifest: PipelineManifest,
+  epicNumber: number,
+  repo: string,
+): PipelineManifest {
+  return {
+    ...manifest,
+    github: { epic: epicNumber, repo },
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Set a GitHub issue number on a specific feature.
+ * Returns manifest unchanged if the feature is not found.
+ */
+export function setFeatureGitHubIssue(
+  manifest: PipelineManifest,
+  featureSlug: string,
+  issueNumber: number,
+): PipelineManifest {
+  const idx = manifest.features.findIndex((f) => f.slug === featureSlug);
+  if (idx === -1) return manifest;
+
+  const features = manifest.features.map((f, i) =>
+    i === idx ? { ...f, github: { issue: issueNumber } } : f,
+  );
+
+  return {
+    ...manifest,
+    features,
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Derive the next dispatchable action from manifest state.
+ */
+export function deriveNextAction(
+  manifest: PipelineManifest,
+): NextAction | null {
+  const slug = manifest.slug;
+
+  switch (manifest.phase) {
+    case "design":
+      return { phase: "plan", args: [slug], type: "single" };
+
+    case "plan":
+      return { phase: "plan", args: [slug], type: "single" };
+
+    case "implement": {
+      const pendingFeatures = manifest.features
+        .filter((f) => f.status === "pending" || f.status === "in-progress")
+        .map((f) => f.slug);
+      if (pendingFeatures.length === 0) return null;
+      return {
+        phase: "implement",
+        args: [slug],
+        type: "fan-out",
+        features: pendingFeatures,
+      };
+    }
+
+    case "validate":
+      return { phase: "validate", args: [slug], type: "single" };
+
+    case "release":
+      return { phase: "release", args: [slug], type: "single" };
+
+    default:
+      return null;
   }
 }
 
 /**
- * Check if a manifest exists for a given slug.
+ * Check if the manifest is blocked by a feature or a human gate.
  */
-export function manifestExists(
-  projectRoot: string,
-  slug: string,
-): boolean {
-  const path = manifestPath(projectRoot, slug);
-  return path !== undefined && existsSync(path);
+export function checkBlocked(
+  manifest: PipelineManifest,
+  gates: GatesConfig,
+): { gate: string; reason: string } | null {
+  // Check for blocked features
+  const blockedFeature = manifest.features.find(
+    (f) => f.status === "blocked",
+  );
+  if (blockedFeature) {
+    return {
+      gate: "feature",
+      reason: `Feature ${blockedFeature.slug} is blocked`,
+    };
+  }
+
+  // Check config gates for human gates on the current phase
+  const phaseGates = gates[manifest.phase as keyof GatesConfig];
+  if (phaseGates) {
+    for (const [gateName, mode] of Object.entries(phaseGates)) {
+      if (mode === "human") {
+        return { gate: gateName, reason: "Human gate" };
+      }
+    }
+  }
+
+  return null;
+}
+
+// --- Phase sequence ---
+
+const PHASE_SEQUENCE: Partial<Record<Phase, Phase>> = {
+  design: "plan",
+  plan: "implement",
+  implement: "validate",
+  validate: "release",
+};
+
+/**
+ * Check if the phase output artifacts contain features.
+ */
+function outputHasFeatures(output: PhaseOutput): boolean {
+  const artifacts = output.artifacts as unknown as Record<string, unknown>;
+  const features = artifacts?.features;
+  return Array.isArray(features) && features.length > 0;
 }
 
 /**
- * Get pending/in-progress features from a manifest.
+ * Determine if the pipeline should advance to the next phase.
+ * Returns the next phase, or null if no advancement should occur.
  */
-export function getPendingFeatures(manifest: PipelineManifest): ManifestFeature[] {
+export function shouldAdvance(
+  manifest: PipelineManifest,
+  output: PhaseOutput | undefined,
+): Phase | null {
+  const nextPhase = PHASE_SEQUENCE[manifest.phase];
+  if (!nextPhase) return null;
+
+  switch (manifest.phase) {
+    case "design":
+      return nextPhase;
+
+    case "plan": {
+      if (!output) return null;
+      return outputHasFeatures(output) ? nextPhase : null;
+    }
+
+    case "implement": {
+      if (manifest.features.length === 0) return null;
+      const allCompleted = manifest.features.every(
+        (f) => f.status === "completed",
+      );
+      return allCompleted ? nextPhase : null;
+    }
+
+    case "validate":
+      return output?.status === "completed" ? nextPhase : null;
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Get features that are pending or in-progress.
+ */
+export function getPendingFeatures(
+  manifest: PipelineManifest,
+): ManifestFeature[] {
   return manifest.features.filter(
     (f) => f.status === "pending" || f.status === "in-progress",
   );
-}
-
-// --- Legacy Support ---
-
-/**
- * Find a manifest in the old state/plan/ location.
- * Used during migration to locate seed manifests.
- * Convention: .beastmode/state/plan/*-<slug>.manifest.json
- */
-export function findLegacyManifestPath(
-  projectRoot: string,
-  designSlug: string,
-): string | undefined {
-  const planDir = resolve(projectRoot, ".beastmode", "state", "plan");
-  if (!existsSync(planDir)) return undefined;
-
-  const files = readdirSync(planDir);
-  const matches = files
-    .filter((f) => f.endsWith(`-${designSlug}.manifest.json`))
-    .sort();
-
-  if (matches.length === 0) return undefined;
-  return resolve(planDir, matches[matches.length - 1]);
-}
-
-/**
- * Read and parse a legacy manifest file from an absolute path.
- */
-export function readLegacyManifest(path: string): Record<string, unknown> {
-  if (!existsSync(path)) {
-    throw new Error(`Manifest not found: ${path}`);
-  }
-  const raw = readFileSync(path, "utf-8");
-  return JSON.parse(raw) as Record<string, unknown>;
-}
-
-// --- Utilities ---
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

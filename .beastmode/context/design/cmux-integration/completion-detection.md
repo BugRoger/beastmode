@@ -2,10 +2,11 @@
 The watch loop needs to detect when a dispatched agent finishes work, regardless of whether it was dispatched via SDK or cmux.
 
 ## Decision
-`phaseCommand` always writes `.dispatch-done.json` to the worktree path on exit with session result data (exit status, cost, duration). This is a universal marker regardless of how phaseCommand was launched (direct CLI, SDK, or cmux surface). `SdkStrategy` resolves the in-process promise and also writes the marker. `CmuxStrategy` watches for the marker via `fs.watch` on the worktrees directory for near-instant detection. No polling delay.
+Stop hook always generates output.json from artifact frontmatter when Claude finishes — universal completion signal regardless of dispatch strategy. output.json is the sole completion marker (`.dispatch-done.json` is deleted). `CmuxStrategy` watches `artifacts/<phase>/` for `*.output.json` via `fs.watch` for near-instant detection. `SdkStrategy` reads output.json after query() iterator completes.
 
 ## Rationale
-Universal marker means completion detection is implementation-agnostic at the data layer while allowing each strategy to detect it via its native mechanism. The marker file also provides a persistent completion artifact that survives process crashes, benefiting the SDK strategy too.
+The Stop hook generates output.json by infrastructure, making completion detection implementation-agnostic at the data layer. A single completion marker simplifies both strategy implementations. The hook approach means skills never need to write a completion signal.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

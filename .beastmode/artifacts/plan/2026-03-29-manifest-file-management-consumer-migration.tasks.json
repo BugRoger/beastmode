@@ -1,0 +1,14 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-29-manifest-file-management-consumer-migration.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create manifest-store.ts", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Rewrite manifest.ts as pure functions", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Rewrite state-scanner.ts", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Rewrite watch-command.ts", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Rewrite post-dispatch.ts", "status": "pending"},
+    {"id": 5, "subject": "Task 5: Refactor github-sync.ts", "status": "pending"},
+    {"id": 6, "subject": "Task 6: Rewrite cancel/status/watch/watch-types/phase-output", "status": "pending"},
+    {"id": 7, "subject": "Task 7: Update all tests", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-29T00:00:00Z"
+}

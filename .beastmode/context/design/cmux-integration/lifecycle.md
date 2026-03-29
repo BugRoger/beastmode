@@ -8,4 +8,4 @@ Clean up cmux workspace and all surfaces when an epic reaches release. Cleanup t
 Release cleanup mirrors the git worktree lifecycle. Best-effort coupling means cmux failures never block the pipeline. Startup reconciliation prevents double-dispatch when the watch loop restarts while agents are still running.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

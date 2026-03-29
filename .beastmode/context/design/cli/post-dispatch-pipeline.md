@@ -1,13 +1,14 @@
 # Post-Dispatch Pipeline
 
 ## Context
-The github-cli-migration introduces a post-dispatch pipeline in the CLI that reads phase outputs, updates the manifest, and syncs GitHub — replacing the scattered sync logic that was previously embedded in skill markdown.
+After each phase dispatch, the CLI needs to read results, update the manifest, and sync GitHub. The manifest-file-management design introduces Stop hook output.json generation and a mutation-return pattern for github-sync.ts.
 
 ## Decision
-After every phase dispatch, the CLI reads the phase output from the worktree (`state/<phase>/YYYY-MM-DD-<slug>.output.json`), updates the manifest (advance phase, record artifacts, update feature statuses), then runs `syncGitHub(manifest, config)`. Same code path for manual `beastmode <phase>` and watch loop dispatch. Post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match.
+After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions (enrich, advancePhase, shouldAdvance), then runs `syncGitHub(manifest, config)`. github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save(). Same code path for manual `beastmode <phase>` and watch loop dispatch. Post-only stateless sync.
 
 ## Rationale
-A single post-dispatch pipeline ensures consistent behavior across manual and automated execution. Stateless sync (read manifest, make GitHub match) is simple to reason about and test. Eliminating pre-sync avoids complex two-phase reconciliation.
+Stop hook generates output.json by infrastructure, eliminating skill-authored output steps. Pure function enrichment is testable without filesystem mocks. Mutation-return from github-sync.ts ensures all manifest writes go through the store, maintaining the single-writer invariant.
 
 ## Source
-.beastmode/state/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

@@ -1,12 +1,12 @@
 ## Context
-The CLI had two divergent scanner implementations (state-scanner.ts and scanEpicsInline in watch-command.ts) with 19 concrete divergences causing inconsistent epic state reporting.
+The CLI had a standalone state-scanner.ts module that read manifest files from the pipeline directory. The manifest-file-management design replaces this with a composition of manifest-store.ts and manifest.ts.
 
 ## Decision
-Rewrite state-scanner.ts as the single canonical scanner. Kill the inline scanner entirely. Scanner is read-only — never writes to the filesystem. Discover epics by reading manifest files from the pipeline directory only, with no design file dependency. Uses flat-file manifest path convention: pipeline/YYYY-MM-DD-<slug>.manifest.json (no directory-per-slug).
+state-scanner.ts is gutted or deleted. Scanning is composed from store.list() (reads manifests from `.beastmode/state/`) + manifest.deriveNextAction() + manifest.checkBlocked(). No standalone scanner module. Manifest path convention: `state/YYYY-MM-DD-<slug>.manifest.json` (gitignored, CLI-owned).
 
 ## Rationale
-Two scanners disagreeing about state is worse than one scanner with a bug. Read-only separation ensures the scanner can run on any tick without side effects. Manifests-only anchoring removes the design file dependency — pre-manifest epics are all released and don't need tracking. Flat-file convention aligns scanner path expectations with manifest.ts writer.
+Composing scanning from store + pure functions eliminates the standalone scanner as a separate module with its own types and path conventions. store.list() provides the same discovery as the old scanner, and manifest.ts pure functions provide the same state derivation — but now the types, paths, and logic are shared with the rest of the manifest system.
 
 ## Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

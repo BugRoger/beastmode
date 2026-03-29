@@ -2,15 +2,20 @@
 
 ## 0. Resolve Feature Slug
 
-The feature slug comes from the skill argument. Use it directly for all artifact file paths below.
+The feature slug comes from the skill argument. Use it directly for all artifact file paths below (under `.beastmode/artifacts/`).
 
 ## 1. Write PRD
 
-Save to `.beastmode/state/design/YYYY-MM-DD-<feature>.md` where `<feature>` is the feature slug (from step 0).
+Save to `.beastmode/artifacts/design/YYYY-MM-DD-<feature>.md` where `<feature>` is the feature slug (from step 0).
 
 Use this template:
 
 ```
+---
+phase: design
+slug: <feature>
+---
+
 ## Problem Statement
 
 [The problem from the user's perspective]
@@ -52,48 +57,11 @@ Do NOT include specific file paths or code snippets — they may become outdated
 [Ideas that came up during the interview but were deferred as separate features, or "None"]
 ```
 
-## 1.5. Write Phase Output
-
-Write the phase output contract file to `.beastmode/state/design/YYYY-MM-DD-<feature>.output.json`:
-
-```json
-{
-  "status": "completed",
-  "artifacts": {
-    "design": ".beastmode/state/design/YYYY-MM-DD-<feature>.md"
-  }
-}
-```
-
-Where the `design` path matches the PRD written in Step 1.
-
-## 2. Create Manifest
-
-Create a minimal manifest JSON so the feature is tracked from inception.
-
-**Path:** `.beastmode/state/plan/YYYY-MM-DD-<feature>.manifest.json` where `<feature>` is the feature slug (from step 0).
-
-Write this JSON:
-
-```json
-{
-  "design": ".beastmode/state/design/YYYY-MM-DD-<feature>.md",
-  "architecturalDecisions": [],
-  "features": [],
-  "lastUpdated": "<ISO-8601 timestamp>"
-}
-```
-
-- `design` — relative path to the PRD just written in Step 1
-- `architecturalDecisions` — empty array; plan phase will populate
-- `features` — empty array; plan phase will populate
-- `lastUpdated` — current timestamp
-
-## 3. Phase Retro
+## 2. Phase Retro
 
 @../_shared/retro.md
 
-## 4. Commit and Handoff
+## 3. Commit and Handoff
 
 Commit all work to the feature branch:
 

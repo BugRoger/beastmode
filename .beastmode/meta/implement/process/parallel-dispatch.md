@@ -56,7 +56,7 @@ Fourth consecutive feature confirming parallel dispatch with file isolation. Wav
 ### Rationale
 File isolation continues to hold as the primary enabler for parallel dispatch. When two files within a task have dependencies, that task should be a single-task wave, not split across parallel subagents. The wave structure in the plan correctly handled this.
 ### Source
-.beastmode/state/implement/2026-03-08-worktree-artifact-alignment-deviations.md
+.beastmode/artifacts/implement/2026-03-08-worktree-artifact-alignment-deviations.md
 ### Confidence
 [HIGH] — confirmed across 4 features (5 total observations)
 
@@ -68,6 +68,6 @@ Sixth consecutive feature confirming parallel dispatch with file isolation. All 
 ### Rationale
 Parallel dispatch reliability is material-agnostic. File isolation and pattern uniformity work whether the target files are code, configuration, or skill definitions. This extends the confirmed domain of the pattern.
 ### Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
 [HIGH] — confirmed across 5+ features (6 total observations)

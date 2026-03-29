@@ -26,6 +26,9 @@
 - ALWAYS persist state needed by subsequent phases to disk — session boundaries are a hard reset
 - ALWAYS ensure state is re-derivable from arguments or persisted artifacts — in-memory state vanishes across sessions
 
+## Single Source of Truth
+- ALWAYS eliminate the secondary source rather than adding reconciliation logic when two sources of truth are discovered -- reconciliation adds complexity while permitting transient disagreement
+
 ## L0 Content Scope
 - ALWAYS keep L0 as persona + map only — operational details belong in skills
 - ALWAYS use pointer references over content duplication — reduces drift

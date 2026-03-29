@@ -10,4 +10,4 @@ CHANGELOG.md at repo root consolidates multiple releases into scannable entries.
 Follows high-star GitHub changelog patterns. Consolidating related minors (e.g., 18 releases into 10 entries) prevents changelog fatigue while preserving key information. Introduced in v0.6.0.
 
 ## Source
-- .beastmode/state/release/2026-03-04-v0.6.0.md (introduced CHANGELOG.md)
+- .beastmode/artifacts/release/2026-03-04-v0.6.0.md (introduced CHANGELOG.md)

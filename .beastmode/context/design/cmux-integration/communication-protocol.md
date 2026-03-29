@@ -8,4 +8,4 @@ Use the `cmux` CLI binary with `--json` flag. A typed `CmuxClient` module wraps 
 CLI wrapper avoids direct Unix socket programming, simplifies the integration surface, and is compatible with the Bun runtime. The `--json` flag provides structured output parsing.
 
 ## Source
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

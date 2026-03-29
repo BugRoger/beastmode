@@ -8,5 +8,5 @@ Phase as direct argument: `beastmode <phase> <slug>` for single phase execution 
 Minimal command surface covers all use cases. Dropping `run` makes the phase name the verb — cleaner ergonomics. Design exception preserves human interaction without forcing SDK workarounds for interactive sessions.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-28-cli-worktree-management.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-cli-worktree-management.md`

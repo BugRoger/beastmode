@@ -8,7 +8,7 @@ CLI architecture drift invalidated the prior cmux-integration design's integrati
 ### Rationale
 When a design's integration points depend on an architecture that is actively evolving, the design may need full revisiting rather than incremental patching. The trigger signal is: the integration points named in the PRD no longer exist or have changed semantics. Patching risks incoherent designs that reference a mix of old and new architecture.
 ### Source
-.beastmode/state/design/2026-03-29-cmux-integration-revisited.md
+.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md
 ### Confidence
 [LOW] — first-time observation; related to scope-management Obs 13 (supersession documentation) and Obs 14 (constraint overrides) but distinct: this is about recognizing when a prior design needs full replacement vs. amendment
 
@@ -20,6 +20,6 @@ The revisited design produced simpler decisions across the board (CLI wrapper vs
 ### Rationale
 Deferring integration design until the target system has stabilized produces cleaner outcomes. When early design sessions reveal that decisions are contentious, that may signal the target architecture has not yet settled — and the design should be deferred rather than forced.
 ### Source
-.beastmode/state/design/2026-03-29-cmux-integration-revisited.md
+.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md
 ### Confidence
 [LOW] — first-time observation; single data point comparing original vs. revisited design complexity

@@ -8,4 +8,4 @@ Plugin testing remains manual (invoke skills and verify). CLI testing via Bun te
 CLI has enough logic to warrant automated tests. Skills remain thin enough that manual testing suffices.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
