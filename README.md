@@ -51,9 +51,9 @@ Prime loads context from `.beastmode/`. Execute does the work. Validate checks q
 
 Three domains organize what gets persisted:
 
-- **Context** — what the project knows (architecture, conventions, product vision)
-- **State** — where features are in the workflow (design through release)
-- **Meta** — what you've learned (procedures, process insights, project-specific rules)
+- **Artifacts** — skill outputs (design specs, plans, validation records, release notes)
+- **Context** — project knowledge (architecture, conventions, product vision)
+- **Meta** — process insights (procedures, learnings, project-specific rules)
 
 ## What's Different
 
@@ -89,15 +89,13 @@ Beastmode places human-in-the-loop gates at every decision point: design approva
 # .beastmode/config.yaml
 gates:
   design:
-    intent-discussion: human      # start supervised
-    design-approval: human
-  plan:
-    plan-approval: auto           # trust the plan phase
+    existing-design-choice: human     # start supervised
+    decision-tree: human
+    prd-approval: human
   implement:
-    architectural-deviation: auto # claude handles deviations
-transitions:
-  design-to-plan: auto            # auto-chain between phases
-  plan-to-implement: auto
+    architectural-deviation: auto     # claude handles deviations
+    blocked-task-decision: auto
+    validation-failure: auto
 ```
 
 [Read the full argument.](docs/configurable-gates.md)
@@ -127,6 +125,12 @@ Feature → Design → Plan → Implement → Validate → Story
 ```
 
 The gap nobody tools for, because it's "just development." But this layer loses the most context, generates the most rework, and gives AI agents the most leverage — if they have structure.
+
+## What Beastmode Is NOT
+
+- **Not portfolio strategy.** It doesn't decide what to build — it turns decisions into working code.
+- **Not CI/CD.** It doesn't deploy, monitor, or roll back. It stops at "validated story."
+- **Not project management.** No sprints, no velocity charts, no resource allocation. One feature at a time, start to finish.
 
 ## Credits
 
