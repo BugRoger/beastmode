@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.35.0 — The Fork Point (Mar 2026)
+
+- **Fork-point tracking** — Worktrees fork from local main instead of stale `origin/HEAD`; fork-point SHA recorded in `WorktreeInfo` for audit trail
+- **Main branch resolution** — `resolveMainBranch()` resolves default branch from `git symbolic-ref` with `"main"` fallback
+- **Graceful degradation** — `forkPoint` set to `undefined` when `merge-base` fails (unrelated histories, missing branch)
+
 ### v0.34.0 — The Manifest-Only Status (Mar 2026)
 
 - **Manifest-first scanner** — Epic discovery pivots on manifest files instead of design files; status table drops from ~116 noisy rows to ~12 active epics
