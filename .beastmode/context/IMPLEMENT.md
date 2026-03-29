@@ -19,3 +19,10 @@
 - Label taxonomy: 12 labels across type (2), phase (7), status (3), gate (1) — status/review is dropped
 - Epic lifecycle: created at design checkpoint, phase-advanced at each subsequent checkpoint, closed at release
 - Feature lifecycle: created as sub-issues at plan checkpoint, set in-progress at implement prime, closed at implement checkpoint
+
+## Cmux Integration
+- CmuxClient is a class wrapping the cmux binary via Bun.spawn with injectable SpawnFn for testability
+- All operations shell out to cmux CLI with --json flag for structured responses; no direct socket programming
+- Error hierarchy: CmuxError base, CmuxConnectionError, CmuxProtocolError, CmuxTimeoutError
+- Close operations are idempotent — "not found" errors are swallowed, connection errors always rethrow
+- No retry logic or caching in the client — callers handle retry policy
