@@ -39,7 +39,7 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **Artifact**: {path to new state artifact}
 - **L1 context path**: `.beastmode/context/{PHASE}.md`
-- **Worktree root**: {current working directory}
+- **Working directory**: {current working directory}
 ```
 
 **Meta Walker** — read prompt from `agents/retro-meta.md`
@@ -52,7 +52,7 @@ Include in agent prompt:
 - **Feature**: {feature name}
 - **L1 meta path**: `.beastmode/meta/{PHASE}.md`
 - **Artifacts**: {list of state artifact paths}
-- **Worktree root**: {current working directory}
+- **Working directory**: {current working directory}
 ```
 
 Wait for both to return before proceeding.

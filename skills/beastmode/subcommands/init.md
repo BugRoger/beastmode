@@ -146,7 +146,7 @@ Agent:
     - **Feature**: init
     - **Artifact**: {list of state artifacts for this phase, or "none"}
     - **L1 context path**: .beastmode/context/{PHASE}.md
-    - **Worktree root**: {project root}
+    - **Working directory**: {project root}
 
     Focus on:
     1. Validating L2 files just written by init writers

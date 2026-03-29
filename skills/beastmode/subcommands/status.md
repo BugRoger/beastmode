@@ -83,7 +83,7 @@ GitHub issue numbers shown only when the manifest has `github` blocks.
 
 ```
 ### <phase>
-- <feature> (worktree: .claude/worktrees/<feature>)
+- <feature> (dir: .claude/worktrees/<feature>)
 ```
 
 **Completed designs:**
