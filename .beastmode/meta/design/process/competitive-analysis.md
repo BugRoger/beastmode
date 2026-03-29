@@ -71,3 +71,15 @@ Research breadth scales with parallel agents, not session duration. When the tar
 .beastmode/state/design/2026-03-28-cmux-integration.md
 ### Confidence
 [LOW] — first-time observation; extends existing research-before-design pattern (Obs 1-4) with a specific parallelization strategy
+
+## Observation 7
+### Context
+During cmux-integration-revisited design, 2026-03-29
+### Observation
+When revisiting a design that already had comprehensive parallel research from a prior session (Obs 6: 4 parallel research agents covering cmux ecosystem), inline delta research via perplexity was sufficient. The session verified the cmux API surface and CLI dispatch architecture inline before the decision tree, without dispatching dedicated research agents. Prior research artifacts served as the baseline; only the delta (what changed in the CLI since the original design) needed fresh investigation.
+### Rationale
+Research investment should be proportional to knowledge staleness. When prior research exists and the external API has not changed, inline verification is cheaper and faster than full parallel research dispatch. The research-before-design rule (Obs 1-4) still holds — but the research depth scales with how much has changed since the last investigation.
+### Source
+.beastmode/state/design/2026-03-29-cmux-integration-revisited.md
+### Confidence
+[LOW] — first-time observation; extends Obs 6 (parallel research) with the complementary pattern of lightweight delta research when prior work exists

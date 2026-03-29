@@ -70,14 +70,14 @@ Manifest JSON is the operational authority for feature lifecycle. GitHub is a sy
 context/design/github-state-model.md
 
 ## Pipeline Orchestration
-TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispatches agent sessions in CLI-owned worktrees to drive epics through plan -> release in parallel. Dispatch uses a strategy pattern: `DispatchedSession` interface with `SdkSession` (SDK `query()`) and `CmuxSession` (cmux terminal surface) implementations. A `SessionFactory` selects the strategy based on cmux availability and config. No concurrency cap — API rate limits are the natural governor. Fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates, pauses epic and logs to stdout on human gates. Event-driven re-scan on session completion with 60-second poll as safety net.
+TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispatches agent sessions in CLI-owned worktrees to drive epics through plan -> release in parallel. Dispatch uses a strategy pattern: `SessionStrategy` interface with `SdkStrategy` (SDK `query()`) and `CmuxStrategy` (cmux terminal surface) implementations. A `SessionFactory` selects the strategy based on `cli.dispatch-strategy` config and runtime cmux availability. No concurrency cap — API rate limits are the natural governor. Fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates, pauses epic and logs to stdout on human gates. Event-driven re-scan on session completion via `.dispatch-done.json` marker files with 60-second poll as safety net.
 
 1. ALWAYS use local state files as the authority for orchestration decisions — not GitHub labels
 2. NEVER orchestrate design phase — interactive by nature, requires human collaboration
 3. ALWAYS merge implement worktrees sequentially with pre-merge conflict simulation via `git merge-tree` — optimized merge order
 4. ALWAYS respect config.yaml gate settings — human gates pause the epic and log to stdout, user runs `beastmode <phase> <slug>` manually to proceed
 5. ALWAYS use CLI-owned worktrees — CLI creates before, merges after, removes when done
-6. ALWAYS use `DispatchedSession` interface for dispatch — `SessionFactory` returns `SdkSession` or `CmuxSession` based on runtime state and config
+6. ALWAYS use `SessionStrategy` interface for dispatch — `SessionFactory` returns `SdkStrategy` or `CmuxStrategy` based on `cli.dispatch-strategy` config and runtime state
 7. ALWAYS reconcile cmux state on startup — adopt live surfaces, close dead ones, remove empty workspaces
 
 context/design/orchestration.md
@@ -86,21 +86,21 @@ context/design/orchestration.md
 TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle: create at first phase, persist through intermediate phases, squash-merge and remove at release. Justfile and WorktreeCreate hook are deleted. Optional cmux integration provides live terminal visibility when cmux is available.
 
 1. ALWAYS use CLI for phase execution and pipeline orchestration — no Justfile, CLI is the sole entry point
-2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
+2. ALWAYS use `SessionStrategy` abstraction for phase dispatch — `SdkStrategy` for SDK `query()`, `CmuxStrategy` for cmux terminal surfaces, `SessionFactory` selects based on `cli.dispatch-strategy` config and runtime state
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
-4. ALWAYS reuse `.beastmode/config.yaml` with `cli:` and `cmux:` sections — no separate config file
+4. ALWAYS reuse `.beastmode/config.yaml` with `cli.dispatch-strategy` field — single config field controls dispatch mechanism (sdk | cmux | auto)
 5. ALWAYS track per-dispatch costs in `.beastmode-runs.json` — observability without running Claude
 6. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 
 context/design/cli.md
 
 ## cmux Integration
-Optional terminal multiplexer integration that provides live visibility into the pipeline. When cmux is available and enabled, the watch loop creates cmux workspaces per epic and terminal surfaces per dispatched agent. Communication uses JSON-RPC over Unix socket. Agents run as real terminal processes with interactive capability. Desktop notifications fire on errors and blocked gates only. Surfaces clean up on release, mirroring the worktree lifecycle. cmux is never a hard dependency — the SDK dispatch path is fully preserved as the fallback.
+Optional terminal multiplexer integration that provides live visibility into the pipeline. When cmux is available and configured, the watch loop creates cmux workspaces per epic and terminal surfaces per dispatched agent. Communication uses the `cmux` CLI binary with `--json` flag via a typed `CmuxClient` wrapper. Each surface runs `beastmode <phase> <slug>` as a real terminal process via `cmux send-surface`. Completion detected via `.dispatch-done.json` marker files with `fs.watch`. Desktop notifications fire on errors and blocked gates only (not configurable). Surfaces clean up on release, mirroring the worktree lifecycle. Worktree is authoritative, cmux cleanup is best-effort. cmux is never a hard dependency — the SDK dispatch path is fully preserved as the fallback.
 
-1. ALWAYS use JSON-RPC over Unix socket for cmux communication — `CmuxClient` wraps the protocol
+1. ALWAYS use `cmux` CLI binary with `--json` flag for cmux communication — `CmuxClient` wraps the CLI, no direct socket programming
 2. ALWAYS create one workspace per epic, one surface per dispatched phase/feature — natural mental model mapping
-3. ALWAYS fire notifications only on errors and blocked gates — configurable via `cmux.notifications`
-4. ALWAYS clean up cmux surfaces on release — mirrors worktree lifecycle
-5. NEVER require cmux — `cmuxAvailable()` check plus `cmux.enabled` config means zero regression risk
+3. ALWAYS fire notifications only on errors and blocked gates — fixed policy, no per-notification config knobs
+4. ALWAYS clean up cmux surfaces on release — worktree is authoritative, cmux cleanup is best-effort
+5. NEVER require cmux — `cli.dispatch-strategy: auto` checks cmux availability at runtime with SDK fallback
 
 context/design/cmux-integration.md

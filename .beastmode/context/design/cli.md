@@ -8,10 +8,10 @@
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
-- ALWAYS use `DispatchedSession` interface for phase dispatch — strategy pattern decouples dispatch mechanism from orchestration logic
-- `SdkSession`: uses `@anthropic-ai/claude-agent-sdk` `query()` with `prompt: "/beastmode:<phase> <args>"`, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming, cost tracking
-- `CmuxSession`: creates cmux terminal surface via JSON-RPC over Unix socket, sends `beastmode <phase> <slug>` via `surface.send-text` — cmux owns the shell process, agents get full interactive terminal capability
-- `SessionFactory` reads config + runtime state (cmux availability) to return the right session type — `auto` mode checks socket + ping
+- ALWAYS use `SessionStrategy` interface for phase dispatch — `dispatch()`, `isComplete()`, `cleanup()` methods decouple dispatch mechanism from orchestration logic
+- `SdkStrategy`: uses `@anthropic-ai/claude-agent-sdk` with `query()` invocation, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming, cost tracking; reconciles state inline and writes `.dispatch-done.json` marker
+- `CmuxStrategy`: creates cmux terminal surface via `cmux` CLI with `--json` flag, sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution, agents get full interactive terminal capability; detects completion via `fs.watch` on `.dispatch-done.json`
+- `SessionFactory` reads `cli.dispatch-strategy` config (sdk | cmux | auto) + runtime state (cmux availability) to return the right strategy
 - AbortController for cancellation — clean shutdown on Ctrl+C
 - Design phase exception: `beastmode design <topic>` always spawns interactive Claude via `Bun.spawn` with inherited stdio — not dispatched through `SessionFactory`
 
@@ -23,11 +23,10 @@
 - Error recovery: failed phases leave worktree dirty, next run picks up and overwrites
 
 ## Configuration
-- ALWAYS reuse `.beastmode/config.yaml` with `cli:` and `cmux:` sections — no separate config file
+- ALWAYS reuse `.beastmode/config.yaml` with `cli:` section — no separate config file
 - `cli.interval` controls poll interval (default 60 seconds)
-- `cmux.enabled` controls cmux integration (auto/true/false) — `auto` checks socket availability at runtime
-- `cmux.notifications` controls notification verbosity (errors/phase-complete/full) — errors and blocks only by default
-- `cmux.cleanup` controls surface cleanup timing (on-release/manual/immediate) — on-release mirrors worktree lifecycle
+- `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
+- No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
 - Gates and other config sections are unchanged
 
 ## Cost Tracking
