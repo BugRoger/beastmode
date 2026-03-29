@@ -4,6 +4,19 @@ All notable changes to beastmode.
 
 ---
 
+### v0.41.0 — The Status Unfuckery, Part II (Mar 2026)
+
+- **Pipeline-only discovery** — Scanner reads pipeline/ manifests exclusively; design-file discovery removed, dropping ~118 zombie epics from status output
+- **Manifest.phase authority** — Phase derivation reads `manifest.phase` directly; missing/invalid phase causes strict reject (manifest skipped)
+- **Shared manifest validation schema** — TypeScript validator used by both scanner (read) and reconciler (write); required fields: phase, design, features, lastUpdated
+- **Single EpicState type** — Canonical interface in state-scanner.ts; watch-types.ts duplicate deleted
+- **Unified blocked field** — Single `blocked: boolean` replaces gateBlocked/blockedGate/gateName
+- **Compact status table** — Redesigned: Epic | Phase | Features (done/total) | Status with color output
+- **--verbose flag** — Surfaces skipped manifests and validation errors
+- **Feature status validation** — Rejects unknown status values instead of casting any string
+- **Cost tracking removed** — costUsd, aggregateCost, readRunLog removed from scanner and status
+- **Test suite rewrite** — 362 tests, 728 assertions across 20 files
+
 ### v0.40.0 — The Great Unbundling (Mar 2026)
 
 - **Merge coordinator deleted** — Removed `merge-coordinator.ts` (328 lines) and all associated types, functions, and tests; CLI no longer drives git merges

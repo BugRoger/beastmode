@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
+import { mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from "fs";
 import { resolve } from "path";
 import {
   seed,
@@ -11,7 +11,6 @@ import {
   loadManifest,
   manifestExists,
   manifestPath,
-  manifestDir,
   getPendingFeatures,
   findLegacyManifestPath,
   readLegacyManifest,
@@ -28,16 +27,24 @@ function setupTestRoot(): void {
 }
 
 describe("manifestPath", () => {
-  test("resolves to pipeline/<slug>/manifest.json", () => {
-    const path = manifestPath("/project", "my-epic");
-    expect(path).toBe("/project/.beastmode/pipeline/my-epic/manifest.json");
-  });
-});
+  beforeEach(setupTestRoot);
+  afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
-describe("manifestDir", () => {
-  test("resolves to pipeline/<slug>/", () => {
-    const dir = manifestDir("/project", "my-epic");
-    expect(dir).toBe("/project/.beastmode/pipeline/my-epic");
+  test("returns undefined when no pipeline dir exists", () => {
+    expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
+  });
+
+  test("returns undefined when no manifest exists for slug", () => {
+    mkdirSync(resolve(TEST_ROOT, ".beastmode/pipeline"), { recursive: true });
+    expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
+  });
+
+  test("finds flat-file manifest by slug", () => {
+    const dir = resolve(TEST_ROOT, ".beastmode/pipeline");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
+    const path = manifestPath(TEST_ROOT, "my-epic");
+    expect(path).toBe(resolve(dir, "2026-03-29-my-epic.manifest.json"));
   });
 });
 
@@ -54,8 +61,8 @@ describe("seed", () => {
     expect(manifest.worktree).toBeUndefined();
     expect(manifest.github).toBeUndefined();
 
-    // File was written
-    expect(existsSync(manifestPath(TEST_ROOT, "test-epic"))).toBe(true);
+    // File was written to flat path
+    expect(manifestExists(TEST_ROOT, "test-epic")).toBe(true);
   });
 
   test("creates manifest with worktree and github options", () => {
@@ -71,7 +78,7 @@ describe("seed", () => {
   });
 
   test("creates pipeline directory if missing", () => {
-    const dir = manifestDir(TEST_ROOT, "test-epic");
+    const dir = resolve(TEST_ROOT, ".beastmode/pipeline");
     expect(existsSync(dir)).toBe(false);
     seed(TEST_ROOT, "test-epic");
     expect(existsSync(dir)).toBe(true);
@@ -106,7 +113,6 @@ describe("enrich", () => {
   });
 
   test("merges features preserving github info", () => {
-    // First enrich with features
     enrich(TEST_ROOT, "test-epic", {
       phase: "plan",
       features: [
@@ -114,7 +120,6 @@ describe("enrich", () => {
       ],
     });
 
-    // Second enrich updates feature but preserves github
     const manifest = enrich(TEST_ROOT, "test-epic", {
       phase: "plan",
       features: [
@@ -166,7 +171,6 @@ describe("advancePhase", () => {
     const manifest = advancePhase(TEST_ROOT, "test-epic", "plan");
     expect(manifest.phase).toBe("plan");
 
-    // Verify persisted
     const reread = readManifest(TEST_ROOT, "test-epic");
     expect(reread.phase).toBe("plan");
   });
@@ -250,7 +254,7 @@ describe("reconstruct", () => {
     );
 
     reconstruct(TEST_ROOT, "test-epic");
-    expect(existsSync(manifestPath(TEST_ROOT, "test-epic"))).toBe(true);
+    expect(manifestExists(TEST_ROOT, "test-epic")).toBe(true);
   });
 });
 
@@ -268,7 +272,7 @@ describe("readManifest", () => {
   });
 
   test("throws on missing manifest", () => {
-    expect(() => readManifest(TEST_ROOT, "nonexistent")).toThrow("Manifest not found");
+    expect(() => readManifest(TEST_ROOT, "nonexistent")).toThrow(/Manifest not found/);
   });
 });
 

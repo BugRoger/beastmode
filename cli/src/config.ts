@@ -9,6 +9,7 @@ export interface GatesConfig {
   design?: GateConfig;
   plan?: GateConfig;
   implement?: GateConfig;
+  validate?: GateConfig;
   retro?: GateConfig;
   release?: GateConfig;
 }

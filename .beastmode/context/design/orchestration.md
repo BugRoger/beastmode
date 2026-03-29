@@ -35,4 +35,4 @@
 ## Lifecycle
 - Start via `beastmode watch`, stop via Ctrl+C — foreground process with explicit control
 - NEVER auto-drain or idle-timeout — manual stop only
-- Cost tracking per dispatch in `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp
+- Per-dispatch run log in `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp

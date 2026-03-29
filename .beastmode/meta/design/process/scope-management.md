@@ -167,3 +167,15 @@ Locked decisions are treated as contracts. When a design intentionally breaks th
 .beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md
 ### Confidence
 [LOW] — first-time observation; extends the "locked decisions can drift" pattern into proactive override documentation
+
+## Observation 15
+### Context
+During status-unfuckery-v2 design, 2026-03-29
+### Observation
+The v1 design (status-unfuckery) shipped as v0.35.0 but left critical bugs including type regressions and a lastUpdated field that was removed from the type but still read by the status command. A v2 overhaul was needed because v1 scoped too narrowly -- it fixed surface symptoms without auditing the full subsystem. The v2 design explicitly framed itself as a comprehensive overhaul rather than incremental bug fixes, and found 20 bugs that v1 missed.
+### Rationale
+When a shipped v1 leaves critical bugs, the question is whether to patch incrementally or overhaul. The indicator for overhaul is when the bug count is high and the bugs span multiple subsystem boundaries (scanner, command, types, watch). Incremental patches compound into spaghetti when the root cause is structural.
+### Source
+.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+### Confidence
+[LOW] -- first observation; related to Obs 3 (challenge deferrals) and Obs 12 (prerequisite absorption) as a scope lifecycle pattern

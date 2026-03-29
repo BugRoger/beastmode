@@ -3,7 +3,8 @@ import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node
 import { resolve } from "node:path";
 import { WatchLoop } from "../src/watch.js";
 import type { WatchDeps } from "../src/watch.js";
-import type { EpicState, SessionResult } from "../src/watch-types.js";
+import type { EpicState } from "../src/state-scanner.js";
+import type { SessionResult } from "../src/watch-types.js";
 import { SdkSessionFactory } from "../src/session.js";
 import { DispatchTracker } from "../src/dispatch-tracker.js";
 import { acquireLock, releaseLock, readLockfile } from "../src/lockfile.js";
@@ -173,11 +174,11 @@ describe("WatchLoop", () => {
 
     const readyEpic: EpicState = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      gateBlocked: false,
-      costUsd: 0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -222,6 +223,7 @@ describe("WatchLoop", () => {
 
     const implementEpic: EpicState = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "implement",
       nextAction: {
         phase: "implement",
@@ -234,8 +236,7 @@ describe("WatchLoop", () => {
         { slug: "feat-b", status: "pending" },
         { slug: "feat-c", status: "pending" },
       ],
-      gateBlocked: false,
-      costUsd: 0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -403,6 +404,7 @@ describe("WatchLoop", () => {
 
     const gatedEpic: EpicState = {
       slug: "gated-epic",
+      manifestPath: "pipeline/gated-epic.manifest.json",
       phase: "implement",
       nextAction: {
         phase: "implement",
@@ -410,9 +412,7 @@ describe("WatchLoop", () => {
         type: "single",
       },
       features: [{ slug: "feat-a", status: "pending" }],
-      gateBlocked: true,
-      gateName: "implement.architectural-deviation",
-      costUsd: 0,
+      blocked: true,
     };
 
     const deps = mockDeps({
@@ -450,11 +450,11 @@ describe("WatchLoop", () => {
 
     const readyEpic: EpicState = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      gateBlocked: false,
-      costUsd: 0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -492,19 +492,19 @@ describe("WatchLoop", () => {
     const epics: EpicState[] = [
       {
         slug: "epic-a",
+        manifestPath: "pipeline/epic-a.manifest.json",
         phase: "design",
         nextAction: { phase: "plan", args: ["epic-a"], type: "single" },
         features: [],
-        gateBlocked: false,
-        costUsd: 0,
+        blocked: false,
       },
       {
         slug: "epic-b",
+        manifestPath: "pipeline/epic-b.manifest.json",
         phase: "design",
         nextAction: { phase: "plan", args: ["epic-b"], type: "single" },
         features: [],
-        gateBlocked: false,
-        costUsd: 0,
+        blocked: false,
       },
     ];
 
@@ -554,11 +554,11 @@ describe("WatchLoop", () => {
 
     const readyEpic: EpicState = {
       slug: "my-epic",
+      manifestPath: "pipeline/my-epic.manifest.json",
       phase: "design",
       nextAction: { phase: "plan", args: ["my-epic"], type: "single" },
       features: [],
-      gateBlocked: false,
-      costUsd: 0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -599,11 +599,11 @@ describe("WatchLoop", () => {
 
     const completedEpic: EpicState = {
       slug: "done-epic",
+      manifestPath: "pipeline/done-epic.manifest.json",
       phase: "release",
       nextAction: null,
       features: [{ slug: "f1", status: "completed" }],
-      gateBlocked: false,
-      costUsd: 5.0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -640,11 +640,11 @@ describe("WatchLoop", () => {
 
     const releaseEpic: EpicState = {
       slug: "release-epic",
+      manifestPath: "pipeline/release-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["release-epic"], type: "single" },
       features: [{ slug: "f1", status: "completed" }],
-      gateBlocked: false,
-      costUsd: 3.0,
+      blocked: false,
     };
 
     const deps = mockDeps({
@@ -824,11 +824,11 @@ describe("WatchLoop", () => {
 
     const releaseEpic: EpicState = {
       slug: "fail-epic",
+      manifestPath: "pipeline/fail-epic.manifest.json",
       phase: "validate",
       nextAction: { phase: "release", args: ["fail-epic"], type: "single" },
       features: [{ slug: "f1", status: "completed" }],
-      gateBlocked: false,
-      costUsd: 2.0,
+      blocked: false,
     };
 
     const deps = mockDeps({

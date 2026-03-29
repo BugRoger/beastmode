@@ -1,8 +1,8 @@
 /**
  * Manifest module — typed access to pipeline manifests.
  *
- * New schema: pure pipeline state. No architectural decisions.
- * Location: .beastmode/pipeline/<slug>/manifest.json
+ * Schema: pure pipeline state.
+ * Location: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json (flat file)
  * Lifecycle: CLI creates, enriches, advances, reconstructs.
  */
 
@@ -37,19 +37,35 @@ export interface PipelineManifest {
 // --- Paths ---
 
 /**
- * Resolve the manifest directory for a given slug.
- * Convention: .beastmode/pipeline/<slug>/
+ * Resolve the pipeline directory.
+ * Convention: .beastmode/pipeline/
  */
-export function manifestDir(projectRoot: string, slug: string): string {
-  return resolve(projectRoot, ".beastmode", "pipeline", slug);
+function pipelineDir(projectRoot: string): string {
+  return resolve(projectRoot, ".beastmode", "pipeline");
 }
 
 /**
- * Resolve the manifest file path for a given slug.
- * Convention: .beastmode/pipeline/<slug>/manifest.json
+ * Find the manifest file path for a given slug.
+ * Convention: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json
+ * Returns the latest match (date prefix sorts chronologically).
  */
-export function manifestPath(projectRoot: string, slug: string): string {
-  return resolve(manifestDir(projectRoot, slug), "manifest.json");
+export function manifestPath(projectRoot: string, slug: string): string | undefined {
+  const dir = pipelineDir(projectRoot);
+  if (!existsSync(dir)) return undefined;
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(`-${slug}.manifest.json`))
+    .sort();
+  if (files.length === 0) return undefined;
+  return resolve(dir, files[files.length - 1]);
+}
+
+/**
+ * Generate a new manifest file path with today's date.
+ */
+function newManifestPath(projectRoot: string, slug: string): string {
+  const dir = pipelineDir(projectRoot);
+  const date = new Date().toISOString().slice(0, 10);
+  return resolve(dir, `${date}-${slug}.manifest.json`);
 }
 
 // --- Core Operations ---
@@ -66,7 +82,7 @@ export function seed(
     github?: ManifestGitHub;
   },
 ): PipelineManifest {
-  const dir = manifestDir(projectRoot, slug);
+  const dir = pipelineDir(projectRoot);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   const manifest: PipelineManifest = {
@@ -79,7 +95,8 @@ export function seed(
     lastUpdated: new Date().toISOString(),
   };
 
-  writeFileSync(manifestPath(projectRoot, slug), JSON.stringify(manifest, null, 2));
+  const path = manifestPath(projectRoot, slug) ?? newManifestPath(projectRoot, slug);
+  writeFileSync(path, JSON.stringify(manifest, null, 2));
   return manifest;
 }
 
@@ -201,9 +218,10 @@ export function reconstruct(
   };
 
   // Write the reconstructed manifest
-  const dir = manifestDir(projectRoot, slug);
+  const dir = pipelineDir(projectRoot);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeManifest(projectRoot, slug, manifest);
+  const path = newManifestPath(projectRoot, slug);
+  writeFileSync(path, JSON.stringify(manifest, null, 2));
 
   return manifest;
 }
@@ -218,8 +236,8 @@ export function readManifest(
   slug: string,
 ): PipelineManifest {
   const path = manifestPath(projectRoot, slug);
-  if (!existsSync(path)) {
-    throw new Error(`Manifest not found: ${path}`);
+  if (!path || !existsSync(path)) {
+    throw new Error(`Manifest not found for slug: ${slug}`);
   }
   const raw = readFileSync(path, "utf-8");
   return JSON.parse(raw) as PipelineManifest;
@@ -233,12 +251,10 @@ export function writeManifest(
   slug: string,
   manifest: PipelineManifest,
 ): void {
-  const dir = manifestDir(projectRoot, slug);
+  const dir = pipelineDir(projectRoot);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    manifestPath(projectRoot, slug),
-    JSON.stringify(manifest, null, 2),
-  );
+  const path = manifestPath(projectRoot, slug) ?? newManifestPath(projectRoot, slug);
+  writeFileSync(path, JSON.stringify(manifest, null, 2));
 }
 
 /**
@@ -262,7 +278,8 @@ export function manifestExists(
   projectRoot: string,
   slug: string,
 ): boolean {
-  return existsSync(manifestPath(projectRoot, slug));
+  const path = manifestPath(projectRoot, slug);
+  return path !== undefined && existsSync(path);
 }
 
 /**

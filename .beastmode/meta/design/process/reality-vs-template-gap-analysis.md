@@ -11,3 +11,15 @@ When templates/skeletons lag behind evolved reality, direct structural compariso
 state/design/2026-03-08-init-assets.md
 ### Confidence
 [LOW] -- first observation; related to external-docs-drift cluster but specifically about internal skeleton/template assets
+
+## Observation 2
+### Context
+During status-unfuckery-v2 design, 2026-03-29
+### Observation
+Design decisions were informed by reading actual manifest files on disk rather than assuming their contents. The audit discovered that existing pipeline manifests (bulletproof-state-scanner.manifest.json, interactive-cmux-workspaces.manifest.json) may not have top-level `phase` fields, that the reconciler writes a `phases` map in a different format than the scanner expects, and that 118 of 120 discovered epics were historical junk from state/design/ files. These were facts from disk, not assumptions.
+### Rationale
+When designing against existing data formats, reading the actual files on disk prevents designing against imagined structures. The gap between assumed and actual data shapes was large enough that a design based on assumptions would have been wrong.
+### Source
+.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+### Confidence
+[LOW] -- first observation; extends Obs 1 (skeleton-vs-reality comparison) from templates to runtime data files

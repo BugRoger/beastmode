@@ -1,0 +1,38 @@
+{
+  "design": ".beastmode/state/design/2026-03-29-status-unfuckery-v2.md",
+  "architecturalDecisions": [
+    {"decision": "Epic discovery source", "choice": "Pipeline manifests only — no design-file scanning"},
+    {"decision": "Phase authority", "choice": "manifest.phase field directly — no heuristic derivation"},
+    {"decision": "Manifest path convention", "choice": "Flat files: pipeline/YYYY-MM-DD-<slug>.manifest.json"},
+    {"decision": "Canonical type location", "choice": "Single EpicState in state-scanner.ts — delete watch-types.ts duplicate"},
+    {"decision": "Blocked semantics", "choice": "Single blocked: boolean — collapse 4 fields"},
+    {"decision": "Manifest validation", "choice": "Shared schema for read + write paths"}
+  ],
+  "features": [
+    {
+      "slug": "manifest-schema",
+      "plan": "2026-03-29-status-unfuckery-v2-manifest-schema.md",
+      "status": "completed"
+    },
+    {
+      "slug": "scanner-overhaul",
+      "plan": "2026-03-29-status-unfuckery-v2-scanner-overhaul.md",
+      "status": "pending"
+    },
+    {
+      "slug": "status-redesign",
+      "plan": "2026-03-29-status-unfuckery-v2-status-redesign.md",
+      "status": "completed"
+    },
+    {
+      "slug": "test-rewrite",
+      "plan": "2026-03-29-status-unfuckery-v2-test-rewrite.md",
+      "status": "pending"
+    }
+  ],
+  "github": {
+    "epic": 91,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-29T23:30:00Z"
+}

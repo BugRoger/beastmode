@@ -880,5 +880,15 @@
     "exit_status": "success",
     "timestamp": "2026-03-29T12:16:09.482Z",
     "session_id": null
+  },
+  {
+    "epic": "remove-merge-logic-from-cli",
+    "phase": "release",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 456946,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:18:31.922Z",
+    "session_id": null
   }
 ]

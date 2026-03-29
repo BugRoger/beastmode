@@ -1,42 +1,10 @@
 /**
  * Watch loop types — shared interfaces for the autonomous pipeline driver.
+ * EpicState, NextAction, and FeatureProgress are canonical in state-scanner.ts.
  */
 
-/** Represents the state of a single epic as determined by the state scanner. */
-export interface EpicState {
-  /** Epic slug (design name) */
-  slug: string;
-  /** Current phase: design, plan, implement, validate, release */
-  phase: string;
-  /** Next action to dispatch, or null if blocked/complete */
-  nextAction: NextAction | null;
-  /** Feature-level progress for epics in implement phase */
-  features: FeatureProgress[];
-  /** Whether the epic is blocked on a human gate */
-  gateBlocked: boolean;
-  /** Gate name if blocked */
-  gateName?: string;
-  /** Last updated timestamp from manifest */
-  lastUpdated?: string;
-}
-
-/** A dispatchable action derived from epic state. */
-export interface NextAction {
-  /** Phase to run */
-  phase: string;
-  /** Arguments to pass (e.g., design slug, feature slug) */
-  args: string[];
-  /** Type of dispatch: single phase or fan-out across features */
-  type: "single" | "fan-out";
-  /** For fan-out: individual feature slugs to dispatch */
-  features?: string[];
-}
-
-/** Progress of a single feature within an epic. */
-export interface FeatureProgress {
-  slug: string;
-  status: "pending" | "in-progress" | "completed" | "blocked";
-}
+import type { EpicState, NextAction, FeatureProgress } from "./state-scanner.js";
+export type { EpicState, NextAction, FeatureProgress };
 
 /** Tracks an active SDK session dispatched by the watch loop. */
 export interface DispatchedSession {

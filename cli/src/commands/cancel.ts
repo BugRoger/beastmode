@@ -16,7 +16,7 @@ import type { BeastmodeConfig } from "../config";
 import {
   remove as removeWorktree,
 } from "../worktree";
-import { manifestPath, manifestExists, loadManifest } from "../manifest";
+import { manifestPath, loadManifest } from "../manifest";
 import { readFileSync, writeFileSync } from "fs";
 
 export async function cancelCommand(
@@ -71,7 +71,7 @@ function updateManifestCancelled(
   slug: string,
 ): void {
   const path = manifestPath(projectRoot, slug);
-  if (!manifestExists(projectRoot, slug)) {
+  if (!path) {
     throw new Error(`No manifest found for: ${slug}`);
   }
 

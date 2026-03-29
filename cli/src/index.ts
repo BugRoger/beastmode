@@ -21,7 +21,7 @@ Usage:
   beastmode release <slug>             Create a release
   beastmode cancel <slug>              Cancel and clean up an epic
   beastmode watch                      Autonomous pipeline orchestration
-  beastmode status                     Show epic state and cost summary
+  beastmode status [--verbose]          Show pipeline status
   beastmode help                       Show this help message`);
 }
 
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
       await watchCommand(config);
       break;
     case "status":
-      await statusCommand(config);
+      await statusCommand(config, args);
       break;
     case "cancel":
       await cancelCommand(args, config);

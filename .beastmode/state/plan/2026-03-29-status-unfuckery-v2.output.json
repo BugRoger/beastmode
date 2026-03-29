@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "manifest-schema", "plan": "2026-03-29-status-unfuckery-v2-manifest-schema.md"},
+      {"slug": "scanner-overhaul", "plan": "2026-03-29-status-unfuckery-v2-scanner-overhaul.md"},
+      {"slug": "status-redesign", "plan": "2026-03-29-status-unfuckery-v2-status-redesign.md"},
+      {"slug": "test-rewrite", "plan": "2026-03-29-status-unfuckery-v2-test-rewrite.md"}
+    ]
+  }
+}

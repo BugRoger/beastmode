@@ -25,18 +25,18 @@ function setupTestRoot(): void {
 }
 
 function writeTestManifest(slug: string, manifest: object): void {
-  const dir = resolve(TEST_ROOT, ".beastmode", "pipeline", slug);
+  const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(resolve(dir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  const date = new Date().toISOString().slice(0, 10);
+  writeFileSync(resolve(dir, `${date}-${slug}.manifest.json`), JSON.stringify(manifest, null, 2));
 }
 
 function readTestManifest(slug: string): PipelineManifest {
-  return JSON.parse(
-    readFileSync(
-      resolve(TEST_ROOT, ".beastmode", "pipeline", slug, "manifest.json"),
-      "utf-8",
-    ),
-  );
+  const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+  const files = require("fs").readdirSync(dir) as string[];
+  const match = files.find((f: string) => f.endsWith(`-${slug}.manifest.json`));
+  if (!match) throw new Error(`No manifest for ${slug}`);
+  return JSON.parse(readFileSync(resolve(dir, match), "utf-8"));
 }
 
 function writePhaseOutput(
@@ -79,10 +79,10 @@ describe("runPostDispatch", () => {
   test("skips updates on failure", async () => {
     const manifest = makeManifest({ phase: "plan" });
     writeTestManifest(EPIC_SLUG, manifest);
-    const before = readFileSync(
-      resolve(TEST_ROOT, ".beastmode", "pipeline", EPIC_SLUG, "manifest.json"),
-      "utf-8",
-    );
+    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const files = require("fs").readdirSync(dir) as string[];
+    const manifestFile = files.find((f: string) => f.endsWith(`-${EPIC_SLUG}.manifest.json`))!;
+    const before = readFileSync(resolve(dir, manifestFile), "utf-8");
 
     await runPostDispatch({
       worktreePath: WORKTREE,
@@ -92,10 +92,7 @@ describe("runPostDispatch", () => {
       success: false,
     });
 
-    const after = readFileSync(
-      resolve(TEST_ROOT, ".beastmode", "pipeline", EPIC_SLUG, "manifest.json"),
-      "utf-8",
-    );
+    const after = readFileSync(resolve(dir, manifestFile), "utf-8");
     expect(after).toBe(before);
   });
 

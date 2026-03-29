@@ -5,8 +5,8 @@
  * handles implement fan-out, human gate pausing, and graceful shutdown.
  */
 
+import type { EpicState, ScanResult } from "./state-scanner.js";
 import type {
-  EpicState,
   DispatchedSession,
   SessionResult,
   WatchConfig,
@@ -18,7 +18,7 @@ import { acquireLock, releaseLock } from "./lockfile.js";
 /** Injected dependencies — allows testing without real SDK/scanner. */
 export interface WatchDeps {
   /** Scan state to determine epic states. */
-  scanEpics: (projectRoot: string) => Promise<EpicState[]>;
+  scanEpics: (projectRoot: string) => Promise<ScanResult | EpicState[]>;
   /** Factory for creating phase sessions. */
   sessionFactory: SessionFactory;
   /** Log a run entry to .beastmode-runs.json. */
@@ -111,7 +111,8 @@ export class WatchLoop {
 
     let epics: EpicState[];
     try {
-      epics = await this.deps.scanEpics(this.config.projectRoot);
+      const result = await this.deps.scanEpics(this.config.projectRoot);
+      epics = Array.isArray(result) ? result : result.epics;
     } catch (err) {
       console.error("[watch] State scan failed:", err);
       return;
@@ -124,12 +125,12 @@ export class WatchLoop {
 
   private async processEpic(epic: EpicState): Promise<void> {
     // Skip epics blocked on human gates
-    if (epic.gateBlocked) {
+    if (epic.blocked) {
       console.log(
-        `[watch] ${epic.slug}: paused — human gate "${epic.gateName}" requires manual intervention`,
+        `[watch] ${epic.slug}: paused — human gate requires manual intervention`,
       );
       console.log(
-        `[watch]   Run: beastmode <phase> ${epic.slug}`,
+        `[watch]   Run: beastmode ${epic.phase} ${epic.slug}`,
       );
       return;
     }
@@ -288,7 +289,8 @@ export class WatchLoop {
   /** Re-scan a single epic and dispatch if it has a new actionable step. */
   private async rescanEpic(epicSlug: string): Promise<void> {
     try {
-      const epics = await this.deps.scanEpics(this.config.projectRoot);
+      const result = await this.deps.scanEpics(this.config.projectRoot);
+      const epics = Array.isArray(result) ? result : result.epics;
       const epic = epics.find((e) => e.slug === epicSlug);
       if (epic) {
         await this.processEpic(epic);

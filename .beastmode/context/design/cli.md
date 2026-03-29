@@ -4,7 +4,7 @@
 - CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch` and `status`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
-- `beastmode status` shows epic state and cost-to-date without running Claude
+- `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
@@ -31,7 +31,7 @@
 
 ## Cost Tracking
 - Per-dispatch run log appended to `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp
-- `beastmode status` reads run log for cost-to-date reporting
+- Cost reporting removed from `beastmode status` — status shows pipeline state only, cost data remains in run log for external consumption
 
 ## Recovery Model
 - State files are the recovery point, not sessions — stateless session model
@@ -42,7 +42,7 @@
 - CLI creates manifest at first phase dispatch (design) with slug, phase, and worktree info
 - ALWAYS enrich manifest from phase output files after each dispatch — CLI reads `state/<phase>/YYYY-MM-DD-<slug>.output.json`
 - CLI is the sole manifest mutator — skills never read or write the manifest
-- Manifest location: `.beastmode/pipeline/<slug>/manifest.json` — local-only, gitignored
+- Manifest location: `.beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
 ## Post-Dispatch Pipeline
