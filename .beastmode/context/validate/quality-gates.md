@@ -5,6 +5,7 @@
 - ALWAYS annotate skipped gates with rationale in the validation report — transparency
 - NEVER treat skipped gates as failures — they are not-applicable, not broken
 - For markdown-only projects, standard gates are skipped and custom gates carry the full validation burden — context-appropriate
+- For code projects, standard gates run alongside custom gates — both carry validation burden together
 
 ## Custom Gate Types
 - ALWAYS define custom gates from the feature's acceptance criteria — design traceability

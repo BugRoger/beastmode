@@ -5,7 +5,8 @@
 - ALWAYS include standard gate sections even when all are skipped — completeness
 - ALWAYS present custom gates as a table with gate name and pass/fail result — scannable format
 - ALWAYS include gate count summary (e.g., "6/6 gates passed") — at-a-glance status
-- Consistent skeleton regardless of feature type — standardized across 41 validated features
+- ALWAYS include feature completion section for multi-feature deliveries — sub-feature tracking
+- Consistent skeleton regardless of feature type — standardized across 41+ validated features
 
 ## Acceptance Criteria Verification
 - ALWAYS trace each custom gate back to a design acceptance criterion — design coverage
