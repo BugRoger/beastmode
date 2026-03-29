@@ -1,10 +1,11 @@
 # CLI Architecture
 
 ## Command Structure
-- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch` and `status`
+- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `status`, and `sync`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
 - `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors
+- `beastmode sync` reconciles all manifests against GitHub in a single pass — reads all manifests via store.list(), runs syncGitHub for each, applies mutations; `--clean` flag additionally closes zombie issues, removes features from board, and cleans stale labels
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
@@ -23,9 +24,10 @@
 - Error recovery: failed phases leave worktree dirty, next run picks up and overwrites
 
 ## Configuration
-- ALWAYS reuse `.beastmode/config.yaml` with `cli:` section — no separate config file
+- ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — no separate config file
 - `cli.interval` controls poll interval (default 60 seconds)
 - `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
+- `github:` section stores: enabled, project-name, project-id, project-number, field-id, field-options (status name to option ID map), and repo (auto-detected from git remote) — setup-github writes directly, no separate cache file
 - No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
 - Gates and other config sections are unchanged
 
@@ -41,13 +43,15 @@
 ## Manifest Lifecycle
 - CLI creates manifest at first phase dispatch (design) via store.create(slug) before dispatching — manifest exists throughout the entire skill session
 - ALWAYS enrich manifest from output.json after each dispatch — Stop hook auto-generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json` from artifact frontmatter
-- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate — sole fs accessor, sync-on-save hook triggers syncGitHub inside save()) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- store.save() uses a module-level re-entrancy guard (_syncing flag) to prevent mutation write-back from re-triggering sync — simple, synchronous, safe in single-threaded Bun
 - Manifest location: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
 ## Post-Dispatch Pipeline
-- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions, runs `syncGitHub(manifest, config)`
-- github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save()
+- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions
+- GitHub sync is NOT part of post-dispatch — it triggers automatically inside store.save() (sync-on-save) when the enriched manifest is saved
+- github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save() with re-entrancy guard
 - Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
 - ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
 

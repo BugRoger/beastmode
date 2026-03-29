@@ -10,7 +10,7 @@ Dual sources of truth create divergence that compounds silently. The design patt
 ### Source
 .beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
 ### Confidence
-[MEDIUM] — first observation; pattern appeared three times within a single design but needs cross-session confirmation
+[HIGH] — confirmed across 3 independent subsystems (scanner, manifest, sync); third instance caused a complete feature failure
 
 ## Observation 2
 ### Context
@@ -22,4 +22,16 @@ Confirms the Obs 1 pattern across a different subsystem. The manifest refactor i
 ### Source
 .beastmode/artifacts/design/2026-03-29-manifest-file-management.md
 ### Confidence
-[MEDIUM] -- second observation across different subsystems; same pattern (kill secondary source) applied 4 times within this design
+[HIGH] — confirmed across 3 independent subsystems (scanner, manifest, sync); pattern consistently applied across different designs
+
+## Observation 3
+### Context
+During github-no-for-real-sync design, 2026-03-29
+### Observation
+The GitHub sync engine was implemented and fully tested (483 passing tests) but never worked end-to-end. Root cause: setup-github wrote project metadata to `github-project.cache.json` while the sync engine read from `config.yaml`, which was never populated. Two sources of configuration truth existed and silently diverged. The fix: eliminate the cache file entirely, have setup-github write directly to `config.yaml`. Same pattern applied to repo detection — instead of requiring manual config, auto-detect from `git remote get-url origin` and cache in `config.yaml` (one source).
+### Rationale
+Third independent application of the "kill the secondary source" pattern, this time discovered through a production failure rather than proactive design. The cache file was the secondary source that silently diverged from the config the sync engine actually read. 483 passing tests could not catch this because the tests never exercised the config-reading path against a real environment. Strongest evidence yet: dual sources caused a complete feature to be dead-on-arrival.
+### Source
+.beastmode/artifacts/design/2026-03-29-github-no-for-real-sync.md
+### Confidence
+[HIGH] — third observation across three independent subsystems (scanner, manifest, sync); this instance caused a complete feature failure in production

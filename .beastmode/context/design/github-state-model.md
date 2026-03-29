@@ -9,6 +9,8 @@
 - ALWAYS track Epic phase via mutually exclusive `phase/*` labels: backlog, design, plan, implement, validate, release, done -- lifecycle state is visible and queryable
 - NEVER allow multiple `phase/*` labels on one Epic -- mutual exclusivity is a state machine invariant
 - Gate transitions use `gate/awaiting-approval` label + issue comments for pre-code phases, PR reviews for code phases -- match gate mechanism to artifact type
+- ALWAYS close epic issue AND all child feature issues when epic reaches done — set epic board status to "Done"
+- ALWAYS close epic issue AND all child feature issues when epic reaches cancelled — add "Cancelled" comment to epic, remove from board or set status "Done" (no "Cancelled" board column)
 
 ## Feature State Machine
 - ALWAYS track Feature status via mutually exclusive `status/*` labels: ready, in-progress, blocked — status/review is dropped (no per-feature PRs in squash-at-release model)
@@ -20,8 +22,8 @@
 - ALWAYS use manifest JSON as operational authority for feature lifecycle — GitHub is a one-way mirror, CLI never reads GitHub to update the manifest
 - ALWAYS use repo files for content — design docs, plans, validation reports remain in artifacts/
 - NEVER duplicate content between issue bodies and state files — issue bodies link to repo artifacts
-- ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` is a post-dispatch step, not a skill checkpoint step
-- Bootstrap write-back is the sole exception to one-way sync — when sync creates an Epic or Feature issue, it writes the issue number back to the manifest github block
+- ALWAYS sync GitHub via sync-on-save in store.save() — every manifest write triggers syncGitHub(manifest, config) when github.enabled is true, with re-entrancy guard preventing write-back loops; `beastmode sync` provides manual full-reconciliation
+- Bootstrap write-back is the sole exception to one-way sync — when sync creates an Epic or Feature issue, it writes the issue number back to the manifest github block via a guarded follow-up save
 
 ## Migration Strategy
 - Clean cut, no backward compatibility — delete old manifests in `state/plan/*.manifest.json`, rewrite CLI manifest module, no old schema support
@@ -31,6 +33,8 @@
 ## Configuration
 - ALWAYS use github.enabled config toggle (default: false) to control GitHub sync — setup-github sets it to true
 - ALWAYS use github.project-name config key for the Projects V2 board name
+- ALWAYS store project metadata in config.yaml under github: section — project-id, project-number, field-id, field-options (map of status name to option ID), written directly by setup-github (no separate cache file)
+- ALWAYS auto-detect github.repo from `git remote get-url origin` when not set — detectRepo() parses owner/repo from HTTPS and SSH URLs, caches result in config.yaml
 - NEVER hardcode transition behavior in skills — config.yaml is the single source for gate and sync behavior
 
 ## Setup
@@ -40,11 +44,11 @@
 ## Error Handling
 - ALWAYS warn and continue when GitHub API calls fail — print warning, skip sync, continue with local state
 - NEVER flag manifest with sync failure state — absence of github data block is the signal
-- ALWAYS retry GitHub operations at next checkpoint — eventual consistency without workflow blocking
+- ALWAYS retry GitHub operations at next manifest save — eventual consistency without workflow blocking
 
 ## Subagent Boundary
 - NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
-- ALWAYS centralize GitHub sync and manifest mutation in the CLI — the `syncGitHub(manifest, config)` function in the TypeScript CLI is the sole sync entry point
+- ALWAYS centralize GitHub sync and manifest mutation in the CLI — syncGitHub(manifest, config) triggers inside store.save() (sync-on-save), `beastmode sync` provides manual full-reconciliation
 
 ## Manifest Schema
 - PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start
