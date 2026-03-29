@@ -43,14 +43,10 @@ Print:
 | [decision 2] | [choice] |
 | ... | ... |
 
-**Modules:**
-- [module 1] — [one-sentence description]
-- [module 2] — [one-sentence description]
-
 **User Stories:** [count] stories covering [summary of scope]
 ```
 
-Render this from the decisions, modules, and stories gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
+Render this from the decisions and stories gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
 
 ## 4. [GATE|design.prd-approval]
 

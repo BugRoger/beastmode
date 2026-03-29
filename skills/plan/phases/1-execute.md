@@ -17,6 +17,7 @@ Before slicing into features, identify high-level decisions that span the entire
 - Authentication and authorization approach
 - Service boundaries and module interfaces
 - Shared infrastructure choices
+- Deep modules (per Ousterhout's *A Philosophy of Software Design*): look for opportunities where a simple, narrow interface can hide significant implementation complexity. Prefer modules whose public surface rarely changes even as internals evolve. Flag shallow modules — those whose interface is nearly as complex as their implementation — as candidates for consolidation or redesign.
 
 These become cross-cutting constraints that every feature must honor.
 

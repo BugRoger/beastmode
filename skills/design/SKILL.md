@@ -1,6 +1,6 @@
 ---
 name: design
-description: Create PRDs through structured decision-tree interviews — designing, speccing, scoping. Walks every branch of the design tree, sweeps for gray areas, sketches modules, writes a PRD.
+description: Create PRDs through structured decision-tree interviews — designing, speccing, scoping. Walks every branch of the design tree, sweeps for gray areas, writes a PRD.
 ---
 
 # /design
@@ -20,6 +20,6 @@ No implementation until PRD is approved. [→ Why](references/constraints.md)
 ## Phases
 
 0. [Prime](phases/0-prime.md) — Load context, check prior decisions
-1. [Execute](phases/1-execute.md) — Decision tree walk, gray areas, module sketch
+1. [Execute](phases/1-execute.md) — Decision tree walk, gray areas
 2. [Validate](phases/2-validate.md) — PRD completeness check, user approval
 3. [Checkpoint](phases/3-checkpoint.md) — Save PRD, update status, suggest /plan

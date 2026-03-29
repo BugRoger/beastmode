@@ -26,7 +26,6 @@ Use this template:
 ## Implementation Decisions
 
 [Flat list of implementation decisions made during the interview. Include:
-- Modules that will be built/modified
 - Interfaces that will be modified
 - Technical clarifications
 - Architectural decisions
@@ -38,7 +37,6 @@ Do NOT include specific file paths or code snippets — they may become outdated
 
 [Include:
 - What makes a good test for this feature
-- Which modules will be tested
 - Prior art for tests (similar test patterns in the codebase)]
 
 ## Out of Scope

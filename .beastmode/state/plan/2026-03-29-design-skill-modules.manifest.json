@@ -9,13 +9,13 @@
     {
       "slug": "remove-module-sketch",
       "plan": "2026-03-29-design-skill-modules-remove-module-sketch.md",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "slug": "add-deep-modules-guidance",
       "plan": "2026-03-29-design-skill-modules-add-deep-modules-guidance.md",
-      "status": "pending"
+      "status": "completed"
     }
   ],
-  "lastUpdated": "2026-03-29T20:15:00Z"
+  "lastUpdated": "2026-03-29T21:10:00Z"
 }

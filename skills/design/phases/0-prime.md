@@ -38,7 +38,7 @@ Log: "Gate `design.prior-decisions` → auto: applied {N} prior decisions"
 If arguments point to an existing PRD, spec, or requirements document (not a `.beastmode/state/design/` file):
 1. Read the document
 2. Skip decision tree walk in execute
-3. Jump directly to "Module Sketch" with the doc as input
+3. Jump directly to "Gray Areas" (Execute step 2) with the doc as input
 
 ## 5. [GATE|design.existing-design-choice]
 

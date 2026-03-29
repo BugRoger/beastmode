@@ -55,19 +55,8 @@ Second pass to catch big-picture blind spots the decision tree may have missed.
 - Flag obvious gaps
 - Log: "Gate `design.gray-areas` → auto: {N} areas checked, {N} gaps found"
 
-## 3. Module Sketch
-
-Sketch out the major modules that will need to be built or modified.
-
-1. List each module with a one-sentence description
-2. Actively look for opportunities to extract **deep modules** — modules that encapsulate a lot of functionality behind a simple, testable interface that rarely changes
-3. For each module, note whether it's new or a modification of existing code
-4. Check with user (if gate mode is human) that modules match expectations
-
-A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
-
-## 4. Iterate Until Ready for Validation
+## 3. Iterate Until Ready for Validation
 
 - Go back and clarify as needed
 - Keep YAGNI in mind — remove unnecessary features
-- PRD is ready when decision tree + gray areas + modules are all resolved
+- PRD is ready when decision tree + gray areas are all resolved
