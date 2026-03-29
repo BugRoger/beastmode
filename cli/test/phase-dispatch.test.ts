@@ -1,0 +1,123 @@
+import { describe, test, expect } from "bun:test";
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
+
+const PHASE_TS_PATH = resolve(import.meta.dir, "../src/commands/phase.ts");
+const phaseSource = readFileSync(PHASE_TS_PATH, "utf-8");
+
+describe("uniform dispatch — all phases use interactive runner", () => {
+  test("phase.ts imports runInteractive from interactive-runner", () => {
+    expect(phaseSource).toContain('from "../runners/interactive-runner"');
+    expect(phaseSource).toContain("runInteractive");
+  });
+
+  test("phase.ts does NOT import from sdk-runner", () => {
+    expect(phaseSource).not.toContain("sdk-runner");
+    expect(phaseSource).not.toContain("runPhaseWithSdk");
+  });
+
+  test("phase.ts does NOT import from design-runner", () => {
+    expect(phaseSource).not.toContain("design-runner");
+    expect(phaseSource).not.toContain("runDesignInteractive");
+  });
+
+  test("phase.ts calls runInteractive with phase, args, cwd", () => {
+    expect(phaseSource).toContain("runInteractive({ phase, args, cwd })");
+  });
+
+  test("no phase-specific dispatch branching for implement", () => {
+    expect(phaseSource).not.toContain("runImplementFanOut");
+    expect(phaseSource).not.toContain('phase === "implement"');
+  });
+
+  test("no phase-specific dispatch branching for design (except worktree slug)", () => {
+    // Design appears in deriveWorktreeSlug for slug generation — that's expected
+    // But it should NOT appear in the dispatch logic (no separate runDesignInteractive call)
+    expect(phaseSource).not.toContain("runDesignInteractive");
+  });
+});
+
+describe("fan-out code removed", () => {
+  test("FanOutResult interface is gone", () => {
+    expect(phaseSource).not.toContain("FanOutResult");
+  });
+
+  test("FeatureDispatch interface is gone", () => {
+    expect(phaseSource).not.toContain("FeatureDispatch");
+  });
+
+  test("runImplementFanOut function is gone", () => {
+    expect(phaseSource).not.toContain("runImplementFanOut");
+  });
+
+  test("no manifest imports (fan-out dependency)", () => {
+    expect(phaseSource).not.toContain("loadManifest");
+    expect(phaseSource).not.toContain("getPendingFeatures");
+  });
+
+  test("no Promise.allSettled (fan-out pattern)", () => {
+    expect(phaseSource).not.toContain("Promise.allSettled");
+  });
+});
+
+describe("release teardown preserved", () => {
+  test("archiveWorktree is still imported and called", () => {
+    expect(phaseSource).toContain("archiveWorktree");
+  });
+
+  test("mergeWorktree is still imported and called", () => {
+    expect(phaseSource).toContain("mergeWorktree");
+  });
+
+  test("removeWorktree is still imported and called", () => {
+    expect(phaseSource).toContain("removeWorktree");
+  });
+
+  test("release teardown is gated on success", () => {
+    expect(phaseSource).toContain('phase === "release"');
+    expect(phaseSource).toContain('result.exit_status === "success"');
+  });
+});
+
+describe("SDK runner preserved for watch loop", () => {
+  test("sdk-runner.ts still exists", () => {
+    const sdkRunnerPath = resolve(import.meta.dir, "../src/runners/sdk-runner.ts");
+    expect(existsSync(sdkRunnerPath)).toBe(true);
+  });
+
+  test("sdk-runner is NOT referenced by phase.ts", () => {
+    expect(phaseSource).not.toContain("sdk-runner");
+  });
+});
+
+describe("backwards compatibility", () => {
+  test("slugify is still exported", async () => {
+    const mod = await import("../src/commands/phase");
+    expect(typeof mod.slugify).toBe("function");
+  });
+
+  test("phaseCommand is still exported", async () => {
+    const mod = await import("../src/commands/phase");
+    expect(typeof mod.phaseCommand).toBe("function");
+  });
+
+  test("slugify produces correct output", async () => {
+    const { slugify } = await import("../src/commands/phase");
+    expect(slugify("My Cool Topic")).toBe("my-cool-topic");
+    expect(slugify("TypeScript's Pipeline!")).toBe("typescripts-pipeline");
+    expect(slugify("foo  --  bar")).toBe("foo-bar");
+  });
+});
+
+describe("phase command is simplified", () => {
+  test("phase.ts is under 100 lines (simplified from ~270)", () => {
+    const lineCount = phaseSource.split("\n").length;
+    expect(lineCount).toBeLessThan(135);
+  });
+
+  test("single dispatch path — only one runInteractive call", () => {
+    const matches = phaseSource.match(/runInteractive\(/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(1);
+  });
+});

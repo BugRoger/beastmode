@@ -1,26 +1,28 @@
 /**
- * Runs the design phase as an interactive Claude session.
+ * Universal interactive runner for all manual phase commands.
  *
- * Design requires human interaction (interview-style), so instead of the SDK
- * we spawn the `claude` CLI directly with inherited stdio. The user interacts
- * with Claude in their terminal as normal.
+ * Spawns the `claude` CLI with inherited stdio so the operator gets a live
+ * interactive terminal. Works for any phase — design, plan, implement,
+ * validate, release.
  */
 
-import type { PhaseResult } from "../types";
+import type { Phase, PhaseResult } from "../types";
 
-export interface DesignRunnerOptions {
-  topic: string;
+export interface InteractiveRunnerOptions {
+  phase: Phase;
+  args: string[];
   cwd: string;
 }
 
-export async function runDesignInteractive(
-  options: DesignRunnerOptions,
+export async function runInteractive(
+  options: InteractiveRunnerOptions,
 ): Promise<PhaseResult> {
-  const { topic, cwd } = options;
+  const { phase, args, cwd } = options;
+  const prompt = `/beastmode:${phase} ${args.join(" ")}`.trim();
   const startTime = Date.now();
 
   const proc = Bun.spawn(
-    ["claude", "--dangerously-skip-permissions", "--", `/beastmode:design ${topic}`],
+    ["claude", "--dangerously-skip-permissions", "--", prompt],
     {
       cwd,
       stdin: "inherit",
@@ -29,8 +31,6 @@ export async function runDesignInteractive(
     },
   );
 
-  // Wire Ctrl+C — Bun.spawn propagates signals to the child, but we
-  // track it for exit_status reporting
   let cancelled = false;
   const onSigint = () => {
     cancelled = true;

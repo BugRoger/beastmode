@@ -12,13 +12,13 @@
     {
       "slug": "interactive-runner",
       "plan": "2026-03-29-interactive-cli-sessions-interactive-runner.md",
-      "status": "pending",
+      "status": "completed",
       "github": {"issue": 74}
     },
     {
       "slug": "phase-dispatch-unification",
       "plan": "2026-03-29-interactive-cli-sessions-phase-dispatch-unification.md",
-      "status": "pending",
+      "status": "in-progress",
       "github": {"issue": 75}
     }
   ],
@@ -26,5 +26,5 @@
     "epic": 70,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-29T14:30:00.000Z"
+  "lastUpdated": "2026-03-29T18:30:00.000Z"
 }
