@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.44.2 — README & ROADMAP Accuracy Fix (Mar 2026)
+
+- **Config example fix** — README config.yaml example now shows real gate names; removed deleted `transitions:` block
+- **Domain description fix** — Corrected domain list to three: Artifacts, Context, Meta
+- **"What Beastmode Is NOT" section** — Added positioning section after "Why?" to clarify scope
+- **ROADMAP "Now" update** — Added CLI orchestrator, cmux integration, GitHub state model, terminal phase states, manifest split, demo recording
+- **ROADMAP cleanup** — Removed shipped/deleted items (phase auto-chaining, visual language spec); updated "Next"/"Later" to reflect current state
+
 ### v0.44.1 — README & ROADMAP Accuracy Fix (Mar 2026)
 
 - **Config example fix** — README config.yaml example now shows real gate names; removed deleted `transitions:` block

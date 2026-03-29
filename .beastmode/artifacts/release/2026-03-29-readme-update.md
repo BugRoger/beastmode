@@ -6,7 +6,7 @@ bump: patch
 
 # Release: readme-update
 
-**Version:** v0.44.1
+**Version:** v0.44.2
 **Date:** 2026-03-29
 
 ## Highlights
@@ -27,3 +27,5 @@ Fix stale information in README.md and ROADMAP.md that drifted from actual proje
 - `b5ba665` design(readme-update): checkpoint
 - `81e6318` plan(readme-update): checkpoint
 - `3c6330c` implement(readme-fix): checkpoint
+- `f4a9781` validate(readme-update): checkpoint
+- `28de728` release(readme-update): checkpoint
