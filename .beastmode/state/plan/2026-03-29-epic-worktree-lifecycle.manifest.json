@@ -30,7 +30,7 @@
     {
       "slug": "cli-worktree-lifecycle",
       "plan": "2026-03-29-epic-worktree-lifecycle-cli-worktree-lifecycle.md",
-      "status": "in-progress",
+      "status": "completed",
       "github": {
         "issue": 60
       }
