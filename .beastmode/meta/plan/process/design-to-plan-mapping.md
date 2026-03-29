@@ -71,3 +71,15 @@ Sixth confirmation of 1:1 design-to-plan mapping. Additionally demonstrates the 
 state/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
 [HIGH] -- sixth observation, pattern firmly established
+
+## Observation 7
+### Context
+During epic-worktree-lifecycle planning, 2026-03-29
+### Observation
+Design doc's 6 architectural decisions (worktree ownership, slug derivation, entry point, implement fan-out, release boundary, error recovery) and component breakdown mapped to 4 independent feature plans via manifest decomposition. Locked decisions (CLI owns worktree ops, skills are blind, slugify() as sole authority) became constraints applied uniformly across all feature plans. The design's component structure (ensureWorktree, phase command refactor, cancel command, skill sweep, Justfile deletion) mapped to features with near-1:1 correspondence.
+### Rationale
+Seventh confirmation of 1:1 design-to-plan mapping. Additionally confirms the pattern works with the manifest-based feature decomposition approach across a second epic.
+### Source
+state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json
+### Confidence
+[HIGH] -- seventh observation, pattern firmly established

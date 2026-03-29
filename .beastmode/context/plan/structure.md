@@ -28,3 +28,4 @@
 - Migration from .agents/ to .beastmode/ — see [agents-to-beastmode-migration](../../state/plan/2026-03-04-agents-to-beastmode-migration.md)
 - Worktree session discovery — see [worktree-session-discovery](../../state/plan/2026-03-04-worktree-session-discovery.md)
 - Progressive L1 docs restructure — see [progressive-l1-docs](../../state/plan/2026-03-04-progressive-l1-docs.md)
+- CLI-owned worktree lifecycle — see [epic-worktree-lifecycle](../../state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json)

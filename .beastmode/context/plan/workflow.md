@@ -1,7 +1,7 @@
 # Workflow
 
 ## Phase Lifecycle
-Five-phase core workflow: design -> plan -> implement -> validate -> release. Each phase follows sub-phase anatomy: prime -> execute -> validate -> checkpoint. Standalone utilities: /beastmode (init), /status. Retro runs within each checkpoint.
+Five-phase core workflow: design -> plan -> implement -> validate -> release. Each phase follows sub-phase anatomy: prime -> execute -> validate -> checkpoint. Standalone utilities: /beastmode (init), /status, /cancel (epic teardown). Retro runs within each checkpoint.
 
 1. ALWAYS follow five-phase core: design -> plan -> implement -> validate -> release
 2. ALWAYS suggest next phase at checkpoint completion
@@ -43,3 +43,4 @@ Config.yaml transitions section controls phase-to-phase chaining. Transition gat
 
 ## Related Decisions
 - Init L2 expansion with retro-compatible format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)
+- Cancel command and CLI orchestration — see [epic-worktree-lifecycle](../../state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json)

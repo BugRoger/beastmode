@@ -1,10 +1,42 @@
 {
   "design": ".beastmode/state/design/2026-03-29-epic-worktree-lifecycle.md",
-  "architecturalDecisions": [],
-  "features": [],
+  "architecturalDecisions": [
+    {"decision": "Worktree ownership", "choice": "CLI owns all worktree ops; skills are completely blind"},
+    {"decision": "Slug derivation", "choice": "CLI's slugify() is sole authority; skills receive slugs as arguments"},
+    {"decision": "Entry point", "choice": "beastmode <phase> <slug> replaces Justfile recipes"},
+    {"decision": "Implement fan-out", "choice": "Single epic worktree shared by parallel SDK sessions; no per-feature worktrees"},
+    {"decision": "Release boundary", "choice": "Release skill keeps squash-merge to main (git ops); CLI does post-release cleanup"},
+    {"decision": "Error recovery", "choice": "Failed phases leave worktree dirty for retry; ensureWorktree() reuses on next run"}
+  ],
+  "features": [
+    {
+      "slug": "cli-worktree-lifecycle",
+      "plan": "2026-03-29-epic-worktree-lifecycle-cli-worktree-lifecycle.md",
+      "status": "pending",
+      "github": {"issue": 60}
+    },
+    {
+      "slug": "cancel-command",
+      "plan": "2026-03-29-epic-worktree-lifecycle-cancel-command.md",
+      "status": "pending",
+      "github": {"issue": 61}
+    },
+    {
+      "slug": "skill-worktree-sweep",
+      "plan": "2026-03-29-epic-worktree-lifecycle-skill-worktree-sweep.md",
+      "status": "pending",
+      "github": {"issue": 62}
+    },
+    {
+      "slug": "delete-justfile-hooks",
+      "plan": "2026-03-29-epic-worktree-lifecycle-delete-justfile-hooks.md",
+      "status": "pending",
+      "github": {"issue": 63}
+    }
+  ],
   "github": {
     "epic": 59,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-29T16:30:00.000Z"
+  "lastUpdated": "2026-03-29T17:18:00.000Z"
 }

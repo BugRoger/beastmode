@@ -10,4 +10,16 @@ This structural shift changes the plan phase's output contract. Instead of one l
 ### Source
 state/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
-[LOW] -- first observation of production use (feature was introduced this release cycle)
+[MEDIUM] -- upgraded: second observation recorded (Observation 2), pattern recurring
+
+## Observation 2
+### Context
+During epic-worktree-lifecycle planning, 2026-03-29
+### Observation
+The plan phase again produced a manifest JSON plus 4 independent feature plans rather than a single monolithic plan. The manifest tracks feature slugs, plan file paths, statuses, GitHub issue numbers, and architectural decisions. Each feature plan (cli-worktree-lifecycle, cancel-command, skill-worktree-sweep, delete-justfile-hooks) is self-contained with user stories, what-to-build sections, and acceptance criteria scoped to that feature alone. The manifest also links back to the design artifact and records the GitHub epic number.
+### Rationale
+Second production use of the manifest-based decomposition approach. Confirms this is becoming the standard plan output format for multi-feature epics. The manifest's role as the coordination artifact (linking features, tracking status, recording decisions) is consistent across both uses.
+### Source
+state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json
+### Confidence
+[MEDIUM] -- second observation, pattern recurring
