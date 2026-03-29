@@ -1,0 +1,10 @@
+{
+  "design": ".beastmode/state/design/2026-03-29-manifest-only-status.md",
+  "architecturalDecisions": [],
+  "features": [],
+  "github": {
+    "epic": 69,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-29T01:15:00.000Z"
+}
