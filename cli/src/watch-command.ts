@@ -212,15 +212,15 @@ async function dispatchPhase(opts: {
       };
     }
 
-    // Release teardown: archive, merge, remove on success
+    // Release teardown: archive, remove on success
+    // Note: the release skill (checkpoint phase) owns the squash-merge to main,
+    // including conflict resolution, version bumps, and changelog updates.
+    // The CLI only handles archive + worktree cleanup.
     if (opts.phase === "release" && sessionResult.success) {
       try {
         console.log(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
         const tagName = await worktree.archive(worktreeSlug, { cwd: opts.projectRoot });
         console.log(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
-
-        await worktree.merge(worktreeSlug, { cwd: opts.projectRoot });
-        console.log(`[watch] ${opts.epicSlug}: squash-merged to main`);
 
         await worktree.remove(worktreeSlug, { cwd: opts.projectRoot });
         console.log(`[watch] ${opts.epicSlug}: worktree removed`);

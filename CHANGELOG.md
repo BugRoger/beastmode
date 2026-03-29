@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.43.0 — Orchestrator State Reconciliation (Mar 2026)
+
+- **Orchestrator-driven state reconciliation** — Watch loop reconciles state by scanning worktree plan files directly instead of parsing output.json; the orchestrator is the sole writer of pipeline state
+- **Explicit phase advancement map** — `NEXT_PHASE` constant map replaces ad-hoc phase transition logic
+- **Plan reconciliation** — Scans worktree for feature plan `.md` files and enriches the manifest automatically
+- **Artifact copying** — Copies plan files from worktree to git-tracked `artifacts/plan/` for downstream agents
+- **Dead code removal** — Removed `findWorktreeOutputFile`, `loadWorktreePhaseOutput`, `shouldAdvance`/`regressPhase` imports, stale release re-dispatch test, and unused manifest-store exports
+
 ### v0.42.1 — Polling Behaviour (Mar 2026)
 
 - **Async dispatch mutex design** — PRD for promise-based async mutex serializing concurrent `tick()` and `rescanEpic()` calls in the watch loop, closing a check-then-act race condition
