@@ -4,7 +4,7 @@ All notable changes to beastmode.
 
 ---
 
-### v0.28.0 — The Terminal Multiplexer (Mar 2026)
+### v0.36.0 — The Terminal Multiplexer (Mar 2026)
 
 - **SessionStrategy interface** — Formal strategy pattern (`dispatch()`, `isComplete()`, `cleanup()`) with `SdkStrategy` and `CmuxStrategy` implementations
 - **CmuxClient** — Typed CLI wrapper for the `cmux` binary with `--json` flag: `ping()`, `newWorkspace()`, `newSplit()`, `sendSurface()`, `closeSurface()`, `listWorkspaces()`, `notify()`

@@ -1,6 +1,6 @@
 # Release: cmux-integration-revisited
 
-**Version:** v0.28.0
+**Version:** v0.36.0
 **Date:** 2026-03-29
 
 ## Highlights
