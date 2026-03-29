@@ -1,16 +1,14 @@
 /**
- * CmuxClient interface and error types.
+ * Typed client for the cmux terminal multiplexer CLI.
  *
- * Defines the contract for communicating with cmux over JSON-RPC Unix socket.
- * The actual transport implementation lives in a sibling feature branch;
- * this file provides the types and interface that consumers depend on.
+ * Communicates with cmux by shelling out to the `cmux` binary with `--json`
+ * for structured responses. No direct socket programming.
  */
 
 // ---------------------------------------------------------------------------
-// Errors
+// Error classes
 // ---------------------------------------------------------------------------
 
-/** Base error for all cmux operations. */
 export class CmuxError extends Error {
   constructor(message: string) {
     super(message);
@@ -18,100 +16,267 @@ export class CmuxError extends Error {
   }
 }
 
-/** cmux socket not found or connection refused. */
 export class CmuxConnectionError extends CmuxError {
-  constructor(message: string = "Cannot connect to cmux socket") {
+  constructor(message: string = "cmux is not running") {
     super(message);
     this.name = "CmuxConnectionError";
   }
 }
 
-/** cmux operation timed out. */
 export class CmuxTimeoutError extends CmuxError {
-  constructor(message: string = "cmux operation timed out") {
+  constructor(message: string = "cmux command timed out") {
     super(message);
     this.name = "CmuxTimeoutError";
   }
 }
 
-/** cmux returned a protocol-level error. */
 export class CmuxProtocolError extends CmuxError {
-  code: number;
-  constructor(code: number, message: string) {
+  constructor(message: string) {
     super(message);
     this.name = "CmuxProtocolError";
-    this.code = code;
   }
 }
 
 // ---------------------------------------------------------------------------
-// Data types
+// Types
 // ---------------------------------------------------------------------------
 
-/** Workspace info returned by cmux. */
 export interface CmuxWorkspace {
   name: string;
   surfaces: string[];
 }
 
-/** Surface info returned by cmux. */
 export interface CmuxSurface {
   name: string;
   workspace: string;
-  /** Whether the surface's shell process is still running. */
-  alive: boolean;
+  pid?: number;
 }
 
 // ---------------------------------------------------------------------------
-// Client interface
+// Interface
 // ---------------------------------------------------------------------------
 
-/** Interface for cmux communication. Implementations wrap the JSON-RPC protocol. */
 export interface ICmuxClient {
-  /** Check if cmux is reachable. */
   ping(): Promise<boolean>;
-
-  /** Create a workspace. Idempotent -- returns existing if name matches. */
   createWorkspace(name: string): Promise<CmuxWorkspace>;
-
-  /** List all workspaces. */
   listWorkspaces(): Promise<CmuxWorkspace[]>;
-
-  /** Close a workspace and all its surfaces. */
   closeWorkspace(name: string): Promise<void>;
-
-  /** Create a surface within a workspace. */
   createSurface(workspace: string, name: string): Promise<CmuxSurface>;
-
-  /** Send text input to a surface (for launching commands). */
   sendText(workspace: string, surface: string, text: string): Promise<void>;
-
-  /** Close a surface (kills its shell process). */
   closeSurface(workspace: string, surface: string): Promise<void>;
-
-  /** Get info about a surface. */
   getSurface(workspace: string, surface: string): Promise<CmuxSurface | null>;
-
-  /** Send a desktop notification. */
   notify(title: string, body: string): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
-// Availability check
+// Spawn function type — injectable for testing
 // ---------------------------------------------------------------------------
 
 /**
- * Check if cmux is available (socket exists and responds to ping).
- * Used by SessionFactory to decide dispatch strategy.
+ * Spawn function signature matching the subset of Bun.spawn we need.
+ * Accepts [cmd, ...args] and returns an object with stdout, stderr streams
+ * and an exited promise.
  */
-export async function cmuxAvailable(): Promise<boolean> {
-  try {
-    const { existsSync } = await import("node:fs");
-    if (!existsSync("/tmp/cmux.sock")) return false;
-    // Full implementation will instantiate CmuxClient and ping.
-    // For now, just check socket existence.
-    return false;
-  } catch {
-    return false;
+export type SpawnFn = (
+  cmd: string[],
+  opts: { stdout: "pipe"; stderr: "pipe" },
+) => {
+  stdout: ReadableStream | null;
+  stderr: ReadableStream | null;
+  exited: Promise<number>;
+};
+
+// ---------------------------------------------------------------------------
+// Implementation
+// ---------------------------------------------------------------------------
+
+export class CmuxClient implements ICmuxClient {
+  private timeoutMs: number;
+  private spawnFn: SpawnFn;
+
+  constructor(opts?: { timeoutMs?: number; spawn?: SpawnFn }) {
+    this.timeoutMs = opts?.timeoutMs ?? 10_000;
+    this.spawnFn =
+      opts?.spawn ?? ((cmd, spawnOpts) => Bun.spawn(cmd, spawnOpts));
   }
+
+  async ping(): Promise<boolean> {
+    try {
+      await this.exec(["ping"]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async createWorkspace(name: string): Promise<CmuxWorkspace> {
+    const result = await this.exec(["workspace", "new", name, "--json"]);
+    return this.parseJson<CmuxWorkspace>(result);
+  }
+
+  async listWorkspaces(): Promise<CmuxWorkspace[]> {
+    const result = await this.exec(["workspace", "list", "--json"]);
+    return this.parseJson<CmuxWorkspace[]>(result);
+  }
+
+  async closeWorkspace(name: string): Promise<void> {
+    try {
+      await this.exec(["workspace", "close", name]);
+    } catch (err) {
+      if (err instanceof CmuxConnectionError) throw err;
+      // "not found" means already closed — that is fine
+      if (err instanceof CmuxError && /not found/i.test(err.message)) {
+        return;
+      }
+      throw err;
+    }
+  }
+
+  async createSurface(workspace: string, name: string): Promise<CmuxSurface> {
+    const result = await this.exec([
+      "surface",
+      "new",
+      "--workspace",
+      workspace,
+      "--name",
+      name,
+      "--json",
+    ]);
+    return this.parseJson<CmuxSurface>(result);
+  }
+
+  async sendText(
+    workspace: string,
+    surface: string,
+    text: string,
+  ): Promise<void> {
+    await this.exec([
+      "surface",
+      "send-text",
+      "--workspace",
+      workspace,
+      "--surface",
+      surface,
+      "--text",
+      text,
+    ]);
+  }
+
+  async closeSurface(workspace: string, surface: string): Promise<void> {
+    try {
+      await this.exec([
+        "surface",
+        "close",
+        "--workspace",
+        workspace,
+        "--surface",
+        surface,
+      ]);
+    } catch (err) {
+      if (err instanceof CmuxConnectionError) throw err;
+      // "not found" means already closed — that is fine
+      if (err instanceof CmuxError && /not found/i.test(err.message)) {
+        return;
+      }
+      throw err;
+    }
+  }
+
+  async getSurface(
+    workspace: string,
+    surface: string,
+  ): Promise<CmuxSurface | null> {
+    try {
+      const result = await this.exec([
+        "surface",
+        "get",
+        "--workspace",
+        workspace,
+        "--surface",
+        surface,
+        "--json",
+      ]);
+      return this.parseJson<CmuxSurface>(result);
+    } catch {
+      return null;
+    }
+  }
+
+  async notify(title: string, body: string): Promise<void> {
+    await this.exec(["notify", "--title", title, "--body", body]);
+  }
+
+  private async exec(args: string[]): Promise<string> {
+    let proc: ReturnType<SpawnFn>;
+    try {
+      proc = this.spawnFn(["cmux", ...args], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+    } catch {
+      throw new CmuxConnectionError("cmux binary not found");
+    }
+
+    const timeout = setTimeout(() => {
+      // proc may have a kill method (real Bun.spawn) or not (mock)
+      if ("kill" in proc && typeof (proc as { kill?: () => void }).kill === "function") {
+        (proc as { kill: () => void }).kill();
+      }
+    }, this.timeoutMs);
+
+    try {
+      const [stdout, stderr] = await Promise.all([
+        proc.stdout
+          ? new Response(proc.stdout as ReadableStream).text()
+          : Promise.resolve(""),
+        proc.stderr
+          ? new Response(proc.stderr as ReadableStream).text()
+          : Promise.resolve(""),
+      ]);
+
+      const exitCode = await proc.exited;
+      clearTimeout(timeout);
+
+      if (exitCode !== 0) {
+        const msg =
+          stderr.trim() ||
+          stdout.trim() ||
+          `cmux exited with code ${exitCode}`;
+        if (msg.includes("not running") || msg.includes("connection refused")) {
+          throw new CmuxConnectionError(msg);
+        }
+        throw new CmuxError(msg);
+      }
+
+      return stdout;
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err instanceof CmuxError) throw err;
+      // Binary not found or spawn failure
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new CmuxConnectionError("cmux binary not found");
+      }
+      throw new CmuxError((err as Error).message);
+    }
+  }
+
+  private parseJson<T>(raw: string): T {
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      throw new CmuxProtocolError(
+        `Invalid JSON from cmux: ${raw.slice(0, 200)}`,
+      );
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Availability helper
+// ---------------------------------------------------------------------------
+
+/** Check if cmux is available by attempting a ping. */
+export async function cmuxAvailable(): Promise<boolean> {
+  const client = new CmuxClient({ timeoutMs: 3_000 });
+  return client.ping();
 }

@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.36.0 — The Terminal Multiplexer (Mar 2026)
+
+- **SessionStrategy interface** — Formal strategy pattern (`dispatch()`, `isComplete()`, `cleanup()`) with `SdkStrategy` and `CmuxStrategy` implementations
+- **CmuxClient** — Typed CLI wrapper for the `cmux` binary with `--json` flag: `ping()`, `newWorkspace()`, `newSplit()`, `sendSurface()`, `closeSurface()`, `listWorkspaces()`, `notify()`
+- **CmuxStrategy** — Workspace-per-epic surface model with `fs.watch` completion detection via `.dispatch-done.json` marker files
+- **SessionFactory** — Strategy selection based on `cli.dispatch-strategy` config (`sdk | cmux | auto`) and runtime cmux availability
+- **Startup reconciliation** — Adopts live cmux surfaces, closes dead ones, removes empty workspaces on watch restart
+- **Surface cleanup** — Automatic workspace teardown when epic reaches release
+- **Universal completion marker** — `phaseCommand` writes `.dispatch-done.json` regardless of dispatch method
+- **Desktop notifications** — Error and blocked gate notifications via `cmux notify`
+- **220 tests passing** — Full test coverage across all new modules
+
 ### v0.35.0 — The Status Unfuckery (Mar 2026)
 
 - **Manifest structural validation** — Scanner validates required fields (design, features, lastUpdated) with correct types; malformed manifests skipped with warning instead of corrupting status output

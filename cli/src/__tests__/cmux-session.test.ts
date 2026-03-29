@@ -1,261 +1,239 @@
-import { describe, test, expect, beforeEach } from "bun:test";
-import { CmuxSession } from "../cmux-session";
-import type { ICmuxClient, CmuxWorkspace, CmuxSurface } from "../cmux-client";
-import type { SessionResult } from "../watch-types";
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
+import { resolve } from "path";
+import { CmuxSessionFactory, type DispatchDoneMarker } from "../cmux-session";
+import type { ICmuxClient } from "../cmux-client";
+import type { SessionCreateOpts } from "../session";
 
-// ---------------------------------------------------------------------------
-// Call-tracking mock
-// ---------------------------------------------------------------------------
+const TEST_ROOT = resolve(import.meta.dir, "../../.test-cmux-session");
 
-interface MockCall {
-  method: string;
-  args: unknown[];
-}
-
-function createMockClient(): ICmuxClient & { calls: MockCall[] } {
-  const calls: MockCall[] = [];
-
-  function track(method: string) {
-    return (...args: unknown[]) => {
-      calls.push({ method, args });
-    };
-  }
+// Mock CmuxClient — tracks all calls for assertions
+function createMockClient(): ICmuxClient & {
+  calls: Array<{ method: string; args: unknown[] }>;
+  notifyArgs: Array<{ title: string; body: string }>;
+} {
+  const calls: Array<{ method: string; args: unknown[] }> = [];
+  const notifyArgs: Array<{ title: string; body: string }> = [];
 
   return {
     calls,
-    ping: async () => {
-      calls.push({ method: "ping", args: [] });
-      return true;
-    },
-    createWorkspace: async (name: string): Promise<CmuxWorkspace> => {
-      track("createWorkspace")(name);
+    notifyArgs,
+    async ping() { calls.push({ method: "ping", args: [] }); return true; },
+    async createWorkspace(name: string) {
+      calls.push({ method: "createWorkspace", args: [name] });
       return { name, surfaces: [] };
     },
-    listWorkspaces: async (): Promise<CmuxWorkspace[]> => {
+    async listWorkspaces() {
       calls.push({ method: "listWorkspaces", args: [] });
       return [];
     },
-    closeWorkspace: async (name: string): Promise<void> => {
-      track("closeWorkspace")(name);
+    async closeWorkspace(name: string) {
+      calls.push({ method: "closeWorkspace", args: [name] });
     },
-    createSurface: async (
-      workspace: string,
-      name: string,
-    ): Promise<CmuxSurface> => {
-      track("createSurface")(workspace, name);
-      return { name, workspace, alive: true };
+    async createSurface(workspace: string, name: string) {
+      calls.push({ method: "createSurface", args: [workspace, name] });
+      return { name, workspace };
     },
-    sendText: async (
-      workspace: string,
-      surface: string,
-      text: string,
-    ): Promise<void> => {
-      track("sendText")(workspace, surface, text);
+    async sendText(workspace: string, surface: string, text: string) {
+      calls.push({ method: "sendText", args: [workspace, surface, text] });
     },
-    closeSurface: async (
-      workspace: string,
-      surface: string,
-    ): Promise<void> => {
-      track("closeSurface")(workspace, surface);
+    async closeSurface(workspace: string, surface: string) {
+      calls.push({ method: "closeSurface", args: [workspace, surface] });
     },
-    getSurface: async (): Promise<CmuxSurface | null> => {
-      calls.push({ method: "getSurface", args: [] });
-      return null;
+    async getSurface(workspace: string, surface: string) {
+      calls.push({ method: "getSurface", args: [workspace, surface] });
+      return { name: surface, workspace };
     },
-    notify: async (title: string, body: string): Promise<void> => {
-      track("notify")(title, body);
+    async notify(title: string, body: string) {
+      calls.push({ method: "notify", args: [title, body] });
+      notifyArgs.push({ title, body });
     },
   };
 }
 
-// ---------------------------------------------------------------------------
-// Shared defaults
-// ---------------------------------------------------------------------------
+function makeOpts(overrides?: Partial<SessionCreateOpts>): SessionCreateOpts {
+  return {
+    epicSlug: "my-epic",
+    phase: "plan",
+    args: ["my-epic"],
+    projectRoot: TEST_ROOT,
+    signal: new AbortController().signal,
+    ...overrides,
+  };
+}
 
-const BASE_OPTIONS = {
-  epicSlug: "my-epic",
-  phase: "implement",
-  worktreeSlug: "wt-my-epic-implement",
-  projectRoot: "/tmp/fake-project",
-};
+function writeMarker(worktreeSlug: string, marker: DispatchDoneMarker): void {
+  const dir = resolve(TEST_ROOT, ".claude", "worktrees", worktreeSlug);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(resolve(dir, ".dispatch-done.json"), JSON.stringify(marker));
+}
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-describe("CmuxSession", () => {
-  let client: ReturnType<typeof createMockClient>;
-  let session: CmuxSession;
+describe("CmuxSessionFactory", () => {
+  let mockClient: ReturnType<typeof createMockClient>;
 
   beforeEach(() => {
-    client = createMockClient();
-    session = new CmuxSession(client);
+    if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
+    mkdirSync(TEST_ROOT, { recursive: true });
+    mockClient = createMockClient();
   });
 
-  // 1. Creates workspace per epic on first dispatch (idempotent)
-  test("creates workspace with the epicSlug", async () => {
-    await session.dispatch({ ...BASE_OPTIONS, client });
-
-    const call = client.calls.find((c) => c.method === "createWorkspace");
-    expect(call).toBeDefined();
-    expect(call!.args[0]).toBe("my-epic");
+  afterEach(() => {
+    if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
   });
 
-  // 2. Creates surface per phase/feature
-  test("creates surface with correct workspace and surface name", async () => {
-    await session.dispatch({
-      ...BASE_OPTIONS,
-      client,
-      featureSlug: "auth-login",
-    });
+  test("creates workspace named bm-{epicSlug}", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    // Pre-write marker so promise resolves immediately
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    const call = client.calls.find((c) => c.method === "createSurface");
-    expect(call).toBeDefined();
-    expect(call!.args[0]).toBe("my-epic");
-    expect(call!.args[1]).toBe("implement-auth-login");
+    const handle = await factory.create(makeOpts());
+    await handle.promise;
+
+    const createWs = mockClient.calls.find(c => c.method === "createWorkspace");
+    expect(createWs).toBeDefined();
+    expect(createWs!.args[0]).toBe("bm-my-epic");
   });
 
-  // 3. Surface naming: phase-only for single dispatch
-  test("surface name equals phase when no featureSlug", async () => {
-    const handle = await session.dispatch({ ...BASE_OPTIONS, client });
+  test("reuses existing workspace for same epic", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    expect(handle.surface).toBe("implement");
+    await (await factory.create(makeOpts({ phase: "plan" }))).promise;
+    // Write marker for second dispatch too
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
+    await (await factory.create(makeOpts({ phase: "validate" }))).promise;
 
-    const call = client.calls.find((c) => c.method === "createSurface");
-    expect(call!.args[1]).toBe("implement");
+    const createWsCalls = mockClient.calls.filter(c => c.method === "createWorkspace");
+    expect(createWsCalls).toHaveLength(1); // Only created once
   });
 
-  // 4. Surface naming: phase-feature for fan-out
-  test("surface name is phase-featureSlug for fan-out", async () => {
-    const handle = await session.dispatch({
-      ...BASE_OPTIONS,
-      client,
-      featureSlug: "dark-mode",
-    });
+  test("creates surface named {phase} for single phases", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    expect(handle.surface).toBe("implement-dark-mode");
+    await (await factory.create(makeOpts({ phase: "plan" }))).promise;
+
+    const createSurf = mockClient.calls.find(c => c.method === "createSurface");
+    expect(createSurf).toBeDefined();
+    expect(createSurf!.args).toEqual(["bm-my-epic", "plan"]);
   });
 
-  // 5. Sends beastmode run command into surface
-  test("sends beastmode run command without featureSlug", async () => {
-    await session.dispatch({ ...BASE_OPTIONS, client, phase: "design" });
+  test("creates surface named {phase}-{featureSlug} for fan-out", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic-feat-a", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    const call = client.calls.find((c) => c.method === "sendText");
-    expect(call).toBeDefined();
-    expect(call!.args[0]).toBe("my-epic"); // workspace
-    expect(call!.args[1]).toBe("design"); // surface
-    expect(call!.args[2]).toBe("beastmode run design my-epic");
+    await (await factory.create(makeOpts({
+      phase: "implement",
+      featureSlug: "feat-a",
+      args: ["my-epic", "feat-a"],
+    }))).promise;
+
+    const createSurf = mockClient.calls.find(c => c.method === "createSurface");
+    expect(createSurf!.args).toEqual(["bm-my-epic", "implement-feat-a"]);
   });
 
-  test("sends beastmode run command with featureSlug", async () => {
-    await session.dispatch({
-      ...BASE_OPTIONS,
-      client,
-      featureSlug: "auth-login",
-    });
+  test("sends correct beastmode command to surface", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    const call = client.calls.find((c) => c.method === "sendText");
-    expect(call).toBeDefined();
-    expect(call!.args[2]).toBe("beastmode run implement my-epic auth-login");
+    await (await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }))).promise;
+
+    const sendText = mockClient.calls.find(c => c.method === "sendText");
+    expect(sendText).toBeDefined();
+    expect(sendText!.args[2]).toBe("beastmode plan my-epic");
   });
 
-  // 6. Session promise resolves when complete() is called
-  test("promise resolves when complete() is called with SessionResult", async () => {
-    const handle = await session.dispatch({ ...BASE_OPTIONS, client });
+  test("resolves session when marker file exists", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 1.23, durationMs: 5000 });
 
-    const result: SessionResult = {
-      success: true,
-      exitCode: 0,
-      costUsd: 1.5,
-      durationMs: 30000,
-    };
-
-    handle.complete(result);
-
-    const resolved = await handle.promise;
-    expect(resolved).toEqual(result);
-  });
-
-  // 7. Abort closes the cmux surface
-  test("abort calls closeSurface on the correct workspace and surface", async () => {
-    const handle = await session.dispatch({ ...BASE_OPTIONS, client });
-
-    handle.abortController.abort();
-
-    // Give the async abort handler a tick to run
-    await new Promise((r) => setTimeout(r, 10));
-
-    const call = client.calls.find((c) => c.method === "closeSurface");
-    expect(call).toBeDefined();
-    expect(call!.args[0]).toBe("my-epic");
-    expect(call!.args[1]).toBe("implement");
-  });
-
-  // 8. Abort resolves promise with failure result
-  test("abort resolves promise with success: false and exitCode: 130", async () => {
-    const handle = await session.dispatch({ ...BASE_OPTIONS, client });
-
-    handle.abortController.abort();
-
+    const handle = await factory.create(makeOpts());
     const result = await handle.promise;
+
+    expect(result.success).toBe(true);
+    expect(result.exitCode).toBe(0);
+    expect(result.costUsd).toBe(1.23);
+    expect(result.durationMs).toBe(5000);
+  });
+
+  test("resolves with failure when marker indicates non-zero exit", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
+    writeMarker("my-epic", { exitCode: 1, costUsd: 0.5, durationMs: 3000, error: "phase failed" });
+
+    const handle = await factory.create(makeOpts());
+    const result = await handle.promise;
+
     expect(result.success).toBe(false);
-    expect(result.exitCode).toBe(130);
-    expect(result.costUsd).toBe(0);
-    expect(typeof result.durationMs).toBe("number");
+    expect(result.exitCode).toBe(1);
   });
 
-  // 9. Cleanup closes workspace
-  test("cleanup calls closeWorkspace with epicSlug", async () => {
-    await session.cleanup("my-epic");
+  test("fires notification on failure", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
+    writeMarker("my-epic", { exitCode: 1, costUsd: 0, durationMs: 1000 });
 
-    const call = client.calls.find((c) => c.method === "closeWorkspace");
-    expect(call).toBeDefined();
-    expect(call!.args[0]).toBe("my-epic");
+    const handle = await factory.create(makeOpts());
+    await handle.promise;
+
+    expect(mockClient.notifyArgs).toHaveLength(1);
+    expect(mockClient.notifyArgs[0].title).toContain("my-epic");
+    expect(mockClient.notifyArgs[0].title).toContain("failed");
   });
 
-  // 10. Cleanup is best-effort (does not throw)
-  test("cleanup does not throw when closeWorkspace fails", async () => {
-    const failingClient = createMockClient();
-    failingClient.closeWorkspace = async () => {
-      throw new Error("workspace already gone");
-    };
-    const failSession = new CmuxSession(failingClient);
+  test("does not fire notification on success", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    // Should not throw
-    await failSession.cleanup("my-epic");
+    const handle = await factory.create(makeOpts());
+    await handle.promise;
+
+    expect(mockClient.notifyArgs).toHaveLength(0);
   });
 
-  // 11. Session handle has correct metadata
-  test("handle exposes correct metadata", async () => {
-    const handle = await session.dispatch({
-      ...BASE_OPTIONS,
-      client,
-      featureSlug: "auth-login",
-    });
+  test("closes surface after session completes", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0.5, durationMs: 1000 });
 
-    expect(handle.id).toMatch(/^cmux-wt-my-epic-implement-/);
-    expect(handle.epicSlug).toBe("my-epic");
-    expect(handle.phase).toBe("implement");
-    expect(handle.featureSlug).toBe("auth-login");
-    expect(handle.worktreeSlug).toBe("wt-my-epic-implement");
-    expect(handle.workspace).toBe("my-epic");
-    expect(handle.surface).toBe("implement-auth-login");
-    expect(typeof handle.startedAt).toBe("number");
-    expect(handle.abortController).toBeInstanceOf(AbortController);
-    expect(typeof handle.complete).toBe("function");
-    expect(handle.promise).toBeInstanceOf(Promise);
+    const handle = await factory.create(makeOpts({ phase: "plan" }));
+    await handle.promise;
+
+    const closeSurf = mockClient.calls.filter(c => c.method === "closeSurface");
+    expect(closeSurf.length).toBeGreaterThanOrEqual(1);
+    expect(closeSurf[0].args).toEqual(["bm-my-epic", "plan"]);
   });
 
-  // Bonus: dispatch order — workspace before surface before sendText
-  test("calls createWorkspace, createSurface, sendText in order", async () => {
-    await session.dispatch({ ...BASE_OPTIONS, client });
+  test("cleanup closes workspace for epic", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0, durationMs: 100 });
 
-    const methods = client.calls.map((c) => c.method);
-    const wsIdx = methods.indexOf("createWorkspace");
-    const surfIdx = methods.indexOf("createSurface");
-    const sendIdx = methods.indexOf("sendText");
+    // Create a session first to register the workspace
+    await (await factory.create(makeOpts())).promise;
 
-    expect(wsIdx).toBeLessThan(surfIdx);
-    expect(surfIdx).toBeLessThan(sendIdx);
+    await factory.cleanup("my-epic");
+
+    const closeWs = mockClient.calls.find(c => c.method === "closeWorkspace");
+    expect(closeWs).toBeDefined();
+    expect(closeWs!.args[0]).toBe("bm-my-epic");
+  });
+
+  test("handle has correct worktreeSlug for single phase", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic", { exitCode: 0, costUsd: 0, durationMs: 100 });
+
+    const handle = await factory.create(makeOpts({ phase: "plan" }));
+    expect(handle.worktreeSlug).toBe("my-epic");
+    await handle.promise;
+  });
+
+  test("handle has correct worktreeSlug for feature fan-out", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
+    writeMarker("my-epic-feat-a", { exitCode: 0, costUsd: 0, durationMs: 100 });
+
+    const handle = await factory.create(makeOpts({
+      phase: "implement",
+      featureSlug: "feat-a",
+      args: ["my-epic", "feat-a"],
+    }));
+    expect(handle.worktreeSlug).toBe("my-epic-feat-a");
+    await handle.promise;
   });
 });

@@ -1,27 +1,50 @@
 # cmux Integration
 
 ## Communication Protocol
-- ALWAYS use JSON-RPC over Unix socket (`/tmp/cmux.sock`) for cmux communication — no process spawning overhead
-- A TypeScript `CmuxClient` class wraps the protocol with reconnection logic, timeout handling, and error mapping
-- Socket authentication uses `cmuxOnly` (process ancestry check) — beastmode inherits cmux ancestry when running inside cmux
+- ALWAYS use the `cmux` CLI binary with `--json` flag for cmux communication — no direct Unix socket programming
+- A typed `CmuxClient` module wraps the CLI with methods: `ping()`, `newWorkspace()`, `newSplit()`, `sendSurface()`, `closeSurface()`, `listWorkspaces()`, `notify()`
+- Process spawn overhead is negligible at dispatch-time frequency
+- cmux's default auth (`cmuxOnly`) checks process ancestry — beastmode inherits cmux ancestry when running inside cmux
 
 ## Surface Model
 - ALWAYS create one cmux workspace per active epic — switching workspaces = switching epics
 - ALWAYS create one cmux surface per dispatched phase or feature within the workspace — one terminal per agent
-- Agent commands sent via `surface.send-text` — cmux owns the shell process, not beastmode
+- Agent commands sent via `cmux send-surface` which runs `beastmode <phase> <slug>` — CLI-in-surface execution model
+- `phaseCommand` handles worktree creation, SDK dispatch, run logging, and release teardown inside the surface — the watch loop does not duplicate this logic for the cmux path
 - Agents get full interactive terminal capability — can prompt for input at human gates
 
 ## Notifications
 - ALWAYS fire desktop notifications only on phase failures and blocked human gates — no news is good news
-- Notification verbosity controlled by `cmux.notifications` config (errors/phase-complete/full)
+- Notification policy is fixed — no per-notification verbosity config knobs
 - Notifications use `cmux notify` command
 
 ## Lifecycle
 - ALWAYS clean up cmux workspace and surfaces when an epic reaches release — mirrors git worktree lifecycle
-- Cleanup timing controlled by `cmux.cleanup` config (on-release/manual/immediate)
-- On startup, reconcile existing cmux workspaces: adopt live surfaces, close dead ones, remove empty workspaces
+- Cleanup timing is fixed at on-release — no per-cleanup config knobs
+- Worktree is authoritative, cmux cleanup is best-effort — if cleanup fails, log warning and continue; stale surfaces get cleaned on next startup reconciliation
+- On startup, reconcile existing cmux workspaces: adopt live surfaces into DispatchTracker, close dead ones, remove empty workspaces
 
 ## Optionality
-- cmux is NEVER a hard dependency — `cmuxAvailable()` check (socket exists + ping succeeds) gates all cmux paths
-- `cmux.enabled` config (auto/true/false) combined with runtime check means zero regression risk
-- When cmux is unavailable or disabled, existing SDK dispatch path runs unchanged via `SdkSession`
+- cmux is NEVER a hard dependency — `cmuxAvailable()` pings the cmux CLI to gate all cmux paths
+- `cli.dispatch-strategy` config (sdk | cmux | auto) controls dispatch selection — `auto` uses cmux if available, falls back to SDK
+- When cmux is unavailable or not configured, existing SDK dispatch path runs unchanged via `SdkStrategy`
+
+## Completion Detection
+- `phaseCommand` ALWAYS writes `.dispatch-done.json` to the worktree path on exit — universal marker regardless of how phaseCommand was launched
+- Marker contains session result data: exit status, cost, duration
+- `CmuxStrategy` detects completion via `fs.watch` on the worktrees directory — near-instant, no polling
+- `SdkStrategy` resolves the in-process promise and also writes the marker — dual signal
+
+## State Reconciliation
+- State reconciliation is strategy-scoped — each strategy handles its own completion path
+- `SdkStrategy` reconciles state inline (existing behavior) and writes the completion marker
+- `CmuxStrategy` relies on `phaseCommand` running inside the surface to handle its own lifecycle
+- The watch loop detects completion via the marker file and re-scans the epic
+
+context/design/cmux-integration/communication-protocol.md
+context/design/cmux-integration/surface-model.md
+context/design/cmux-integration/notifications.md
+context/design/cmux-integration/lifecycle.md
+context/design/cmux-integration/optionality.md
+context/design/cmux-integration/completion-detection.md
+context/design/cmux-integration/state-reconciliation.md

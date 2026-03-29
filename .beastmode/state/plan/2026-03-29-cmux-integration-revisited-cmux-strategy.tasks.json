@@ -1,0 +1,14 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-29-cmux-integration-revisited-cmux-strategy.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: CmuxClient — typed CLI wrapper", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: CmuxClient unit tests", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: SessionFactory interface + SdkSessionFactory extraction", "wave": 1, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Config extension — dispatch-strategy field", "wave": 1, "status": "completed"},
+    {"id": 4, "subject": "Task 4: CmuxSessionFactory — cmux dispatch strategy", "wave": 2, "status": "completed"},
+    {"id": 5, "subject": "Task 5: CmuxSessionFactory unit tests", "wave": 2, "status": "completed"},
+    {"id": 6, "subject": "Task 6: SessionFactory integration — wire into watch-command", "wave": 3, "status": "completed"},
+    {"id": 7, "subject": "Task 7: Marker file + phaseCommand integration", "wave": 2, "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-29T21:00:00Z"
+}

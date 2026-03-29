@@ -9,12 +9,12 @@
 - No concurrency cap — parallel epics, parallel features within epics, API rate limits are the natural governor
 
 ## Agent Dispatching
-- ALWAYS dispatch one session per phase per epic via `DispatchedSession` interface, except implement which fans out one session per feature — parallelism at every level
+- ALWAYS dispatch one session per phase per epic via `SessionStrategy` interface, except implement which fans out one session per feature — parallelism at every level
 - ALWAYS use CLI-owned worktrees for agent isolation — CLI creates worktree, points session at it via `cwd`, merges after completion, removes when done
-- `SdkSession` invokes via SDK `query()` with prompt invoking the skill, `permissionMode: 'bypassPermissions'` — typed session management with streaming
-- `CmuxSession` creates a cmux terminal surface and sends `beastmode <phase> <slug>` via `surface.send-text` — cmux owns the shell process
-- `SessionFactory` returns `CmuxSession` when cmux is available and config enables it, `SdkSession` otherwise — strategy pattern with automatic fallback
-- Completion detection is implementation-agnostic — both session types check `.beastmode-runs.json` for run entries
+- `SdkStrategy` invokes via SDK `query()` with prompt invoking the skill, `permissionMode: 'bypassPermissions'` — typed session management with streaming
+- `CmuxStrategy` creates a cmux terminal surface and sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution model
+- `SessionFactory` returns `CmuxStrategy` when `cli.dispatch-strategy` config enables it and cmux is available, `SdkStrategy` otherwise — strategy pattern with automatic fallback
+- Completion detection via `.dispatch-done.json` marker file — `phaseCommand` always writes it on exit, each strategy detects it per its own mechanism (SDK resolves promise + writes marker, cmux watches via `fs.watch`)
 
 ## Merge Strategy
 - ALWAYS merge implement worktrees sequentially after all agents for an epic finish — ordering prevents conflicts

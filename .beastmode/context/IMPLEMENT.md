@@ -26,3 +26,10 @@
 - ALWAYS derive phase from the manifest.phases map — no filesystem marker sniffing
 - Status table: Epic, Phase, Progress, Blocked, Last Activity — no cost column
 - Next action: fan-out at implement, single dispatch for all other phases, null for done epics
+
+## Cmux Integration
+- CmuxClient is a class wrapping the cmux binary via Bun.spawn with injectable SpawnFn for testability
+- All operations shell out to cmux CLI with --json flag for structured responses; no direct socket programming
+- Error hierarchy: CmuxError base, CmuxConnectionError, CmuxProtocolError, CmuxTimeoutError
+- Close operations are idempotent — "not found" errors are swallowed, connection errors always rethrow
+- No retry logic or caching in the client — callers handle retry policy

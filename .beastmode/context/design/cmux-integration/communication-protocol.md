@@ -1,11 +1,11 @@
 ## Context
-The watch loop needs to communicate with cmux to create workspaces, surfaces, and send commands without process spawning overhead.
+The watch loop needs to communicate with cmux to create workspaces, surfaces, and send commands.
 
 ## Decision
-Use JSON-RPC over Unix socket (`/tmp/cmux.sock`). A TypeScript `CmuxClient` class wraps the protocol with reconnection logic, timeout handling, and error mapping. Socket authentication uses `cmuxOnly` (process ancestry check) — beastmode inherits cmux ancestry automatically.
+Use the `cmux` CLI binary with `--json` flag. A typed `CmuxClient` module wraps the CLI with methods: `ping()`, `newWorkspace()`, `newSplit()`, `sendSurface()`, `closeSurface()`, `listWorkspaces()`, `notify()`. Process spawn overhead is negligible at dispatch-time frequency. cmux's default auth (`cmuxOnly`) checks process ancestry — beastmode inherits cmux ancestry automatically.
 
 ## Rationale
-Unix socket avoids process spawning overhead, provides proper error handling, and is compatible with the Bun event loop. JSON-RPC is the native cmux protocol.
+CLI wrapper avoids direct Unix socket programming, simplifies the integration surface, and is compatible with the Bun runtime. The `--json` flag provides structured output parsing.
 
 ## Source
-`.beastmode/state/design/2026-03-28-cmux-integration.md`
+`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`

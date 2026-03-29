@@ -670,5 +670,35 @@
     "exit_status": "success",
     "timestamp": "2026-03-29T10:46:36.339Z",
     "session_id": null
+  },
+  {
+    "epic": "github-skill-cleanup",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 177673,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T11:16:29.998Z",
+    "session_id": null
+  },
+  {
+    "epic": "worktree-fork-point",
+    "phase": "implement",
+    "feature": "fork-point-tracking",
+    "cost_usd": null,
+    "duration_ms": 571052,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T11:18:20.892Z",
+    "session_id": null
+  },
+  {
+    "epic": "worktree-fork-point",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 171152,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T11:21:18.148Z",
+    "session_id": null
   }
 ]

@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "session-strategy", "status": "completed"}
+    ]
+  }
+}

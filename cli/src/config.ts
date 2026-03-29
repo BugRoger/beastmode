@@ -22,8 +22,11 @@ export interface GitHubConfig {
   "field-options"?: Record<string, string>;
 }
 
+export type DispatchStrategy = "sdk" | "cmux" | "auto";
+
 export interface CliConfig {
   interval?: number;
+  "dispatch-strategy"?: DispatchStrategy;
 }
 
 export interface BeastmodeConfig {
@@ -35,7 +38,7 @@ export interface BeastmodeConfig {
 const DEFAULT_CONFIG: BeastmodeConfig = {
   gates: {},
   github: { enabled: false },
-  cli: { interval: 60 },
+  cli: { interval: 60, "dispatch-strategy": "sdk" },
 };
 
 /**
@@ -110,6 +113,8 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
     interval:
       ((raw.cli as Record<string, unknown>)?.interval as number) ??
       DEFAULT_CONFIG.cli.interval,
+    "dispatch-strategy":
+      (((raw.cli as Record<string, unknown>)?.["dispatch-strategy"] as string) ?? "sdk") as DispatchStrategy,
   } satisfies CliConfig;
 
   return { gates, github, cli };
