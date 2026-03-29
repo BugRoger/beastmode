@@ -7,7 +7,7 @@
  */
 
 import { watch, type FSWatcher } from "node:fs";
-import { readFileSync, readdirSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, mkdirSync, statSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ICmuxClient } from "./cmux-client.js";
 import type {
@@ -16,28 +16,45 @@ import type {
   SessionHandle,
 } from "./session.js";
 import type { SessionResult } from "./watch-types.js";
+import * as worktree from "./worktree.js";
+
+/** Function that creates a worktree and returns its info. */
+export type CreateWorktreeFn = (
+  slug: string,
+  opts: { cwd: string },
+) => Promise<{ path: string }>;
 
 export class CmuxSessionFactory implements SessionFactory {
   private client: ICmuxClient;
+  private createWorktree: CreateWorktreeFn;
   private workspaces = new Map<string, string>(); // epicSlug -> workspace name
   private watchers = new Map<string, FSWatcher>(); // session id -> fs watcher
   private watchTimeoutMs: number;
 
-  constructor(client: ICmuxClient, opts?: { watchTimeoutMs?: number }) {
+  constructor(
+    client: ICmuxClient,
+    opts?: { watchTimeoutMs?: number; createWorktree?: CreateWorktreeFn },
+  ) {
     this.client = client;
+    this.createWorktree = opts?.createWorktree ?? ((slug, o) => worktree.create(slug, o));
     this.watchTimeoutMs = opts?.watchTimeoutMs ?? 600_000; // 10 min default
   }
 
   async create(opts: SessionCreateOpts): Promise<SessionHandle> {
     const { epicSlug, phase, featureSlug, args, projectRoot } = opts;
 
+    // Record start time before any setup — used to filter stale output.json files
+    const startTime = Date.now();
+
     // Derive workspace + surface names
     const workspaceName = `bm-${epicSlug}`;
     const surfaceName = featureSlug ? `${phase}-${featureSlug}` : phase;
-    const worktreeSlug = featureSlug
-      ? `${epicSlug}-${featureSlug}`
-      : epicSlug;
+    // Always use the epic-level worktree — no per-feature worktrees
+    const worktreeSlug = epicSlug;
     const id = `cmux-${worktreeSlug}-${Date.now()}`;
+
+    // Create worktree (idempotent — worktree.create handles existing)
+    const wt = await this.createWorktree(worktreeSlug, { cwd: projectRoot });
 
     // Ensure workspace exists (idempotent)
     if (!this.workspaces.has(epicSlug)) {
@@ -52,21 +69,18 @@ export class CmuxSessionFactory implements SessionFactory {
     // Create surface
     await this.client.createSurface(workspaceName, surfaceName);
 
-    // Build and send the beastmode command
-    const command = `beastmode ${phase} ${args.join(" ")}`;
+    // cd into the worktree, then run the beastmode command
+    const command = `cd ${wt.path} && beastmode ${phase} ${args.join(" ")}`;
     await this.client.sendText(workspaceName, surfaceName, command);
 
     // Derive artifact directory where output.json will appear
-    const worktreePath = resolve(
-      projectRoot,
-      ".claude",
-      "worktrees",
-      worktreeSlug,
-    );
-    const artifactDir = resolve(worktreePath, ".beastmode", "artifacts", opts.phase);
+    const artifactDir = resolve(wt.path, ".beastmode", "artifacts", opts.phase);
+
+    // Clean stale output.json files — git checkout sets mtime to now,
+    // which defeats the startTime filter and causes instant false matches.
+    this.cleanStaleOutputFiles(artifactDir);
 
     // Set up promise that resolves when output.json appears
-    const startTime = Date.now();
     const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal);
 
     // Handle abort — close surface
@@ -129,8 +143,9 @@ export class CmuxSessionFactory implements SessionFactory {
     signal: AbortSignal,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
-      // Check if an output.json already exists
-      const existing = this.findOutputJson(artifactDir);
+      // Check if an output.json already exists that is newer than dispatch time.
+      // Stale output.json files from previous runs must be ignored.
+      const existing = this.findOutputJson(artifactDir, startTime);
       if (existing) {
         const result = this.readOutputJson(existing, startTime);
         if (result) {
@@ -153,6 +168,12 @@ export class CmuxSessionFactory implements SessionFactory {
         watcher = watch(artifactDir, (_eventType, filename) => {
           if (filename && filename.endsWith(".output.json")) {
             const filePath = resolve(artifactDir, filename);
+            // Verify the file was written after dispatch, not a stale leftover
+            try {
+              if (statSync(filePath).mtimeMs < startTime) return;
+            } catch {
+              return;
+            }
             const result = this.readOutputJson(filePath, startTime);
             if (result) {
               cleanup();
@@ -164,7 +185,7 @@ export class CmuxSessionFactory implements SessionFactory {
       } catch {
         // Fall back to polling
         const pollInterval = setInterval(() => {
-          const found = this.findOutputJson(artifactDir);
+          const found = this.findOutputJson(artifactDir, startTime);
           if (found) {
             clearInterval(pollInterval);
             clearTimeout(timeout);
@@ -226,15 +247,23 @@ export class CmuxSessionFactory implements SessionFactory {
     });
   }
 
-  /** Find an output.json file in the artifact directory. */
-  private findOutputJson(dir: string): string | null {
+  /** Find an output.json file in the artifact directory, optionally filtering by mtime. */
+  private findOutputJson(dir: string, newerThanMs?: number): string | null {
     try {
       const files = readdirSync(dir) as string[];
-      const match = files
+      const candidates = files
         .filter((f: string) => f.endsWith(".output.json"))
-        .sort()
-        .pop();
-      return match ? resolve(dir, match) : null;
+        .map((f: string) => resolve(dir, f))
+        .filter((fullPath: string) => {
+          if (newerThanMs === undefined) return true;
+          try {
+            return statSync(fullPath).mtimeMs >= newerThanMs;
+          } catch {
+            return false;
+          }
+        })
+        .sort();
+      return candidates.length > 0 ? candidates[candidates.length - 1] : null;
     } catch {
       return null;
     }
@@ -257,6 +286,20 @@ export class CmuxSessionFactory implements SessionFactory {
       };
     } catch {
       return null;
+    }
+  }
+
+  /** Remove pre-existing output.json files to prevent stale matches after git checkout. */
+  private cleanStaleOutputFiles(dir: string): void {
+    try {
+      const files = readdirSync(dir);
+      for (const f of files) {
+        if (f.endsWith(".output.json")) {
+          unlinkSync(resolve(dir, f));
+        }
+      }
+    } catch {
+      // Directory doesn't exist yet — nothing to clean
     }
   }
 

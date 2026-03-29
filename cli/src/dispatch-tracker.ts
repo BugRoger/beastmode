@@ -42,8 +42,7 @@ export class DispatchTracker {
   }
 
   /**
-   * Check if an epic has an active session for a non-implement phase.
-   * (Implement fan-out allows multiple sessions per epic.)
+   * Check if an epic has an active session for a specific phase.
    */
   hasPhaseSession(epicSlug: string, phase: string): boolean {
     for (const s of this.sessions.values()) {

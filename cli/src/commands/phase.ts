@@ -18,23 +18,51 @@ import {
   ensureWorktree,
   enter as enterWorktree,
   remove as removeWorktree,
+  isInsideWorktree,
+  resolveMainCheckoutRoot,
 } from "../worktree";
 import { runPostDispatch } from "../post-dispatch";
+import * as store from "../manifest-store";
 
 /**
  * Execute a phase command. Called directly from the top-level router.
  * Phase is already validated by the argument parser.
+ *
+ * Two invocation contexts:
+ *   1. Manual — user runs `beastmode design <topic>` from the project root.
+ *      We create/enter the worktree and run post-dispatch + teardown.
+ *   2. Cmux — the watch loop already created the worktree and CDed into it.
+ *      We skip worktree creation and defer post-dispatch to the watch loop's
+ *      ReconcilingFactory (which has the correct projectRoot).
  */
 export async function phaseCommand(
   phase: Phase,
   args: string[],
   _config: BeastmodeConfig,
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const inWorktree = await isInsideWorktree();
+  const projectRoot = inWorktree
+    ? await resolveMainCheckoutRoot()
+    : process.cwd();
   const worktreeSlug = deriveWorktreeSlug(phase, args);
 
-  await ensureWorktree(worktreeSlug);
-  const cwd = enterWorktree(worktreeSlug);
+  let cwd: string;
+  if (inWorktree) {
+    // Already in a worktree (cmux dispatch) — use cwd as-is
+    cwd = process.cwd();
+  } else {
+    // Manual invocation — create/enter worktree
+    await ensureWorktree(worktreeSlug);
+    cwd = enterWorktree(worktreeSlug);
+  }
+
+  // Seed manifest for design phase so runPostDispatch can enrich it
+  const epicSlug = args[0] || worktreeSlug;
+  if (phase === "design" && !store.manifestExists(projectRoot, epicSlug)) {
+    store.create(projectRoot, epicSlug, {
+      worktree: { branch: `feature/${worktreeSlug}`, path: cwd },
+    });
+  }
 
   console.log(`[beastmode] Phase: ${phase}`);
   console.log(`[beastmode] Worktree: ${cwd}`);
@@ -44,22 +72,25 @@ export async function phaseCommand(
 
   await appendRunLog(projectRoot, phase, args, result);
 
-  // Post-dispatch: read phase output, enrich manifest, sync GitHub
-  await runPostDispatch({
-    worktreePath: cwd,
-    projectRoot,
-    epicSlug: args[0] || worktreeSlug,
-    phase,
-    success: result.exit_status === "success",
-  });
+  // Post-dispatch: only when not in a worktree.
+  // Cmux path defers to the watch loop's ReconcilingFactory.
+  if (!inWorktree) {
+    await runPostDispatch({
+      worktreePath: cwd,
+      projectRoot,
+      epicSlug,
+      phase,
+      success: result.exit_status === "success",
+    });
+  }
 
   console.log("");
   console.log(
     `[beastmode] ${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`,
   );
 
-  // Release teardown: remove worktree on success
-  if (phase === "release" && result.exit_status === "success") {
+  // Release teardown: only from main checkout (watch loop handles its own)
+  if (!inWorktree && phase === "release" && result.exit_status === "success") {
     try {
       console.log("[beastmode] Release successful — removing worktree...");
 

@@ -9,6 +9,8 @@
  *   archive       — tag feature branch HEAD as archive/<slug>
  *   merge         — squash-merge feature branch into main
  *   remove        — cleans up worktree directory and optionally deletes branch
+ *   isInsideWorktree      — detect if cwd is inside a git worktree
+ *   resolveMainCheckoutRoot — resolve the main checkout path from any worktree
  */
 
 import { resolve } from "node:path";
@@ -16,6 +18,49 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { git, gitCheck } from "./git.js";
 
 const WORKTREE_DIR = ".claude/worktrees";
+
+/**
+ * Detect whether cwd is inside a git worktree (not the main checkout).
+ *
+ * Uses `git rev-parse --git-common-dir`: in the main checkout this returns
+ * `.git` (relative), in a worktree it returns an absolute path to the main
+ * repo's .git directory.
+ */
+export async function isInsideWorktree(
+  opts: { cwd?: string } = {},
+): Promise<boolean> {
+  const result = await git(["rev-parse", "--git-common-dir"], {
+    cwd: opts.cwd,
+    allowFailure: true,
+  });
+  if (result.exitCode !== 0) return false;
+  return result.stdout !== ".git";
+}
+
+/**
+ * Resolve the main checkout root (where .beastmode/state/ lives).
+ *
+ * In a worktree, `git rev-parse --git-common-dir` returns the absolute path
+ * to the main repo's .git dir. The parent of that is the project root.
+ * In the main checkout, returns `git rev-parse --show-toplevel`.
+ */
+export async function resolveMainCheckoutRoot(
+  opts: { cwd?: string } = {},
+): Promise<string> {
+  const commonDir = await git(["rev-parse", "--git-common-dir"], {
+    cwd: opts.cwd,
+    allowFailure: true,
+  });
+
+  if (commonDir.exitCode === 0 && commonDir.stdout !== ".git") {
+    return resolve(commonDir.stdout, "..");
+  }
+
+  const toplevel = await git(["rev-parse", "--show-toplevel"], {
+    cwd: opts.cwd,
+  });
+  return toplevel.stdout;
+}
 
 /**
  * Resolve the default branch name from the remote.

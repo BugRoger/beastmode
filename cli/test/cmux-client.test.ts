@@ -61,14 +61,15 @@ function mockSpawn(opts: {
 describe("CmuxClient", () => {
   describe("ping", () => {
     it("returns true when cmux responds with exit 0", async () => {
-      const spawn = mockSpawn({ stdout: "pong", exitCode: 0 });
+      const spawn = mockSpawn({ stdout: "PONG\n", exitCode: 0 });
       const client = new CmuxClient({ spawn });
 
       const result = await client.ping();
 
       expect(result).toBe(true);
       expect(spawn.calls).toHaveLength(1);
-      expect(spawn.calls[0]).toEqual(["cmux", "ping"]);
+      // Binary may be resolved path or "cmux" — just check the command arg
+      expect(spawn.calls[0].slice(-1)).toEqual(["ping"]);
     });
 
     it("returns false when cmux exits non-zero", async () => {
@@ -91,17 +92,18 @@ describe("CmuxClient", () => {
   });
 
   describe("closeWorkspace", () => {
-    it("calls cmux with correct args", async () => {
-      const spawn = mockSpawn({ exitCode: 0 });
+    it("calls cmux close-workspace with --workspace flag", async () => {
+      const spawn = mockSpawn({ exitCode: 0, stdout: "OK workspace:4\n" });
       const client = new CmuxClient({ spawn });
 
       await client.closeWorkspace("my-workspace");
 
       expect(spawn.calls).toHaveLength(1);
-      expect(spawn.calls[0]).toEqual([
-        "cmux",
-        "workspace",
-        "close",
+      // Check command args (skip binary path)
+      const args = spawn.calls[0].slice(1);
+      expect(args).toEqual([
+        "close-workspace",
+        "--workspace",
         "my-workspace",
       ]);
     });
@@ -109,7 +111,7 @@ describe("CmuxClient", () => {
     it("handles already-closed workspace gracefully (not found)", async () => {
       const spawn = mockSpawn({
         exitCode: 1,
-        stderr: "workspace not found",
+        stderr: "not_found: Workspace not found",
       });
       const client = new CmuxClient({ spawn });
 
@@ -138,17 +140,16 @@ describe("CmuxClient", () => {
   });
 
   describe("closeSurface", () => {
-    it("calls cmux with correct args", async () => {
-      const spawn = mockSpawn({ exitCode: 0 });
+    it("calls cmux close-surface with correct flags", async () => {
+      const spawn = mockSpawn({ exitCode: 0, stdout: "OK\n" });
       const client = new CmuxClient({ spawn });
 
       await client.closeSurface("my-workspace", "my-surface");
 
       expect(spawn.calls).toHaveLength(1);
-      expect(spawn.calls[0]).toEqual([
-        "cmux",
-        "surface",
-        "close",
+      const args = spawn.calls[0].slice(1);
+      expect(args).toEqual([
+        "close-surface",
         "--workspace",
         "my-workspace",
         "--surface",
@@ -159,7 +160,7 @@ describe("CmuxClient", () => {
     it("handles already-closed surface gracefully (not found)", async () => {
       const spawn = mockSpawn({
         exitCode: 1,
-        stderr: "surface not found",
+        stderr: "not_found: Surface not found",
       });
       const client = new CmuxClient({ spawn });
 

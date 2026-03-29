@@ -1,7 +1,7 @@
 /**
  * Startup reconciliation — adopt live cmux surfaces, clean dead ones.
  *
- * Called by CmuxStrategy during watch loop initialization. Prevents
+ * Called during watch loop initialization when using cmux dispatch. Prevents
  * double-dispatching agents that survived a watch loop restart.
  */
 
@@ -194,9 +194,7 @@ export async function reconcileStartup(opts: {
 
       if (surface.alive && parsed) {
         // Live surface with parseable title — adopt it
-        const worktreeSlug = parsed.featureSlug
-          ? `${parsed.epicSlug}-${parsed.featureSlug}`
-          : parsed.epicSlug;
+        const worktreeSlug = parsed.epicSlug;
         const worktreePath = resolve(
           projectRoot,
           ".claude/worktrees",

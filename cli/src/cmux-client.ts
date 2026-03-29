@@ -1,8 +1,8 @@
 /**
  * Typed client for the cmux terminal multiplexer CLI.
  *
- * Communicates with cmux by shelling out to the `cmux` binary with `--json`
- * for structured responses. No direct socket programming.
+ * Communicates with cmux by shelling out to the `cmux` binary.
+ * Responses are plain text in "OK ref" format; parsed into typed results.
  */
 
 // ---------------------------------------------------------------------------
@@ -87,12 +87,93 @@ export type SpawnFn = (
 };
 
 // ---------------------------------------------------------------------------
+// Binary resolution
+// ---------------------------------------------------------------------------
+
+const CMUX_APP_BIN = "/Applications/cmux.app/Contents/Resources/bin/cmux";
+
+/** Resolve the cmux binary path. Checks PATH first, then the macOS app bundle. */
+function resolveCmuxBinary(): string {
+  try {
+    // which(1) equivalent — if cmux is on PATH, Bun.spawn will find it
+    const proc = Bun.spawnSync(["which", "cmux"], { stdout: "pipe", stderr: "pipe" });
+    if (proc.exitCode === 0) return "cmux";
+  } catch {
+    // which not available or failed
+  }
+  // Fall back to known macOS app bundle location
+  try {
+    const fs = require("fs");
+    if (fs.existsSync(CMUX_APP_BIN)) return CMUX_APP_BIN;
+  } catch {
+    // fs not available
+  }
+  return "cmux"; // let it fail at exec time with a clear error
+}
+
+let _resolvedBinary: string | null = null;
+function cmuxBinary(): string {
+  if (_resolvedBinary === null) _resolvedBinary = resolveCmuxBinary();
+  return _resolvedBinary;
+}
+
+// ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
+
+/**
+ * Parse a workspace ref from cmux output.
+ * e.g. "OK workspace:4" -> "workspace:4"
+ */
+function parseRef(stdout: string, prefix: string): string | null {
+  const match = stdout.match(new RegExp(`${prefix}:\\d+`));
+  return match ? match[0] : null;
+}
+
+/**
+ * Parse list-workspaces output into workspace names and refs.
+ *
+ * Output format (one workspace per line):
+ *   "* workspace:1  ~  [selected]"
+ *   "  workspace:4  bm-my-epic"
+ */
+function parseWorkspaceList(stdout: string): Array<{ ref: string; name: string }> {
+  const results: Array<{ ref: string; name: string }> = [];
+  for (const line of stdout.split("\n")) {
+    const trimmed = line.replace(/^\*?\s*/, "").trim();
+    if (!trimmed) continue;
+    const match = trimmed.match(/^(workspace:\d+)\s+(.+?)(?:\s+\[.*\])?$/);
+    if (match) {
+      results.push({ ref: match[1], name: match[2].trim() });
+    }
+  }
+  return results;
+}
+
+/**
+ * Parse tree output to extract surfaces for a workspace.
+ *
+ * Surface lines look like:
+ *   '        └── surface surface:5 [terminal] "plan" [selected]'
+ */
+function parseSurfaces(treeOutput: string): Array<{ ref: string; title: string }> {
+  const results: Array<{ ref: string; title: string }> = [];
+  for (const line of treeOutput.split("\n")) {
+    const match = line.match(/(surface:\d+)\s+\[terminal\]\s+"([^"]*)"/);
+    if (match) {
+      results.push({ ref: match[1], title: match[2] });
+    }
+  }
+  return results;
+}
 
 export class CmuxClient implements ICmuxClient {
   private timeoutMs: number;
   private spawnFn: SpawnFn;
+  /** Maps workspace names to their cmux refs (e.g. "bm-my-epic" -> "workspace:4") */
+  private workspaceRefs = new Map<string, string>();
+  /** Maps surface names to their cmux refs (e.g. "plan" -> "surface:5") */
+  private surfaceRefs = new Map<string, string>();
 
   constructor(opts?: { timeoutMs?: number; spawn?: SpawnFn }) {
     this.timeoutMs = opts?.timeoutMs ?? 10_000;
@@ -110,39 +191,52 @@ export class CmuxClient implements ICmuxClient {
   }
 
   async createWorkspace(name: string): Promise<CmuxWorkspace> {
-    const result = await this.exec(["workspace", "new", name, "--json"]);
-    return this.parseJson<CmuxWorkspace>(result);
+    const stdout = await this.exec(["new-workspace", "--name", name]);
+    const ref = parseRef(stdout, "workspace");
+    if (ref) this.workspaceRefs.set(name, ref);
+    return { name, surfaces: [] };
   }
 
   async listWorkspaces(): Promise<CmuxWorkspace[]> {
-    const result = await this.exec(["workspace", "list", "--json"]);
-    return this.parseJson<CmuxWorkspace[]>(result);
+    const stdout = await this.exec(["list-workspaces"]);
+    const workspaces = parseWorkspaceList(stdout);
+
+    // Cache refs
+    for (const ws of workspaces) {
+      this.workspaceRefs.set(ws.name, ws.ref);
+    }
+
+    return workspaces.map((ws) => ({ name: ws.name, surfaces: [] }));
   }
 
   async closeWorkspace(name: string): Promise<void> {
+    const ref = this.workspaceRefs.get(name) ?? name;
     try {
-      await this.exec(["workspace", "close", name]);
+      await this.exec(["close-workspace", "--workspace", ref]);
     } catch (err) {
       if (err instanceof CmuxConnectionError) throw err;
-      // "not found" means already closed — that is fine
-      if (err instanceof CmuxError && /not found/i.test(err.message)) {
-        return;
-      }
+      if (err instanceof CmuxError && /not.found/i.test(err.message)) return;
       throw err;
     }
+    this.workspaceRefs.delete(name);
   }
 
   async createSurface(workspace: string, name: string): Promise<CmuxSurface> {
-    const result = await this.exec([
-      "surface",
-      "new",
-      "--workspace",
-      workspace,
-      "--name",
-      name,
-      "--json",
-    ]);
-    return this.parseJson<CmuxSurface>(result);
+    const wsRef = this.workspaceRefs.get(workspace) ?? workspace;
+    const stdout = await this.exec(["new-surface", "--workspace", wsRef]);
+    const surfaceRef = parseRef(stdout, "surface");
+
+    // Rename the tab to the desired name
+    if (surfaceRef) {
+      this.surfaceRefs.set(`${workspace}/${name}`, surfaceRef);
+      try {
+        await this.exec(["rename-tab", "--workspace", wsRef, "--surface", surfaceRef, name]);
+      } catch {
+        // Best-effort rename
+      }
+    }
+
+    return { name, workspace };
   }
 
   async sendText(
@@ -150,53 +244,38 @@ export class CmuxClient implements ICmuxClient {
     surface: string,
     text: string,
   ): Promise<void> {
-    await this.exec([
-      "surface",
-      "send-text",
-      "--workspace",
-      workspace,
-      "--surface",
-      surface,
-      "--text",
-      text,
-    ]);
+    const wsRef = this.workspaceRefs.get(workspace) ?? workspace;
+    const surfRef = this.surfaceRefs.get(`${workspace}/${surface}`) ?? surface;
+    await this.exec(["send", "--workspace", wsRef, "--surface", surfRef, text]);
+    await this.exec(["send-key", "--workspace", wsRef, "--surface", surfRef, "enter"]);
   }
 
   async closeSurface(workspace: string, surface: string): Promise<void> {
+    const wsRef = this.workspaceRefs.get(workspace) ?? workspace;
+    const surfRef = this.surfaceRefs.get(`${workspace}/${surface}`) ?? surface;
     try {
-      await this.exec([
-        "surface",
-        "close",
-        "--workspace",
-        workspace,
-        "--surface",
-        surface,
-      ]);
+      await this.exec(["close-surface", "--workspace", wsRef, "--surface", surfRef]);
     } catch (err) {
       if (err instanceof CmuxConnectionError) throw err;
-      // "not found" means already closed — that is fine
-      if (err instanceof CmuxError && /not found/i.test(err.message)) {
-        return;
-      }
+      if (err instanceof CmuxError && /not.found/i.test(err.message)) return;
       throw err;
     }
+    this.surfaceRefs.delete(`${workspace}/${surface}`);
   }
 
   async getSurface(
     workspace: string,
     surface: string,
   ): Promise<CmuxSurface | null> {
+    const wsRef = this.workspaceRefs.get(workspace) ?? workspace;
     try {
-      const result = await this.exec([
-        "surface",
-        "get",
-        "--workspace",
-        workspace,
-        "--surface",
-        surface,
-        "--json",
-      ]);
-      return this.parseJson<CmuxSurface>(result);
+      const stdout = await this.exec(["tree", "--workspace", wsRef]);
+      const surfaces = parseSurfaces(stdout);
+      const found = surfaces.find((s) => s.title === surface);
+      if (found) {
+        return { name: surface, workspace };
+      }
+      return null;
     } catch {
       return null;
     }
@@ -209,7 +288,7 @@ export class CmuxClient implements ICmuxClient {
   private async exec(args: string[]): Promise<string> {
     let proc: ReturnType<SpawnFn>;
     try {
-      proc = this.spawnFn(["cmux", ...args], {
+      proc = this.spawnFn([cmuxBinary(), ...args], {
         stdout: "pipe",
         stderr: "pipe",
       });
@@ -242,7 +321,7 @@ export class CmuxClient implements ICmuxClient {
           stderr.trim() ||
           stdout.trim() ||
           `cmux exited with code ${exitCode}`;
-        if (msg.includes("not running") || msg.includes("connection refused")) {
+        if (msg.includes("Failed to write to socket") || msg.includes("not running") || msg.includes("connection refused")) {
           throw new CmuxConnectionError(msg);
         }
         throw new CmuxError(msg);
@@ -257,16 +336,6 @@ export class CmuxClient implements ICmuxClient {
         throw new CmuxConnectionError("cmux binary not found");
       }
       throw new CmuxError((err as Error).message);
-    }
-  }
-
-  private parseJson<T>(raw: string): T {
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      throw new CmuxProtocolError(
-        `Invalid JSON from cmux: ${raw.slice(0, 200)}`,
-      );
     }
   }
 }

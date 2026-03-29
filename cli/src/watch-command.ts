@@ -11,7 +11,10 @@ import { loadConfig } from "./config.js";
 import { WatchLoop } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
 import type { SessionResult } from "./watch-types.js";
+import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
 import { SdkSessionFactory } from "./session.js";
+import { CmuxSessionFactory } from "./cmux-session.js";
+import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
 import * as worktree from "./worktree.js";
 import { scanEpics } from "./state-scanner.js";
 import * as store from "./manifest-store.js";
@@ -120,6 +123,78 @@ function readProgress(
   return { completed, total: manifest.features.length };
 }
 
+/**
+ * Reconciling factory — wraps any SessionFactory with state reconciliation
+ * and release teardown. Both SDK and cmux paths get identical post-dispatch
+ * behavior without duplicating the logic.
+ */
+class ReconcilingFactory implements SessionFactory {
+  private inner: SessionFactory;
+  private projectRoot: string;
+
+  constructor(inner: SessionFactory, projectRoot: string) {
+    this.inner = inner;
+    this.projectRoot = projectRoot;
+  }
+
+  async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+    const handle = await this.inner.create(opts);
+    const { projectRoot } = this;
+
+    const worktreePath = resolve(
+      projectRoot,
+      ".claude",
+      "worktrees",
+      handle.worktreeSlug,
+    );
+
+    const wrappedPromise = handle.promise.then(async (result) => {
+      let sessionResult = result;
+
+      // Release teardown: archive, remove on success
+      if (opts.phase === "release" && sessionResult.success) {
+        try {
+          console.log(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
+          const tagName = await worktree.archive(handle.worktreeSlug, { cwd: projectRoot });
+          console.log(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
+
+          await worktree.remove(handle.worktreeSlug, { cwd: projectRoot });
+          console.log(`[watch] ${opts.epicSlug}: worktree removed`);
+
+          // Mark manifest as done so scanner skips it
+          const doneManifest = store.load(projectRoot, opts.epicSlug);
+          if (doneManifest) {
+            store.save(projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
+          }
+          console.log(`[watch] ${opts.epicSlug}: manifest marked done`);
+        } catch (err) {
+          console.error(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
+          console.error(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);
+          sessionResult = { ...sessionResult, success: false };
+        }
+      }
+
+      // State reconciliation
+      const progress = reconcileState({
+        worktreePath,
+        projectRoot,
+        epicSlug: opts.epicSlug,
+        phase: opts.phase,
+        featureSlug: opts.featureSlug,
+        success: sessionResult.success,
+      });
+
+      return { ...sessionResult, progress };
+    });
+
+    return { ...handle, promise: wrappedPromise };
+  }
+
+  async cleanup(epicSlug: string): Promise<void> {
+    return this.inner.cleanup?.(epicSlug);
+  }
+}
+
 /** Dispatch a phase using the Claude Agent SDK. */
 async function dispatchPhase(opts: {
   epicSlug: string;
@@ -133,9 +208,8 @@ async function dispatchPhase(opts: {
   worktreeSlug: string;
   promise: Promise<SessionResult>;
 }> {
-  const worktreeSlug = opts.featureSlug
-    ? `${opts.epicSlug}-${opts.featureSlug}`
-    : opts.epicSlug;
+  // Always use the epic-level worktree — no per-feature worktrees
+  const worktreeSlug = opts.epicSlug;
 
   // Create worktree
   const wt = await worktree.create(worktreeSlug, { cwd: opts.projectRoot });
@@ -211,50 +285,10 @@ async function dispatchPhase(opts: {
       };
     }
 
-    // Release teardown: archive, remove on success
-    // Note: the release skill (checkpoint phase) owns the squash-merge to main,
-    // including conflict resolution, version bumps, and changelog updates.
-    // The CLI only handles archive + worktree cleanup.
-    if (opts.phase === "release" && sessionResult.success) {
-      try {
-        console.log(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
-        const tagName = await worktree.archive(worktreeSlug, { cwd: opts.projectRoot });
-        console.log(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
-
-        await worktree.remove(worktreeSlug, { cwd: opts.projectRoot });
-        console.log(`[watch] ${opts.epicSlug}: worktree removed`);
-
-        // Mark manifest as done so scanner skips it (deriveNextAction returns null for "done")
-        const doneManifest = store.load(opts.projectRoot, opts.epicSlug);
-        if (doneManifest) {
-          store.save(opts.projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
-        }
-        console.log(`[watch] ${opts.epicSlug}: manifest marked done`);
-      } catch (err) {
-        console.error(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
-        console.error(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);
-        // Propagate teardown failure so the watch loop doesn't re-dispatch
-        sessionResult = { ...sessionResult, success: false };
-      }
-    }
-
     return sessionResult;
   })();
 
-  // After the agent exits, reconcile state on the project root
-  const syncedPromise = promise.then((result) => {
-    const progress = reconcileState({
-      worktreePath: wt.path,
-      projectRoot: opts.projectRoot,
-      epicSlug: opts.epicSlug,
-      phase: opts.phase,
-      featureSlug: opts.featureSlug,
-      success: result.success,
-    });
-    return { ...result, progress };
-  });
-
-  return { id, worktreeSlug, promise: syncedPromise };
+  return { id, worktreeSlug, promise };
 }
 
 /** Append a run entry to .beastmode-runs.json. */
@@ -298,9 +332,30 @@ export async function watchCommand(_args: string[]): Promise<void> {
   const projectRoot = findProjectRoot();
   const config = loadConfig(projectRoot);
 
+  // Select dispatch strategy based on config
+  const strategy = config.cli["dispatch-strategy"] ?? "sdk";
+  let innerFactory: SessionFactory;
+
+  if (strategy === "cmux" || strategy === "auto") {
+    const available = await cmuxAvailable();
+    if (available) {
+      console.log("[watch] Using cmux dispatch strategy");
+      innerFactory = new CmuxSessionFactory(new CmuxClient());
+    } else if (strategy === "cmux") {
+      console.error("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
+      innerFactory = new SdkSessionFactory(dispatchPhase);
+    } else {
+      innerFactory = new SdkSessionFactory(dispatchPhase);
+    }
+  } else {
+    innerFactory = new SdkSessionFactory(dispatchPhase);
+  }
+
+  const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot);
+
   const deps: WatchDeps = {
     scanEpics,
-    sessionFactory: new SdkSessionFactory(dispatchPhase),
+    sessionFactory,
     logRun,
   };
 

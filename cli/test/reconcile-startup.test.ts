@@ -344,7 +344,7 @@ describe("reconcileStartup", () => {
     expect(sessions[0].epicSlug).toBe("my-epic");
     expect(sessions[0].phase).toBe("implement");
     expect(sessions[0].featureSlug).toBe("feat-a");
-    expect(sessions[0].worktreeSlug).toBe("my-epic-feat-a");
+    expect(sessions[0].worktreeSlug).toBe("my-epic");
     expect(sessions[0].id).toStartWith("adopted-");
 
     safeAbortAll(tracker);

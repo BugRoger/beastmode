@@ -3,7 +3,6 @@ import {
   CmuxClient,
   CmuxError,
   CmuxConnectionError,
-  CmuxProtocolError,
   cmuxAvailable,
   type SpawnFn,
 } from "../cmux-client";
@@ -48,6 +47,17 @@ function createMockSpawn(proc: ReturnType<SpawnFn>) {
   return { fn, calls };
 }
 
+/** Create a mock SpawnFn that returns different results per call. */
+function createSequentialSpawn(procs: ReturnType<SpawnFn>[]) {
+  const calls: Array<{ cmd: string[]; opts: Record<string, string> }> = [];
+  let idx = 0;
+  const fn: SpawnFn = (cmd, opts) => {
+    calls.push({ cmd, opts });
+    return procs[Math.min(idx++, procs.length - 1)];
+  };
+  return { fn, calls };
+}
+
 /** Create a mock SpawnFn that throws (simulating binary not found). */
 function createThrowingSpawn() {
   const fn: SpawnFn = () => {
@@ -85,11 +95,11 @@ describe("CmuxClient", () => {
 
   describe("ping", () => {
     test("returns true when cmux responds with exit 0", async () => {
-      const { client, calls } = clientOk();
+      const { client, calls } = clientOk("PONG\n");
 
       expect(await client.ping()).toBe(true);
       expect(calls).toHaveLength(1);
-      expect(calls[0].cmd).toEqual(["cmux", "ping"]);
+      expect(calls[0].cmd[1]).toBe("ping");
     });
 
     test("returns false when cmux binary is not found", async () => {
@@ -99,7 +109,7 @@ describe("CmuxClient", () => {
     });
 
     test("returns false when cmux exits non-zero", async () => {
-      const { client } = clientFail("not running");
+      const { client } = clientFail("Failed to write to socket");
 
       expect(await client.ping()).toBe(false);
     });
@@ -110,27 +120,16 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("createWorkspace", () => {
-    test("passes name and parses workspace from JSON", async () => {
-      const ws = { name: "my-epic", surfaces: [] };
-      const { client, calls } = clientOk(JSON.stringify(ws));
+    test("calls new-workspace with --name flag", async () => {
+      const { client, calls } = clientOk("OK workspace:4\n");
 
-      const result = await client.createWorkspace("my-epic");
-      expect(result).toEqual(ws);
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "workspace",
-        "new",
-        "my-epic",
-        "--json",
+      const result = await client.createWorkspace("bm-my-epic");
+      expect(result).toEqual({ name: "bm-my-epic", surfaces: [] });
+      expect(calls[0].cmd.slice(1)).toEqual([
+        "new-workspace",
+        "--name",
+        "bm-my-epic",
       ]);
-    });
-
-    test("throws CmuxProtocolError on invalid JSON", async () => {
-      const { client } = clientOk("not json");
-
-      await expect(client.createWorkspace("x")).rejects.toThrow(
-        CmuxProtocolError,
-      );
     });
   });
 
@@ -139,21 +138,36 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("createSurface", () => {
-    test("creates surface in workspace with name", async () => {
-      const surf = { name: "implement", workspace: "ws-1", pid: 123 };
-      const { client, calls } = clientOk(JSON.stringify(surf));
+    test("creates surface and renames tab", async () => {
+      // First call: new-workspace, second: new-surface, third: rename-tab
+      const { fn, calls } = createSequentialSpawn([
+        mockProc("OK workspace:4\n", "", 0),
+        mockProc("OK surface:5 pane:4 workspace:4\n", "", 0),
+        mockProc("OK action=rename\n", "", 0),
+      ]);
+      const client = new CmuxClient({ timeoutMs: 1000, spawn: fn });
 
-      const result = await client.createSurface("ws-1", "implement");
-      expect(result).toEqual(surf);
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "surface",
-        "new",
+      // Create workspace first to register the ref
+      await client.createWorkspace("bm-my-epic");
+      const result = await client.createSurface("bm-my-epic", "plan");
+
+      expect(result).toEqual({ name: "plan", workspace: "bm-my-epic" });
+
+      // new-surface should use the workspace ref
+      expect(calls[1].cmd.slice(1)).toEqual([
+        "new-surface",
         "--workspace",
-        "ws-1",
-        "--name",
-        "implement",
-        "--json",
+        "workspace:4",
+      ]);
+
+      // rename-tab should set the surface title
+      expect(calls[2].cmd.slice(1)).toEqual([
+        "rename-tab",
+        "--workspace",
+        "workspace:4",
+        "--surface",
+        "surface:5",
+        "plan",
       ]);
     });
   });
@@ -163,20 +177,38 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("sendText", () => {
-    test("sends text to surface without JSON flag", async () => {
-      const { client, calls } = clientOk();
+    test("sends text then presses enter", async () => {
+      const { fn, calls } = createSequentialSpawn([
+        mockProc("OK workspace:4\n", "", 0),  // createWorkspace
+        mockProc("OK surface:5 pane:4 workspace:4\n", "", 0),  // createSurface
+        mockProc("OK\n", "", 0),  // rename-tab
+        mockProc("OK surface:5 workspace:4\n", "", 0),  // send
+        mockProc("OK surface:5 workspace:4\n", "", 0),  // send-key enter
+      ]);
+      const client = new CmuxClient({ timeoutMs: 1000, spawn: fn });
 
-      await client.sendText("ws-1", "surf-1", "beastmode implement epic feat");
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "surface",
-        "send-text",
+      await client.createWorkspace("bm-my-epic");
+      await client.createSurface("bm-my-epic", "plan");
+      await client.sendText("bm-my-epic", "plan", "beastmode plan my-epic");
+
+      // send command
+      expect(calls[3].cmd.slice(1)).toEqual([
+        "send",
         "--workspace",
-        "ws-1",
+        "workspace:4",
         "--surface",
-        "surf-1",
-        "--text",
-        "beastmode implement epic feat",
+        "surface:5",
+        "beastmode plan my-epic",
+      ]);
+
+      // send-key enter
+      expect(calls[4].cmd.slice(1)).toEqual([
+        "send-key",
+        "--workspace",
+        "workspace:4",
+        "--surface",
+        "surface:5",
+        "enter",
       ]);
     });
   });
@@ -187,7 +219,7 @@ describe("CmuxClient", () => {
 
   describe("closeSurface", () => {
     test("closes surface successfully", async () => {
-      const { client } = clientOk();
+      const { client } = clientOk("OK\n");
 
       await expect(
         client.closeSurface("ws-1", "surf-1"),
@@ -195,9 +227,8 @@ describe("CmuxClient", () => {
     });
 
     test("swallows 'not found' error (idempotent close)", async () => {
-      const { client } = clientFail("surface not found");
+      const { client } = clientFail("not_found: Surface not found");
 
-      // Should NOT throw — "not found" is swallowed as already-closed
       await expect(
         client.closeSurface("ws-1", "surf-1"),
       ).resolves.toBeUndefined();
@@ -218,21 +249,6 @@ describe("CmuxClient", () => {
         CmuxError,
       );
     });
-
-    test("passes correct args", async () => {
-      const { client, calls } = clientOk();
-
-      await client.closeSurface("ws-1", "surf-1");
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "surface",
-        "close",
-        "--workspace",
-        "ws-1",
-        "--surface",
-        "surf-1",
-      ]);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -241,13 +257,13 @@ describe("CmuxClient", () => {
 
   describe("closeWorkspace", () => {
     test("closes workspace successfully", async () => {
-      const { client } = clientOk();
+      const { client } = clientOk("OK workspace:4\n");
 
       await expect(client.closeWorkspace("ws-1")).resolves.toBeUndefined();
     });
 
     test("swallows 'not found' error (idempotent close)", async () => {
-      const { client } = clientFail("workspace not found");
+      const { client } = clientFail("not_found: Workspace not found");
 
       await expect(client.closeWorkspace("ws-1")).resolves.toBeUndefined();
     });
@@ -258,8 +274,8 @@ describe("CmuxClient", () => {
       await expect(client.closeWorkspace("ws-1")).rejects.toThrow(CmuxError);
     });
 
-    test("throws CmuxConnectionError when not running", async () => {
-      const { client } = clientFail("cmux is not running");
+    test("throws CmuxConnectionError when socket dead", async () => {
+      const { client } = clientFail("Failed to write to socket");
 
       await expect(client.closeWorkspace("ws-1")).rejects.toThrow(
         CmuxConnectionError,
@@ -272,22 +288,19 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("listWorkspaces", () => {
-    test("parses workspace list from JSON", async () => {
-      const data = [{ name: "epic-a", surfaces: ["s-1", "s-2"] }];
-      const { client, calls } = clientOk(JSON.stringify(data));
+    test("parses workspace list from text output", async () => {
+      const output = `* workspace:1  ~  [selected]\n  workspace:4  bm-my-epic\n`;
+      const { client } = clientOk(output);
 
       const result = await client.listWorkspaces();
-      expect(result).toEqual(data);
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "workspace",
-        "list",
-        "--json",
+      expect(result).toEqual([
+        { name: "~", surfaces: [] },
+        { name: "bm-my-epic", surfaces: [] },
       ]);
     });
 
-    test("returns empty array for no workspaces", async () => {
-      const { client } = clientOk("[]");
+    test("returns empty array for blank output", async () => {
+      const { client } = clientOk("\n");
 
       const result = await client.listWorkspaces();
       expect(result).toEqual([]);
@@ -299,15 +312,29 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("getSurface", () => {
-    test("returns surface when found", async () => {
-      const surf = { name: "plan", workspace: "ws-1", pid: 100 };
-      const { client } = clientOk(JSON.stringify(surf));
+    test("returns surface when found in tree output", async () => {
+      const treeOutput = `window window:1 [current]
+└── workspace workspace:4 "bm-my-epic"
+    └── pane pane:4 [focused]
+        └── surface surface:5 [terminal] "plan" [selected]\n`;
+      const { client } = clientOk(treeOutput);
 
       const result = await client.getSurface("ws-1", "plan");
-      expect(result).toEqual(surf);
+      expect(result).toEqual({ name: "plan", workspace: "ws-1" });
     });
 
-    test("returns null when surface not found", async () => {
+    test("returns null when surface not in tree", async () => {
+      const treeOutput = `window window:1 [current]
+└── workspace workspace:4 "bm-my-epic"
+    └── pane pane:4 [focused]
+        └── surface surface:5 [terminal] "other" [selected]\n`;
+      const { client } = clientOk(treeOutput);
+
+      const result = await client.getSurface("ws-1", "plan");
+      expect(result).toBeNull();
+    });
+
+    test("returns null when tree command fails", async () => {
       const { client } = clientFail("not found");
 
       const result = await client.getSurface("ws-1", "plan");
@@ -320,23 +347,6 @@ describe("CmuxClient", () => {
       const result = await client.getSurface("ws-1", "plan");
       expect(result).toBeNull();
     });
-
-    test("passes correct args including --json", async () => {
-      const surf = { name: "plan", workspace: "ws-1" };
-      const { client, calls } = clientOk(JSON.stringify(surf));
-
-      await client.getSurface("ws-1", "plan");
-      expect(calls[0].cmd).toEqual([
-        "cmux",
-        "surface",
-        "get",
-        "--workspace",
-        "ws-1",
-        "--surface",
-        "plan",
-        "--json",
-      ]);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -344,12 +354,11 @@ describe("CmuxClient", () => {
   // -----------------------------------------------------------------------
 
   describe("notify", () => {
-    test("passes title and body without JSON flag", async () => {
+    test("passes title and body", async () => {
       const { client, calls } = clientOk();
 
       await client.notify("Error", "Phase failed");
-      expect(calls[0].cmd).toEqual([
-        "cmux",
+      expect(calls[0].cmd.slice(1)).toEqual([
         "notify",
         "--title",
         "Error",
@@ -380,8 +389,8 @@ describe("CmuxClient", () => {
       );
     });
 
-    test("throws CmuxConnectionError when not running", async () => {
-      const { client } = clientFail("cmux is not running");
+    test("throws CmuxConnectionError on socket write failure", async () => {
+      const { client } = clientFail("Failed to write to socket");
 
       await expect(client.createWorkspace("x")).rejects.toThrow(
         CmuxConnectionError,
@@ -451,7 +460,7 @@ describe("CmuxClient", () => {
 describe("cmuxAvailable", () => {
   test("returns true when ping succeeds", async () => {
     const spy = spyOn(Bun, "spawn").mockReturnValue(
-      mockProc("", "", 0) as any,
+      mockProc("PONG\n", "", 0) as any,
     );
     try {
       expect(await cmuxAvailable()).toBe(true);

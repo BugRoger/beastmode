@@ -7,6 +7,11 @@ import type { SessionCreateOpts } from "../session";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-cmux-session");
 
+/** Mock worktree creation — returns the expected path without running git. */
+const mockCreateWorktree = async (slug: string, opts: { cwd: string }) => ({
+  path: resolve(opts.cwd, ".claude", "worktrees", slug),
+});
+
 // Mock CmuxClient — tracks all calls for assertions
 function createMockClient(): ICmuxClient & {
   calls: Array<{ method: string; args: unknown[] }>;
@@ -82,6 +87,9 @@ function writeOutputJson(
   writeFileSync(resolve(dir, filename), JSON.stringify(output));
 }
 
+/** Small delay to ensure file mtime > session start time. */
+const tick = () => new Promise<void>((r) => setTimeout(r, 50));
+
 describe("CmuxSessionFactory", () => {
   let mockClient: ReturnType<typeof createMockClient>;
 
@@ -96,10 +104,11 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("creates workspace named bm-{epicSlug}", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
     await handle.promise;
 
     const createWs = mockClient.calls.find(c => c.method === "createWorkspace");
@@ -108,23 +117,29 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("reuses existing workspace for same epic", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
-    await (await factory.create(makeOpts({ phase: "plan" }))).promise;
-    // Write marker for second dispatch too
+    const h1 = await factory.create(makeOpts({ phase: "plan" }));
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await h1.promise;
+
+    const h2 = await factory.create(makeOpts({ phase: "validate" }));
+    await tick();
     writeOutputJson("my-epic", "validate", { status: "completed", artifacts: {} });
-    await (await factory.create(makeOpts({ phase: "validate" }))).promise;
+    await h2.promise;
 
     const createWsCalls = mockClient.calls.filter(c => c.method === "createWorkspace");
     expect(createWsCalls).toHaveLength(1); // Only created once
   });
 
   test("creates surface named {phase} for single phases", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
-    await (await factory.create(makeOpts({ phase: "plan" }))).promise;
+    const handle = await factory.create(makeOpts({ phase: "plan" }));
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
 
     const createSurf = mockClient.calls.find(c => c.method === "createSurface");
     expect(createSurf).toBeDefined();
@@ -132,46 +147,69 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("creates surface named {phase}-{featureSlug} for fan-out", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic-feat-a", "implement", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
-    await (await factory.create(makeOpts({
+    const handle = await factory.create(makeOpts({
       phase: "implement",
       featureSlug: "feat-a",
       args: ["my-epic", "feat-a"],
-    }))).promise;
+    }));
+    await tick();
+    writeOutputJson("my-epic-feat-a", "implement", { status: "completed", artifacts: {} });
+    await handle.promise;
 
     const createSurf = mockClient.calls.find(c => c.method === "createSurface");
     expect(createSurf!.args).toEqual(["bm-my-epic", "implement-feat-a"]);
   });
 
   test("sends correct beastmode command to surface", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
-    await (await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }))).promise;
+    const handle = await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }));
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
 
     const sendText = mockClient.calls.find(c => c.method === "sendText");
     expect(sendText).toBeDefined();
-    expect(sendText!.args[2]).toBe("beastmode plan my-epic");
+    const sentCommand = sendText!.args[2] as string;
+    expect(sentCommand).toContain("cd ");
+    expect(sentCommand).toContain("&& beastmode plan my-epic");
   });
 
-  test("resolves session when output.json file exists", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: { prd: "path/to/prd.md" } });
+  test("resolves session when output.json file appears after dispatch", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: { prd: "path/to/prd.md" } });
     const result = await handle.promise;
 
     expect(result.success).toBe(true);
     expect(result.exitCode).toBe(0);
   });
 
-  test("resolves with failure when output.json indicates error status", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
+  test("ignores stale output.json from previous runs", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 1000, createWorktree: mockCreateWorktree });
+    // Pre-write a stale output.json BEFORE creating the session
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+
+    // Ensure the stale file's mtime is strictly in the past
+    await tick();
 
     const handle = await factory.create(makeOpts());
+
+    // The stale file should be ignored, so the promise should timeout
+    const result = await handle.promise;
+    expect(result.success).toBe(false); // timeout => failure
+  });
+
+  test("resolves with failure when output.json indicates error status", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
+
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
     const result = await handle.promise;
 
     expect(result.success).toBe(false);
@@ -179,10 +217,11 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("fires notification on failure", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "error", artifacts: {} });
     await handle.promise;
 
     expect(mockClient.notifyArgs).toHaveLength(1);
@@ -191,20 +230,22 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("does not fire notification on success", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
     await handle.promise;
 
     expect(mockClient.notifyArgs).toHaveLength(0);
   });
 
   test("closes surface after session completes", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts({ phase: "plan" }));
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
     await handle.promise;
 
     const closeSurf = mockClient.calls.filter(c => c.method === "closeSurface");
@@ -213,11 +254,12 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("cleanup closes workspace for epic", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
-    // Create a session first to register the workspace
-    await (await factory.create(makeOpts())).promise;
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
 
     await factory.cleanup("my-epic");
 
@@ -227,24 +269,26 @@ describe("CmuxSessionFactory", () => {
   });
 
   test("handle has correct worktreeSlug for single phase", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts({ phase: "plan" }));
     expect(handle.worktreeSlug).toBe("my-epic");
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
     await handle.promise;
   });
 
   test("handle has correct worktreeSlug for feature fan-out", async () => {
-    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500 });
-    writeOutputJson("my-epic-feat-a", "implement", { status: "completed", artifacts: {} });
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 2000, createWorktree: mockCreateWorktree });
 
     const handle = await factory.create(makeOpts({
       phase: "implement",
       featureSlug: "feat-a",
       args: ["my-epic", "feat-a"],
     }));
-    expect(handle.worktreeSlug).toBe("my-epic-feat-a");
+    expect(handle.worktreeSlug).toBe("my-epic");
+    await tick();
+    writeOutputJson("my-epic", "implement", { status: "completed", artifacts: {} });
     await handle.promise;
   });
 });
