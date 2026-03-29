@@ -31,6 +31,7 @@ Rewrites the watch loop's state reconciliation so the orchestrator is the sole w
 
 ## Full Changelog
 
+- `a17dd6d` release(polling-behaviour): checkpoint
 - `3fb21c8` release(polling-behaviour): checkpoint
 - `93af52a` release(polling-behaviour): checkpoint
 - `f483cad` plan(polling-behaviour): checkpoint
