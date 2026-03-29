@@ -117,7 +117,7 @@ Suggest: `git push origin main && git push origin vX.Y.Z`
 Suggest running:
 ```bash
 claude plugin marketplace update
-claude plugin update beastmode@beastmode-marketplace --scope project
+claude plugin update beastmode@beastmode-marketplace --scope user 
 ```
 
 ## 11. Complete

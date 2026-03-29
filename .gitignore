@@ -2,6 +2,9 @@
 .beastmode/state/
 .beastmode/sessions/
 .beastmode/worktrees/
+.beastmode/pipeline/
 .claude/worktrees/
 .claude/settings.local.json
+.beastmode-runs.json
+.beastmode-watch.lock
 .DS_Store
