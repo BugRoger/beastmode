@@ -1,8 +1,0 @@
-{
-  "status": "completed",
-  "artifacts": {
-    "features": [
-      {"slug": "output-json-phase-detection", "status": "completed"}
-    ]
-  }
-}

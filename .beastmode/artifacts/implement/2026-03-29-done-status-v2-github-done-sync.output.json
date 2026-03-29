@@ -2,7 +2,7 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "test-rewrite", "status": "completed"}
+      {"slug": "github-done-sync", "status": "completed"}
     ]
   }
 }
