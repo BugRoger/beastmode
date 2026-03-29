@@ -9,7 +9,7 @@ Review this phase's work for context doc accuracy and meta learnings.
 Determine current phase and feature:
 
 1. Identify current phase from the skill being executed (design/plan/implement/validate/release)
-2. Read phase artifacts (design doc, plan doc) from `.beastmode/state/`
+2. Read phase artifacts (design doc, plan doc) from `.beastmode/artifacts/`
 3. Identify the most recent state artifact produced this phase (the reconciliation target)
 
 ## 2. Quick-Exit Check
@@ -187,7 +187,7 @@ If no L0 changes proposed, skip this gate.
 
 L0 changes are proposed when:
 - The meta walker detects capabilities or workflow changes significant enough to update BEASTMODE.md
-- A release-phase retro has an L0 update proposal at `.beastmode/state/release/YYYY-MM-DD-<feature>-l0-proposal.md`
+- A release-phase retro has an L0 update proposal at `.beastmode/artifacts/release/YYYY-MM-DD-<feature>-l0-proposal.md`
 
 #### [GATE-OPTION|human] Review BEASTMODE.md Updates
 

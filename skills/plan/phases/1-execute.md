@@ -30,7 +30,7 @@ Rules:
 2. Features should map to user stories from the PRD
 3. Avoid deep dependencies between features where possible
 4. If a decision can be answered by exploring the codebase, explore instead of asking
-5. If a question requires research (unfamiliar technology, external APIs), research inline using Explore agent with `@../../agents/common-researcher.md` — save findings to `.beastmode/state/research/YYYY-MM-DD-<topic>.md`
+5. If a question requires research (unfamiliar technology, external APIs), research inline using Explore agent with `@../../agents/common-researcher.md` — save findings to `.beastmode/artifacts/research/YYYY-MM-DD-<topic>.md`
 6. Scope guardrail: new capabilities get deferred
    "That sounds like its own design — I'll note it as a deferred idea."
 7. Track deferred ideas internally

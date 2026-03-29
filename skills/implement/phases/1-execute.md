@@ -13,7 +13,7 @@ Before dispatching, create a detailed task breakdown from the architectural feat
    - Include complete code in steps
    - Assign wave numbers based on dependencies
    - Include verification steps with expected output
-5. **Save internal plan** to `.beastmode/state/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
+5. **Save internal plan** to `.beastmode/artifacts/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
    ```json
    {
      "featurePlan": "<path-to-feature-plan.md>",
@@ -113,7 +113,7 @@ Log: "Gate `implement.architectural-deviation` → auto: <decision>"
 
 After each task completes (or is blocked):
 
-1. Update `.beastmode/state/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
+1. Update `.beastmode/artifacts/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
    - Set task status to `completed` or `blocked`
    - Set `lastUpdated` timestamp
 2. Update TodoWrite

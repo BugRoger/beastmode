@@ -6,7 +6,7 @@ Surface and reconcile deferred ideas from design docs.
 
 ### 1. Walk Design Docs
 
-Read all files in `.beastmode/state/design/*.md`.
+Read all files in `.beastmode/artifacts/design/*.md`.
 
 For each file, extract the `## Deferred Ideas` section.
 

@@ -30,17 +30,17 @@ describe("manifestPath", () => {
   beforeEach(setupTestRoot);
   afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
 
-  test("returns undefined when no pipeline dir exists", () => {
+  test("returns undefined when no state dir exists", () => {
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("returns undefined when no manifest exists for slug", () => {
-    mkdirSync(resolve(TEST_ROOT, ".beastmode/pipeline"), { recursive: true });
+    mkdirSync(resolve(TEST_ROOT, ".beastmode/state"), { recursive: true });
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("finds flat-file manifest by slug", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode/pipeline");
+    const dir = resolve(TEST_ROOT, ".beastmode/state");
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
     const path = manifestPath(TEST_ROOT, "my-epic");
@@ -77,8 +77,8 @@ describe("seed", () => {
     expect(manifest.github).toEqual({ epic: 42, repo: "org/repo" });
   });
 
-  test("creates pipeline directory if missing", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode/pipeline");
+  test("creates state directory if missing", () => {
+    const dir = resolve(TEST_ROOT, ".beastmode/state");
     expect(existsSync(dir)).toBe(false);
     seed(TEST_ROOT, "test-epic");
     expect(existsSync(dir)).toBe(true);
@@ -246,7 +246,7 @@ describe("reconstruct", () => {
     expect(manifest!.phase).toBe("implement");
   });
 
-  test("writes reconstructed manifest to pipeline dir", () => {
+  test("writes reconstructed manifest to state dir", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
     writeFileSync(
       resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),

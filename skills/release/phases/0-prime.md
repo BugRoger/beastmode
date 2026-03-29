@@ -22,6 +22,6 @@ Prior decisions, conventions, and learnings inform this phase — don't re-decid
 ## 4. Load Artifacts
 
 Locate:
-- Design doc path (`.beastmode/state/design/YYYY-MM-DD-<feature>.md`)
-- Plan doc path (`.beastmode/state/plan/YYYY-MM-DD-<feature>.md`)
-- Validation report path (`.beastmode/state/validate/YYYY-MM-DD-<feature>.md`)
+- Design doc path (`.beastmode/artifacts/design/YYYY-MM-DD-<feature>.md`)
+- Plan doc path (`.beastmode/artifacts/plan/YYYY-MM-DD-<feature>.md`)
+- Validation report path (`.beastmode/artifacts/validate/YYYY-MM-DD-<feature>.md`)

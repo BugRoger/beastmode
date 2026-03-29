@@ -1,4 +1,5 @@
 # Beastmode session state and worktrees
+.beastmode/state/
 .beastmode/sessions/
 .beastmode/worktrees/
 .claude/worktrees/

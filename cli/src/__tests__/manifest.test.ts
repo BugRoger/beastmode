@@ -24,18 +24,18 @@ describe("manifest path conventions", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  test("manifestPath returns undefined when pipeline dir missing", () => {
+  test("manifestPath returns undefined when state dir missing", () => {
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("manifestPath returns undefined when no matching manifest exists", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const dir = resolve(TEST_ROOT, ".beastmode", "state");
     mkdirSync(dir, { recursive: true });
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("manifestPath finds flat-file manifest by slug suffix", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const dir = resolve(TEST_ROOT, ".beastmode", "state");
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
     const found = manifestPath(TEST_ROOT, "my-epic");
@@ -43,7 +43,7 @@ describe("manifest path conventions", () => {
   });
 
   test("manifestPath returns latest when multiple date-prefixed manifests exist", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const dir = resolve(TEST_ROOT, ".beastmode", "state");
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, "2026-03-28-my-epic.manifest.json"), "{}");
     writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
@@ -52,14 +52,14 @@ describe("manifest path conventions", () => {
   });
 
   test("manifest.ts and scanner use same flat-file convention", () => {
-    // Both use .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json
-    // Seed a manifest, then verify the file is in the flat pipeline dir
+    // Both use .beastmode/state/YYYY-MM-DD-<slug>.manifest.json
+    // Seed a manifest, then verify the file is in the flat state dir
     seed(TEST_ROOT, "convention-test");
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
     const files = readdirSync(pipeDir);
     const match = files.find((f) => f.endsWith("-convention-test.manifest.json"));
     expect(match).toBeDefined();
-    // No subdirectory — flat file directly in pipeline/
+    // No subdirectory — flat file directly in state/
     expect(match!).toMatch(/^\d{4}-\d{2}-\d{2}-convention-test\.manifest\.json$/);
   });
 });
@@ -83,8 +83,8 @@ describe("manifest core operations", () => {
     expect(loaded.features).toEqual([]);
   });
 
-  test("seed creates pipeline directory if missing", () => {
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+  test("seed creates state directory if missing", () => {
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
     expect(existsSync(pipeDir)).toBe(false);
 
     seed(TEST_ROOT, "fresh-epic");
@@ -114,7 +114,7 @@ describe("manifest core operations", () => {
   });
 
   test("writeManifest creates directories", () => {
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
     expect(existsSync(pipeDir)).toBe(false);
 
     const manifest: PipelineManifest = {

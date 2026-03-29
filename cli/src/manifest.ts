@@ -2,7 +2,7 @@
  * Manifest module — typed access to pipeline manifests.
  *
  * Schema: pure pipeline state.
- * Location: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json (flat file)
+ * Location: .beastmode/state/YYYY-MM-DD-<slug>.manifest.json (flat file)
  * Lifecycle: CLI creates, enriches, advances, reconstructs.
  */
 
@@ -38,15 +38,15 @@ export interface PipelineManifest {
 
 /**
  * Resolve the pipeline directory.
- * Convention: .beastmode/pipeline/
+ * Convention: .beastmode/state/
  */
 function pipelineDir(projectRoot: string): string {
-  return resolve(projectRoot, ".beastmode", "pipeline");
+  return resolve(projectRoot, ".beastmode", "state");
 }
 
 /**
  * Find the manifest file path for a given slug.
- * Convention: .beastmode/pipeline/YYYY-MM-DD-<slug>.manifest.json
+ * Convention: .beastmode/state/YYYY-MM-DD-<slug>.manifest.json
  * Returns the latest match (date prefix sorts chronologically).
  */
 export function manifestPath(projectRoot: string, slug: string): string | undefined {
@@ -168,7 +168,7 @@ export function reconstruct(
   slug: string,
 ): PipelineManifest | undefined {
   // Scan for design artifact
-  const designDir = resolve(projectRoot, ".beastmode", "state", "design");
+  const designDir = resolve(projectRoot, ".beastmode", "artifacts", "design");
   if (!existsSync(designDir)) return undefined;
 
   const designFiles = readdirSync(designDir).filter((f) =>
@@ -177,7 +177,7 @@ export function reconstruct(
   if (designFiles.length === 0) return undefined;
 
   // Scan for feature plans
-  const planDir = resolve(projectRoot, ".beastmode", "state", "plan");
+  const planDir = resolve(projectRoot, ".beastmode", "artifacts", "plan");
   const features: ManifestFeature[] = [];
   if (existsSync(planDir)) {
     const featurePlanPattern = new RegExp(
@@ -202,7 +202,7 @@ export function reconstruct(
 
   // Check for implement/validate/release state markers
   for (const p of ["implement", "validate", "release"] as Phase[]) {
-    const phaseDir = resolve(projectRoot, ".beastmode", "state", p);
+    const phaseDir = resolve(projectRoot, ".beastmode", "artifacts", p);
     if (existsSync(phaseDir)) {
       const hasMarker = readdirSync(phaseDir).some((f) => f.includes(slug));
       if (hasMarker) phase = p;
@@ -296,13 +296,13 @@ export function getPendingFeatures(manifest: PipelineManifest): ManifestFeature[
 /**
  * Find a manifest in the old state/plan/ location.
  * Used during migration to locate seed manifests.
- * Convention: .beastmode/state/plan/*-<slug>.manifest.json
+ * Convention: .beastmode/artifacts/plan/*-<slug>.manifest.json
  */
 export function findLegacyManifestPath(
   projectRoot: string,
   designSlug: string,
 ): string | undefined {
-  const planDir = resolve(projectRoot, ".beastmode", "state", "plan");
+  const planDir = resolve(projectRoot, ".beastmode", "artifacts", "plan");
   if (!existsSync(planDir)) return undefined;
 
   const files = readdirSync(planDir);

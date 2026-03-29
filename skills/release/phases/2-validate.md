@@ -2,7 +2,7 @@
 
 ## 1. Verify Release Notes
 
-Check that release notes file exists in `.beastmode/state/release/` with correct feature name and bump type.
+Check that release notes file exists in `.beastmode/artifacts/release/` with correct feature name and bump type.
 
 ## 2. Verify Commit Categorization
 

@@ -30,7 +30,7 @@ function findProjectRoot(from: string = process.cwd()): string {
  * Contains manifests and phase markers. Never in a worktree.
  */
 function pipelineDir(projectRoot: string): string {
-  const dir = resolve(projectRoot, ".beastmode/pipeline");
+  const dir = resolve(projectRoot, ".beastmode/state");
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -38,7 +38,7 @@ function pipelineDir(projectRoot: string): string {
 /**
  * State reconciliation — the orchestrator is the sole writer of pipeline state.
  *
- * All runtime state lives in .beastmode/pipeline/ (gitignored).
+ * All runtime state lives in .beastmode/state/ (gitignored).
  * Rules:
  *   plan      → scan worktree for feature plan .md files, build manifest
  *   implement → mark the completed feature in the manifest

@@ -24,7 +24,7 @@ Prior decisions, conventions, and learnings inform this phase — don't re-decid
 Scan for implementation artifacts to verify all features have been implemented:
 
 ```bash
-ls .beastmode/state/implement/*-$design-*.md 2>/dev/null
+ls .beastmode/artifacts/implement/*-$design-*.md 2>/dev/null
 ```
 
 Cross-reference against the feature plan files to determine completion status.

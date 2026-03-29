@@ -33,7 +33,7 @@ If triggered, spawn Explore agent with `@../../agents/common-researcher.md`, sav
 Locate the design artifact by convention glob:
 
 ```bash
-matches=$(ls .beastmode/state/design/*-$feature.md 2>/dev/null)
+matches=$(ls .beastmode/artifacts/design/*-$feature.md 2>/dev/null)
 ```
 
 If no matches, error: "No design artifact found for feature '$feature'". If multiple, take the latest (date prefix sorts chronologically).
