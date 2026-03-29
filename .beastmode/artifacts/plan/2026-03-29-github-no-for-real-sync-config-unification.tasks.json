@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-29-github-no-for-real-sync-config-unification.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add updateConfig and detectRepo to config.ts", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Migrate cache to config.yaml and update setup-github", "status": "pending", "wave": 2},
+    {"id": 2, "subject": "Task 2: Wire detectRepo into github-sync and add repo to config", "status": "pending", "wave": 2},
+    {"id": 3, "subject": "Task 3: Verify all acceptance criteria and run tests", "status": "pending", "wave": 3}
+  ],
+  "lastUpdated": "2026-03-29T14:00:00Z"
+}

@@ -1,0 +1,13 @@
+{
+  "phase": "implement",
+  "epic": "github-no-for-real-sync",
+  "feature": "board-epics-only",
+  "status": "completed",
+  "tasks": 4,
+  "tasksCompleted": 4,
+  "deviations": 0,
+  "files": [
+    "cli/src/github-sync.ts",
+    "cli/test/github-sync.test.ts"
+  ]
+}

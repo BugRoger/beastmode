@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "board-epics-only", "plan": "2026-03-29-github-no-for-real-sync-board-epics-only.md"},
+      {"slug": "config-unification", "plan": "2026-03-29-github-no-for-real-sync-config-unification.md"},
+      {"slug": "sync-command", "plan": "2026-03-29-github-no-for-real-sync-sync-command.md"},
+      {"slug": "sync-on-save", "plan": "2026-03-29-github-no-for-real-sync-sync-on-save.md"},
+      {"slug": "terminal-states", "plan": "2026-03-29-github-no-for-real-sync-terminal-states.md"}
+    ]
+  }
+}

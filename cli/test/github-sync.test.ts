@@ -773,7 +773,7 @@ describe("syncGitHub", () => {
       ).toBe(true);
     });
 
-    test("syncs project status for features too", async () => {
+    test("does not add features to project board", async () => {
       const feature = makeFeature({
         slug: "board-feat",
         status: "in-progress",
@@ -786,13 +786,15 @@ describe("syncGitHub", () => {
 
       await syncGitHub(manifest, config);
 
-      // ghProjectItemAdd should be called for both epic and feature
+      // ghProjectItemAdd should be called ONLY for the epic, NOT the feature
       const addCalls = callsTo("ghProjectItemAdd");
-      expect(addCalls.length).toBeGreaterThanOrEqual(2);
+      expect(addCalls).toHaveLength(1);
+      // The one call should be for the epic (issue 10), not the feature (issue 40)
+      expect((addCalls[0].args[2] as string)).toContain("/issues/10");
       const featureAdd = addCalls.find((c) =>
         (c.args[2] as string).includes("/issues/40"),
       );
-      expect(featureAdd).toBeDefined();
+      expect(featureAdd).toBeUndefined();
     });
   });
 

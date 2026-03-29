@@ -160,7 +160,7 @@ export async function syncGitHub(
   // --- Feature Sync ---
 
   for (const feature of manifest.features) {
-    await syncFeature(repo, owner, epicNumber, feature, config.github, result);
+    await syncFeature(repo, epicNumber, feature, result);
   }
 
   // --- Epic Close (if done) ---
@@ -184,10 +184,8 @@ export async function syncGitHub(
  */
 async function syncFeature(
   repo: string,
-  owner: string,
   epicNumber: number,
   feature: ManifestFeature,
-  githubConfig: GitHubConfig,
   result: SyncResult,
 ): Promise<void> {
   // Resolve or create the feature issue number — track locally, never mutate feature
@@ -250,38 +248,6 @@ async function syncFeature(
     }
   }
 
-  // Update project board status for feature
-  const featureBoardStatus = featureStatusToBoardStatus(feature.status);
-  if (featureBoardStatus) {
-    await syncProjectStatus(
-      githubConfig,
-      owner,
-      repo,
-      featureNumber,
-      featureBoardStatus,
-      result,
-    );
-  }
-}
-
-/**
- * Map feature status to project board status.
- */
-function featureStatusToBoardStatus(
-  status: ManifestFeature["status"],
-): string | undefined {
-  switch (status) {
-    case "pending":
-      return "Plan";
-    case "in-progress":
-      return "Implement";
-    case "blocked":
-      return "Plan";
-    case "completed":
-      return "Done";
-    default:
-      return undefined;
-  }
 }
 
 /**

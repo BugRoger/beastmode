@@ -189,6 +189,22 @@ export async function ghIssueClose(
 }
 
 /**
+ * Add a comment to a GitHub issue.
+ */
+export async function ghIssueComment(
+  repo: string,
+  issueNumber: number,
+  body: string,
+  opts: { cwd?: string } = {},
+): Promise<boolean> {
+  const result = await gh(
+    ["issue", "comment", String(issueNumber), "--repo", repo, "--body", body],
+    { cwd: opts.cwd },
+  );
+  return result !== undefined;
+}
+
+/**
  * Get issue labels. Returns label names or undefined.
  */
 export async function ghIssueLabels(
