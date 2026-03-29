@@ -13,7 +13,6 @@ import type { WatchDeps } from "./watch.js";
 import type { EpicState, SessionResult, NextAction, FeatureProgress } from "./watch-types.js";
 import { SdkSessionFactory } from "./session.js";
 import * as worktree from "./worktree.js";
-import { manifestPath as pipelineManifestPath, manifestDir as pipelineManifestDir } from "./manifest.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -45,16 +44,6 @@ function pipelineDir(projectRoot: string): string {
   const dir = resolve(projectRoot, ".beastmode/pipeline");
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   return dir;
-}
-
-/**
- * Resolve the manifest file path for a given slug using new nested layout.
- * Convention: .beastmode/pipeline/<slug>/manifest.json
- */
-function resolveManifestPath(projectRoot: string, slug: string): string {
-  const dir = resolve(projectRoot, ".beastmode/pipeline", slug);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return resolve(dir, "manifest.json");
 }
 
 /**
@@ -226,9 +215,10 @@ function reconcilePlan(
   (manifest.phases as Record<string, string>).design = "completed";
   (manifest.phases as Record<string, string>).plan = "completed";
 
-  // Write manifest to pipeline dir
-  const manifestName = manifestFile ?? `${new Date().toISOString().slice(0, 10)}-${epicSlug}.manifest.json`;
-  writeFileSync(resolve(dir, manifestName), JSON.stringify(manifest, null, 2));
+  // Write manifest to new pipeline location: .beastmode/pipeline/<slug>/manifest.json
+  const newManifestDir = resolve(projectRoot, ".beastmode/pipeline", epicSlug);
+  if (!existsSync(newManifestDir)) mkdirSync(newManifestDir, { recursive: true });
+  writeFileSync(resolve(newManifestDir, "manifest.json"), JSON.stringify(manifest, null, 2));
 
   // Copy plan files to git-tracked state/plan/ for agents to read
   const destPlanDir = resolve(projectRoot, ".beastmode/state/plan");
@@ -337,25 +327,49 @@ function scanEpicsInline(projectRoot: string): EpicState[] {
   const pipeDir = pipelineDir(projectRoot);
   const planDir = resolve(projectRoot, ".beastmode", "state", "plan");
 
-  // Prefer pipeline dir manifests, fall back to plan dir
-  const manifestDir = readdirSync(pipeDir).some(f => f.endsWith(".manifest.json"))
-    ? pipeDir
-    : planDir;
-  if (!existsSync(manifestDir)) return [];
+  // Scan new nested locations first: .beastmode/pipeline/<slug>/manifest.json
+  interface ManifestEntry { slug: string; path: string }
+  const entries: ManifestEntry[] = [];
 
-  const files = readdirSync(manifestDir).filter((f: string) =>
-    f.endsWith(".manifest.json"),
-  );
+  if (existsSync(pipeDir)) {
+    // Check for nested slug dirs
+    for (const entry of readdirSync(pipeDir)) {
+      const nestedManifest = resolve(pipeDir, entry, "manifest.json");
+      if (existsSync(nestedManifest)) {
+        entries.push({ slug: entry, path: nestedManifest });
+      }
+    }
+
+    // Also check flat files for legacy
+    for (const f of readdirSync(pipeDir)) {
+      if (f.endsWith(".manifest.json")) {
+        const slug = f.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(".manifest.json", "");
+        // Don't duplicate if already found in nested dir
+        if (!entries.some((e) => e.slug === slug)) {
+          entries.push({ slug, path: resolve(pipeDir, f) });
+        }
+      }
+    }
+  }
+
+  // Fall back to plan dir if no pipeline manifests found
+  if (entries.length === 0 && existsSync(planDir)) {
+    for (const f of readdirSync(planDir)) {
+      if (f.endsWith(".manifest.json")) {
+        const slug = f.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(".manifest.json", "");
+        entries.push({ slug, path: resolve(planDir, f) });
+      }
+    }
+  }
 
   const epics: EpicState[] = [];
 
-  for (const file of files) {
+  for (const entry of entries) {
     try {
-      const content = readFileSync(resolve(manifestDir, file), "utf-8");
+      const content = readFileSync(entry.path, "utf-8");
       const manifest = JSON.parse(content);
 
-      // Derive slug from filename: YYYY-MM-DD-<slug>.manifest.json
-      const slug = file.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(".manifest.json", "");
+      const slug = entry.slug;
 
       const features: FeatureProgress[] = (manifest.features ?? []).map(
         (f: { slug: string; status: string }) => ({
