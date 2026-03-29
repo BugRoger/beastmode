@@ -1,33 +1,23 @@
-# skill-cleanup
+# Skill Cleanup
 
-**Design:** .beastmode/state/design/2026-03-28-github-cli-migration.md
+**Design:** .beastmode/state/design/2026-03-29-github-cli-migration.md
 **Architectural Decisions:** see manifest
 
 ## User Stories
 
-2. As a skill author, I want skills to be pure content processors with no GitHub awareness, so that I can modify skill logic without worrying about breaking GitHub sync.
+1. US 2: As a skill author, I want skills to be pure content processors with no GitHub or manifest awareness, so that I can modify skill logic without worrying about breaking pipeline state.
 
 ## What to Build
 
-Remove all GitHub-related code from skill markdown files, making skills pure content processors. This is a subtractive feature — no new code, only deletions and simplifications.
-
-Files to modify:
-- **`skills/design/phases/3-checkpoint.md`** — Remove the "Sync GitHub" section that creates epics and adds to project.
-- **`skills/plan/phases/3-checkpoint.md`** — Remove the "Sync GitHub" section that advances epic, creates feature sub-issues, and writes issue numbers to manifest.
-- **`skills/implement/phases/0-prime.md`** — Remove the "Sync GitHub" subsection that sets feature status and advances epic phase.
-- **`skills/implement/phases/3-checkpoint.md`** — Remove the "Sync GitHub" section that closes features and checks epic completion.
-- **`skills/validate/phases/3-checkpoint.md`** — Remove the "Sync GitHub" section.
-- **`skills/release/phases/3-checkpoint.md`** — Remove the "Sync GitHub" section that advances epic to done and closes it.
-
-Files to delete:
-- **`skills/_shared/github.md`** — The shared GitHub utility. All operations are now in the CLI's `github-client` module.
-
-After cleanup, no skill file should contain references to `github.enabled`, `github.md`, `gh issue`, `gh api`, `gh project`, or `github.epic`/`github.issue` manifest fields.
+Remove all GitHub sync and manifest mutation logic from skill markdown files. Delete `skills/_shared/github.md` entirely. From the 5 checkpoint phase files (design, plan, implement, validate, release), remove the "Sync GitHub" sections that create/update issues, set labels, and manage project board state. From implement prime, remove the GitHub status update section. From all checkpoint files, remove manifest creation and mutation logic — skills no longer write to or read from the manifest. Ensure each checkpoint still writes its phase output file (the structured `.output.json` from the phase-output-contract feature). The setup-github skill remains unchanged as it's interactive and not part of the dispatch pipeline, except for the config extension handled by the github-sync-engine feature. Verify no remaining references to `gh` CLI, `github.md`, manifest reading, or manifest writing in any skill file.
 
 ## Acceptance Criteria
 
-- [ ] All 6 checkpoint/prime files have GitHub sync sections removed
-- [ ] `skills/_shared/github.md` is deleted
-- [ ] No skill file contains `github.enabled`, `@../_shared/github.md`, `gh issue`, `gh api`, or `gh project`
-- [ ] Skills still write manifest content fields (design path, features array, feature statuses) — only `github.*` fields are removed from skill responsibility
-- [ ] Existing non-GitHub skill logic is preserved unchanged
+- [ ] `skills/_shared/github.md` deleted
+- [ ] No "Sync GitHub" sections in any checkpoint phase file
+- [ ] No manifest read/write logic in any skill file
+- [ ] No `gh` CLI references in any skill file (except setup-github)
+- [ ] Implement prime has no GitHub status update section
+- [ ] All checkpoints still write phase output files
+- [ ] Setup-github skill unchanged (except config extension from sync-engine feature)
+- [ ] Grep for `gh issue`, `gh api`, `manifest`, `github.md` returns zero hits in skill files (excluding setup-github)

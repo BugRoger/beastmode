@@ -83,3 +83,15 @@ Seventh confirmation of 1:1 design-to-plan mapping. Additionally confirms the pa
 state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json
 ### Confidence
 [HIGH] -- seventh observation, pattern firmly established
+
+## Observation 8
+### Context
+During github-cli-migration planning, 2026-03-29
+### Observation
+Design doc's 11 architectural decisions (sync trigger, sync direction, reconciliation logic, Projects V2 metadata, manifest schema, manifest location, manifest lifecycle, phase output contract, GitHub API client, error handling, migration strategy) and component breakdown mapped to 5 independent feature plans via manifest decomposition. Locked decisions (stateless post-only sync, blast-replace labels, manifest as pipeline-only state, gh CLI via Bun.spawn, warn-and-continue error handling, clean-cut migration) became constraints applied uniformly across all feature plans.
+### Rationale
+Eighth confirmation of 1:1 design-to-plan mapping. Largest set of architectural decisions yet (11), all cleanly distributing as constraints across feature plans.
+### Source
+state/plan/2026-03-28-github-cli-migration.manifest.json
+### Confidence
+[HIGH] -- eighth observation, pattern firmly established

@@ -1,13 +1,15 @@
-# Shared Utility
+# Sync Engine
 
 ## Context
-Multiple phase skills will need GitHub API operations (label management, issue creation, project queries). Duplicating API calls across skills violates the shared utility pattern.
+Multiple phase checkpoints needed GitHub sync (labels, issues, project board). The original approach used a shared skill utility (`skills/_shared/github.md`) invoked from each checkpoint. This distributed responsibility across skills and made sync unreliable.
 
 ## Decision
-Centralized `skills/_shared/github.md` with reusable operations: auth check, repo detection, label CRUD, issue CRUD (create epic, create feature, close feature, check completion), Projects V2 operations (create project, get status field, link repo). All operations use `gh api` or `gh api graphql`.
+Single CLI-owned TypeScript module exporting `syncGitHub(manifest, config)`. Called post-dispatch after every phase. Stateless: reads manifest, reconciles GitHub state, writes back bootstrap data (new issue numbers). All `gh` CLI calls go through `Bun.spawn` with try/catch and warn-and-continue. Replaces `skills/_shared/github.md` entirely. Reconciliation logic: blast-replace `phase/*` labels, create-if-missing issues, set `status/*` labels, close completed features, close epic when done.
 
 ## Rationale
-Follows existing convention of cross-skill utilities in `skills/_shared/`. Single source for API operations prevents drift. `gh api` used for hierarchy operations because `gh issue` CLI has no sub-issue support.
+Moving sync to the CLI eliminates skill-level GitHub awareness, making skills pure content processors. A single entry point is testable with standard TypeScript tooling (mock `Bun.spawn`). Post-dispatch placement guarantees sync runs regardless of skill behavior.
 
 ## Source
-state/plan/2026-03-28-github-state-model.md
+state/plan/2026-03-29-github-cli-migration-github-sync-engine.md
+state/plan/2026-03-29-github-cli-migration-skill-cleanup.md
+state/plan/2026-03-28-github-cli-migration.manifest.json

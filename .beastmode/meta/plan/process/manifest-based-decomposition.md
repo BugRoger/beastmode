@@ -10,7 +10,7 @@ This structural shift changes the plan phase's output contract. Instead of one l
 ### Source
 state/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
-[MEDIUM] -- upgraded: second observation recorded (Observation 2), pattern recurring
+[HIGH] -- upgraded: third observation recorded (Observation 3), pattern confirmed across three epics
 
 ## Observation 2
 ### Context
@@ -23,3 +23,15 @@ Second production use of the manifest-based decomposition approach. Confirms thi
 state/plan/2026-03-29-epic-worktree-lifecycle.manifest.json
 ### Confidence
 [MEDIUM] -- second observation, pattern recurring
+
+## Observation 3
+### Context
+During github-cli-migration planning, 2026-03-29
+### Observation
+The plan phase again produced a manifest JSON plus 5 independent feature plans (manifest-redesign, phase-output-contract, github-sync-engine, dispatch-pipeline, skill-cleanup). The manifest tracks feature slugs, plan file paths, statuses, and GitHub issue numbers. Each feature plan is self-contained with user stories, what-to-build, and acceptance criteria. User stories trace back to specific design user stories, providing design-to-plan traceability.
+### Rationale
+Third production use of the manifest-based decomposition approach. Confirms this is the standard plan output format for multi-feature epics. Pattern is now well-established across three distinct epics.
+### Source
+state/plan/2026-03-28-github-cli-migration.manifest.json
+### Confidence
+[HIGH] -- third observation, upgraded from MEDIUM; pattern confirmed across three epics

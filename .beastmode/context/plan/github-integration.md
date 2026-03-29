@@ -19,27 +19,35 @@
 - ALWAYS create Projects V2 board named from `config.yaml github.project-name` -- configurable
 - ALWAYS configure board columns to match phase lifecycle: Backlog, Design, Plan, Implement, Validate, Release, Done
 
-## Shared Utility
-- ALWAYS use `skills/_shared/github.md` for reusable GitHub operations -- centralized API layer
-- Utility covers: auth check, repo detection, label ops, issue ops (create/close/query), Projects V2 ops
-- ALWAYS use `gh api` or `gh api graphql` for hierarchy operations -- CLI gap for sub-issues
+## Sync Engine
+- ALWAYS use the CLI-owned `syncGitHub(manifest, config)` TypeScript module for all GitHub operations -- replaces skills/_shared/github.md
+- Sync is stateless and post-only: reads manifest, makes GitHub match, writes back bootstrap data (new issue numbers)
+- ALWAYS call sync after every phase dispatch via the post-dispatch hook -- same code path for manual and watch
+- ALWAYS use `gh` CLI via `Bun.spawn` wrapped in try/catch with warn-and-continue -- never raw API calls from skills
+- Reconciliation: blast-replace `phase/*` labels on epic, create-if-missing issues, set `status/*` labels on features, close completed
 
 ## Configuration Extension
 - ALWAYS define phase transitions in `config.yaml` under `transitions:` key -- centralized mode control
 - ALWAYS define project board name in `config.yaml` under `github.project-name` -- configurable
+- ALWAYS store Projects V2 metadata in `config.yaml` (project-id, field-id, option IDs) -- no cache file, no lazy queries
+- Setup-github subcommand writes project metadata fields to config.yaml -- one-time bootstrap populates sync engine config
 - Transition modes: human (requires approval), auto (self-advancing) -- matches existing gate system
 
 ## State Authority Model
-- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives on the feature branch in the worktree
-- GitHub is a synced mirror updated at checkpoint boundaries -- provides the global view across designs
+- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/pipeline/<slug>/manifest.json`, gitignored, local-only
+- CLI is the sole manifest mutator: seed at first dispatch, enrich from phase output files, advance phase, reconstruct from branch scanning on cold start
+- Skills write phase output files (`state/<phase>/YYYY-MM-DD-<slug>.output.json`) -- CLI reads these, skills never touch the manifest
+- GitHub is a synced mirror updated post-dispatch -- provides the global view across designs
 - State files (.beastmode/state/) remain the content store (PRDs, plans, validation reports)
-- `/beastmode status` bridges both: scans worktrees for local manifest state, queries GitHub for the board view when enabled
-- Manifest created at design checkpoint (minimal), enriched at plan (features array), updated at implement (status transitions)
+- `/beastmode status` bridges both: scans pipeline directories for local manifest state, queries GitHub for the board view when enabled
+- Manifest schema is pure pipeline state: slug, phase, features array, artifacts, worktree info, optional github block -- no architectural decisions or content concerns
 - Four feature statuses: pending, in-progress, blocked, completed
-- GitHub API failures: warn and continue, no `githubSyncFailed` flag -- absence of `github` data is the signal
+- GitHub API failures: warn and continue -- absence of `github` data is the signal
 
 ## Related Decisions
 - GitHub state model design — see [github-state-model design](../../state/design/2026-03-28-github-state-model.md)
 - GitHub state model plan — see [github-state-model plan](../../state/plan/2026-03-28-github-state-model.md)
 - GitHub phase integration PRD — see [github-phase-integration design](../../state/design/2026-03-28-github-phase-integration.md)
 - GitHub phase integration plan manifest — see [github-phase-integration manifest](../../state/plan/2026-03-28-github-phase-integration.manifest.json)
+- GitHub CLI migration manifest — see [github-cli-migration manifest](../../state/plan/2026-03-28-github-cli-migration.manifest.json)
+- GitHub CLI migration design — see [github-cli-migration design](../../state/design/2026-03-29-github-cli-migration.md)

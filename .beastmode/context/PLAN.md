@@ -40,13 +40,14 @@ Phase lifecycle (design -> plan -> implement -> validate -> release), session tr
 context/plan/workflow.md
 
 ## GitHub Integration
-Manifest-based local state system with optional GitHub mirroring. Manifest JSON is the operational authority for feature lifecycle (per-branch, per-design). When GitHub is enabled, each phase checkpoint syncs state to GitHub Issues and a Projects V2 board, providing a global dashboard. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Setup bootstrapped via `/beastmode setup-github` subcommand. Shared GitHub utility in `skills/_shared/github.md` provides reusable API operations. Warn-and-continue error handling ensures GitHub failures never block local workflow.
+CLI-owned GitHub sync system. The CLI invokes a stateless `syncGitHub(manifest, config)` TypeScript module after every phase dispatch, reconciling manifest state to GitHub Issues and a Projects V2 board. Manifest lives at `.beastmode/pipeline/<slug>/manifest.json` (gitignored, local-only, CLI is sole mutator). Skills are pure content processors with no GitHub or manifest awareness -- they write phase output files (`state/<phase>/YYYY-MM-DD-<slug>.output.json`) that the CLI reads to enrich the manifest. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Projects V2 metadata stored in `config.yaml`. Setup bootstrapped via `/beastmode setup-github` subcommand. Warn-and-continue error handling ensures GitHub failures never block local workflow.
 
-1. ALWAYS use `gh` CLI (REST + GraphQL) for all GitHub API operations -- never raw curl
+1. ALWAYS use `gh` CLI via `Bun.spawn` in the sync engine TypeScript module -- never from skills, never raw curl
 2. ALWAYS make label and project creation idempotent -- `--force` for labels, existence check for projects
-3. ALWAYS use the shared utility (`skills/_shared/github.md`) for GitHub operations -- never inline API calls in individual skills
+3. NEVER put GitHub sync or manifest mutation logic in skill files -- CLI owns all sync and manifest operations
 4. ALWAYS treat manifest JSON as the operational authority -- GitHub is a synced mirror, never the source of truth
-5. ALWAYS extend config.yaml `transitions:` block for new phase transition modes -- centralized gate configuration
+5. ALWAYS store Projects V2 metadata (project-id, field-id, option IDs) in config.yaml -- no cache file
 6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
+7. ALWAYS write phase output files from skill checkpoints -- the CLI reads these to enrich the manifest
 
 context/plan/github-integration.md
