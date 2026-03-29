@@ -601,7 +601,7 @@ describe("syncGitHub", () => {
   // -------------------------------------------------------
   describe("epic close on phase done", () => {
     test("closes epic when phase is 'done'", async () => {
-      const manifest = makeManifest({ phase: "done" as unknown as PipelineManifest["phase"] });
+      const manifest = makeManifest({ phase: "done" });
       const config = makeConfig();
 
       const result = await syncGitHub(manifest, config);
@@ -613,7 +613,7 @@ describe("syncGitHub", () => {
     });
 
     test("warns when epic close fails", async () => {
-      const manifest = makeManifest({ phase: "done" as unknown as PipelineManifest["phase"] });
+      const manifest = makeManifest({ phase: "done" });
       mockErrors.ghIssueClose = true;
       const config = makeConfig();
 
@@ -743,7 +743,7 @@ describe("syncGitHub", () => {
     });
 
     test("sets project status to Done when phase is done", async () => {
-      const manifest = makeManifest({ phase: "done" as unknown as PipelineManifest["phase"] });
+      const manifest = makeManifest({ phase: "done" });
       const config = makeConfigWithProject();
 
       await syncGitHub(manifest, config);

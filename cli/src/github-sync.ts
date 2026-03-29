@@ -46,6 +46,7 @@ const PHASE_TO_BOARD_STATUS: Record<string, string> = {
   implement: "Implement",
   validate: "Validate",
   release: "Release",
+  done: "Done",
 };
 
 /** Map manifest feature status to GitHub label. */
@@ -163,9 +164,7 @@ export async function syncGitHub(
   }
 
   // --- Epic Close (if done) ---
-  // Note: Phase type doesn't include "done", but after release the CLI
-  // may set a custom state. Check for it as a string.
-  if ((manifest.phase as string) === "done") {
+  if (manifest.phase === "done") {
     const closed = await ghIssueClose(repo, epicNumber);
     if (closed) {
       result.epicClosed = true;

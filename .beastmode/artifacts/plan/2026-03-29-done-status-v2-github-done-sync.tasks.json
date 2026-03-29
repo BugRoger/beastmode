@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-29-done-status-v2-github-done-sync.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add done to PHASE_TO_BOARD_STATUS", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Remove type cast from epic close check", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Update test to remove type cast workaround", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Validate — run tests and type-check", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-29T17:00:00Z"
+}
