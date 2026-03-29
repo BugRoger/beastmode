@@ -14,33 +14,14 @@ Read (if they exist):
 
 Follow L2 convention paths (`context/design/{domain}.md`) when relevant to the current topic.
 
-## 3. [GATE|design.prior-decisions]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.prior-decisions`.
-Default: `auto`.
-
-Collect prior decisions from context/meta docs that are relevant to the current topic.
-
-### [GATE-OPTION|human] Present Prior Decisions
-
-If prior decisions were found:
-- Present each as a one-liner with source reference
-- Ask: "These prior decisions apply. Accept all, or review individually?"
-- Options: Accept all / Review individually / Ignore all
-
-### [GATE-OPTION|auto] Apply Silently
-
-Apply all relevant prior decisions as constraints for the interview.
-Log: "Gate `design.prior-decisions` → auto: applied {N} prior decisions"
-
-## 4. Express Path Check
+## 3. Express Path Check
 
 If arguments point to an existing PRD, spec, or requirements document (not a `.beastmode/artifacts/design/` file):
 1. Read the document
 2. Skip decision tree walk in execute
 3. Jump directly to "Gray Areas" (Execute step 2) with the doc as input
 
-## 5. [GATE|design.existing-design-choice]
+## 4. [GATE|design.existing-design-choice]
 
 Read `.beastmode/config.yaml` → resolve mode for `design.existing-design-choice`.
 Default: `human`.

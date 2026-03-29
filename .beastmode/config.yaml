@@ -4,7 +4,6 @@
 gates:
   design:
     existing-design-choice: human     # INTERACTIVE — prior PRD found, ask what to do
-    prior-decisions: auto             # INTERACTIVE — apply prior decisions from context/meta
     decision-tree: human              # INTERACTIVE — walk every branch of the design tree
     gray-areas: human                 # INTERACTIVE — second pass for big-picture blind spots
     prd-approval: human               # APPROVAL — approve before documenting

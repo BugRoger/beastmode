@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-29-slim-down-design-remove-prior-decisions-gate.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Remove prior-decisions gate from design prime", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Remove prior-decisions config entry", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Validate changes", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-29T12:00:00Z"
+}
