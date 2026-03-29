@@ -11,6 +11,7 @@ import { loadConfig } from "./config.js";
 import { WatchLoop } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
 import type { EpicState, SessionResult, NextAction, FeatureProgress } from "./watch-types.js";
+import { SdkSessionFactory } from "./session.js";
 import * as worktree from "./worktree.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
@@ -615,7 +616,7 @@ export async function watchCommand(_args: string[]): Promise<void> {
 
   const deps: WatchDeps = {
     scanEpics,
-    dispatchPhase,
+    sessionFactory: new SdkSessionFactory(dispatchPhase),
     logRun,
   };
 

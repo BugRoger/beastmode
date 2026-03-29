@@ -11,6 +11,7 @@ import type {
   SessionResult,
   WatchConfig,
 } from "./watch-types.js";
+import type { SessionFactory } from "./session.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
 import { coordinateMerges } from "./merge-coordinator.js";
@@ -20,19 +21,8 @@ import { remove as removeWorktree } from "./worktree.js";
 export interface WatchDeps {
   /** Scan state to determine epic states. */
   scanEpics: (projectRoot: string) => Promise<EpicState[]>;
-  /** Dispatch a phase for an epic. Returns a session handle. */
-  dispatchPhase: (opts: {
-    epicSlug: string;
-    phase: string;
-    args: string[];
-    featureSlug?: string;
-    projectRoot: string;
-    signal: AbortSignal;
-  }) => Promise<{
-    id: string;
-    worktreeSlug: string;
-    promise: Promise<SessionResult>;
-  }>;
+  /** Factory for creating phase sessions. */
+  sessionFactory: SessionFactory;
   /** Log a run entry to .beastmode-runs.json. */
   logRun: (opts: {
     epicSlug: string;
@@ -176,7 +166,7 @@ export class WatchLoop {
     );
 
     try {
-      const handle = await this.deps.dispatchPhase({
+      const handle = await this.deps.sessionFactory.create({
         epicSlug: epic.slug,
         phase: action.phase,
         args: action.args,
@@ -219,7 +209,7 @@ export class WatchLoop {
       );
 
       try {
-        const handle = await this.deps.dispatchPhase({
+        const handle = await this.deps.sessionFactory.create({
           epicSlug: epic.slug,
           phase: "implement",
           args: [epic.slug, featureSlug],

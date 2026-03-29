@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { WatchLoop } from "../src/watch.js";
 import type { WatchDeps } from "../src/watch.js";
 import type { EpicState, SessionResult } from "../src/watch-types.js";
+import { SdkSessionFactory } from "../src/session.js";
 import { DispatchTracker } from "../src/dispatch-tracker.js";
 import { acquireLock, releaseLock, readLockfile } from "../src/lockfile.js";
 
@@ -151,7 +152,7 @@ describe("WatchLoop", () => {
   function mockDeps(overrides: Partial<WatchDeps> = {}): WatchDeps {
     return {
       scanEpics: async () => [],
-      dispatchPhase: async (opts) => ({
+      sessionFactory: new SdkSessionFactory(async (opts) => ({
         id: `${opts.epicSlug}-${opts.phase}-${Date.now()}`,
         worktreeSlug: `${opts.epicSlug}-${opts.phase}`,
         promise: Promise.resolve({
@@ -160,7 +161,7 @@ describe("WatchLoop", () => {
           costUsd: 0.1,
           durationMs: 500,
         }),
-      }),
+      })),
       logRun: async () => {},
       ...overrides,
     };
@@ -186,7 +187,7 @@ describe("WatchLoop", () => {
         if (scanCount === 1) return [readyEpic];
         return [{ ...readyEpic, nextAction: null }];
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         dispatched.push(`${opts.phase} ${opts.args.join(" ")}`);
         return {
           id: `dispatch-${Date.now()}`,
@@ -198,7 +199,7 @@ describe("WatchLoop", () => {
             durationMs: 500,
           }),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -243,7 +244,7 @@ describe("WatchLoop", () => {
         if (scanCount === 1) return [implementEpic];
         return [{ ...implementEpic, nextAction: null }];
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         dispatched.push(
           `${opts.phase} ${opts.args.join(" ")} feature=${opts.featureSlug}`,
         );
@@ -257,7 +258,7 @@ describe("WatchLoop", () => {
             durationMs: 500,
           }),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -296,7 +297,7 @@ describe("WatchLoop", () => {
 
     const deps = mockDeps({
       scanEpics: async () => [gatedEpic],
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         dispatched.push(opts.phase);
         return {
           id: "nope",
@@ -308,7 +309,7 @@ describe("WatchLoop", () => {
             durationMs: 0,
           }),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -338,7 +339,7 @@ describe("WatchLoop", () => {
 
     const deps = mockDeps({
       scanEpics: async () => [readyEpic],
-      dispatchPhase: async () => {
+      sessionFactory: new SdkSessionFactory(async () => {
         dispatchCount++;
         return {
           id: `dispatch-${dispatchCount}`,
@@ -346,7 +347,7 @@ describe("WatchLoop", () => {
           // Never resolves — simulates long-running session
           promise: new Promise(() => {}),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -393,7 +394,7 @@ describe("WatchLoop", () => {
         if (scanCount === 1) return epics;
         return epics.map((e) => ({ ...e, nextAction: null }));
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         dispatched.push(opts.epicSlug);
         return {
           id: `dispatch-${opts.epicSlug}`,
@@ -405,7 +406,7 @@ describe("WatchLoop", () => {
             durationMs: 500,
           }),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -487,7 +488,7 @@ describe("WatchLoop", () => {
 
     const deps = mockDeps({
       scanEpics: async () => [completedEpic],
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         dispatched.push(opts.epicSlug);
         return {
           id: "nope",
@@ -499,7 +500,7 @@ describe("WatchLoop", () => {
             durationMs: 0,
           }),
         };
-      },
+      }),
     });
 
     const loop = new WatchLoop(
@@ -533,7 +534,7 @@ describe("WatchLoop", () => {
         // After release completes, epic has no next action
         return [{ ...releaseEpic, nextAction: null }];
       },
-      dispatchPhase: async (opts) => {
+      sessionFactory: new SdkSessionFactory(async (opts) => {
         return {
           id: `release-${Date.now()}`,
           worktreeSlug: `release-epic-release`,
@@ -544,7 +545,7 @@ describe("WatchLoop", () => {
             durationMs: 30000,
           }),
         };
-      },
+      }),
       logRun: async (opts) => {
         loggedRuns.push({ phase: opts.phase, epicSlug: opts.epicSlug });
       },
@@ -591,7 +592,7 @@ describe("WatchLoop", () => {
         // After failed release, epic still exists but gate blocks re-dispatch
         return [{ ...releaseEpic, nextAction: null }];
       },
-      dispatchPhase: async () => ({
+      sessionFactory: new SdkSessionFactory(async () => ({
         id: `fail-release-${Date.now()}`,
         worktreeSlug: `fail-epic-release`,
         promise: Promise.resolve({
@@ -600,7 +601,7 @@ describe("WatchLoop", () => {
           costUsd: 0.5,
           durationMs: 5000,
         }),
-      }),
+      })),
       logRun: async (opts) => {
         loggedRuns.push({ phase: opts.phase, result: opts.result });
       },

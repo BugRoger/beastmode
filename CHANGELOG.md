@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.29.0 — The Terminal Multiplexer (Mar 2026)
+
+- **Dispatch abstraction** — `DispatchedSession` interface with `SdkSession` and `CmuxSession` implementations, `SessionFactory` for runtime strategy selection
+- **CmuxSession implementation** — Workspace-per-epic surface model, Unix socket JSON-RPC client, lifecycle management (create workspace, create surface, send command, cleanup)
+- **Validation** — 124 tests, 0 failures, clean type check
+
 ### v0.28.0 — The Worktree Takeover (Mar 2026)
 
 - **Phase command** — `beastmode <phase> <slug>` replaces `beastmode run` and `just <phase>` as the sole entry point for phase execution
