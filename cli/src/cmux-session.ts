@@ -2,11 +2,12 @@
  * Cmux-based session factory — dispatches phases into cmux terminal surfaces.
  *
  * Creates one workspace per epic, one surface per dispatched phase/feature.
- * Completion is detected via fs.watch on .dispatch-done.json marker files.
+ * Completion is detected via fs.watch on *.output.json files in
+ * .beastmode/artifacts/<phase>/.
  */
 
 import { watch, type FSWatcher } from "node:fs";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ICmuxClient } from "./cmux-client.js";
 import type {
@@ -15,15 +16,6 @@ import type {
   SessionHandle,
 } from "./session.js";
 import type { SessionResult } from "./watch-types.js";
-
-/** Marker file written by phaseCommand on exit. */
-export interface DispatchDoneMarker {
-  exitCode: number;
-  costUsd: number;
-  durationMs: number;
-  error?: string;
-  gateBlocked?: boolean;
-}
 
 export class CmuxSessionFactory implements SessionFactory {
   private client: ICmuxClient;
@@ -64,18 +56,18 @@ export class CmuxSessionFactory implements SessionFactory {
     const command = `beastmode ${phase} ${args.join(" ")}`;
     await this.client.sendText(workspaceName, surfaceName, command);
 
-    // Derive worktree path where marker will appear
+    // Derive artifact directory where output.json will appear
     const worktreePath = resolve(
       projectRoot,
       ".claude",
       "worktrees",
       worktreeSlug,
     );
-    const markerPath = resolve(worktreePath, ".dispatch-done.json");
+    const artifactDir = resolve(worktreePath, ".beastmode", "artifacts", opts.phase);
 
-    // Set up promise that resolves when marker file appears
+    // Set up promise that resolves when output.json appears
     const startTime = Date.now();
-    const promise = this.watchForMarker(id, markerPath, startTime, opts.signal);
+    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal);
 
     // Handle abort — close surface
     const onAbort = async () => {
@@ -129,25 +121,24 @@ export class CmuxSessionFactory implements SessionFactory {
     this.workspaces.delete(epicSlug);
   }
 
-  /** Watch for the .dispatch-done.json marker file. */
+  /** Watch for *.output.json files in the artifact directory. */
   private watchForMarker(
     sessionId: string,
-    markerPath: string,
+    artifactDir: string,
     startTime: number,
     signal: AbortSignal,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
-      // Check if marker already exists (race condition guard)
-      if (existsSync(markerPath)) {
-        const result = this.readMarker(markerPath, startTime);
+      // Check if an output.json already exists
+      const existing = this.findOutputJson(artifactDir);
+      if (existing) {
+        const result = this.readOutputJson(existing, startTime);
         if (result) {
           resolvePromise(result);
           return;
         }
       }
 
-      // Watch the directory for the marker file
-      const dir = resolve(markerPath, "..");
       let watcher: FSWatcher;
 
       const cleanup = () => {
@@ -156,9 +147,13 @@ export class CmuxSessionFactory implements SessionFactory {
       };
 
       try {
-        watcher = watch(dir, (_eventType, filename) => {
-          if (filename === ".dispatch-done.json") {
-            const result = this.readMarker(markerPath, startTime);
+        // Ensure directory exists for watching
+        mkdirSync(artifactDir, { recursive: true });
+
+        watcher = watch(artifactDir, (_eventType, filename) => {
+          if (filename && filename.endsWith(".output.json")) {
+            const filePath = resolve(artifactDir, filename);
+            const result = this.readOutputJson(filePath, startTime);
             if (result) {
               cleanup();
               resolvePromise(result);
@@ -167,12 +162,13 @@ export class CmuxSessionFactory implements SessionFactory {
         });
         this.watchers.set(sessionId, watcher);
       } catch {
-        // Directory might not exist yet — fall back to polling
+        // Fall back to polling
         const pollInterval = setInterval(() => {
-          if (existsSync(markerPath)) {
+          const found = this.findOutputJson(artifactDir);
+          if (found) {
             clearInterval(pollInterval);
             clearTimeout(timeout);
-            const result = this.readMarker(markerPath, startTime);
+            const result = this.readOutputJson(found, startTime);
             resolvePromise(
               result ?? {
                 success: false,
@@ -194,7 +190,6 @@ export class CmuxSessionFactory implements SessionFactory {
           });
         }, this.watchTimeoutMs);
 
-        // Handle abort
         signal.addEventListener(
           "abort",
           () => {
@@ -231,19 +226,34 @@ export class CmuxSessionFactory implements SessionFactory {
     });
   }
 
-  /** Read and parse the dispatch-done marker file. */
-  private readMarker(
-    markerPath: string,
+  /** Find an output.json file in the artifact directory. */
+  private findOutputJson(dir: string): string | null {
+    try {
+      const files = readdirSync(dir) as string[];
+      const match = files
+        .filter((f: string) => f.endsWith(".output.json"))
+        .sort()
+        .pop();
+      return match ? resolve(dir, match) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Read and parse a PhaseOutput JSON file. */
+  private readOutputJson(
+    filePath: string,
     startTime: number,
   ): SessionResult | null {
     try {
-      const raw = readFileSync(markerPath, "utf-8");
-      const marker: DispatchDoneMarker = JSON.parse(raw);
+      const raw = readFileSync(filePath, "utf-8");
+      const output = JSON.parse(raw);
+      if (!output.status || !output.artifacts) return null;
       return {
-        success: marker.exitCode === 0,
-        exitCode: marker.exitCode,
-        costUsd: marker.costUsd ?? 0,
-        durationMs: marker.durationMs ?? Date.now() - startTime,
+        success: output.status === "completed",
+        exitCode: output.status === "completed" ? 0 : 1,
+        costUsd: 0,
+        durationMs: Date.now() - startTime,
       };
     } catch {
       return null;

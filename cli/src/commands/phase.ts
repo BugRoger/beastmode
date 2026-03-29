@@ -10,9 +10,6 @@
  * The SDK runner is preserved for the watch loop — it is not used here.
  */
 
-import { writeFileSync } from "node:fs";
-import { resolve as resolvePath } from "node:path";
-
 import type { BeastmodeConfig } from "../config";
 import type { Phase, PhaseResult } from "../types";
 import { runInteractive } from "../runners/interactive-runner";
@@ -23,30 +20,6 @@ import {
   remove as removeWorktree,
 } from "../worktree";
 import { runPostDispatch } from "../post-dispatch";
-
-/** Schema for .dispatch-done.json marker file. */
-export interface DispatchDoneMarker {
-  exitCode: number;
-  costUsd: number | null;
-  durationMs: number;
-  sessionId: string | null;
-  timestamp: string;
-}
-
-/** Write .dispatch-done.json marker file to the worktree. */
-function writeDispatchDone(worktreePath: string, result: PhaseResult): void {
-  const marker: DispatchDoneMarker = {
-    exitCode: result.exit_status === "success" ? 0 : result.exit_status === "cancelled" ? 130 : 1,
-    costUsd: result.cost_usd,
-    durationMs: result.duration_ms,
-    sessionId: result.session_id,
-    timestamp: new Date().toISOString(),
-  };
-  writeFileSync(
-    resolvePath(worktreePath, ".dispatch-done.json"),
-    JSON.stringify(marker, null, 2),
-  );
-}
 
 /**
  * Execute a phase command. Called directly from the top-level router.
@@ -79,9 +52,6 @@ export async function phaseCommand(
     phase,
     success: result.exit_status === "success",
   });
-
-  // Write completion marker for strategy-based detection
-  writeDispatchDone(cwd, result);
 
   console.log("");
   console.log(

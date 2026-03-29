@@ -377,17 +377,17 @@ describe("reconcileStartup", () => {
     const sessions = tracker.getAll();
     expect(sessions).toHaveLength(1);
 
-    // Give fs.watch time to initialize before writing the marker
+    // Give fs.watch time to initialize before writing the output
     await new Promise((r) => setTimeout(r, 200));
 
-    // Write the marker file — this should resolve the session promise
+    // Write an output.json file — this should resolve the session promise
+    const artifactDir = resolve(worktreePath, ".beastmode", "artifacts", "plan");
+    mkdirSync(artifactDir, { recursive: true });
     writeFileSync(
-      resolve(worktreePath, ".dispatch-done.json"),
+      resolve(artifactDir, "2026-03-29-my-epic.output.json"),
       JSON.stringify({
-        exitCode: 0,
-        costUsd: 1.23,
-        durationMs: 45000,
-        timestamp: new Date().toISOString(),
+        status: "completed",
+        artifacts: { design: ".beastmode/artifacts/design/2026-03-29-my-epic.md" },
       }),
     );
 
@@ -401,8 +401,6 @@ describe("reconcileStartup", () => {
     if (result !== "timeout") {
       expect(result.success).toBe(true);
       expect(result.exitCode).toBe(0);
-      expect(result.costUsd).toBe(1.23);
-      expect(result.durationMs).toBe(45000);
     }
 
     safeAbortAll(tracker);

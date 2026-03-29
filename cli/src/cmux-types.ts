@@ -36,12 +36,3 @@ export interface CmuxClientLike {
   /** Close a workspace and all its surfaces by ID. */
   closeWorkspace(workspaceId: string): Promise<void>;
 }
-
-/** Schema for .dispatch-done.json marker files. */
-export interface DispatchDoneMarker {
-  exitCode: number;
-  costUsd: number;
-  durationMs: number;
-  sessionId?: string;
-  timestamp: string;
-}
