@@ -1,23 +1,7 @@
 {
-  "phase": "validate",
-  "slug": "slim-down-design",
-  "status": "passed",
-  "features": [
-    {
-      "slug": "remove-prior-decisions-gate",
-      "status": "passed",
-      "acceptanceCriteria": {
-        "total": 6,
-        "passed": 5,
-        "skipped": 1,
-        "failed": 0
-      }
-    }
-  ],
-  "gates": {
-    "tests": "skip",
-    "lint": "skip",
-    "types": "skip",
-    "custom": "pass"
+  "status": "completed",
+  "artifacts": {
+    "report": ".beastmode/artifacts/validate/2026-03-29-slim-down-design.md",
+    "passed": true
   }
 }
