@@ -15,7 +15,6 @@ function makeEpic(overrides: Partial<EpicState> = {}): EpicState {
     features: [],
     blocked: false,
     gateBlocked: false,
-    costUsd: 0,
     ...overrides,
   };
 }

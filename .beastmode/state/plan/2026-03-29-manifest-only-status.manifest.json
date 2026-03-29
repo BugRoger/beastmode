@@ -17,7 +17,7 @@
     {
       "slug": "status-cleanup",
       "plan": "2026-03-29-manifest-only-status-status-cleanup.md",
-      "status": "pending",
+      "status": "completed",
       "github": {"issue": 72}
     },
     {
@@ -31,5 +31,5 @@
     "epic": 69,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-29T01:30:00.000Z"
+  "lastUpdated": "2026-03-29T14:00:00.000Z"
 }
