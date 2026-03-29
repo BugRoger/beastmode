@@ -45,13 +45,12 @@ function reconcileState(opts: {
 }): { completed: number; total: number } | undefined {
   if (!opts.success) return readProgress(opts.projectRoot, opts.epicSlug);
 
-  // 1. Load output.json from worktree artifacts dir
-  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
+  // 1. Load manifest — if it's gone (e.g. release teardown removed it), bail
+  let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
+  if (!manifest) return undefined;
 
-  // 2. Load or create manifest
-  let manifest: PipelineManifest =
-    store.load(opts.projectRoot, opts.epicSlug) ??
-    store.create(opts.projectRoot, opts.epicSlug);
+  // 2. Load output.json from worktree artifacts dir
+  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
 
   // 3. Enrich from output.json (features, artifact paths)
   if (output) {
@@ -225,9 +224,12 @@ async function dispatchPhase(opts: {
         await worktree.remove(worktreeSlug, { cwd: opts.projectRoot });
         console.log(`[watch] ${opts.epicSlug}: worktree removed`);
 
-        // Manifest served its purpose — remove so scanner doesn't re-dispatch
-        store.remove(opts.projectRoot, opts.epicSlug);
-        console.log(`[watch] ${opts.epicSlug}: manifest removed`);
+        // Mark manifest as done so scanner skips it (deriveNextAction returns null for "done")
+        const doneManifest = store.load(opts.projectRoot, opts.epicSlug);
+        if (doneManifest) {
+          store.save(opts.projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
+        }
+        console.log(`[watch] ${opts.epicSlug}: manifest marked done`);
       } catch (err) {
         console.error(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
         console.error(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);

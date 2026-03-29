@@ -3,7 +3,7 @@
  */
 
 /** Valid beastmode workflow phases */
-export type Phase = "design" | "plan" | "implement" | "validate" | "release";
+export type Phase = "design" | "plan" | "implement" | "validate" | "release" | "done";
 
 /** Valid top-level CLI commands: phases + utilities */
 export type Command = Phase | "watch" | "status" | "cancel" | "help";
