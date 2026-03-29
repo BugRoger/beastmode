@@ -1,0 +1,34 @@
+---
+phase: implement
+epic: github-no-for-real-sync
+feature: terminal-states
+status: completed
+---
+
+# Implementation: terminal-states
+
+**Date:** 2026-03-29
+**Feature Plan:** .beastmode/artifacts/plan/2026-03-29-github-no-for-real-sync-terminal-states.md
+**Tasks completed:** 3/3
+**Deviations:** 1 total
+
+## Auto-Fixed
+- Task 1: Subagent removed feature board sync (board-epics-only scope creep) — restored immediately, caught by existing test
+
+## Changes
+
+### cli/src/gh.ts
+- Added `ghIssueComment(repo, issueNumber, body)` function for posting comments on issues
+
+### cli/src/github-sync.ts
+- Replaced "Epic Close (if done)" block with unified "Terminal State (done / cancelled)" block
+- "done" phase: closes epic + closes ALL child features + sets board to Done
+- "cancelled" phase: posts "Cancelled" comment + closes epic + closes all child features + sets board to Done
+- Features without issue numbers are skipped gracefully
+
+### cli/test/github-sync.test.ts
+- Added `ghIssueComment` to mock infrastructure
+- Added 9 tests for "done epic closes all child features" (3 tests)
+- Added 6 tests for "cancelled epic handling"
+- Total: 44 tests (was 35), all passing
+- Full suite: 511 tests, 0 failures
