@@ -8,5 +8,5 @@ Reuse `.beastmode/config.yaml` with `cli:` section. `cli.interval` controls poll
 Single config field reduces cognitive overhead and configuration surface area. The `cli:` namespace avoids collision with existing config sections. Separate `cmux:` section is eliminated — dispatch strategy is the only knob needed.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

@@ -10,6 +10,6 @@ Feature branch tips preserved as `archive/feature/<name>` tags before deletion. 
 Tags are lightweight and survive branch deletion. `git log archive/feature/<name>` recovers the full development narrative that was squashed into one commit on main. Preserves the ability to inspect intermediate states without cluttering main.
 
 ## Source
-- .beastmode/state/release/2026-03-04-v0.3.0.md (archive tagging introduced)
-- .beastmode/state/release/2026-03-05-v0.11.0.md (squash-per-release formalized)
-- .beastmode/state/release/2026-03-06-v0.12.2.md (pattern confirmed stable)
+- .beastmode/artifacts/release/2026-03-04-v0.3.0.md (archive tagging introduced)
+- .beastmode/artifacts/release/2026-03-05-v0.11.0.md (squash-per-release formalized)
+- .beastmode/artifacts/release/2026-03-06-v0.12.2.md (pattern confirmed stable)

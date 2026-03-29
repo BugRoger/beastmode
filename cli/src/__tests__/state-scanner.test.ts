@@ -32,7 +32,7 @@ function writePipelineManifest(
 ): void {
   const manifest = {
     phase,
-    design: `.beastmode/state/design/${TEST_DATE}-${slug}.md`,
+    design: `.beastmode/artifacts/design/${TEST_DATE}-${slug}.md`,
     features: features.map((f) => ({
       slug: f.slug,
       plan: `${TEST_DATE}-${slug}-${f.slug}.md`,
@@ -333,7 +333,7 @@ describe("scanEpics", () => {
 
   test("manifest without phase field is skipped — appears in skipped array", async () => {
     writeRawManifest("no-phase-epic", {
-      design: `.beastmode/state/design/${TEST_DATE}-no-phase-epic.md`,
+      design: `.beastmode/artifacts/design/${TEST_DATE}-no-phase-epic.md`,
       features: [{ slug: "f1", plan: "plan.md", status: "pending" }],
       lastUpdated: `${TEST_DATE}T00:00:00Z`,
     });
@@ -347,7 +347,7 @@ describe("scanEpics", () => {
   test("manifest with invalid phase 'bogus' is skipped", async () => {
     writeRawManifest("bogus-phase-epic", {
       phase: "bogus",
-      design: `.beastmode/state/design/${TEST_DATE}-bogus-phase-epic.md`,
+      design: `.beastmode/artifacts/design/${TEST_DATE}-bogus-phase-epic.md`,
       features: [{ slug: "f1", plan: "plan.md", status: "pending" }],
       lastUpdated: `${TEST_DATE}T00:00:00Z`,
     });
@@ -394,7 +394,7 @@ describe("scanEpics", () => {
   test("feature status validation rejects unknown values — entire manifest skipped", async () => {
     writeRawManifest("bad-status-epic", {
       phase: "implement",
-      design: `.beastmode/state/design/${TEST_DATE}-bad-status-epic.md`,
+      design: `.beastmode/artifacts/design/${TEST_DATE}-bad-status-epic.md`,
       features: [
         { slug: "f1", plan: "plan.md", status: "pending" },
         { slug: "f2", plan: "plan.md", status: "unknown_value" },
@@ -516,7 +516,7 @@ describe("scanEpics", () => {
       resolve(legacyPlanDir, `${TEST_DATE}-orphan-epic.manifest.json`),
       JSON.stringify({
         phase: "plan",
-        design: `.beastmode/state/design/${TEST_DATE}-orphan-epic.md`,
+        design: `.beastmode/artifacts/design/${TEST_DATE}-orphan-epic.md`,
         features: [{ slug: "f1", plan: "plan.md", status: "pending" }],
         lastUpdated: `${TEST_DATE}T00:00:00Z`,
       }),

@@ -13,8 +13,8 @@ Six custom gate types established through practice: acceptance criteria (design 
 - Regression checks prevent unintended side effects (proven in release-retro-commit, release-version-sync)
 
 ## Source
-- .beastmode/state/validate/2026-03-04-hitl-gate-config.md
-- .beastmode/state/validate/2026-03-04-agents-to-beastmode-migration.md
-- .beastmode/state/validate/2026-03-04-implement-v2.md
-- .beastmode/state/validate/2026-03-05-dynamic-retro-walkers.md
-- .beastmode/state/validate/2026-03-06-retro-reconciliation.md
+- .beastmode/artifacts/validate/2026-03-04-hitl-gate-config.md
+- .beastmode/artifacts/validate/2026-03-04-agents-to-beastmode-migration.md
+- .beastmode/artifacts/validate/2026-03-04-implement-v2.md
+- .beastmode/artifacts/validate/2026-03-05-dynamic-retro-walkers.md
+- .beastmode/artifacts/validate/2026-03-06-retro-reconciliation.md

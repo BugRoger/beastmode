@@ -8,6 +8,6 @@ The design moved output.json generation from skill checkpoint instructions (wher
 ### Rationale
 When a contract must be enforced across N independent skills, placing enforcement in infrastructure (hooks) is more reliable than placing it in instructions (skill checkpoints). Instructions can be missed, misinterpreted, or skipped. Infrastructure runs unconditionally. The trade-off is reduced skill flexibility -- skills can no longer customize the output contract. But when the contract is standardized (which it is -- artifact frontmatter schema is fixed), infrastructure enforcement eliminates an entire class of compliance bugs.
 ### Source
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md
 ### Confidence
 [LOW] -- first-time observation; related to redundant-upstream-gatekeeping (Obs 1-2) in that both are about where enforcement logic lives, but distinct: that pattern is about removing unnecessary upstream checks, this pattern is about moving necessary enforcement from instructions to infrastructure

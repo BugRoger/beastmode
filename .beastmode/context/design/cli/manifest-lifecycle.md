@@ -10,5 +10,5 @@ CLI creates manifest at first phase dispatch (design) via store.create(slug) bef
 Two-module split separates filesystem concerns from business logic, making state machine functions testable with plain objects and no mocks. store.create() before dispatch ensures the manifest exists for the entire session, so post-dispatch always has a manifest to enrich. Directory rename makes names match contents: `artifacts/` for committed skill outputs, `state/` for gitignored pipeline state.
 
 ## Source
-.beastmode/state/design/2026-03-29-github-cli-migration.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

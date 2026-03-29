@@ -10,5 +10,5 @@ Retro runs in the execute phase (step 8) before the release commit (step 9), not
 When retro ran in checkpoint (after commit), meta file updates were left as untracked changes, creating dirty working tree state. Moving retro before commit ensures all output is included in the unified squash commit.
 
 ## Source
-- .beastmode/state/release/2026-03-04-v0.3.1.md (introduced phase retro)
-- .beastmode/state/release/2026-03-04-v0.3.8.md (moved retro from checkpoint to execute)
+- .beastmode/artifacts/release/2026-03-04-v0.3.1.md (introduced phase retro)
+- .beastmode/artifacts/release/2026-03-04-v0.3.8.md (moved retro from checkpoint to execute)

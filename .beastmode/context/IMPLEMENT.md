@@ -22,7 +22,7 @@
 
 ## State Scanning
 - ALWAYS discover epics from manifest files — never from design files or date heuristics
-- Scan state/plan/ then pipeline/ — pipeline wins dedup
+- Scan artifacts/plan/ then state/ — state/ wins dedup
 - ALWAYS derive phase from the manifest.phases map — no filesystem marker sniffing
 - Status table: Epic, Phase, Progress, Blocked, Last Activity — no cost column
 - Next action: fan-out at implement, single dispatch for all other phases, null for done epics

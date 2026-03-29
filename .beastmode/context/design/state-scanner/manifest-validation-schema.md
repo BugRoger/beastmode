@@ -8,5 +8,5 @@ manifest-store.ts owns the validate() function — single source of truth for ma
 Validation in the store ensures every manifest read or written passes the same structural checks. Dropping the `design` required field reflects that the manifest no longer duplicates artifact paths as required top-level fields.
 
 ## Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

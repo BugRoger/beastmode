@@ -8,5 +8,5 @@ PipelineManifest is the sole manifest type, exported from manifest-store.ts. Epi
 One type, one truth. PipelineManifest unifies all consumers. Structured blocked field provides actionable information in status output without requiring additional lookups. Deleting competing types eliminates silent divergence.
 
 ## Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

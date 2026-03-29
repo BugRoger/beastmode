@@ -10,5 +10,5 @@ Manifest tracks four feature statuses: pending, in-progress, blocked, completed.
 Manifest needs a terminal state (completed) that GitHub handles via issue closure. Dropping status/review aligns with squash-at-release model where no per-feature PRs exist. Roll-up from Feature closure to Epic advancement is handled at checkpoint, not by GitHub automation.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-state-model.md
-.beastmode/state/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-28-github-state-model.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md

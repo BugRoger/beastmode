@@ -10,4 +10,4 @@ Use warn-and-continue pattern: wrap every gh CLI call in a conditional, print a 
 Eventual consistency over transactional correctness. The manifest is the authority; GitHub is a mirror. Next checkpoint retries all operations, so transient failures self-heal.
 
 ## Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json

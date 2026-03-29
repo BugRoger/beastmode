@@ -10,5 +10,5 @@ Skills write artifacts with YAML frontmatter to `artifacts/<phase>/`. A Stop hoo
 Moving output.json generation from skills to a Stop hook eliminates the "Write Phase Output" step from all skill checkpoints, enforcing the contract by infrastructure rather than skill instructions. YAML frontmatter is minimal and controlled. A single completion marker simplifies dispatch strategy detection.
 
 ## Source
-.beastmode/state/design/2026-03-29-github-cli-migration.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

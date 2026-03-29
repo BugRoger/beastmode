@@ -10,4 +10,4 @@ All GitHub operations are centralized in `_shared/github.md`. Checkpoint skills 
 Single source of truth for GitHub API patterns ensures consistent error handling, label management, and issue operations. Changes to GitHub's API or the gh CLI only need updating in one place.
 
 ## Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json

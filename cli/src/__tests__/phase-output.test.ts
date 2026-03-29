@@ -39,7 +39,7 @@ function writeOutput(
 
 const VALID_OUTPUT = JSON.stringify({
   status: "completed",
-  artifacts: { design: ".beastmode/state/design/2026-03-29-my-epic.md" },
+  artifacts: { design: ".beastmode/artifacts/design/2026-03-29-my-epic.md" },
 });
 
 describe("findOutputFile", () => {
@@ -130,7 +130,7 @@ describe("readOutput", () => {
     const result = readOutput(filePath);
     expect(result.status).toBe("completed");
     expect(result.artifacts).toEqual({
-      design: ".beastmode/state/design/2026-03-29-my-epic.md",
+      design: ".beastmode/artifacts/design/2026-03-29-my-epic.md",
     });
   });
 
@@ -268,7 +268,7 @@ describe("readPhaseOutput", () => {
     expect(result).toBeDefined();
     expect(result!.status).toBe("completed");
     expect(result!.artifacts).toEqual({
-      design: ".beastmode/state/design/2026-03-29-my-epic.md",
+      design: ".beastmode/artifacts/design/2026-03-29-my-epic.md",
     });
   });
 

@@ -10,4 +10,4 @@ Two-level hierarchy: Epic (capability/initiative flowing through all 5 phases) >
 Industry consensus is 2-3 levels max. Two keeps automation simple. Labels are universal across all GitHub plans -- Issue Types require org-level setup and `gh` CLI has no support for them.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-state-model.md
+.beastmode/artifacts/design/2026-03-28-github-state-model.md

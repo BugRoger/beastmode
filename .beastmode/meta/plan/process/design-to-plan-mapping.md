@@ -104,6 +104,6 @@ Design doc's 8 architectural decisions (manifest filesystem boundary, state mach
 ### Rationale
 Ninth confirmation of 1:1 design-to-plan mapping. Demonstrates the pattern holds even for infrastructure replacement work where features share module targets -- the responsibility-boundary slicing prevents conflicts.
 ### Source
-.beastmode/state/plan/2026-03-29-manifest-file-management.manifest.json
+.beastmode/artifacts/plan/2026-03-29-manifest-file-management.manifest.json
 ### Confidence
 [HIGH] -- ninth observation, pattern firmly established

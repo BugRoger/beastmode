@@ -10,4 +10,4 @@ Dedicated setup skill or /beastmode subcommand that creates all labels in the ta
 One-time bootstrap avoids manual GitHub configuration. Idempotency means re-running after partial failure is safe. Whether it's a standalone skill or subcommand is left to implementer's discretion.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-state-model.md
+.beastmode/artifacts/design/2026-03-28-github-state-model.md

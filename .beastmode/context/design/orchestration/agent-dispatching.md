@@ -8,5 +8,5 @@ Extract a `SessionStrategy` interface with `dispatch()`, `isComplete()`, and `cl
 Strategy pattern decouples dispatch mechanism from orchestration logic. SDK sessions provide typed streaming and cost tracking. cmux sessions provide live terminal visibility and interactive capability. The abstraction improves testability of the existing SDK path as a standalone benefit.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-`.beastmode/state/design/2026-03-29-cmux-integration-revisited.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md`

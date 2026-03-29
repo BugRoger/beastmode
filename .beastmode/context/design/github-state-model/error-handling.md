@@ -10,4 +10,4 @@ Warn-and-continue pattern: print warning on GitHub API failure, skip the sync st
 Local-first authority model means GitHub sync is a nice-to-have, not a hard dependency. Retrying at next checkpoint avoids complex retry logic while still recovering from transient failures.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md

@@ -10,6 +10,6 @@ Every gate result requires specific evidence: tables with pass/fail columns, cou
 The strongest validation reports (hitl-adherence, meta-hierarchy, squash-per-release) include exact line numbers, grep counts, and file path verification. Reports that merely assert PASS without evidence cannot be audited after the fact.
 
 ## Source
-- .beastmode/state/validate/2026-03-05-hitl-adherence.md
-- .beastmode/state/validate/2026-03-05-meta-hierarchy.md
-- .beastmode/state/validate/2026-03-05-squash-per-release.md
+- .beastmode/artifacts/validate/2026-03-05-hitl-adherence.md
+- .beastmode/artifacts/validate/2026-03-05-meta-hierarchy.md
+- .beastmode/artifacts/validate/2026-03-05-squash-per-release.md

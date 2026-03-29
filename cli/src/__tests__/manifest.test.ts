@@ -3,16 +3,21 @@ import { existsSync, rmSync, mkdirSync, writeFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 import {
   manifestPath,
-  seed,
-  readManifest,
-  loadManifest,
+  create,
+  get,
+  load,
   manifestExists,
-  writeManifest,
-  getPendingFeatures,
+  save,
+} from "../manifest-store";
+import type { PipelineManifest, ManifestFeature } from "../manifest-store";
+import {
   enrich,
   advancePhase,
+  regressPhase,
+  markFeature,
+  cancel,
+  getPendingFeatures,
 } from "../manifest";
-import type { PipelineManifest, ManifestFeature } from "../manifest";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest");
 
@@ -24,18 +29,18 @@ describe("manifest path conventions", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  test("manifestPath returns undefined when state dir missing", () => {
+  test("manifestPath returns undefined when pipeline dir missing", () => {
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("manifestPath returns undefined when no matching manifest exists", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "state");
+    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     mkdirSync(dir, { recursive: true });
     expect(manifestPath(TEST_ROOT, "my-epic")).toBeUndefined();
   });
 
   test("manifestPath finds flat-file manifest by slug suffix", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "state");
+    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
     const found = manifestPath(TEST_ROOT, "my-epic");
@@ -43,7 +48,7 @@ describe("manifest path conventions", () => {
   });
 
   test("manifestPath returns latest when multiple date-prefixed manifests exist", () => {
-    const dir = resolve(TEST_ROOT, ".beastmode", "state");
+    const dir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, "2026-03-28-my-epic.manifest.json"), "{}");
     writeFileSync(resolve(dir, "2026-03-29-my-epic.manifest.json"), "{}");
@@ -51,70 +56,61 @@ describe("manifest path conventions", () => {
     expect(found).toBe(resolve(dir, "2026-03-29-my-epic.manifest.json"));
   });
 
-  test("manifest.ts and scanner use same flat-file convention", () => {
-    // Both use .beastmode/state/YYYY-MM-DD-<slug>.manifest.json
-    // Seed a manifest, then verify the file is in the flat state dir
-    seed(TEST_ROOT, "convention-test");
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
+  test("manifest-store and scanner use same flat-file convention", () => {
+    create(TEST_ROOT, "convention-test");
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     const files = readdirSync(pipeDir);
     const match = files.find((f) => f.endsWith("-convention-test.manifest.json"));
     expect(match).toBeDefined();
-    // No subdirectory — flat file directly in state/
     expect(match!).toMatch(/^\d{4}-\d{2}-\d{2}-convention-test\.manifest\.json$/);
   });
 });
 
-describe("manifest core operations", () => {
+describe("manifest-store core operations", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  test("seed creates manifest with design phase", () => {
-    const manifest = seed(TEST_ROOT, "test-epic");
+  test("create creates manifest with design phase and blocked=null", () => {
+    const manifest = create(TEST_ROOT, "test-epic");
     expect(manifest.slug).toBe("test-epic");
     expect(manifest.phase).toBe("design");
     expect(manifest.features).toEqual([]);
     expect(manifest.artifacts).toEqual({});
+    expect(manifest.blocked).toBeNull();
     expect(manifest.lastUpdated).toBeTruthy();
 
-    // Read it back from disk to confirm persistence
-    const loaded = readManifest(TEST_ROOT, "test-epic");
+    const loaded = get(TEST_ROOT, "test-epic");
     expect(loaded.slug).toBe("test-epic");
     expect(loaded.phase).toBe("design");
-    expect(loaded.features).toEqual([]);
   });
 
-  test("seed creates state directory if missing", () => {
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
+  test("create creates pipeline directory if missing", () => {
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     expect(existsSync(pipeDir)).toBe(false);
-
-    seed(TEST_ROOT, "fresh-epic");
-
+    create(TEST_ROOT, "fresh-epic");
     expect(existsSync(pipeDir)).toBe(true);
     expect(manifestExists(TEST_ROOT, "fresh-epic")).toBe(true);
   });
 
-  test("readManifest throws if manifest missing", () => {
-    expect(() => readManifest(TEST_ROOT, "nonexistent")).toThrow(
-      /Manifest not found/,
-    );
+  test("get throws if manifest missing", () => {
+    expect(() => get(TEST_ROOT, "nonexistent")).toThrow(/Manifest not found/);
   });
 
-  test("loadManifest returns undefined if missing", () => {
-    const result = loadManifest(TEST_ROOT, "nonexistent");
-    expect(result).toBeUndefined();
+  test("load returns undefined if missing", () => {
+    expect(load(TEST_ROOT, "nonexistent")).toBeUndefined();
   });
 
   test("manifestExists returns false for missing", () => {
     expect(manifestExists(TEST_ROOT, "nonexistent")).toBe(false);
   });
 
-  test("manifestExists returns true after seed", () => {
-    seed(TEST_ROOT, "seeded-epic");
+  test("manifestExists returns true after create", () => {
+    create(TEST_ROOT, "seeded-epic");
     expect(manifestExists(TEST_ROOT, "seeded-epic")).toBe(true);
   });
 
-  test("writeManifest creates directories", () => {
-    const pipeDir = resolve(TEST_ROOT, ".beastmode", "state");
+  test("save creates directories", () => {
+    const pipeDir = resolve(TEST_ROOT, ".beastmode", "pipeline");
     expect(existsSync(pipeDir)).toBe(false);
 
     const manifest: PipelineManifest = {
@@ -125,13 +121,11 @@ describe("manifest core operations", () => {
       lastUpdated: new Date().toISOString(),
     };
 
-    writeManifest(TEST_ROOT, "write-test", manifest);
-
+    save(TEST_ROOT, "write-test", manifest);
     expect(existsSync(pipeDir)).toBe(true);
-    // Should be findable via manifestPath after write
     expect(manifestPath(TEST_ROOT, "write-test")).toBeDefined();
 
-    const loaded = readManifest(TEST_ROOT, "write-test");
+    const loaded = get(TEST_ROOT, "write-test");
     expect(loaded.slug).toBe("write-test");
     expect(loaded.phase).toBe("plan");
   });
@@ -151,24 +145,25 @@ describe("manifest core operations", () => {
     };
 
     const pending = getPendingFeatures(manifest);
-
     expect(pending).toHaveLength(2);
     expect(pending.map((f) => f.slug).sort()).toEqual(["feat-a", "feat-c"]);
   });
 
-  test("enrich merges features", () => {
-    seed(TEST_ROOT, "enrich-epic");
+  test("enrich merges features (pure, then save roundtrip)", () => {
+    create(TEST_ROOT, "enrich-epic");
+    const initial = get(TEST_ROOT, "enrich-epic");
 
     const features: ManifestFeature[] = [
       { slug: "feat-x", plan: "x.md", status: "pending" },
       { slug: "feat-y", plan: "y.md", status: "in-progress" },
     ];
 
-    const enriched = enrich(TEST_ROOT, "enrich-epic", {
+    const enriched = enrich(initial, {
       phase: "plan",
       features,
       artifacts: ["plan-output.md"],
     });
+    save(TEST_ROOT, "enrich-epic", enriched);
 
     expect(enriched.features).toHaveLength(2);
     expect(enriched.features[0].slug).toBe("feat-x");
@@ -176,18 +171,20 @@ describe("manifest core operations", () => {
     expect(enriched.artifacts["plan"]).toContain("plan-output.md");
 
     // Verify persistence
-    const loaded = readManifest(TEST_ROOT, "enrich-epic");
+    const loaded = get(TEST_ROOT, "enrich-epic");
     expect(loaded.features).toHaveLength(2);
   });
 
-  test("advancePhase updates phase field", () => {
-    seed(TEST_ROOT, "advance-epic");
+  test("advancePhase updates phase field (pure, then save roundtrip)", () => {
+    create(TEST_ROOT, "advance-epic");
+    const initial = get(TEST_ROOT, "advance-epic");
 
-    const advanced = advancePhase(TEST_ROOT, "advance-epic", "plan");
+    const advanced = advancePhase(initial, "plan");
+    save(TEST_ROOT, "advance-epic", advanced);
     expect(advanced.phase).toBe("plan");
 
     // Verify persistence
-    const loaded = readManifest(TEST_ROOT, "advance-epic");
+    const loaded = get(TEST_ROOT, "advance-epic");
     expect(loaded.phase).toBe("plan");
   });
 });

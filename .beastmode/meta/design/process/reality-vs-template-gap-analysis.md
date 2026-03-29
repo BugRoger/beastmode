@@ -20,6 +20,6 @@ Design decisions were informed by reading actual manifest files on disk rather t
 ### Rationale
 When designing against existing data formats, reading the actual files on disk prevents designing against imagined structures. The gap between assumed and actual data shapes was large enough that a design based on assumptions would have been wrong.
 ### Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
 ### Confidence
 [LOW] -- first observation; extends Obs 1 (skeleton-vs-reality comparison) from templates to runtime data files

@@ -8,5 +8,5 @@ Per-dispatch run log appended to `.beastmode-runs.json` with fields: epic, phase
 File-based run log is readable without Claude. JSON format enables programmatic consumption. Per-dispatch granularity supports cost attribution to specific phases and features. Status command is simplified to pure state reporting — cost data is available in the run log for anyone who needs it.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md

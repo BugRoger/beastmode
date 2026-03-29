@@ -8,4 +8,4 @@ Plugin stack: Claude Code CLI, Claude API, Git, Markdown + YAML, GitHub API via 
 Clean separation — plugin users don't need Bun or the Agent SDK. CLI users get typed session management and streaming that the raw CLI approach lacks.
 
 ## Source
-`.beastmode/state/design/2026-03-28-typescript-pipeline-orchestrator.md`
+`.beastmode/artifacts/design/2026-03-28-typescript-pipeline-orchestrator.md`

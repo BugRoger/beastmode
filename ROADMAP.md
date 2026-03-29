@@ -15,7 +15,7 @@ Shipped and working in the current release.
 - **Progressive knowledge hierarchy** — L0/L1/L2/L3 with fractal progressive enhancement
 - **Phase auto-chaining** — transitions between phases fire automatically via Skill tool calls when context threshold is met, configurable per-transition in `config.yaml`
 - **Confidence-gated meta promotion** — L3 records use confidence tags with frequency-based promotion to L1 Procedures
-- **Checkpoint restart** — re-run any phase by passing its artifact path (e.g., `/plan .beastmode/state/design/...`)
+- **Checkpoint restart** — re-run any phase by passing its artifact path (e.g., `/plan .beastmode/artifacts/design/...`)
 - **Unified `/beastmode` command** — `init`, `status`, and `ideas` subcommands in a single entry point
 - **Deferred ideas capture** — ideas surfaced during any phase are captured and reconciled at release
 - **Feature name arguments** — pass feature names directly to phase commands (e.g., `/plan docs-refresh`)

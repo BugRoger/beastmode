@@ -8,6 +8,6 @@ Grep-based cross-file verification proved effective for confirming consistency a
 ### Rationale
 A dedicated verification wave using grep searches is more efficient than re-reading all files. It scales well to large changesets and catches both presence and absence patterns. Plans should include a verification wave as the final task for multi-file changes.
 ### Source
-.beastmode/state/implement/2026-03-08-worktree-artifact-alignment-deviations.md
+.beastmode/artifacts/implement/2026-03-08-worktree-artifact-alignment-deviations.md
 ### Confidence
 [LOW] — first observation

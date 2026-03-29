@@ -8,6 +8,6 @@ The implement phase can target the beastmode system's own skill definitions as t
 ### Rationale
 Confirms the implement phase is generic enough to handle self-referential changes. Plans that edit skill files follow the same file-isolation and parallel-dispatch patterns as code-targeting plans. This is worth tracking because future features that modify beastmode internals should not require workflow exceptions.
 ### Source
-.beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json
+.beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
 [LOW] — first observation

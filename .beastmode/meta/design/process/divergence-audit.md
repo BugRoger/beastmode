@@ -8,7 +8,7 @@ The design session's problem discovery came from a systematic divergence audit â
 ### Rationale
 When multiple implementations of the same concern exist, a structured divergence audit (enumerate every difference in a concrete list) quantifies the problem and makes the design decision (kill vs. reconcile) data-driven rather than opinion-based.
 ### Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
 ### Confidence
 [LOW] â€” first observation; extends the "walk every instance" pattern from decision enumeration to implementation comparison
 
@@ -20,6 +20,6 @@ Spawning an Explore agent to audit the entire codebase subsystem (state scanner,
 ### Rationale
 When designing an overhaul of an existing subsystem, auditing the codebase first (not from memory, not from assumptions) produces a concrete defect inventory that drives design scope. Extends the research-first pattern from external competitive analysis to internal codebase analysis.
 ### Source
-.beastmode/state/design/2026-03-29-status-unfuckery-v2.md
+.beastmode/artifacts/design/2026-03-29-status-unfuckery-v2.md
 ### Confidence
 [LOW] -- first observation; extends divergence-audit pattern from two-implementation comparison to full-subsystem bug audit

@@ -8,5 +8,5 @@ Stop hook always generates output.json from artifact frontmatter when Claude fin
 The Stop hook generates output.json by infrastructure, making completion detection implementation-agnostic at the data layer. A single completion marker simplifies both strategy implementations. The hook approach means skills never need to write a completion signal.
 
 ## Source
-.beastmode/state/design/2026-03-29-cmux-integration-revisited.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-cmux-integration-revisited.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

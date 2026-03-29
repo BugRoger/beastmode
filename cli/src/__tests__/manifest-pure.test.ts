@@ -14,7 +14,7 @@ import {
   checkBlocked,
   shouldAdvance,
   getPendingFeatures,
-} from "../manifest-pure";
+} from "../manifest";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},

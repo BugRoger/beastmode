@@ -10,6 +10,6 @@ PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.m
 Unified PipelineManifest eliminates competing types. Two-module split separates filesystem (store) from logic (pure functions), making state transitions testable with plain objects. Structured blocked field provides actionable status information. Directory rename from pipeline/ to state/ makes the name match the content.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-phase-integration.md
-.beastmode/state/design/2026-03-29-github-cli-migration.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

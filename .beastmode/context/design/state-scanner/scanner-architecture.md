@@ -8,5 +8,5 @@ state-scanner.ts is gutted or deleted. Scanning is composed from store.list() (r
 Composing scanning from store + pure functions eliminates the standalone scanner as a separate module with its own types and path conventions. store.list() provides the same discovery as the old scanner, and manifest.ts pure functions provide the same state derivation — but now the types, paths, and logic are shared with the rest of the manifest system.
 
 ## Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

@@ -16,8 +16,8 @@ import type { BeastmodeConfig } from "../config";
 import {
   remove as removeWorktree,
 } from "../worktree";
-import { manifestPath, loadManifest } from "../manifest";
-import { readFileSync, writeFileSync } from "fs";
+import * as store from "../manifest-store";
+import { cancel } from "../manifest";
 
 export async function cancelCommand(
   args: string[],
@@ -64,22 +64,16 @@ export async function cancelCommand(
 }
 
 /**
- * Read the manifest for the given slug and set a `phase` field to "cancelled".
+ * Read the manifest for the given slug and set phase to "cancelled".
  */
 function updateManifestCancelled(
   projectRoot: string,
   slug: string,
 ): void {
-  const path = manifestPath(projectRoot, slug);
-  if (!path) {
-    throw new Error(`No manifest found for: ${slug}`);
-  }
-
-  const raw = readFileSync(path, "utf-8");
-  const manifest = JSON.parse(raw);
-  manifest.phase = "cancelled";
-  manifest.lastUpdated = new Date().toISOString();
-  writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n");
+  const manifest = store.load(projectRoot, slug);
+  if (!manifest) throw new Error(`No manifest found for: ${slug}`);
+  const cancelled = cancel(manifest);
+  store.save(projectRoot, slug, cancelled);
 }
 
 /**
@@ -90,7 +84,7 @@ async function closeGitHubEpic(
   projectRoot: string,
   slug: string,
 ): Promise<void> {
-  const manifest = loadManifest(projectRoot, slug);
+  const manifest = store.load(projectRoot, slug);
   if (!manifest) return;
 
   const epicNumber = manifest.github?.epic;

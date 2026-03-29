@@ -14,6 +14,10 @@ import type { SessionResult } from "./watch-types.js";
 import { SdkSessionFactory } from "./session.js";
 import * as worktree from "./worktree.js";
 import { scanEpics } from "./state-scanner.js";
+import * as store from "./manifest-store.js";
+import { enrich, advancePhase, markFeature } from "./manifest.js";
+import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
+import type { Phase } from "./types.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -25,25 +29,23 @@ function findProjectRoot(from: string = process.cwd()): string {
   throw new Error("Not inside a beastmode project (no .beastmode/ found)");
 }
 
-/**
- * Pipeline state directory — gitignored, orchestrator-owned.
- * Contains manifests and phase markers. Never in a worktree.
- */
-function pipelineDir(projectRoot: string): string {
-  const dir = resolve(projectRoot, ".beastmode/state");
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return dir;
-}
+/** Phase advancement map — which phase follows which. */
+const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
+  design: "plan",
+  plan: "implement",
+  implement: "validate",
+  validate: "release",
+};
 
 /**
  * State reconciliation — the orchestrator is the sole writer of pipeline state.
  *
  * All runtime state lives in .beastmode/state/ (gitignored).
  * Rules:
- *   plan      → scan worktree for feature plan .md files, build manifest
+ *   plan      → scan worktree for feature plan .md files, enrich manifest
  *   implement → mark the completed feature in the manifest
- *   validate  → write validate marker
- *   release   → write release marker
+ *   validate  → advance phase
+ *   release   → advance phase
  */
 function reconcileState(opts: {
   worktreePath: string;
@@ -75,87 +77,62 @@ function reconcileState(opts: {
   }
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 /**
  * After plan completes, scan the worktree for feature plan .md files and
- * build the manifest in the pipeline dir.
+ * enrich the manifest via the store + manifest modules.
  */
 function reconcilePlan(
   worktreePath: string,
   projectRoot: string,
   epicSlug: string,
 ): { completed: number; total: number } | undefined {
-  const planDir = resolve(worktreePath, ".beastmode/state/plan");
+  const planDir = resolve(worktreePath, ".beastmode/artifacts/plan");
   if (!existsSync(planDir)) return;
 
+  // Scan worktree for feature plan files
   const featurePlanPattern = new RegExp(
-    `^\\d{4}-\\d{2}-\\d{2}-${escapeRegExp(epicSlug)}-(.+)\\.md$`,
+    `^\\d{4}-\\d{2}-\\d{2}-${epicSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-(.+)\\.md$`,
   );
   const planFiles = readdirSync(planDir).filter((f) => featurePlanPattern.test(f));
   if (planFiles.length === 0) return;
 
-  const features = planFiles.map((f) => {
+  const scannedFeatures: ManifestFeature[] = planFiles.map((f) => {
     const match = f.match(featurePlanPattern)!;
-    return { slug: match[1], plan: f };
+    return { slug: match[1], plan: f, status: "pending" as const };
   });
 
-  const dir = pipelineDir(projectRoot);
+  // Load or create manifest via store
+  let manifest: PipelineManifest =
+    store.load(projectRoot, epicSlug) ??
+    store.create(projectRoot, epicSlug);
 
-  // Read existing manifest to preserve statuses and metadata
-  const manifestFile = readdirSync(dir).find(
-    (f) => f.endsWith(`-${epicSlug}.manifest.json`),
-  );
-  let manifest: Record<string, unknown> = {};
-  if (manifestFile) {
-    try {
-      manifest = JSON.parse(readFileSync(resolve(dir, manifestFile), "utf-8"));
-    } catch { /* start fresh */ }
-  }
-
-  // Read worktree manifest for architectural decisions and github metadata
+  // Read worktree manifest for github metadata
   const wtManifestFile = readdirSync(planDir).find(
     (f) => f.endsWith(`-${epicSlug}.manifest.json`),
   );
   if (wtManifestFile) {
     try {
       const wtManifest = JSON.parse(readFileSync(resolve(planDir, wtManifestFile), "utf-8"));
-      if (wtManifest.architecturalDecisions?.length > 0) {
-        manifest.architecturalDecisions = wtManifest.architecturalDecisions;
+      if (wtManifest.github && !manifest.github) {
+        manifest = { ...manifest, github: wtManifest.github };
       }
-      if (wtManifest.github) manifest.github = wtManifest.github;
-      if (wtManifest.design) manifest.design = wtManifest.design;
     } catch { /* ignore */ }
   }
 
-  // Preserve existing feature statuses
-  const existingFeatures = (manifest.features ?? []) as Array<{ slug: string; status: string; github?: unknown }>;
-  const statusMap = new Map(existingFeatures.map((f) => [f.slug, f]));
-
-  manifest.features = features.map((f) => {
-    const existing = statusMap.get(f.slug);
-    return {
-      slug: f.slug,
-      plan: f.plan,
-      status: existing?.status ?? "pending",
-      ...(existing?.github ? { github: existing.github } : {}),
-    };
+  // Enrich manifest with scanned features
+  manifest = enrich(manifest, {
+    phase: "plan",
+    features: scannedFeatures,
   });
-  manifest.lastUpdated = new Date().toISOString();
 
-  // Plan completing implies design is done too
-  if (!manifest.phases) manifest.phases = {};
-  (manifest.phases as Record<string, string>).design = "completed";
-  (manifest.phases as Record<string, string>).plan = "completed";
+  // Plan completing means we advance to implement
+  manifest = advancePhase(manifest, "implement");
 
-  // Write manifest to pipeline dir
-  const manifestName = manifestFile ?? `${new Date().toISOString().slice(0, 10)}-${epicSlug}.manifest.json`;
-  writeFileSync(resolve(dir, manifestName), JSON.stringify(manifest, null, 2));
+  // Persist
+  store.save(projectRoot, epicSlug, manifest);
 
-  // Copy plan files to git-tracked state/plan/ for agents to read
-  const destPlanDir = resolve(projectRoot, ".beastmode/state/plan");
+  // Copy plan files to git-tracked artifacts/plan/ for agents to read
+  const destPlanDir = resolve(projectRoot, ".beastmode/artifacts/plan");
   if (!existsSync(destPlanDir)) mkdirSync(destPlanDir, { recursive: true });
   const allPlanFiles = readdirSync(planDir).filter(
     (f) => f.includes(epicSlug) && !f.endsWith(".manifest.json"),
@@ -164,32 +141,27 @@ function reconcilePlan(
     copyFileSync(resolve(planDir, file), resolve(destPlanDir, file));
   }
 
-  const completed = (manifest.features as Array<{ status: string }>).filter(
+  const completed = manifest.features.filter(
     (f) => f.status === "completed",
   ).length;
-  return { completed, total: features.length };
+  return { completed, total: manifest.features.length };
 }
 
-/** Update a phase status in the manifest's `phases` object. */
+/** Advance the manifest phase after a phase completes successfully. */
 function updatePhaseStatus(
   projectRoot: string,
   epicSlug: string,
   phase: string,
 ): void {
-  const dir = pipelineDir(projectRoot);
-  const match = readdirSync(dir).find(
-    (f) => f.endsWith(`-${epicSlug}.manifest.json`),
-  );
-  if (!match) return;
+  let manifest = store.load(projectRoot, epicSlug);
+  if (!manifest) return;
 
-  const manifestPath = resolve(dir, match);
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+  const next = NEXT_PHASE[phase as Phase];
+  if (next) {
+    manifest = advancePhase(manifest, next);
+  }
 
-  if (!manifest.phases) manifest.phases = {};
-  manifest.phases[phase] = "completed";
-  manifest.lastUpdated = new Date().toISOString();
-
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  store.save(projectRoot, epicSlug, manifest);
 }
 
 /** Mark a single feature as completed in the pipeline manifest. */
@@ -198,34 +170,24 @@ function markFeatureCompleted(
   epicSlug: string,
   featureSlug: string,
 ): { completed: number; total: number } | undefined {
-  const dir = pipelineDir(projectRoot);
+  let manifest = store.load(projectRoot, epicSlug);
+  if (!manifest) return;
 
-  const match = readdirSync(dir).find(
-    (f) => f.endsWith(`-${epicSlug}.manifest.json`),
-  );
-  if (!match) return;
+  manifest = markFeature(manifest, featureSlug, "completed");
 
-  const manifestPath = resolve(dir, match);
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+  const completed = manifest.features.filter(
+    (f) => f.status === "completed",
+  ).length;
+  const total = manifest.features.length;
 
-  const features: { slug: string; status: string }[] = manifest.features ?? [];
-  const feature = features.find((f) => f.slug === featureSlug);
-  if (!feature) return;
-
-  feature.status = "completed";
-  manifest.lastUpdated = new Date().toISOString();
-
-  const completed = features.filter((f) => f.status === "completed").length;
-
-  // If all features done, mark implement phase completed
-  if (completed === features.length) {
-    if (!manifest.phases) manifest.phases = {};
-    (manifest.phases as Record<string, string>).implement = "completed";
+  // If all features done, advance to validate
+  if (total > 0 && completed === total) {
+    manifest = advancePhase(manifest, "validate");
   }
 
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  store.save(projectRoot, epicSlug, manifest);
 
-  return { completed, total: features.length };
+  return { completed, total };
 }
 
 /** Read feature progress from the pipeline manifest. */
@@ -233,22 +195,13 @@ function readProgress(
   projectRoot: string,
   epicSlug: string,
 ): { completed: number; total: number } | undefined {
-  const dir = pipelineDir(projectRoot);
+  const manifest = store.load(projectRoot, epicSlug);
+  if (!manifest || manifest.features.length === 0) return;
 
-  const match = readdirSync(dir).find(
-    (f) => f.endsWith(`-${epicSlug}.manifest.json`),
-  );
-  if (!match) return;
-
-  try {
-    const manifest = JSON.parse(readFileSync(resolve(dir, match), "utf-8"));
-    const features: { status: string }[] = manifest.features ?? [];
-    if (features.length === 0) return;
-    const completed = features.filter((f) => f.status === "completed").length;
-    return { completed, total: features.length };
-  } catch {
-    return;
-  }
+  const completed = manifest.features.filter(
+    (f) => f.status === "completed",
+  ).length;
+  return { completed, total: manifest.features.length };
 }
 
 /** Dispatch a phase using the Claude Agent SDK. */

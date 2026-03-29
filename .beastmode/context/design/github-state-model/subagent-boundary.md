@@ -10,5 +10,5 @@ All skills (not just implement subagents) are GitHub-unaware and manifest-unawar
 Centralizing all GitHub and manifest operations in the CLI (not just keeping subagents unaware) eliminates scattered markdown-interpreted bash snippets. Skills as pure content processors are easier to test, version, and debug. A single TypeScript module for sync is testable with standard tooling.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-phase-integration.md
-.beastmode/state/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md

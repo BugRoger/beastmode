@@ -18,4 +18,4 @@ state/design/2026-03-01-bootstrap-discovery-v2.md
 state/design/2026-03-07-meta-retro-rework.md
 state/design/2026-03-08-init-assets.md
 state/design/2026-03-29-bulletproof-state-scanner.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

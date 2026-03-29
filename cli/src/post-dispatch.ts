@@ -8,20 +8,13 @@
  * errors are caught and logged with a [post-dispatch] prefix.
  */
 
-import type { Phase, PhaseOutput } from "./types";
-import type { PipelineManifest } from "./manifest";
+import type { Phase } from "./types";
+import type { PipelineManifest } from "./manifest-store";
+import * as store from "./manifest-store";
+import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
 import { loadPhaseOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output";
-import { loadManifest, enrich, advancePhase, writeManifest } from "./manifest";
 import { syncGitHub } from "./github-sync";
 import { loadConfig } from "./config";
-
-/** Maps each phase to its successor (release has no successor). */
-const PHASE_SEQUENCE: Partial<Record<Phase, Phase>> = {
-  design: "plan",
-  plan: "implement",
-  implement: "validate",
-  validate: "release",
-};
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {
@@ -63,7 +56,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     }
 
     // Load the manifest
-    let manifest = loadManifest(opts.projectRoot, opts.epicSlug);
+    let manifest = store.load(opts.projectRoot, opts.epicSlug);
     if (!manifest) {
       console.log(`[post-dispatch] No manifest found for ${opts.epicSlug} — cannot update`);
       return;
@@ -84,30 +77,34 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
           }))
         : undefined;
 
-      manifest = enrich(opts.projectRoot, opts.epicSlug, {
+      manifest = enrich(manifest, {
         phase: opts.phase,
         features,
         artifacts: artifactPaths.length > 0 ? artifactPaths : undefined,
       });
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
       console.log(`[post-dispatch] Enriched manifest (artifacts: ${artifactPaths.length}, features: ${featureStatuses.length})`);
     }
 
     // Handle implement fan-out: mark individual feature as completed
     if (opts.phase === "implement" && opts.featureSlug) {
-      const feature = manifest.features.find((f) => f.slug === opts.featureSlug);
-      if (feature) {
-        feature.status = "completed";
-        writeManifest(opts.projectRoot, opts.epicSlug, manifest);
-        console.log(`[post-dispatch] Marked feature ${opts.featureSlug} as completed`);
-      } else {
-        console.log(`[post-dispatch] Feature ${opts.featureSlug} not found in manifest — skipping status update`);
-      }
+      manifest = markFeature(manifest, opts.featureSlug, "completed");
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
+      console.log(`[post-dispatch] Marked feature ${opts.featureSlug} as completed`);
+    }
+
+    // Handle validate regression: if validate didn't complete, regress to implement
+    if (opts.phase === "validate" && output?.status !== "completed") {
+      manifest = regressPhase(manifest, "implement");
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
+      console.log(`[post-dispatch] Regressed phase: validate -> implement (features reset to pending)`);
     }
 
     // Determine whether to advance the phase
-    const nextPhase = shouldAdvance(opts.phase, output, manifest);
+    const nextPhase = shouldAdvance(manifest, output);
     if (nextPhase) {
-      manifest = advancePhase(opts.projectRoot, opts.epicSlug, nextPhase);
+      manifest = advancePhase(manifest, nextPhase);
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
       console.log(`[post-dispatch] Advanced phase: ${opts.phase} -> ${nextPhase}`);
     } else {
       console.log(`[post-dispatch] No phase advancement for ${opts.phase}`);
@@ -125,50 +122,5 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.log(`[post-dispatch] Unexpected error (non-blocking): ${message}`);
-  }
-}
-
-/**
- * Determine whether the pipeline should advance to the next phase.
- *
- * Rules:
- * - design -> plan: always (output exists or not)
- * - plan -> implement: only if output has features
- * - implement -> validate: only if ALL features are completed
- * - validate -> release: only if output.status === "completed"
- * - release: no advancement
- *
- * Returns the next phase, or undefined if no advancement should occur.
- */
-function shouldAdvance(
-  phase: Phase,
-  output: PhaseOutput | undefined,
-  manifest: PipelineManifest,
-): Phase | undefined {
-  const nextPhase = PHASE_SEQUENCE[phase];
-  if (!nextPhase) return undefined;
-
-  switch (phase) {
-    case "design":
-      return nextPhase;
-
-    case "plan": {
-      if (!output) return undefined;
-      const features = extractFeatureStatuses(output);
-      return features.length > 0 ? nextPhase : undefined;
-    }
-
-    case "implement": {
-      // All features must be completed
-      if (manifest.features.length === 0) return undefined;
-      const allCompleted = manifest.features.every((f) => f.status === "completed");
-      return allCompleted ? nextPhase : undefined;
-    }
-
-    case "validate":
-      return output?.status === "completed" ? nextPhase : undefined;
-
-    default:
-      return undefined;
   }
 }

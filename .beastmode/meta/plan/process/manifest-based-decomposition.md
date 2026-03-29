@@ -44,6 +44,6 @@ The plan phase produced a manifest JSON plus 5 independent feature plans (manife
 ### Rationale
 Fourth confirmation of the manifest-based decomposition approach. New variant: infrastructure replacement epics require slicing by responsibility boundary (not module boundary) to avoid features that conflict during implementation. Story-level traceability back to the design is a useful addition to the feature plan format.
 ### Source
-.beastmode/state/plan/2026-03-29-manifest-file-management.manifest.json
+.beastmode/artifacts/plan/2026-03-29-manifest-file-management.manifest.json
 ### Confidence
 [HIGH] -- fourth observation, pattern confirmed across four epics

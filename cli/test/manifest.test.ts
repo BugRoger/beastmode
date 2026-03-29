@@ -196,7 +196,7 @@ describe("reconstruct", () => {
   test("reconstructs design-only manifest", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/design/2026-03-29-test-epic.md"),
       "# Test Epic",
     );
 
@@ -211,15 +211,15 @@ describe("reconstruct", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/design/2026-03-29-test-epic.md"),
       "# Test",
     );
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-29-test-epic-feat-a.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-29-test-epic-feat-a.md"),
       "# Feature A",
     );
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-29-test-epic-feat-b.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-29-test-epic-feat-b.md"),
       "# Feature B",
     );
 
@@ -234,11 +234,11 @@ describe("reconstruct", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/implement"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/design/2026-03-29-test-epic.md"),
       "# Test",
     );
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/implement/2026-03-29-test-epic.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/implement/2026-03-29-test-epic.md"),
       "# Implement",
     );
 
@@ -249,7 +249,7 @@ describe("reconstruct", () => {
   test("writes reconstructed manifest to state dir", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/design"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/design/2026-03-29-test-epic.md"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/design/2026-03-29-test-epic.md"),
       "# Test",
     );
 
@@ -371,7 +371,7 @@ describe("findLegacyManifestPath", () => {
   test("finds legacy manifest by slug", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-28-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-28-test-epic.manifest.json"),
       "{}",
     );
     const path = findLegacyManifestPath(TEST_ROOT, "test-epic");
@@ -382,11 +382,11 @@ describe("findLegacyManifestPath", () => {
   test("returns latest when multiple exist", () => {
     mkdirSync(resolve(TEST_ROOT, ".beastmode/state/plan"), { recursive: true });
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-27-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-27-test-epic.manifest.json"),
       "{}",
     );
     writeFileSync(
-      resolve(TEST_ROOT, ".beastmode/state/plan/2026-03-28-test-epic.manifest.json"),
+      resolve(TEST_ROOT, ".beastmode/artifacts/plan/2026-03-28-test-epic.manifest.json"),
       "{}",
     );
     const path = findLegacyManifestPath(TEST_ROOT, "test-epic");

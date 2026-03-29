@@ -10,4 +10,4 @@ Derive phase from manifest.phases map and feature completion state. Logic chain:
 Using the phases map gives explicit phase tracking rather than inferring phase from filesystem markers. This removes guesswork and makes the state machine deterministic from a single JSON read.
 
 ## Source
-.beastmode/state/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json
+.beastmode/artifacts/plan/2026-03-29-manifest-only-status-manifest-first-scanner.tasks.json

@@ -10,5 +10,5 @@ After every phase dispatch: Stop hook generates output.json from artifact frontm
 Stop hook generates output.json by infrastructure, eliminating skill-authored output steps. Pure function enrichment is testable without filesystem mocks. Mutation-return from github-sync.ts ensures all manifest writes go through the store, maintaining the single-writer invariant.
 
 ## Source
-.beastmode/state/design/2026-03-29-github-cli-migration.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

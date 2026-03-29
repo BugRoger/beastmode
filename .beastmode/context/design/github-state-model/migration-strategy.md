@@ -10,6 +10,6 @@ Clean cut, no backward compatibility. Delete old manifests in `state/plan/*.mani
 Backward compatibility adds complexity without proportional value in a single-project tool. All state can be recreated from the repo. Clean cut allows the new schema and sync model to be validated independently without legacy code paths.
 
 ## Source
-.beastmode/state/design/2026-03-28-github-phase-integration.md
-.beastmode/state/design/2026-03-29-github-cli-migration.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-28-github-phase-integration.md
+.beastmode/artifacts/design/2026-03-29-github-cli-migration.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

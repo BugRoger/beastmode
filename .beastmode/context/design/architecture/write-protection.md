@@ -13,4 +13,4 @@ Phases write artifacts to `artifacts/` only. Compaction and promotion to L1 and 
 
 ## Source
 state/design/2026-03-06-context-write-protection.md
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md

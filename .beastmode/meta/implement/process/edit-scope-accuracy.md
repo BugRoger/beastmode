@@ -8,6 +8,6 @@ The plan scoped the edit to lines 1-5 (replacing `<topic>` with `<feature>` in t
 ### Rationale
 Line-range scoping in plans creates a false sense of completeness. When a plan changes a placeholder or pattern, it should either enumerate all locations or explicitly instruct replace_all for global substitution. The auto-fix mechanism caught this, but it would have been cleaner to specify it in the plan.
 ### Source
-.beastmode/state/implement/2026-03-08-worktree-artifact-alignment-deviations.md
+.beastmode/artifacts/implement/2026-03-08-worktree-artifact-alignment-deviations.md
 ### Confidence
 [LOW] — first observation

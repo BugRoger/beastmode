@@ -20,6 +20,6 @@ Design chose reactive gate blocking over preemptive config gate checking. The sc
 ### Rationale
 Preemptive gate checking requires the scanner to understand gate semantics, coupling it to config structure. Reactive blocking keeps the scanner read-only and simple — it reports what the manifest says, nothing more.
 ### Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
 ### Confidence
 [MEDIUM] — second observation of reactive-over-preemptive principle (Obs 1 covered retro skip-checks; this covers runtime gate evaluation)

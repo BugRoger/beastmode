@@ -8,7 +8,7 @@ The design made three independent decisions that all enforced the same principle
 ### Rationale
 Dual sources of truth create divergence that compounds silently. The design pattern is: when discovering dual sources, kill the secondary rather than adding reconciliation logic. Reconciliation adds complexity and still permits transient disagreement. A single source is simpler, fails loudly, and is easier to debug.
 ### Source
-.beastmode/state/design/2026-03-29-bulletproof-state-scanner.md
+.beastmode/artifacts/design/2026-03-29-bulletproof-state-scanner.md
 ### Confidence
 [MEDIUM] — first observation; pattern appeared three times within a single design but needs cross-session confirmation
 
@@ -20,6 +20,6 @@ The design made 4 independent single-source-of-truth decisions: (1) kill EpicSta
 ### Rationale
 Confirms the Obs 1 pattern across a different subsystem. The manifest refactor is a different codebase area (manifest handling vs. state scanner) but applies the identical principle: when two sources exist, kill the secondary rather than adding reconciliation logic. Four independent applications within a single design strengthens the pattern.
 ### Source
-.beastmode/state/design/2026-03-29-manifest-file-management.md
+.beastmode/artifacts/design/2026-03-29-manifest-file-management.md
 ### Confidence
 [MEDIUM] -- second observation across different subsystems; same pattern (kill secondary source) applied 4 times within this design
