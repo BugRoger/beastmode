@@ -10,22 +10,20 @@ git add -A
 
 Report: "All changes staged. Ready for release."
 
-## 2. Determine Version
+## 2. Determine Version Bump Type
 
 ```bash
-# Read current version from plugin.json
-current_version=$(grep -o '"version": "[^"]*"' .claude-plugin/plugin.json | head -1 | cut -d'"' -f4)
-echo "Current version: $current_version"
-
-# List commits since last release tag for bump detection
+# List commits on this feature branch for bump detection
 last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
 git log ${last_tag}..HEAD --oneline
 ```
 
-Detect version bump from commit messages:
+Detect version bump **type** from commit messages:
 - Any `BREAKING CHANGE` or `!:` suffix → **major** bump
 - Any `feat:` or `feat(` prefix → **minor** bump
 - Otherwise → **patch** bump
+
+**Important:** Do NOT read `plugin.json` for the current version — the worktree's copy is stale. The actual version bump happens post-merge on main in the checkpoint phase.
 
 ### 2.1 [GATE|release.version-confirmation]
 
@@ -34,12 +32,12 @@ Default: `human`.
 
 #### [GATE-OPTION|human] Ask User
 
-Increment from `$current_version`. Present suggested version via AskUserQuestion with override option.
+Present detected bump type (major/minor/patch) via AskUserQuestion with override option.
 
 #### [GATE-OPTION|auto] Auto-Detect
 
-Use the auto-detected version bump without asking.
-Log: "Gate `release.version-confirmation` → auto: vX.Y.Z"
+Use the auto-detected bump type without asking.
+Log: "Gate `release.version-confirmation` → auto: <bump-type>"
 
 ## 3. Categorize Commits
 
@@ -62,7 +60,7 @@ Save to `.beastmode/state/release/YYYY-MM-DD-<feature>.md`:
 ```markdown
 # Release: <feature>
 
-**Version:** vX.Y.Z
+**Bump:** minor
 **Date:** YYYY-MM-DD
 
 ## Highlights
@@ -88,14 +86,5 @@ Save to `.beastmode/state/release/YYYY-MM-DD-<feature>.md`:
 
 Omit empty sections (e.g., no Breaking Changes → skip that heading).
 
-## 5. Update CHANGELOG.md
-
-If the project has a CHANGELOG.md, prepend the new release section.
-
-## 6. Bump Version Files
-
-Update version in all three files:
-- `.claude-plugin/plugin.json` → `"version": "X.Y.Z"`
-- `.claude-plugin/marketplace.json` → version in plugins array
-- `hooks/session-start.sh` → banner line `BEASTMODE vX.Y.Z`
+Use `**Bump:** major|minor|patch` instead of a concrete version — the actual version is computed post-merge from main's current state.
 

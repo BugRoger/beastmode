@@ -2,21 +2,13 @@
 
 ## 1. Verify Release Notes
 
-Check that release notes file exists in `.beastmode/state/release/`.
+Check that release notes file exists in `.beastmode/state/release/` with correct feature name and bump type.
 
-## 2. Verify CHANGELOG
+## 2. Verify Commit Categorization
 
-If project has CHANGELOG.md, verify new section was prepended with correct version.
+Check that release notes contain categorized commits (Features, Fixes, etc.) with no empty sections.
 
-## 3. Verify Plugin Version
-
-Check `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` have updated version matching the release.
-
-## 4. Verify Commit
-
-Check unified commit was created with cycle artifact references.
-
-## 5. Validation Gate
+## 3. Validation Gate
 
 If any check fails:
 - Report specific problems

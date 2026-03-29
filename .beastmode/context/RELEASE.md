@@ -8,9 +8,11 @@
 
 ## Release Process
 - ALWAYS use merge-only — no rebase before merge
-- ALWAYS run retro in execute phase before the release commit
-- ALWAYS prepare L0 update proposal from L1 summaries at release time (targets BEASTMODE.md)
-- NEVER spread version across more than 3 files (plugin.json, marketplace.json, CHANGELOG.md)
+- ALWAYS bump versions and update CHANGELOG on main AFTER the squash merge — never in the worktree
+- ALWAYS read main's plugin.json for the current version — the worktree's copy is stale
+- ALWAYS resolve version file and CHANGELOG conflicts with --ours (main) during squash merge
+- ALWAYS resolve code file conflicts with --theirs (feature branch) during squash merge
+- NEVER modify version files (plugin.json, marketplace.json, session-start.sh) or CHANGELOG.md in the worktree
 
 ## Changelog
 - ALWAYS include Highlights and Full Changelog sections in release artifacts
