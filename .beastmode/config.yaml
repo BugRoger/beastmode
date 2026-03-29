@@ -27,6 +27,9 @@ gates:
   release:
     version-confirmation: auto       # APPROVAL — version bump override
 
+cli:
+  dispatch-strategy: cmux            # sdk | cmux | auto
+
 github:
   enabled: true                     # Set to true by /beastmode setup-github
   project-name: "Beastmode Pipeline" # Projects V2 board name
