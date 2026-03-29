@@ -1,0 +1,17 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-29-handoff-v2-plan-frontmatter.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Add slug and status to plan checkpoint frontmatter template",
+      "wave": 1,
+      "parallel_safe": false,
+      "depends_on": [],
+      "files": [
+        "Modify: skills/plan/phases/3-checkpoint.md:12-16"
+      ],
+      "status": "completed"
+    }
+  ],
+  "lastUpdated": "2026-03-29T00:00:00Z"
+}

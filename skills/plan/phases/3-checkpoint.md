@@ -13,6 +13,8 @@ Each feature plan file must begin with YAML frontmatter:
 phase: plan
 epic: <design>
 feature: <feature-slug>
+slug: <epic>-<feature>
+status: completed
 ---
 ```
 
