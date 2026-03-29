@@ -1,10 +1,63 @@
 {
   "design": ".beastmode/state/design/2026-03-28-github-cli-migration.md",
-  "architecturalDecisions": [],
-  "features": [],
+  "architecturalDecisions": [
+    {
+      "decision": "Sync location",
+      "choice": "CLI pre-sync/post-sync wrapping phase dispatch — skills have zero GitHub awareness"
+    },
+    {
+      "decision": "Phase rule engine",
+      "choice": "Switch on (phase) + manifest state to determine GitHub operations — no diffing or sidecar files"
+    },
+    {
+      "decision": "Manifest ownership split",
+      "choice": "Skills write content fields (design, features, statuses); CLI exclusively writes github.* fields"
+    },
+    {
+      "decision": "GitHub API client",
+      "choice": "gh CLI via Bun.spawn in TypeScript — same commands as current markdown but typed and testable"
+    },
+    {
+      "decision": "Projects V2 cache",
+      "choice": "In-memory lazy cache per session — file-based cache (.beastmode/state/github-project.cache.json) removed"
+    },
+    {
+      "decision": "Error handling",
+      "choice": "Warn-and-continue with try/catch at Bun.spawn boundary — never block workflow on GitHub failure"
+    }
+  ],
+  "features": [
+    {
+      "slug": "setup-github-cli",
+      "plan": "2026-03-29-github-cli-migration-setup-github-cli.md",
+      "status": "completed"
+    },
+    {
+      "slug": "skill-cleanup",
+      "plan": "2026-03-29-github-cli-migration-skill-cleanup.md",
+      "status": "completed"
+    },
+    {
+      "slug": "github-client",
+      "plan": "2026-03-29-github-cli-migration-github-client.md",
+      "status": "completed"
+    },
+    {
+      "slug": "phase-sync-engine",
+      "plan": "2026-03-29-github-cli-migration-phase-sync-engine.md",
+      "status": "completed"
+    }
+  ],
   "github": {
     "epic": 33,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-28T00:00:00Z"
+  "lastUpdated": "2026-03-29T00:31:16.352Z",
+  "phases": {
+    "design": "completed",
+    "plan": "completed",
+    "implement": "completed",
+    "validate": "completed",
+    "release": "completed"
+  }
 }

@@ -1,0 +1,75 @@
+{
+  "design": ".beastmode/state/design/2026-03-29-bulletproof-state-scanner.md",
+  "architecturalDecisions": [
+    {
+      "decision": "Single scanner implementation",
+      "choice": "state-scanner.ts only; remove scanEpicsInline()"
+    },
+    {
+      "decision": "Epic discovery anchoring",
+      "choice": "Manifests-only in pipeline dir — no design file fallback"
+    },
+    {
+      "decision": "Phase source of truth",
+      "choice": "Top-level manifest.phase field (plan|implement|validate|release|released) replaces marker files and phases map"
+    },
+    {
+      "decision": "Phase advancement authority",
+      "choice": "Reconciler writes manifest.phase at transition points"
+    },
+    {
+      "decision": "Merge conflict handling",
+      "choice": "Ours-side auto-resolution before JSON.parse"
+    },
+    {
+      "decision": "Gate blocking strategy",
+      "choice": "Reactive — check feature status only, no preemptive config gate checking"
+    },
+    {
+      "decision": "Cost aggregation",
+      "choice": "Removed from scanner; separate concern for beastmode status"
+    },
+    {
+      "decision": "Slug collision policy",
+      "choice": "Warn stderr, use newest manifest (last sorted by filename)"
+    }
+  ],
+  "features": [
+    {
+      "slug": "merge-conflict-resolution",
+      "plan": "2026-03-29-bulletproof-state-scanner-merge-conflict-resolution.md",
+      "status": "completed"
+    },
+    {
+      "slug": "scanner-test-suite",
+      "plan": "2026-03-29-bulletproof-state-scanner-scanner-test-suite.md",
+      "status": "completed"
+    },
+    {
+      "slug": "graceful-empty-state",
+      "plan": "2026-03-29-bulletproof-state-scanner-graceful-empty-state.md",
+      "status": "completed"
+    },
+    {
+      "slug": "manifest-phase-field",
+      "plan": "2026-03-29-bulletproof-state-scanner-manifest-phase-field.md",
+      "status": "completed"
+    },
+    {
+      "slug": "canonical-scanner-rewrite",
+      "plan": "2026-03-29-bulletproof-state-scanner-canonical-scanner-rewrite.md",
+      "status": "completed"
+    },
+    {
+      "slug": "slug-collision-detection",
+      "plan": "2026-03-29-bulletproof-state-scanner-slug-collision-detection.md",
+      "status": "completed"
+    }
+  ],
+  "github": {
+    "epic": 38,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-29T14:00:00.000Z",
+  "phase": "validate"
+}

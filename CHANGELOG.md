@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.30.0 — The Bulletproof Scanner (Mar 2026)
+
+- **Canonical scanner rewrite** — Single `state-scanner.ts` replaces divergent `scanEpicsInline()` in watch-command.ts; manifests are the sole epic anchor, no design file fallback
+- **Manifest phase field** — Top-level `manifest.phase` (plan|implement|validate|release|released) replaces marker files and the `phases` map as the single source of truth for epic phase
+- **Merge conflict auto-resolution** — Ours-side resolution strips git conflict markers before JSON.parse, preventing silent phase regressions from parallel worktree merges
+- **Slug collision detection** — Warns on stderr when multiple manifests resolve to the same slug; uses newest manifest (last sorted by filename)
+- **Graceful empty state** — Missing or empty pipeline directories return an empty array instead of crashing
+- **Scanner test suite** — Comprehensive unit tests covering every phase transition, conflict resolution, slug collision, empty state, and blocked feature detection (124 tests)
+
 ### v0.29.0 — The Terminal Multiplexer (Mar 2026)
 
 - **Dispatch abstraction** — `DispatchedSession` interface with `SdkSession` and `CmuxSession` implementations, `SessionFactory` for runtime strategy selection

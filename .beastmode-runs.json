@@ -381,5 +381,194 @@
     "exit_status": "success",
     "timestamp": "2026-03-28T23:46:23.035Z",
     "session_id": "7239415f-d2e0-486a-8b3c-dd654f2b543b"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "cmux-session",
+    "cost_usd": 0,
+    "duration_ms": 21282,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.022Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "plan",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 19291,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.030Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "release-cleanup",
+    "cost_usd": 0,
+    "duration_ms": 19810,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.034Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "notifications",
+    "cost_usd": 0,
+    "duration_ms": 21253,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.036Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "startup-reconciliation",
+    "cost_usd": 0,
+    "duration_ms": 21233,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.040Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "dispatch-abstraction",
+    "cost_usd": 0,
+    "duration_ms": 21880,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.044Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "cmux-client",
+    "cost_usd": 0,
+    "duration_ms": 21866,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.048Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "implement",
+    "feature": "cmux-config",
+    "cost_usd": 0,
+    "duration_ms": 21852,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.053Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "implement",
+    "feature": "github-client",
+    "cost_usd": 0,
+    "duration_ms": 424034,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.055Z"
+  },
+  {
+    "epic": "interactive-cmux-workspaces",
+    "phase": "release",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 203943,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:27:30.082Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "implement",
+    "feature": "setup-github-cli",
+    "cost_usd": 0,
+    "duration_ms": 54023,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:28:27.116Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "implement",
+    "feature": "phase-sync-engine",
+    "cost_usd": 0,
+    "duration_ms": 70581,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:28:43.712Z"
+  },
+  {
+    "epic": "bulletproof-state-scanner",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 70764,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:28:43.921Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "implement",
+    "feature": "skill-cleanup",
+    "cost_usd": 0,
+    "duration_ms": 107517,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:29:20.630Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 41323,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:30:02.080Z"
+  },
+  {
+    "epic": "bulletproof-state-scanner",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 113488,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:30:37.490Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 43213,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:30:45.372Z"
+  },
+  {
+    "epic": "bulletproof-state-scanner",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 33995,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:31:11.581Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 29087,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:31:14.552Z"
+  },
+  {
+    "epic": "bulletproof-state-scanner",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 4453,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:31:16.335Z"
+  },
+  {
+    "epic": "github-cli-migration",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": 0,
+    "duration_ms": 1499,
+    "exit_status": 0,
+    "timestamp": "2026-03-29T00:31:16.357Z"
   }
 ]

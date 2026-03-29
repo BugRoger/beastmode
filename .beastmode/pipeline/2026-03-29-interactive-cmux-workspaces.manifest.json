@@ -1,59 +1,95 @@
 {
   "design": ".beastmode/state/design/2026-03-29-interactive-cmux-workspaces.md",
   "architecturalDecisions": [
-    {"decision": "Dispatch abstraction", "choice": "DispatchedSession interface + SessionFactory pattern"},
-    {"decision": "Unix socket protocol", "choice": "JSON-RPC over /tmp/cmux.sock via CmuxClient class"},
-    {"decision": "Config shape", "choice": "cmux: section in config.yaml with enabled/notifications/cleanup"},
-    {"decision": "Completion contract", "choice": "Existing .beastmode-runs.json polling — no new protocol"},
-    {"decision": "Process ownership", "choice": "cmux-owned via surface.send-text"}
+    {
+      "decision": "Dispatch abstraction",
+      "choice": "DispatchedSession interface + SessionFactory pattern"
+    },
+    {
+      "decision": "Unix socket protocol",
+      "choice": "JSON-RPC over /tmp/cmux.sock via CmuxClient class"
+    },
+    {
+      "decision": "Config shape",
+      "choice": "cmux: section in config.yaml with enabled/notifications/cleanup"
+    },
+    {
+      "decision": "Completion contract",
+      "choice": "Existing .beastmode-runs.json polling — no new protocol"
+    },
+    {
+      "decision": "Process ownership",
+      "choice": "cmux-owned via surface.send-text"
+    }
   ],
   "features": [
     {
       "slug": "dispatch-abstraction",
       "plan": "2026-03-29-interactive-cmux-workspaces-dispatch-abstraction.md",
       "status": "pending",
-      "github": {"issue": 48}
+      "github": {
+        "issue": 48
+      }
     },
     {
       "slug": "cmux-client",
       "plan": "2026-03-29-interactive-cmux-workspaces-cmux-client.md",
       "status": "pending",
-      "github": {"issue": 49}
+      "github": {
+        "issue": 49
+      }
     },
     {
       "slug": "cmux-config",
       "plan": "2026-03-29-interactive-cmux-workspaces-cmux-config.md",
       "status": "pending",
-      "github": {"issue": 50}
+      "github": {
+        "issue": 50
+      }
     },
     {
       "slug": "cmux-session",
       "plan": "2026-03-29-interactive-cmux-workspaces-cmux-session.md",
       "status": "pending",
-      "github": {"issue": 51}
+      "github": {
+        "issue": 51
+      }
     },
     {
       "slug": "notifications",
       "plan": "2026-03-29-interactive-cmux-workspaces-notifications.md",
       "status": "pending",
-      "github": {"issue": 52}
+      "github": {
+        "issue": 52
+      }
     },
     {
       "slug": "startup-reconciliation",
       "plan": "2026-03-29-interactive-cmux-workspaces-startup-reconciliation.md",
       "status": "pending",
-      "github": {"issue": 53}
+      "github": {
+        "issue": 53
+      }
     },
     {
       "slug": "release-cleanup",
       "plan": "2026-03-29-interactive-cmux-workspaces-release-cleanup.md",
       "status": "pending",
-      "github": {"issue": 54}
+      "github": {
+        "issue": 54
+      }
     }
   ],
   "github": {
     "epic": 47,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-29T16:15:00.000Z"
+  "lastUpdated": "2026-03-29T14:30:00.000Z",
+  "phases": {
+    "design": "completed",
+    "plan": "completed",
+    "implement": "pending",
+    "validate": "pending",
+    "release": "pending"
+  }
 }

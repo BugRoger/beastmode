@@ -5,23 +5,43 @@
     "repo": "BugRoger/beastmode"
   },
   "architecturalDecisions": [
-    {"decision": "Shared utility change scope", "choice": "No changes to _shared/github.md — callers stop invoking Add to Project for features"},
-    {"decision": "Checkpoint-scoped edits", "choice": "Only checkpoint/prime phase files change — shared utility and manifest schema untouched"},
-    {"decision": "Cleanup approach", "choice": "Ad-hoc one-time deleteProjectV2Item operation — not codified as reusable command"}
+    {
+      "decision": "Shared utility change scope",
+      "choice": "No changes to _shared/github.md — callers stop invoking Add to Project for features"
+    },
+    {
+      "decision": "Checkpoint-scoped edits",
+      "choice": "Only checkpoint/prime phase files change — shared utility and manifest schema untouched"
+    },
+    {
+      "decision": "Cleanup approach",
+      "choice": "Ad-hoc one-time deleteProjectV2Item operation — not codified as reusable command"
+    }
   ],
   "features": [
     {
       "slug": "skip-feature-board-add",
       "plan": "2026-03-28-epics-only-board-skip-feature-board-add.md",
       "status": "completed",
-      "github": {"issue": 10}
+      "github": {
+        "issue": 10
+      }
     },
     {
       "slug": "cleanup-existing-board-features",
       "plan": "2026-03-28-epics-only-board-cleanup-existing-board-features.md",
       "status": "completed",
-      "github": {"issue": 11}
+      "github": {
+        "issue": 11
+      }
     }
   ],
-  "lastUpdated": "2026-03-28T17:05:00Z"
+  "lastUpdated": "2026-03-28T17:05:00Z",
+  "phases": {
+    "validate": "completed",
+    "design": "completed",
+    "plan": "completed",
+    "implement": "completed",
+    "release": "completed"
+  }
 }

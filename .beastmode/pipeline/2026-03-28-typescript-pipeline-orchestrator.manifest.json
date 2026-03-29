@@ -27,7 +27,7 @@
     },
     {
       "decision": "Watch concurrency",
-      "choice": "No cap \u2014 parallel epics, parallel features, API rate limits as natural governor"
+      "choice": "No cap — parallel epics, parallel features, API rate limits as natural governor"
     },
     {
       "decision": "Merge strategy",
@@ -104,5 +104,12 @@
     "epic": 12,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-28T19:25:00Z"
+  "lastUpdated": "2026-03-28T19:25:00Z",
+  "phases": {
+    "validate": "completed",
+    "design": "completed",
+    "plan": "completed",
+    "implement": "completed",
+    "release": "completed"
+  }
 }
