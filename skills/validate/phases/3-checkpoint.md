@@ -27,7 +27,7 @@ If FAIL:
 Validation failed. Fix issues and re-run:
 beastmode validate <feature>
 ```
-STOP — do not proceed to commit.
+STOP. No additional output.
 
 If PASS:
 
