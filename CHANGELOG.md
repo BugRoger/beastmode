@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.32.0 — The GitHub CLI Migration (Mar 2026)
+
+- **Manifest redesign** — Pipeline manifest restructured as pure state: single epic, top-level phase, feature statuses, artifact refs; CLI is sole mutator
+- **Phase output contract** — Skills write structured `.output.json` files to `state/<phase>/` at checkpoint; universal schema consumed by CLI to advance pipeline state
+- **GitHub sync engine** — Stateless `syncGitHub(manifest, config)` runs post-dispatch; one-way mirror from manifest to GitHub with blast-replace labels and warn-and-continue error handling
+- **Dispatch pipeline** — CLI reads phase outputs from worktree after dispatch, updates manifest, then syncs GitHub
+- **Skill cleanup** — Deleted `skills/_shared/github.md`, removed GitHub sync from 5 checkpoint files and implement prime; skills are now fully GitHub-unaware and manifest-unaware
+
 ### v0.31.0 — The Worktree Transaction (Mar 2026)
 
 - **CLI worktree lifecycle** — `ensureWorktree()` creates or reuses a single worktree per epic; all phases share it via cwd injection
