@@ -800,5 +800,85 @@
     "exit_status": "success",
     "timestamp": "2026-03-29T12:06:26.386Z",
     "session_id": null
+  },
+  {
+    "epic": "design-skill-modules",
+    "phase": "release",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 211297,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:09:58.713Z",
+    "session_id": null
+  },
+  {
+    "epic": "design-skill-modules",
+    "phase": "implement",
+    "feature": "remove-module-sketch",
+    "cost_usd": null,
+    "duration_ms": 625407,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:10:35.219Z",
+    "session_id": null
+  },
+  {
+    "epic": "design-skill-modules",
+    "phase": "implement",
+    "feature": "add-deep-modules-guidance",
+    "cost_usd": null,
+    "duration_ms": 575372,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:10:37.490Z",
+    "session_id": null
+  },
+  {
+    "epic": "remove-merge-logic-from-cli",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 818308,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:10:53.767Z",
+    "session_id": null
+  },
+  {
+    "epic": "remove-merge-logic-from-cli",
+    "phase": "implement",
+    "feature": "strip-worktree-ops",
+    "cost_usd": null,
+    "duration_ms": 621877,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:11:01.580Z",
+    "session_id": null
+  },
+  {
+    "epic": "remove-merge-logic-from-cli",
+    "phase": "implement",
+    "feature": "strip-worktree-ops",
+    "cost_usd": null,
+    "duration_ms": 1270210,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:11:03.677Z",
+    "session_id": null
+  },
+  {
+    "epic": "remove-merge-logic-from-cli",
+    "phase": "implement",
+    "feature": "simplify-watch-fanout",
+    "cost_usd": null,
+    "duration_ms": 1272053,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:11:10.246Z",
+    "session_id": null
+  },
+  {
+    "epic": "status-unfuckery-v2",
+    "phase": "validate",
+    "feature": null,
+    "cost_usd": null,
+    "duration_ms": 873723,
+    "exit_status": "success",
+    "timestamp": "2026-03-29T12:16:09.482Z",
+    "session_id": null
   }
 ]

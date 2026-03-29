@@ -1,12 +1,12 @@
 /**
- * Worktree lifecycle manager — TypeScript rewrite of hooks/worktree-create.sh.
+ * Worktree lifecycle manager — create, enter, exists, remove.
  *
- * Provides five operations:
- *   create  — git worktree at .claude/worktrees/<slug> with feature/<slug> branch
- *   enter   — returns absolute path for use as cwd
- *   merge   — squash-merges feature branch back to main
- *   archive — tags the branch tip before deletion to preserve history
- *   remove  — cleans up worktree directory and optionally deletes branch
+ * Provides lifecycle operations only:
+ *   create        — git worktree at .claude/worktrees/<slug> with feature/<slug> branch
+ *   enter         — returns absolute path for use as cwd
+ *   ensureWorktree — idempotent create-or-reuse
+ *   exists        — checks if worktree exists for slug
+ *   remove        — cleans up worktree directory and optionally deletes branch
  */
 
 import { resolve } from "node:path";
@@ -190,61 +190,6 @@ export function enter(
   opts: { cwd?: string } = {},
 ): string {
   return resolve(opts.cwd ?? process.cwd(), `${WORKTREE_DIR}/${slug}`);
-}
-
-/**
- * Squash-merge the feature branch back to main.
- * Assumes we are NOT in the worktree (caller should remove or switch first).
- */
-export async function merge(
-  slug: string,
-  opts: { cwd?: string; mainBranch?: string } = {},
-): Promise<void> {
-  const cwd = opts.cwd;
-  const branch = `feature/${slug}`;
-  const main = opts.mainBranch ?? "main";
-
-  // Ensure we're on the main branch
-  const currentBranch = (
-    await git(["rev-parse", "--abbrev-ref", "HEAD"], { cwd })
-  ).stdout;
-
-  if (currentBranch !== main) {
-    await git(["checkout", main], { cwd });
-  }
-
-  // Squash merge
-  await git(["merge", "--squash", branch], { cwd });
-  await git(
-    ["commit", "-m", `feat(${slug}): squash merge feature/${slug}`],
-    { cwd },
-  );
-}
-
-/**
- * Archive the current tip of a feature branch as a lightweight tag.
- * Tag format: archive/<slug>/<ISO-date>
- *
- * Call this BEFORE removing the worktree/branch to preserve history.
- */
-export async function archive(
-  slug: string,
-  opts: { cwd?: string } = {},
-): Promise<string> {
-  const cwd = opts.cwd;
-  const branch = `feature/${slug}`;
-  const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const tagName = `archive/${slug}/${date}`;
-
-  // Get the branch tip SHA
-  const tipResult = await git(["rev-parse", branch], { cwd });
-  const tipSha = tipResult.stdout;
-
-  // Create lightweight tag at the branch tip
-  // Use --force in case we're re-running on the same day
-  await git(["tag", "--force", tagName, tipSha], { cwd });
-
-  return tagName;
 }
 
 /**

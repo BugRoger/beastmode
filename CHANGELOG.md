@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.40.0 — The Great Unbundling (Mar 2026)
+
+- **Merge coordinator deleted** — Removed `merge-coordinator.ts` (328 lines) and all associated types, functions, and tests; CLI no longer drives git merges
+- **Worktree ops stripped** — Removed `merge()` and `archive()` from `worktree.ts`; module reduced to create, enter, ensureWorktree, exists, remove
+- **Watch fan-out simplified** — Implement fan-out dispatches all feature sessions to the same epic worktree instead of creating per-feature branches
+- **Release/cancel teardown** — Release calls `removeWorktree()` only (no archive, no merge); cancel skips archive step entirely
+
 ### v0.39.0 — The Problem-Space Purification (Mar 2026)
 
 - **Module sketch removal** — Removed Execute step 3 (module sketch) from design phase; design stays in problem-space (decisions, gray areas, user stories) without premature structural decomposition

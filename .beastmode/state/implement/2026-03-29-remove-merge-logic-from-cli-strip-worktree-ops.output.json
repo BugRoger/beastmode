@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "strip-worktree-ops", "status": "completed"}
+    ]
+  }
+}

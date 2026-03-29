@@ -60,13 +60,13 @@ describe("fan-out code removed", () => {
   });
 });
 
-describe("release teardown preserved", () => {
-  test("archiveWorktree is still imported and called", () => {
-    expect(phaseSource).toContain("archiveWorktree");
+describe("release teardown simplified", () => {
+  test("archiveWorktree is removed", () => {
+    expect(phaseSource).not.toContain("archiveWorktree");
   });
 
-  test("mergeWorktree is still imported and called", () => {
-    expect(phaseSource).toContain("mergeWorktree");
+  test("mergeWorktree is removed", () => {
+    expect(phaseSource).not.toContain("mergeWorktree");
   });
 
   test("removeWorktree is still imported and called", () => {

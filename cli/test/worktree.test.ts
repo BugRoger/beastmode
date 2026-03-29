@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { git, gitCheck } from "../src/git.js";
-import { create, enter, merge, archive, remove, ensureWorktree, exists, resolveMainBranch } from "../src/worktree.js";
+import { create, enter, remove, ensureWorktree, exists, resolveMainBranch } from "../src/worktree.js";
 
 /**
  * Integration tests for the worktree manager.
@@ -101,85 +101,6 @@ describe("worktree enter", () => {
   test("returns absolute path to worktree directory", () => {
     const path = enter("my-feature", { cwd: repoDir });
     expect(path).toBe(join(repoDir, ".claude/worktrees/my-feature"));
-  });
-});
-
-describe("worktree merge", () => {
-  test("squash-merges feature branch to main", async () => {
-    // Create worktree with a change
-    const info = await create("test-merge", { cwd: repoDir });
-
-    // Add a file in the worktree
-    await Bun.write(join(info.path, "feature.txt"), "feature content\n");
-    await git(["add", "."], { cwd: info.path });
-    await git(["commit", "-m", "add feature file"], { cwd: info.path });
-
-    // Remove worktree first (merge needs main checkout)
-    await git(["worktree", "remove", ".claude/worktrees/test-merge", "--force"], { cwd: repoDir });
-    await git(["worktree", "prune"], { cwd: repoDir, allowFailure: true });
-
-    // Merge back to main
-    await merge("test-merge", { cwd: repoDir, mainBranch });
-
-    // Verify the file exists on main
-    const result = await git(["log", "--oneline", "-1"], { cwd: repoDir });
-    expect(result.stdout).toContain("test-merge");
-
-    // Clean up branch
-    await git(["branch", "-D", "feature/test-merge"], {
-      cwd: repoDir,
-      allowFailure: true,
-    });
-  });
-});
-
-describe("worktree archive", () => {
-  test("creates a lightweight tag at the branch tip", async () => {
-    // Create worktree with a commit
-    const info = await create("test-archive", { cwd: repoDir });
-    await Bun.write(join(info.path, "archive-test.txt"), "archive content\n");
-    await git(["add", "."], { cwd: info.path });
-    await git(["commit", "-m", "add archive test file"], { cwd: info.path });
-
-    // Get the branch tip SHA
-    const tipSha = (await git(["rev-parse", "HEAD"], { cwd: info.path })).stdout;
-
-    // Remove worktree first so we're back on main
-    await git(["worktree", "remove", ".claude/worktrees/test-archive", "--force"], { cwd: repoDir });
-    await git(["worktree", "prune"], { cwd: repoDir, allowFailure: true });
-
-    // Archive the branch
-    const tagName = await archive("test-archive", { cwd: repoDir });
-
-    // Verify tag was created
-    expect(tagName).toMatch(/^archive\/test-archive\/\d{4}-\d{2}-\d{2}$/);
-
-    // Verify tag points to the correct SHA
-    const tagSha = (await git(["rev-parse", tagName], { cwd: repoDir })).stdout;
-    expect(tagSha).toBe(tipSha);
-
-    // Clean up
-    await git(["tag", "-d", tagName], { cwd: repoDir, allowFailure: true });
-    await git(["branch", "-D", "feature/test-archive"], { cwd: repoDir, allowFailure: true });
-  });
-
-  test("overwrites tag on same day (idempotent)", async () => {
-    const info = await create("test-archive-idem", { cwd: repoDir });
-    await Bun.write(join(info.path, "idem.txt"), "v1\n");
-    await git(["add", "."], { cwd: info.path });
-    await git(["commit", "-m", "first commit"], { cwd: info.path });
-
-    await git(["worktree", "remove", ".claude/worktrees/test-archive-idem", "--force"], { cwd: repoDir });
-    await git(["worktree", "prune"], { cwd: repoDir, allowFailure: true });
-
-    // Archive twice — should not error
-    const tag1 = await archive("test-archive-idem", { cwd: repoDir });
-    const tag2 = await archive("test-archive-idem", { cwd: repoDir });
-    expect(tag1).toBe(tag2);
-
-    // Clean up
-    await git(["tag", "-d", tag1], { cwd: repoDir, allowFailure: true });
-    await git(["branch", "-D", "feature/test-archive-idem"], { cwd: repoDir, allowFailure: true });
   });
 });
 

@@ -4,18 +4,16 @@
  * Full teardown of an abandoned epic's worktree and associated state.
  *
  * Steps (warn-and-continue for each):
- *   1. Archive branch tip as lightweight tag
- *   2. Remove worktree (force, even with uncommitted changes)
- *   3. Delete local branch (handled by remove)
- *   4. Update manifest phase to "cancelled"
- *   5. Close GitHub epic as not_planned (when enabled)
+ *   1. Remove worktree (force, even with uncommitted changes)
+ *   2. Delete local branch (handled by remove)
+ *   3. Update manifest phase to "cancelled"
+ *   4. Close GitHub epic as not_planned (when enabled)
  *
  * Idempotent — safe to run multiple times.
  */
 
 import type { BeastmodeConfig } from "../config";
 import {
-  archive as archiveWorktree,
   remove as removeWorktree,
 } from "../worktree";
 import { manifestPath, manifestExists, loadManifest } from "../manifest";
@@ -36,17 +34,7 @@ export async function cancelCommand(
   console.log(`[beastmode] Cancel: ${slug}`);
   console.log("");
 
-  // Step 1: Archive branch tip
-  try {
-    const tagName = await archiveWorktree(slug, { cwd: projectRoot });
-    console.log(`[beastmode] Archived branch tip: ${tagName}`);
-  } catch (err) {
-    console.warn(
-      `[beastmode] Warning: archive failed (branch may not exist): ${err instanceof Error ? err.message : err}`,
-    );
-  }
-
-  // Step 2+3: Remove worktree and delete branch
+  // Step 1+2: Remove worktree and delete branch
   try {
     await removeWorktree(slug, { cwd: projectRoot, deleteBranch: true });
     console.log("[beastmode] Worktree removed, branch deleted");
@@ -56,7 +44,7 @@ export async function cancelCommand(
     );
   }
 
-  // Step 4: Update manifest phase to cancelled
+  // Step 3: Update manifest phase to cancelled
   try {
     updateManifestCancelled(projectRoot, slug);
     console.log("[beastmode] Manifest updated: phase = cancelled");
@@ -66,7 +54,7 @@ export async function cancelCommand(
     );
   }
 
-  // Step 5: Close GitHub epic as not_planned
+  // Step 4: Close GitHub epic as not_planned
   if (config.github.enabled) {
     await closeGitHubEpic(projectRoot, slug);
   }

@@ -250,7 +250,7 @@ describe("WatchLoop", () => {
         );
         return {
           id: `dispatch-${opts.featureSlug}-${Date.now()}`,
-          worktreeSlug: `my-epic-${opts.featureSlug}`,
+          worktreeSlug: opts.epicSlug,
           promise: Promise.resolve({
             success: true,
             exitCode: 0,
@@ -275,6 +275,126 @@ describe("WatchLoop", () => {
     expect(dispatched).toContain("implement my-epic feat-c feature=feat-c");
 
     await new Promise((r) => setTimeout(r, 50));
+    await loop.stop();
+  });
+
+  it("fan-out sessions share the epic worktree slug", async () => {
+    const worktreeSlugs: string[] = [];
+    let scanCount = 0;
+
+    const implementEpic: EpicState = {
+      slug: "my-epic",
+      phase: "implement",
+      nextAction: {
+        phase: "implement",
+        args: ["my-epic"],
+        type: "fan-out",
+        features: ["feat-a", "feat-b"],
+      },
+      features: [
+        { slug: "feat-a", status: "pending" },
+        { slug: "feat-b", status: "pending" },
+      ],
+      gateBlocked: false,
+      costUsd: 0,
+    };
+
+    const deps = mockDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) return [implementEpic];
+        return [{ ...implementEpic, nextAction: null }];
+      },
+      sessionFactory: new SdkSessionFactory(async (opts) => {
+        worktreeSlugs.push(opts.epicSlug);
+        return {
+          id: `dispatch-${opts.featureSlug}-${Date.now()}`,
+          worktreeSlug: opts.epicSlug,
+          promise: Promise.resolve({
+            success: true,
+            exitCode: 0,
+            costUsd: 0.1,
+            durationMs: 500,
+          }),
+        };
+      }),
+    });
+
+    const loop = new WatchLoop(
+      { intervalSeconds: 999, projectRoot: TEST_ROOT },
+      deps,
+    );
+    loop.setRunning(true);
+
+    await loop.tick();
+
+    // Both sessions should use the same epic worktree slug
+    expect(worktreeSlugs).toEqual(["my-epic", "my-epic"]);
+
+    await new Promise((r) => setTimeout(r, 50));
+    await loop.stop();
+  });
+
+  it("no merge coordination after fan-out completion", async () => {
+    let scanCount = 0;
+    const loggedRuns: Array<{ phase: string; featureSlug?: string }> = [];
+
+    const implementEpic: EpicState = {
+      slug: "my-epic",
+      phase: "implement",
+      nextAction: {
+        phase: "implement",
+        args: ["my-epic"],
+        type: "fan-out",
+        features: ["feat-a", "feat-b"],
+      },
+      features: [
+        { slug: "feat-a", status: "pending" },
+        { slug: "feat-b", status: "pending" },
+      ],
+      gateBlocked: false,
+      costUsd: 0,
+    };
+
+    const deps = mockDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) return [implementEpic];
+        return [{ ...implementEpic, nextAction: null }];
+      },
+      sessionFactory: new SdkSessionFactory(async (opts) => ({
+        id: `dispatch-${opts.featureSlug}-${Date.now()}`,
+        worktreeSlug: opts.epicSlug,
+        promise: Promise.resolve({
+          success: true,
+          exitCode: 0,
+          costUsd: 0.1,
+          durationMs: 500,
+        }),
+      })),
+      logRun: async (opts) => {
+        loggedRuns.push({ phase: opts.phase, featureSlug: opts.featureSlug });
+      },
+    });
+
+    const loop = new WatchLoop(
+      { intervalSeconds: 999, projectRoot: TEST_ROOT },
+      deps,
+    );
+    loop.setRunning(true);
+
+    await loop.tick();
+
+    // Wait for all sessions to complete
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Sessions completed and were logged — no merge step occurred
+    expect(loggedRuns).toHaveLength(2);
+    expect(loggedRuns.every((r) => r.phase === "implement")).toBe(true);
+
+    // Tracker should be clean — no lingering merge sessions
+    expect(loop.getTracker().size).toBe(0);
+
     await loop.stop();
   });
 

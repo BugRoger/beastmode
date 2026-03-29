@@ -5,7 +5,7 @@
  *
  * All five manual phase commands (design, plan, implement, validate, release)
  * dispatch through the interactive runner. No phase-specific branching except
- * release teardown (archive, merge, remove worktree on success).
+ * release teardown (remove worktree on success).
  *
  * The SDK runner is preserved for the watch loop — it is not used here.
  */
@@ -20,8 +20,6 @@ import { appendRunLog } from "../utils/run-log";
 import {
   ensureWorktree,
   enter as enterWorktree,
-  archive as archiveWorktree,
-  merge as mergeWorktree,
   remove as removeWorktree,
 } from "../worktree";
 import { runPostDispatch } from "../post-dispatch";
@@ -90,16 +88,10 @@ export async function phaseCommand(
     `[beastmode] ${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`,
   );
 
-  // Release teardown: archive, merge, remove worktree on success
+  // Release teardown: remove worktree on success
   if (phase === "release" && result.exit_status === "success") {
     try {
-      console.log("[beastmode] Release successful — starting teardown...");
-
-      const tagName = await archiveWorktree(worktreeSlug, { cwd: projectRoot });
-      console.log(`[beastmode] Archived branch tip: ${tagName}`);
-
-      await mergeWorktree(worktreeSlug, { cwd: projectRoot });
-      console.log("[beastmode] Squash-merged to main");
+      console.log("[beastmode] Release successful — removing worktree...");
 
       await removeWorktree(worktreeSlug, { cwd: projectRoot });
       console.log("[beastmode] Worktree removed");

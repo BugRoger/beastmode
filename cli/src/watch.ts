@@ -14,8 +14,6 @@ import type {
 import type { SessionFactory } from "./session.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
-import { coordinateMerges } from "./merge-coordinator.js";
-import { remove as removeWorktree } from "./worktree.js";
 
 /** Injected dependencies — allows testing without real SDK/scanner. */
 export interface WatchDeps {
@@ -39,8 +37,6 @@ export class WatchLoop {
   private tracker = new DispatchTracker();
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
-  private featureResults = new Map<string, Map<string, { worktreeSlug: string; success: boolean }>>();
-
   constructor(config: WatchConfig, deps: WatchDeps) {
     this.config = config;
     this.deps = deps;
@@ -249,17 +245,6 @@ export class WatchLoop {
       .then(async (result) => {
         this.tracker.remove(session.id);
 
-        // Track feature results for post-fan-out merge coordination
-        if (session.featureSlug) {
-          if (!this.featureResults.has(session.epicSlug)) {
-            this.featureResults.set(session.epicSlug, new Map());
-          }
-          this.featureResults.get(session.epicSlug)!.set(session.featureSlug, {
-            worktreeSlug: session.worktreeSlug,
-            success: result.success,
-          });
-        }
-
         const featureLabel = session.featureSlug
           ? ` (${session.featureSlug})`
           : "";
@@ -282,11 +267,6 @@ export class WatchLoop {
           });
         } catch (err) {
           console.error("[watch] Failed to log run:", err);
-        }
-
-        // Check if all feature sessions for this epic are complete
-        if (session.featureSlug && !this.tracker.hasActiveSession(session.epicSlug)) {
-          await this.mergeCompletedFeatures(session.epicSlug);
         }
 
         // Event-driven re-scan: immediately process this epic again
@@ -316,79 +296,6 @@ export class WatchLoop {
     } catch (err) {
       console.error(`[watch] Re-scan of ${epicSlug} failed:`, err);
     }
-  }
-
-  /**
-   * After all feature sessions for an epic complete, merge successful
-   * feature branches to the epic branch and clean up worktrees.
-   */
-  private async mergeCompletedFeatures(epicSlug: string): Promise<void> {
-    const results = this.featureResults.get(epicSlug);
-    if (!results || results.size === 0) return;
-
-    const succeededSlugs: string[] = [];
-    const failedSlugs: string[] = [];
-
-    for (const [_featureSlug, result] of results) {
-      if (result.success) {
-        succeededSlugs.push(result.worktreeSlug);
-      } else {
-        failedSlugs.push(result.worktreeSlug);
-      }
-    }
-
-    if (succeededSlugs.length > 0) {
-      const epicBranch = `feature/${epicSlug}`;
-      const featureBranches = succeededSlugs.map((s) => `feature/${s}`);
-
-      console.log(
-        `[watch] ${epicSlug}: merging ${featureBranches.length} feature branch(es) to ${epicBranch}`,
-      );
-
-      try {
-        const mergeReport = await coordinateMerges(featureBranches, {
-          cwd: this.config.projectRoot,
-          targetBranch: epicBranch,
-        });
-
-        console.log(
-          `[watch] ${epicSlug}: merge complete — ${mergeReport.succeeded} succeeded, ${mergeReport.conflictResolved} resolved, ${mergeReport.failed} failed`,
-        );
-
-        // Remove worktrees for successfully merged features
-        for (const mergeResult of mergeReport.results) {
-          if (mergeResult.status === "success" || mergeResult.status === "conflict-resolved") {
-            const slug = mergeResult.branch.replace("feature/", "");
-            try {
-              await removeWorktree(slug, { cwd: this.config.projectRoot });
-            } catch (err) {
-              console.warn(`[watch] ${epicSlug}: failed to remove worktree ${slug}:`, err);
-            }
-          }
-        }
-
-        // Report preserved worktrees for failed merges
-        for (const mergeResult of mergeReport.results) {
-          if (mergeResult.status === "failed") {
-            const slug = mergeResult.branch.replace("feature/", "");
-            console.warn(
-              `[watch] ${epicSlug}: worktree preserved for retry: ${slug} (${mergeResult.error})`,
-            );
-          }
-        }
-      } catch (err) {
-        console.error(`[watch] ${epicSlug}: merge coordination failed:`, err);
-      }
-    }
-
-    if (failedSlugs.length > 0) {
-      console.log(
-        `[watch] ${epicSlug}: ${failedSlugs.length} feature(s) failed — worktrees preserved for retry`,
-      );
-    }
-
-    // Clear tracked results for this epic
-    this.featureResults.delete(epicSlug);
   }
 
   private scheduleTick(): void {
