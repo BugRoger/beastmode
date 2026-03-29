@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.39.0 — The Problem-Space Purification (Mar 2026)
+
+- **Module sketch removal** — Removed Execute step 3 (module sketch) from design phase; design stays in problem-space (decisions, gray areas, user stories) without premature structural decomposition
+- **Deep modules guidance** — Moved "deep modules" guidance (from A Philosophy of Software Design) to plan phase's architectural decisions step where it applies with actual codebase context
+- **Reference cleanup** — Removed all module-related references from design SKILL.md, express path, executive summary template, and PRD template
+
 ### v0.38.0 — The Skill Cleanup (Mar 2026)
 
 - **Checkpoint sync removal** — Removed orphaned "Sync GitHub" sections and `@../_shared/github.md` imports from all 5 checkpoint files; skills no longer reference the deleted shared GitHub utility
