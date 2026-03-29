@@ -38,3 +38,21 @@
 - State files are the recovery point, not sessions — stateless session model
 - On startup, scan for existing worktrees with uncommitted changes and re-dispatch from last committed state
 - Lockfile (`cli/.beastmode-watch.lock`) prevents duplicate watch instances
+
+## Manifest Lifecycle
+- CLI creates manifest at first phase dispatch (design) with slug, phase, and worktree info
+- ALWAYS enrich manifest from phase output files after each dispatch — CLI reads `state/<phase>/YYYY-MM-DD-<slug>.output.json`
+- CLI is the sole manifest mutator — skills never read or write the manifest
+- Manifest location: `.beastmode/pipeline/<slug>/manifest.json` — local-only, gitignored
+- ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
+
+## Post-Dispatch Pipeline
+- After every phase dispatch: read phase output from worktree `state/`, update manifest (advance phase, record artifacts, update feature statuses), run `syncGitHub(manifest, config)`
+- Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
+- ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
+
+## Phase Output Contract
+- Skills write structured output to `state/<phase>/YYYY-MM-DD-<slug>.output.json` at checkpoint
+- Universal schema: `{ "status": "completed", "artifacts": { ... } }` — features listed in artifacts
+- Output files committed on feature branch alongside skill artifacts — audit trail
+- CLI reads output files from the worktree's `state/` directory after dispatch

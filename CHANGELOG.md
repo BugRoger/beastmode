@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.31.0 — The Worktree Transaction (Mar 2026)
+
+- **CLI worktree lifecycle** — `ensureWorktree()` creates or reuses a single worktree per epic; all phases share it via cwd injection
+- **Cancel command** — `beastmode cancel <slug>` archives branch tip, removes worktree, deletes local branch, updates manifest, closes GitHub epic
+- **Skill worktree sweep** — Removed worktree references from ~16 skill files; skills receive feature slug as argument, never touch worktree internals
+- **Justfile and hook deletion** — Deleted `Justfile`, `hooks/worktree-create.sh`, `skills/_shared/worktree-manager.md`; removed `WorktreeCreate` from `hooks/hooks.json`
+- **Implement fan-out flattened** — Parallel SDK sessions share the epic worktree directly; no per-feature worktrees or merge-coordinator involvement
+
 ### v0.30.0 — The Bulletproof Scanner (Mar 2026)
 
 - **Canonical scanner rewrite** — Single `state-scanner.ts` replaces divergent `scanEpicsInline()` in watch-command.ts; manifests are the sole epic anchor, no design file fallback

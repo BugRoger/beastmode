@@ -8,7 +8,7 @@
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 - NEVER use @imports between hierarchy levels — convention-based paths only
-- Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains). Manifest JSON is the operational authority for feature lifecycle; GitHub is a synced mirror updated at checkpoint boundaries when enabled
+- Three data domains: State (feature workflow), Context (published knowledge), Meta (process knowledge with process + workarounds domains). Manifest JSON is the operational authority for feature lifecycle; GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled
 - ALWAYS create a matching L3 directory for every L2 file — structural invariant for retro expansion
 - State has no L1 index files — only empty phase subdirs with .gitkeep as workflow containers
 - research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
@@ -57,15 +57,16 @@ TypeScript CLI (`beastmode`) drives phase transitions via `beastmode <phase> <sl
 context/design/init-system.md
 
 ## GitHub State Model
-Manifest JSON is the operational authority for feature lifecycle. GitHub is a synced mirror updated at checkpoint boundaries when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Only Epics appear on the Projects V2 board — Features retain labels and sub-issue linkage but are not board items. Subagents are GitHub-unaware; only checkpoints read/write manifests and sync GitHub. GitHub API failures warn and continue without blocking.
+Manifest JSON is the operational authority for feature lifecycle, located at `.beastmode/pipeline/<slug>/manifest.json` (local-only, gitignored). GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines using blast-replace for mutually exclusive label families. Only Epics appear on the Projects V2 board. Skills are fully GitHub-unaware and manifest-unaware — they write structured output files to `state/`, and the CLI reads those outputs to update the manifest and sync GitHub. GitHub API failures warn and continue without blocking.
 
 1. ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) with label-based type/phase/status encoding
-2. ALWAYS use manifest JSON as operational authority — GitHub is a synced mirror, not the source of truth
-3. ALWAYS sync GitHub at checkpoint boundaries only — one sync step per phase between artifact-save and retro
-4. NEVER let GitHub API failures block workflow — warn and continue, next checkpoint retries
-5. NEVER make subagents GitHub-aware — only the checkpoint (main conversation) handles manifest and GitHub sync
+2. ALWAYS use manifest JSON as operational authority — GitHub is a one-way mirror, CLI never reads GitHub state to update the manifest
+3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` runs post-dispatch, same code path for manual and watch-loop execution
+4. NEVER let GitHub API failures block workflow — warn and continue, next dispatch retries
+5. NEVER make skills GitHub-aware or manifest-aware — skills write phase output files only, CLI is the sole manifest mutator
 6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — status/review is dropped
 7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
+8. ALWAYS use blast-replace for mutually exclusive label families (phase/*, status/*) — remove all labels in family, add correct one, idempotent
 
 context/design/github-state-model.md
 
@@ -83,14 +84,16 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 context/design/orchestration.md
 
 ## CLI Architecture
-TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle: create at first phase, persist through intermediate phases, squash-merge and remove at release. Justfile and WorktreeCreate hook are deleted. Optional cmux integration provides live terminal visibility when cmux is available.
+TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle, manifest lifecycle, and GitHub sync. After every phase dispatch, the CLI reads the phase output from the worktree, updates the manifest (advance phase, record artifacts, update feature statuses), then runs `syncGitHub(manifest, config)`. Manifest lives at `.beastmode/pipeline/<slug>/manifest.json`, local-only and gitignored. Justfile and WorktreeCreate hook are deleted. Optional cmux integration provides live terminal visibility when cmux is available.
 
-1. ALWAYS use CLI for phase execution and pipeline orchestration — no Justfile, CLI is the sole entry point
+1. ALWAYS use CLI for phase execution, pipeline orchestration, manifest management, and GitHub sync — no Justfile, CLI is the sole entry point
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
-4. ALWAYS reuse `.beastmode/config.yaml` with `cli:` and `cmux:` sections — no separate config file
-5. ALWAYS track per-dispatch costs in `.beastmode-runs.json` — observability without running Claude
-6. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
+4. ALWAYS own manifest lifecycle in the CLI — create at first dispatch, enrich from phase outputs at each checkpoint, CLI is the sole mutator
+5. ALWAYS run post-dispatch pipeline: read phase output from worktree `state/`, update manifest, run `syncGitHub(manifest, config)`
+6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup
+7. ALWAYS track per-dispatch costs in `.beastmode-runs.json` — observability without running Claude
+8. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 
 context/design/cli.md
 

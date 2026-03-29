@@ -13,7 +13,7 @@
 ## Data Domains
 - NEVER mix domain concerns — State tracks features, Context documents knowledge, Meta captures process knowledge
 - ALWAYS write phase artifacts to `state/` — retro promotes to `context/` and `meta/`
-- Manifest JSON is the operational authority for feature lifecycle with top-level `phase` field as the single phase source of truth; GitHub is a synced mirror updated at checkpoint boundaries when enabled — repo files remain the content store
+- Manifest JSON is the operational authority for feature lifecycle with top-level `phase` field as the single phase source of truth; GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled — repo files remain the content store
 - Write protection: phases write `state/` only, retro promotes — prevents unauthorized knowledge edits
 - Meta has two L2 domains per phase: process.md and workarounds.md — separates process patterns from beastmode feedback
 - Meta L3 records are topic-clustered with confidence tags — no date prefixes, observations accumulate by topic
