@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.38.0 — The Skill Cleanup (Mar 2026)
+
+- **Checkpoint sync removal** — Removed orphaned "Sync GitHub" sections and `@../_shared/github.md` imports from all 5 checkpoint files; skills no longer reference the deleted shared GitHub utility
+- **Status subcommand deletion** — Deleted `skills/beastmode/subcommands/status.md` and removed routing/help text from SKILL.md (status moved to CLI in v0.32.0)
+- **Context doc update** — DESIGN.md GitHub State Model section updated to reflect skills are no longer GitHub-aware at checkpoint time
+
 ### v0.37.0 — The Fork Point (Mar 2026)
 
 - **Fork-point tracking** — Worktrees fork from local main instead of stale `origin/HEAD`; fork-point SHA recorded in `WorktreeInfo` for audit trail

@@ -1,6 +1,6 @@
 ---
 name: beastmode
-description: Project initialization, status, idea tracking, and GitHub setup. Use when starting a new project, checking project state, reviewing deferred ideas, or bootstrapping GitHub labels and project boards.
+description: Project initialization, idea tracking, and GitHub setup. Use when starting a new project, reviewing deferred ideas, or bootstrapping GitHub labels and project boards.
 ---
 
 # /beastmode
@@ -10,7 +10,6 @@ Unified command for project management.
 ## Subcommands
 
 - `init` — Discover project knowledge and populate context hierarchy
-- `status` — Show features grouped by workflow phase
 - `ideas` — Surface and reconcile deferred ideas from design docs
 - `setup-github` — Bootstrap GitHub labels, project board, and state model
 
@@ -20,7 +19,6 @@ Unified command for project management.
 
 Extract subcommand from arguments:
 - If args start with "init" → route to `@subcommands/init.md`
-- If args start with "status" → route to `@subcommands/status.md`
 - If args start with "ideas" → route to `@subcommands/ideas.md`
 - If args start with "setup-github" → route to `@subcommands/setup-github.md`
 - If no args or unrecognized → show help
@@ -34,13 +32,11 @@ Usage: /beastmode <subcommand>
 
 Subcommands:
   init          Discover project knowledge and populate context hierarchy
-  status        Show features grouped by workflow phase
   ideas         Surface and reconcile deferred ideas
   setup-github  Bootstrap GitHub labels, project board, and state model
 
 Examples:
   /beastmode init
-  /beastmode status
   /beastmode ideas
   /beastmode setup-github
 ```

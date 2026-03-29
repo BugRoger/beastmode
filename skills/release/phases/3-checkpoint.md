@@ -22,37 +22,11 @@ Write the phase output contract file to `.beastmode/state/release/YYYY-MM-DD-<fe
 - The `changelog` path points to the release notes file (if one was generated)
 - If no changelog was written, omit the `changelog` field from artifacts
 
-## 2. Sync GitHub
-
-Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, or the manifest has no `github` block, **skip this step entirely**.
-
-When `github.enabled` is `true` and the manifest has `github.epic`:
-
-@../_shared/github.md
-
-Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
-
-1. **Advance Epic Phase** — set the Epic's phase label to `phase/done`:
-
-```bash
-gh issue edit <epic-number> --remove-label "phase/validate" --add-label "phase/done"
-```
-
-2. **Close Epic:**
-
-```bash
-gh issue close <epic-number>
-```
-
-3. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Done"`.
-
-If GitHub sync fails, continue — the release proceeds regardless.
-
 ---
 
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 
-## 3. Commit to Feature Branch
+## 2. Commit to Feature Branch
 
 Before merging to main, commit all release artifacts to the feature branch:
 
@@ -61,7 +35,7 @@ git add -A
 git commit -m "release(<feature>): checkpoint"
 ```
 
-## 4. Squash Merge to Main
+## 3. Squash Merge to Main
 
 ```bash
 feature_dir=$(pwd)
@@ -75,9 +49,9 @@ git tag "archive/$feature_branch"
 git merge --squash "$feature_branch"
 ```
 
-**Important:** The squash merge stages changes but does NOT commit. Proceed to step 5 to create the commit.
+**Important:** The squash merge stages changes but does NOT commit. Proceed to step 4 to create the commit.
 
-## 5. Commit Release
+## 4. Commit Release
 
 Create the single commit with GitHub release style message:
 
@@ -101,7 +75,7 @@ git commit -m "Release vX.Y.Z — <Title from CHANGELOG>
 
 Use the release notes generated in execute step 4 and categorized commits from execute step 3 as the commit body. Omit empty sections (no Fixes if none exist).
 
-## 6. Git Tagging
+## 5. Git Tagging
 
 ```bash
 git tag -a vX.Y.Z -m "Release X.Y.Z"
@@ -109,7 +83,7 @@ git tag -a vX.Y.Z -m "Release X.Y.Z"
 
 Suggest: `git push origin vX.Y.Z`
 
-## 7. Plugin Marketplace Update
+## 6. Plugin Marketplace Update
 
 Suggest running:
 ```bash
@@ -117,6 +91,6 @@ claude plugin marketplace update
 claude plugin update beastmode@beastmode-marketplace --scope project
 ```
 
-## 8. Complete
+## 7. Complete
 
 "Release complete."

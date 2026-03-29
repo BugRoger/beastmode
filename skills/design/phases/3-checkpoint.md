@@ -91,45 +91,11 @@ Write this JSON:
 - `features` — empty array; plan phase will populate
 - `lastUpdated` — current timestamp
 
-## 3. Sync GitHub
-
-Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, **skip this step entirely**.
-
-When `github.enabled` is `true`:
-
-@../_shared/github.md
-
-Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
-
-1. **Create Epic** using the "Create Epic" operation from github.md:
-   - Title: the feature name (human-readable form)
-   - Labels: `type/epic`, `phase/design`
-   - Body: standard Epic template with phase set to "Design"
-
-2. **Update Manifest** — add `github` block to the manifest written in Step 2:
-
-```json
-{
-  "design": "...",
-  "architecturalDecisions": [],
-  "features": [],
-  "github": {
-    "epic": <issue-number>,
-    "repo": "<owner>/<repo>"
-  },
-  "lastUpdated": "<ISO-8601 timestamp>"
-}
-```
-
-If any GitHub call fails (warn-and-continue), the manifest is written **without** the `github` block. The next checkpoint will retry.
-
-3. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Design"`.
-
-## 4. Phase Retro
+## 3. Phase Retro
 
 @../_shared/retro.md
 
-## 5. Commit and Handoff
+## 4. Commit and Handoff
 
 Commit all work to the feature branch:
 

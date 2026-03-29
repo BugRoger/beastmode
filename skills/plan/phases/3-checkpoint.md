@@ -46,55 +46,13 @@ If no existing manifest is found, create a new one (backwards compatibility with
 }
 ```
 
-Preserve any existing fields (e.g., `github` block from design checkpoint) — only add/overwrite `architecturalDecisions`, `features`, and `lastUpdated`.
+Preserve any existing fields — only add/overwrite `architecturalDecisions`, `features`, and `lastUpdated`.
 
-## 3. Sync GitHub
-
-Read `.beastmode/config.yaml`. If `github.enabled` is `false` or missing, or the manifest has no `github` block, **skip this step entirely**.
-
-When `github.enabled` is `true` and the manifest has `github.epic`:
-
-@../_shared/github.md
-
-Use warn-and-continue for all GitHub calls (see Error Handling Convention in github.md).
-
-1. **Advance Epic Phase** — set the Epic's phase label to `phase/plan` (removing the previous `phase/design`):
-
-```bash
-# Use Set Phase Label from github.md on the epic issue
-gh issue edit <epic-number> --remove-label "phase/design" --add-label "phase/plan"
-```
-
-2. **Add Epic to Project** — call the "Add to Project + Set Status" operation from github.md with the epic URL and status `"Plan"`.
-
-3. **Create Feature Sub-Issues** — for each feature in the manifest:
-   - Create a Feature issue using the "Create Feature" operation from github.md
-   - Labels: `type/feature`, `status/ready`
-   - Link as sub-issue of the Epic
-   - Write the issue number into the manifest feature entry as `github.issue`
-
-4. **Update Manifest** — write the enriched manifest with feature issue numbers:
-
-```json
-{
-  "features": [
-    {
-      "slug": "<feature-slug>",
-      "plan": "YYYY-MM-DD-<design>-<feature-slug>.md",
-      "status": "pending",
-      "github": {"issue": <issue-number>}
-    }
-  ]
-}
-```
-
-If any GitHub call fails (warn-and-continue), the manifest retains the features array but without `github.issue` fields. The next checkpoint will retry.
-
-## 4. Phase Retro
+## 3. Phase Retro
 
 @../_shared/retro.md
 
-## 5. Commit and Handoff
+## 4. Commit and Handoff
 
 Commit all work to the feature branch:
 

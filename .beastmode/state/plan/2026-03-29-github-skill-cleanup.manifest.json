@@ -1,0 +1,25 @@
+{
+  "design": ".beastmode/state/design/2026-03-29-github-skill-cleanup.md",
+  "architecturalDecisions": [
+    {"decision": "Skills are not GitHub-aware", "choice": "Already locked in v0.32.0 — CLI owns all GitHub sync via syncGitHub(manifest, config)"}
+  ],
+  "features": [
+    {
+      "slug": "checkpoint-sync-removal",
+      "plan": "2026-03-29-github-skill-cleanup-checkpoint-sync-removal.md",
+      "status": "completed",
+      "github": {"issue": 89}
+    },
+    {
+      "slug": "status-subcommand-removal",
+      "plan": "2026-03-29-github-skill-cleanup-status-subcommand-removal.md",
+      "status": "completed",
+      "github": {"issue": 90}
+    }
+  ],
+  "github": {
+    "epic": 87,
+    "repo": "BugRoger/beastmode"
+  },
+  "lastUpdated": "2026-03-29T18:06:00Z"
+}

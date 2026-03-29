@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "checkpoint-sync-removal", "status": "completed"}
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-29-github-skill-cleanup-checkpoint-sync-removal.md",
+  "tasks": [
+    {"id": 0, "subject": "Remove Sync GitHub from design checkpoint", "status": "completed"},
+    {"id": 1, "subject": "Remove Sync GitHub from plan checkpoint", "status": "completed"},
+    {"id": 2, "subject": "Remove Sync GitHub from implement checkpoint", "status": "completed"},
+    {"id": 3, "subject": "Remove Sync GitHub from validate checkpoint", "status": "completed"},
+    {"id": 4, "subject": "Remove Sync GitHub from release checkpoint", "status": "completed"},
+    {"id": 5, "subject": "Grep sweep for orphaned GitHub references", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-29T18:00:00Z"
+}
