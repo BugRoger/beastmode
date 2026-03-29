@@ -1,0 +1,13 @@
+{
+  "featurePlan": ".beastmode/state/plan/2026-03-29-remove-merge-logic-from-cli-strip-worktree-ops.md",
+  "tasks": [
+    {"id": 0, "subject": "Strip merge() and archive() from worktree.ts", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Simplify release teardown in phase.ts", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Remove archive step from cancel.ts", "wave": 1, "status": "pending"},
+    {"id": 3, "subject": "Update worktree.test.ts", "wave": 2, "status": "pending"},
+    {"id": 4, "subject": "Update phase-dispatch.test.ts", "wave": 2, "status": "pending"},
+    {"id": 5, "subject": "Update run-command.test.ts", "wave": 2, "status": "pending"},
+    {"id": 6, "subject": "Run tests and verify", "wave": 3, "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-29T16:00:00.000Z"
+}

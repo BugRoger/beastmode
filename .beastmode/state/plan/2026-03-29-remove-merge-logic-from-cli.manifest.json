@@ -11,7 +11,7 @@
     {
       "slug": "delete-merge-coordinator",
       "plan": "2026-03-29-remove-merge-logic-from-cli-delete-merge-coordinator.md",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "slug": "strip-worktree-ops",
@@ -28,5 +28,5 @@
     "epic": 92,
     "repo": "BugRoger/beastmode"
   },
-  "lastUpdated": "2026-03-29T15:30:00.000Z"
+  "lastUpdated": "2026-03-29T17:00:00.000Z"
 }
