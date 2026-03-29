@@ -56,6 +56,7 @@ Read the bump type from the release notes YAML frontmatter (written during execu
 phase: release
 slug: <feature>
 bump: minor
+status: completed
 ---
 ```
 
@@ -123,3 +124,5 @@ claude plugin update beastmode@beastmode-marketplace --scope user
 ## 11. Complete
 
 "Release complete."
+
+STOP. No additional output.

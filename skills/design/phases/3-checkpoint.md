@@ -14,6 +14,7 @@ Use this template:
 ---
 phase: design
 slug: <feature>
+status: completed
 ---
 
 ## Problem Statement

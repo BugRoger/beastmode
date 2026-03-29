@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-29-handoff-v2-release-normalize.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add status to release checkpoint frontmatter", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add STOP termination to release checkpoint", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-29T00:00:00Z"
+}

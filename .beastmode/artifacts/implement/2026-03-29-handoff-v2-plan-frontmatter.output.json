@@ -2,7 +2,7 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "manifest-schema", "status": "completed"}
+      {"slug": "plan-frontmatter", "status": "completed"}
     ]
   }
 }

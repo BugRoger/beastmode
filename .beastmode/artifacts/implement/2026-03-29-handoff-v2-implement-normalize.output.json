@@ -2,7 +2,7 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "manifest-validation", "status": "completed"}
+      {"slug": "implement-normalize", "status": "completed"}
     ]
   }
 }

@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(bun x:*)",
+      "Bash(bun install:*)"
+    ]
+  },
   "enabledPlugins": {
     "commons@overrides": true,
     "beastmode@beastmode-marketplace": true

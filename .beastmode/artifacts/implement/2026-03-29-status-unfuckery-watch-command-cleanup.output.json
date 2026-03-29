@@ -1,8 +1,0 @@
-{
-  "status": "completed",
-  "artifacts": {
-    "features": [
-      {"slug": "watch-command-cleanup", "status": "completed"}
-    ]
-  }
-}

@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "design-frontmatter", "plan": "2026-03-29-handoff-v2-design-frontmatter.md"},
+      {"slug": "implement-normalize", "plan": "2026-03-29-handoff-v2-implement-normalize.md"},
+      {"slug": "plan-frontmatter", "plan": "2026-03-29-handoff-v2-plan-frontmatter.md"},
+      {"slug": "release-normalize", "plan": "2026-03-29-handoff-v2-release-normalize.md"},
+      {"slug": "validate-stop", "plan": "2026-03-29-handoff-v2-validate-stop.md"}
+    ]
+  }
+}
