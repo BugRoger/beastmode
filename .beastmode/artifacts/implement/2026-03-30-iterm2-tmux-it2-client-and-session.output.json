@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "it2-client-and-session", "status": "completed"}
+    ]
+  }
+}
