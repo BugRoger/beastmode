@@ -15,6 +15,8 @@ import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session
 import { SdkSessionFactory } from "./session.js";
 import { CmuxSessionFactory } from "./cmux-session.js";
 import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
+import { ITermSessionFactory } from "./it2-session.js";
+import { It2Client } from "./it2-client.js";
 import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "./iterm2-detect.js";
 import * as worktree from "./worktree.js";
 import { scanEpics } from "./state-scanner.js";
@@ -396,9 +398,9 @@ export async function watchCommand(_args: string[]): Promise<void> {
 
   if (selected.strategy === "cmux") {
     innerFactory = new CmuxSessionFactory(new CmuxClient());
+  } else if (selected.strategy === "iterm2") {
+    innerFactory = new ITermSessionFactory(new It2Client());
   } else {
-    // Both "iterm2" (placeholder) and "sdk" use SdkSessionFactory for now
-    // ITermSessionFactory will be added by the it2-client-and-session feature
     innerFactory = new SdkSessionFactory(dispatchPhase);
   }
 

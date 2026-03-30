@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import { ITermSessionFactory } from "../it2-session";
-import type { IIt2Client, It2Tab, It2Pane } from "../it2-client";
+import type { IIt2Client, It2Session } from "../it2-client";
 import type { SessionCreateOpts } from "../session";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-it2-session");
@@ -15,60 +15,52 @@ const mockCreateWorktree = async (slug: string, opts: { cwd: string }) => ({
 let sessionIdCounter = 0;
 
 function createMockIt2Client(opts?: {
-  tabs?: It2Tab[];
-  listPanesFails?: Set<string>;
+  sessions?: It2Session[];
 }): IIt2Client & {
   calls: Array<{ method: string; args: unknown[] }>;
-  notifyArgs: Array<{ title: string; body: string }>;
+  badgeArgs: Array<{ sessionId: string; text: string }>;
 } {
   const calls: Array<{ method: string; args: unknown[] }> = [];
-  const notifyArgs: Array<{ title: string; body: string }> = [];
-  const existingTabs = opts?.tabs ?? [];
-  const listPanesFails = opts?.listPanesFails ?? new Set<string>();
+  const badgeArgs: Array<{ sessionId: string; text: string }> = [];
+  const existingSessions = opts?.sessions ?? [];
 
   return {
     calls,
-    notifyArgs,
+    badgeArgs,
     async ping() {
       calls.push({ method: "ping", args: [] });
       return true;
     },
-    async listTabs() {
-      calls.push({ method: "listTabs", args: [] });
-      return existingTabs;
+    async listSessions() {
+      calls.push({ method: "listSessions", args: [] });
+      return existingSessions;
     },
-    async createTab(name: string) {
+    async createTab() {
       const id = `tab-${++sessionIdCounter}`;
-      calls.push({ method: "createTab", args: [name] });
-      return { id, name };
+      calls.push({ method: "createTab", args: [] });
+      return id;
     },
-    async closeTab(sessionId: string) {
-      calls.push({ method: "closeTab", args: [sessionId] });
-    },
-    async splitPane(sessionId: string, _vertical?: boolean) {
+    async splitPane(sessionId: string) {
       const id = `pane-${++sessionIdCounter}`;
       calls.push({ method: "splitPane", args: [sessionId] });
-      return { id, tabId: sessionId };
+      return id;
     },
-    async closePane(sessionId: string) {
-      calls.push({ method: "closePane", args: [sessionId] });
+    async closeSession(sessionId: string) {
+      calls.push({ method: "closeSession", args: [sessionId] });
     },
     async sendText(sessionId: string, text: string) {
       calls.push({ method: "sendText", args: [sessionId, text] });
     },
-    async listPanes(tabSessionId: string) {
-      calls.push({ method: "listPanes", args: [tabSessionId] });
-      if (listPanesFails.has(tabSessionId)) {
-        throw new Error("session not found");
-      }
-      return [{ id: tabSessionId, tabId: tabSessionId }] as It2Pane[];
+    async setBadge(sessionId: string, text: string) {
+      calls.push({ method: "setBadge", args: [sessionId, text] });
+      badgeArgs.push({ sessionId, text });
     },
-    async setPaneTitle(sessionId: string, title: string) {
-      calls.push({ method: "setPaneTitle", args: [sessionId, title] });
+    async setTabTitle(sessionId: string, title: string) {
+      calls.push({ method: "setTabTitle", args: [sessionId, title] });
     },
-    async notify(title: string, body: string) {
-      calls.push({ method: "notify", args: [title, body] });
-      notifyArgs.push({ title, body });
+    async getSessionProperty(sessionId: string, property: string) {
+      calls.push({ method: "getSessionProperty", args: [sessionId, property] });
+      return "";
     },
   };
 }
@@ -121,7 +113,7 @@ describe("ITermSessionFactory", () => {
     if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
   });
 
-  test("creates tab named bm-{epicSlug}", async () => {
+  test("creates tab and sets title to bm-{epicSlug}", async () => {
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
       createWorktree: mockCreateWorktree,
@@ -137,7 +129,10 @@ describe("ITermSessionFactory", () => {
 
     const createTab = mockClient.calls.find((c) => c.method === "createTab");
     expect(createTab).toBeDefined();
-    expect(createTab!.args[0]).toBe("bm-my-epic");
+
+    const setTitle = mockClient.calls.find((c) => c.method === "setTabTitle");
+    expect(setTitle).toBeDefined();
+    expect(setTitle!.args[1]).toBe("bm-my-epic");
   });
 
   test("reuses existing tab for same epic", async () => {
@@ -255,7 +250,6 @@ describe("ITermSessionFactory", () => {
       artifacts: {},
     });
 
-    // Ensure the stale file's mtime is strictly in the past
     await tick();
 
     const handle = await factory.create(makeOpts());
@@ -265,7 +259,7 @@ describe("ITermSessionFactory", () => {
     expect(result.success).toBe(false); // timeout => failure
   });
 
-  test("notification on failure", async () => {
+  test("badge notification on failure", async () => {
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
       createWorktree: mockCreateWorktree,
@@ -279,12 +273,12 @@ describe("ITermSessionFactory", () => {
     });
     await handle.promise;
 
-    expect(mockClient.notifyArgs).toHaveLength(1);
-    expect(mockClient.notifyArgs[0].title).toContain("my-epic");
-    expect(mockClient.notifyArgs[0].title).toContain("failed");
+    expect(mockClient.badgeArgs).toHaveLength(1);
+    expect(mockClient.badgeArgs[0].text).toContain("ERROR");
+    expect(mockClient.badgeArgs[0].text).toContain("failed");
   });
 
-  test("no notification on success", async () => {
+  test("no badge on success", async () => {
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
       createWorktree: mockCreateWorktree,
@@ -298,7 +292,7 @@ describe("ITermSessionFactory", () => {
     });
     await handle.promise;
 
-    expect(mockClient.notifyArgs).toHaveLength(0);
+    expect(mockClient.badgeArgs).toHaveLength(0);
   });
 
   test("closes pane after completion (split pane only)", async () => {
@@ -325,13 +319,13 @@ describe("ITermSessionFactory", () => {
     });
     await h2.promise;
 
-    const closePane = mockClient.calls.filter(
-      (c) => c.method === "closePane",
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession",
     );
-    expect(closePane.length).toBeGreaterThanOrEqual(1);
+    expect(closeCalls.length).toBeGreaterThanOrEqual(1);
   });
 
-  test("cleanup closes tab", async () => {
+  test("cleanup closes tab session", async () => {
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
       createWorktree: mockCreateWorktree,
@@ -347,14 +341,17 @@ describe("ITermSessionFactory", () => {
 
     await factory.cleanup("my-epic");
 
-    const closeTab = mockClient.calls.find((c) => c.method === "closeTab");
-    expect(closeTab).toBeDefined();
-    expect(closeTab!.args[0]).toBe("tab-1"); // The tab session ID
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "tab-1",
+    );
+    expect(closeCalls).toHaveLength(1);
   });
 
   test("reconciliation adopts live sessions", async () => {
-    const liveTabs: It2Tab[] = [{ id: "existing-tab-1", name: "bm-live-epic" }];
-    mockClient = createMockIt2Client({ tabs: liveTabs });
+    const liveSessions: It2Session[] = [
+      { id: "existing-tab-1", name: "bm-live-epic", isAlive: true },
+    ];
+    mockClient = createMockIt2Client({ sessions: liveSessions });
 
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
@@ -378,21 +375,18 @@ describe("ITermSessionFactory", () => {
     );
     expect(createTabCalls).toHaveLength(0);
 
-    // Should NOT have closed the live tab during reconciliation
-    const closeTabCalls = mockClient.calls.filter(
-      (c) => c.method === "closeTab",
+    // Should NOT have closed the live session during reconciliation
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "existing-tab-1",
     );
-    expect(closeTabCalls).toHaveLength(0);
+    expect(closeCalls).toHaveLength(0);
   });
 
   test("reconciliation closes stale sessions", async () => {
-    const staleTabs: It2Tab[] = [
-      { id: "stale-tab-1", name: "bm-dead-epic" },
+    const staleSessions: It2Session[] = [
+      { id: "stale-tab-1", name: "bm-dead-epic", isAlive: false },
     ];
-    mockClient = createMockIt2Client({
-      tabs: staleTabs,
-      listPanesFails: new Set(["stale-tab-1"]),
-    });
+    mockClient = createMockIt2Client({ sessions: staleSessions });
 
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
@@ -408,16 +402,16 @@ describe("ITermSessionFactory", () => {
     });
     await handle.promise;
 
-    // Should have closed the stale tab
-    const closeTabCalls = mockClient.calls.filter(
-      (c) => c.method === "closeTab" && c.args[0] === "stale-tab-1",
+    // Should have closed the stale session
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "stale-tab-1",
     );
-    expect(closeTabCalls).toHaveLength(1);
+    expect(closeCalls).toHaveLength(1);
   });
 
   test("reconciliation is idempotent", async () => {
     mockClient = createMockIt2Client({
-      tabs: [{ id: "tab-x", name: "bm-some-epic" }],
+      sessions: [{ id: "tab-x", name: "bm-some-epic", isAlive: true }],
     });
 
     const factory = new ITermSessionFactory(mockClient, {
@@ -436,7 +430,7 @@ describe("ITermSessionFactory", () => {
     });
     await h1.promise;
 
-    // Second create should NOT call listTabs again
+    // Second create should NOT call listSessions again
     const h2 = await factory.create(
       makeOpts({ epicSlug: "some-epic", phase: "validate" }),
     );
@@ -447,10 +441,10 @@ describe("ITermSessionFactory", () => {
     });
     await h2.promise;
 
-    const listTabsCalls = mockClient.calls.filter(
-      (c) => c.method === "listTabs",
+    const listCalls = mockClient.calls.filter(
+      (c) => c.method === "listSessions",
     );
-    expect(listTabsCalls).toHaveLength(1); // Only called once
+    expect(listCalls).toHaveLength(1); // Only called once
   });
 
   test("handle has correct worktreeSlug", async () => {

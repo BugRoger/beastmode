@@ -19,7 +19,7 @@ export interface GitHubConfig {
   "project-name"?: string;
 }
 
-export type DispatchStrategy = "sdk" | "cmux" | "auto";
+export type DispatchStrategy = "sdk" | "cmux" | "iterm2" | "auto";
 
 export interface CliConfig {
   interval?: number;

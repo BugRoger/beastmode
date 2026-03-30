@@ -1,9 +1,9 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-03-30-iterm2-tmux-reconciliation-notify.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Create It2Client with reconciliation query methods", "status": "pending", "wave": 1},
-    {"id": 1, "subject": "Task 1: Create ITermSessionFactory with reconciliation and badge notifications", "status": "pending", "wave": 1},
+    {"id": 0, "subject": "Task 0: Verify It2Client reconciliation query API", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Verify ITermSessionFactory reconciliation and badge notifications", "status": "pending", "wave": 1},
     {"id": 2, "subject": "Task 2: Wire iterm2 strategy into dispatch selection and update config types", "status": "pending", "wave": 2}
   ],
-  "lastUpdated": "2026-03-30T00:00:00Z"
+  "lastUpdated": "2026-03-30T12:00:00Z"
 }
