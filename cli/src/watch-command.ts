@@ -6,9 +6,9 @@
  */
 
 import { resolve } from "node:path";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { loadConfig } from "./config.js";
-import { WatchLoop } from "./watch.js";
+import { WatchLoop, watchLog, watchErr } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
 import type { SessionResult } from "./watch-types.js";
 import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
@@ -21,7 +21,28 @@ import * as store from "./manifest-store.js";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest.js";
 import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
 import type { Phase } from "./types.js";
-import { loadWorktreePhaseOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
+import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput, extractFeatureStatuses, extractArtifactPaths, filenameMatchesEpic } from "./phase-output.js";
+
+/**
+ * Remove stale output.json files from a worktree's artifacts directory
+ * that don't belong to the current epic. Prevents the stop hook or
+ * reconciliation from picking up outputs from prior epics.
+ */
+function cleanStaleOutputs(worktreePath: string, phase: string, epicSlug: string): void {
+  const dir = resolve(worktreePath, ".beastmode", "artifacts", phase);
+  if (!existsSync(dir)) return;
+
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith(".output.json")) continue;
+    if (filenameMatchesEpic(f, epicSlug)) continue;
+    try {
+      unlinkSync(resolve(dir, f));
+      watchLog(`[watch] Cleaned stale output: ${phase}/${f}`);
+    } catch {
+      // Best-effort cleanup
+    }
+  }
+}
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -38,7 +59,8 @@ function findProjectRoot(from: string = process.cwd()): string {
  * and uses it to enrich/advance the manifest. Same logic as post-dispatch,
  * reading from the correct location (.beastmode/artifacts/<phase>/).
  */
-function reconcileState(opts: {
+/** @internal Exported for testing. */
+export function reconcileState(opts: {
   worktreePath: string;
   projectRoot: string;
   epicSlug: string;
@@ -52,8 +74,13 @@ function reconcileState(opts: {
   let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
   if (!manifest) return undefined;
 
-  // 2. Load output.json from worktree artifacts dir
-  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
+  // 2. Load output.json from worktree artifacts dir.
+  // For implement fan-out (featureSlug present), load the feature-specific output
+  // instead of the epic-level one — prevents one feature's output from marking
+  // other features completed via enrich.
+  const output = opts.featureSlug
+    ? loadWorktreeFeatureOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug, opts.featureSlug)
+    : loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug);
 
   // 3. Enrich from output.json (features, artifact paths)
   if (output) {
@@ -88,8 +115,13 @@ function reconcileState(opts: {
   }
 
   // 4. Handle implement fan-out: mark specific feature completed
+  // Only mark completed if the feature produced its own output.json with status "completed" —
+  // a session that exits 0 without writing an artifact did not actually implement anything.
   if (opts.phase === "implement" && opts.featureSlug) {
-    manifest = markFeature(manifest, opts.featureSlug, "completed");
+    const featureOutput = loadWorktreeFeatureOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug, opts.featureSlug);
+    if (featureOutput?.status === "completed") {
+      manifest = markFeature(manifest, opts.featureSlug, "completed");
+    }
   }
 
   // 5. Handle validate regression
@@ -138,15 +170,20 @@ class ReconcilingFactory implements SessionFactory {
   }
 
   async create(opts: SessionCreateOpts): Promise<SessionHandle> {
-    const handle = await this.inner.create(opts);
     const { projectRoot } = this;
 
+    // Worktree path is deterministic from epic slug — compute before dispatch
     const worktreePath = resolve(
       projectRoot,
       ".claude",
       "worktrees",
-      handle.worktreeSlug,
+      opts.epicSlug,
     );
+
+    // Clean stale output.json from prior epics before dispatching
+    cleanStaleOutputs(worktreePath, opts.phase, opts.epicSlug);
+
+    const handle = await this.inner.create(opts);
 
     const wrappedPromise = handle.promise.then(async (result) => {
       let sessionResult = result;
@@ -154,22 +191,22 @@ class ReconcilingFactory implements SessionFactory {
       // Release teardown: archive, remove on success
       if (opts.phase === "release" && sessionResult.success) {
         try {
-          console.log(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
+          watchLog(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
           const tagName = await worktree.archive(handle.worktreeSlug, { cwd: projectRoot });
-          console.log(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
+          watchLog(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
 
           await worktree.remove(handle.worktreeSlug, { cwd: projectRoot });
-          console.log(`[watch] ${opts.epicSlug}: worktree removed`);
+          watchLog(`[watch] ${opts.epicSlug}: worktree removed`);
 
           // Mark manifest as done so scanner skips it
           const doneManifest = store.load(projectRoot, opts.epicSlug);
           if (doneManifest) {
             store.save(projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
           }
-          console.log(`[watch] ${opts.epicSlug}: manifest marked done`);
+          watchLog(`[watch] ${opts.epicSlug}: manifest marked done`);
         } catch (err) {
-          console.error(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
-          console.error(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);
+          watchErr(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
+          watchErr(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);
           sessionResult = { ...sessionResult, success: false };
         }
       }
@@ -339,10 +376,10 @@ export async function watchCommand(_args: string[]): Promise<void> {
   if (strategy === "cmux" || strategy === "auto") {
     const available = await cmuxAvailable();
     if (available) {
-      console.log("[watch] Using cmux dispatch strategy");
+      watchLog("[watch] Using cmux dispatch strategy");
       innerFactory = new CmuxSessionFactory(new CmuxClient());
     } else if (strategy === "cmux") {
-      console.error("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
+      watchErr("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
       innerFactory = new SdkSessionFactory(dispatchPhase);
     } else {
       innerFactory = new SdkSessionFactory(dispatchPhase);

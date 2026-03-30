@@ -14,6 +14,38 @@ import type {
 import type { SessionFactory } from "./session.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { execSync } from "node:child_process";
+
+// --- Timestamped logging ---
+
+function ts(): string {
+  return new Date().toISOString().slice(11, 19);
+}
+
+/** Log with timestamp. */
+export function watchLog(msg: string): void {
+  console.log(`${ts()} ${msg}`);
+}
+
+/** Error log with timestamp. */
+export function watchErr(msg: string, ...args: unknown[]): void {
+  console.error(`${ts()} ${msg}`, ...args);
+}
+
+// --- Version banner ---
+
+function resolveVersion(projectRoot: string): string {
+  try {
+    const pkg = JSON.parse(readFileSync(resolve(projectRoot, "cli", "package.json"), "utf-8"));
+    const version = pkg.version ?? "unknown";
+    const hash = execSync("git rev-parse --short HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim();
+    return `v${version} (${hash})`;
+  } catch {
+    return "v?.?.?";
+  }
+}
 
 /** Injected dependencies — allows testing without real SDK/scanner. */
 export interface WatchDeps {
@@ -49,14 +81,13 @@ export class WatchLoop {
   async start(): Promise<void> {
     if (!acquireLock(this.config.projectRoot)) {
       const msg = "[watch] Another watch process is already running. Exiting.";
-      console.error(msg);
+      watchErr(msg);
       throw new Error(msg);
     }
 
     this.running = true;
-    console.log(
-      `[watch] Started (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`,
-    );
+    const version = resolveVersion(this.config.projectRoot);
+    watchLog(`[watch] Started ${version} (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`);
 
     this.setupSignalHandlers();
 
@@ -77,10 +108,10 @@ export class WatchLoop {
       this.pollTimer = null;
     }
 
-    console.log("[watch] Shutting down...");
+    watchLog("[watch] Shutting down...");
 
     if (this.tracker.size > 0) {
-      console.log(
+      watchLog(
         `[watch] Waiting for ${this.tracker.size} active session(s)...`,
       );
       this.tracker.abortAll();
@@ -88,7 +119,7 @@ export class WatchLoop {
     }
 
     releaseLock(this.config.projectRoot);
-    console.log("[watch] Stopped.");
+    watchLog("[watch] Stopped.");
   }
 
   /** Get the dispatch tracker (for testing/status). */
@@ -114,7 +145,7 @@ export class WatchLoop {
       const result = await this.deps.scanEpics(this.config.projectRoot);
       epics = Array.isArray(result) ? result : result.epics;
     } catch (err) {
-      console.error("[watch] State scan failed:", err);
+      watchErr("[watch] State scan failed:", err);
       return;
     }
 
@@ -126,10 +157,10 @@ export class WatchLoop {
   private async processEpic(epic: EnrichedManifest): Promise<void> {
     // Skip epics blocked on human gates
     if (epic.blocked) {
-      console.log(
+      watchLog(
         `[watch] ${epic.slug}: paused — human gate requires manual intervention`,
       );
-      console.log(
+      watchLog(
         `[watch]   Run: beastmode ${epic.phase} ${epic.slug}`,
       );
       return;
@@ -156,9 +187,13 @@ export class WatchLoop {
     if (this.tracker.hasPhaseSession(epic.slug, action.phase)) return;
     if (this.tracker.hasEpicWorktreeSession(epic.slug)) return;
 
+    // Reserve the slot synchronously before the async create to prevent
+    // concurrent rescans from dispatching the same phase.
+    this.tracker.reserve(epic.slug, action.phase);
+
     const abortController = new AbortController();
 
-    console.log(
+    watchLog(
       `[watch] ${epic.slug}: dispatching ${action.phase} ${action.args.join(" ")}`,
     );
 
@@ -184,7 +219,8 @@ export class WatchLoop {
       this.tracker.add(session);
       this.watchSession(session);
     } catch (err) {
-      console.error(
+      this.tracker.unreserve(epic.slug, action.phase);
+      watchErr(
         `[watch] ${epic.slug}: failed to dispatch ${action.phase}:`,
         err,
       );
@@ -195,13 +231,66 @@ export class WatchLoop {
     epic: EnrichedManifest,
     features: string[],
   ): Promise<void> {
-    for (const featureSlug of features) {
+    // Validate feature provenance when worktree exists: each feature must
+    // have a plan file with matching epic frontmatter. Skip check if worktree
+    // hasn't been created yet (session factory will create it).
+    const worktreePath = resolve(
+      this.config.projectRoot,
+      ".claude",
+      "worktrees",
+      epic.slug,
+    );
+
+    let featuresToDispatch = features;
+
+    if (existsSync(worktreePath)) {
+      const validFeatures = features.filter((featureSlug) => {
+        const feature = epic.features.find((f) => f.slug === featureSlug);
+        if (!feature?.plan) {
+          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — no plan file reference`);
+          return false;
+        }
+        const planPath = resolve(worktreePath, ".beastmode", "artifacts", "plan", feature.plan);
+        if (!existsSync(planPath)) {
+          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file missing: ${feature.plan}`);
+          return false;
+        }
+        try {
+          const content = readFileSync(planPath, "utf-8");
+          const match = content.match(/^epic:\s*(.+)$/m);
+          if (match) {
+            const fileEpic = match[1].trim().replace(/^['"]|['"]$/g, "");
+            if (fileEpic !== epic.slug) {
+              watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epic.slug}, got ${fileEpic})`);
+              return false;
+            }
+          }
+        } catch {
+          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file unreadable`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFeatures.length === 0 && features.length > 0) {
+        watchErr(`[watch] ${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
+        return;
+      }
+
+      featuresToDispatch = validFeatures;
+    }
+
+    for (const featureSlug of featuresToDispatch) {
       // Don't double-dispatch the same feature
       if (this.tracker.hasFeatureSession(epic.slug, featureSlug)) continue;
 
+      // Reserve the slot synchronously before the async create to prevent
+      // concurrent rescans from dispatching the same feature.
+      this.tracker.reserve(epic.slug, "implement", featureSlug);
+
       const abortController = new AbortController();
 
-      console.log(
+      watchLog(
         `[watch] ${epic.slug}: dispatching implement ${epic.slug} ${featureSlug}`,
       );
 
@@ -229,7 +318,8 @@ export class WatchLoop {
         this.tracker.add(session);
         this.watchSession(session);
       } catch (err) {
-        console.error(
+        this.tracker.unreserve(epic.slug, "implement", featureSlug);
+        watchErr(
           `[watch] ${epic.slug}: failed to dispatch implement for ${featureSlug}:`,
           err,
         );
@@ -253,7 +343,7 @@ export class WatchLoop {
         const progressLabel = result.progress
           ? ` [${result.progress.completed}/${result.progress.total}]`
           : "";
-        console.log(
+        watchLog(
           `[watch] ${session.epicSlug}: ${session.phase}${featureLabel} ${status}${progressLabel} ($${result.costUsd.toFixed(2)}, ${(result.durationMs / 1000).toFixed(0)}s)`,
         );
 
@@ -267,7 +357,7 @@ export class WatchLoop {
             projectRoot: this.config.projectRoot,
           });
         } catch (err) {
-          console.error("[watch] Failed to log run:", err);
+          watchErr("[watch] Failed to log run:", err);
         }
 
         // Event-driven re-scan: immediately process this epic again
@@ -278,7 +368,7 @@ export class WatchLoop {
       .catch((err) => {
         this.tracker.remove(session.id);
         if (err?.name !== "AbortError") {
-          console.error(
+          watchErr(
             `[watch] ${session.epicSlug}: session error:`,
             err,
           );
@@ -296,7 +386,7 @@ export class WatchLoop {
         await this.processEpic(epic);
       }
     } catch (err) {
-      console.error(`[watch] Re-scan of ${epicSlug} failed:`, err);
+      watchErr(`[watch] Re-scan of ${epicSlug} failed:`, err);
     }
   }
 
@@ -311,7 +401,7 @@ export class WatchLoop {
 
   private setupSignalHandlers(): void {
     const handler = async () => {
-      console.log("\n[watch] Received SIGINT — initiating graceful shutdown...");
+      watchLog("\n[watch] Received SIGINT — initiating graceful shutdown...");
       await this.stop();
       process.exit(0);
     };

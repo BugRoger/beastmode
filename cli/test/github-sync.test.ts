@@ -75,11 +75,12 @@ mock.module("../src/gh", () => ({
 // NOW import the module under test
 import { syncGitHub, type SyncResult } from "../src/github-sync";
 import type { PipelineManifest, ManifestFeature } from "../src/manifest";
-import type { BeastmodeConfig, GitHubConfig } from "../src/config";
+import type { BeastmodeConfig } from "../src/config";
+import type { ResolvedGitHub } from "../src/github-discovery";
 
 // --- Test helpers ---
 
-function makeConfig(overrides: Partial<GitHubConfig> = {}): BeastmodeConfig {
+function makeConfig(overrides: Partial<BeastmodeConfig["github"]> = {}): BeastmodeConfig {
   return {
     gates: {},
     github: {
@@ -90,13 +91,20 @@ function makeConfig(overrides: Partial<GitHubConfig> = {}): BeastmodeConfig {
   };
 }
 
-function makeConfigWithProject(): BeastmodeConfig {
-  return makeConfig({
-    "project-name": "Test Board",
-    "project-id": "PVT_123",
-    "project-number": 7,
-    "field-id": "PVTSSF_456",
-    "field-options": {
+function makeResolved(overrides: Partial<ResolvedGitHub> = {}): ResolvedGitHub {
+  return {
+    repo: "org/repo",
+    ...overrides,
+  };
+}
+
+function makeResolvedWithProject(overrides: Partial<ResolvedGitHub> = {}): ResolvedGitHub {
+  return {
+    repo: "org/repo",
+    projectNumber: 7,
+    projectId: "PVT_123",
+    fieldId: "PVTSSF_456",
+    fieldOptions: {
       Backlog: "opt-backlog",
       Design: "opt-design",
       Plan: "opt-plan",
@@ -105,7 +113,8 @@ function makeConfigWithProject(): BeastmodeConfig {
       Release: "opt-release",
       Done: "opt-done",
     },
-  });
+    ...overrides,
+  };
 }
 
 function makeManifest(
@@ -117,7 +126,7 @@ function makeManifest(
     features: [],
     artifacts: {},
     lastUpdated: "2026-03-29T00:00:00Z",
-    github: { epic: 10, repo: "org/repo" },
+    github: { epic: 10 },
     ...overrides,
   };
 }
@@ -145,8 +154,9 @@ describe("syncGitHub", () => {
     test("returns immediately with warning, no gh calls", async () => {
       const manifest = makeManifest();
       const config = makeConfig({ enabled: false });
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.warnings).toContain("GitHub sync disabled in config");
       expect(mockCalls).toHaveLength(0);
@@ -156,35 +166,32 @@ describe("syncGitHub", () => {
   });
 
   // -------------------------------------------------------
-  // 2. No repo in manifest
+  // 2. Repo comes from resolved, not manifest
   // -------------------------------------------------------
-  describe("when no repo in manifest", () => {
-    test("returns with warning, no gh calls", async () => {
-      const manifest = makeManifest({ github: undefined });
+  describe("repo source", () => {
+    test("uses resolved.repo for all GitHub operations", async () => {
+      const manifest = makeManifest();
+      delete (manifest.github as Record<string, unknown>).epic;
       const config = makeConfig();
+      const resolved = makeResolved({ repo: "custom/repo" });
+      mockReturns.ghIssueCreate = 99;
 
-      const result = await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
-      expect(result.warnings).toContain(
-        "No github.repo in manifest — skipping sync",
-      );
-      expect(mockCalls).toHaveLength(0);
+      const createCalls = callsTo("ghIssueCreate");
+      expect(createCalls[0].args[0]).toBe("custom/repo");
     });
 
-    test("handles manifest with github but no repo", async () => {
-      // Edge: manifest.github exists but repo is empty string — shouldn't
-      // happen in practice, but the code checks for truthiness of `repo`.
-      const manifest = makeManifest({
-        github: { epic: 10, repo: "" as unknown as string },
-      });
+    test("manifest does not need github.repo field", async () => {
+      const manifest = makeManifest({ github: { epic: 10 } });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
-
-      expect(result.warnings).toContain(
+      // Should not throw or warn about missing repo
+      const result = await syncGitHub(manifest, config, resolved);
+      expect(result.warnings).not.toContain(
         "No github.repo in manifest — skipping sync",
       );
-      expect(mockCalls).toHaveLength(0);
     });
   });
 
@@ -193,18 +200,14 @@ describe("syncGitHub", () => {
   // -------------------------------------------------------
   describe("epic creation", () => {
     test("creates epic when manifest has no github.epic", async () => {
-      const manifest = makeManifest({
-        github: { epic: 0 as unknown as number, repo: "org/repo" },
-      });
-      // epic is 0 = falsy, so the code should try to create
-      // Actually, let's use the more realistic case: no epic field at all
-      const manifest2 = makeManifest();
-      delete (manifest2.github as Record<string, unknown>).epic;
+      const manifest = makeManifest();
+      delete (manifest.github as Record<string, unknown>).epic;
 
       mockReturns.ghIssueCreate = 99;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest2, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.epicCreated).toBe(true);
       expect(result.epicNumber).toBe(99);
@@ -217,7 +220,7 @@ describe("syncGitHub", () => {
       // Verify the create call with correct args
       const createCalls = callsTo("ghIssueCreate");
       expect(createCalls).toHaveLength(1);
-      expect(createCalls[0].args[0]).toBe("org/repo"); // repo
+      expect(createCalls[0].args[0]).toBe("org/repo"); // repo from resolved
       expect(createCalls[0].args[1]).toBe("test-epic"); // title = slug
       expect(createCalls[0].args[3]).toEqual(["type/epic", "phase/design"]); // labels
     });
@@ -229,12 +232,13 @@ describe("syncGitHub", () => {
         features: [],
         artifacts: {},
         lastUpdated: "2026-03-29T00:00:00Z",
-        github: { repo: "org/repo" } as unknown as PipelineManifest["github"],
+        github: {} as unknown as PipelineManifest["github"],
       };
       mockReturns.ghIssueCreate = 55;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.epicCreated).toBe(true);
       const epicMutation = result.mutations.find(m => m.type === "setEpic");
@@ -242,16 +246,14 @@ describe("syncGitHub", () => {
       expect(epicMutation!.type === "setEpic" && epicMutation!.epicNumber).toBe(55);
     });
 
-    test("initializes manifest.github when it is undefined and repo comes from... wait, repo is required", async () => {
-      // This test confirms that if github is somehow missing epic but has repo,
-      // the function creates the epic and sets it. We already tested this above.
-      // Instead let's verify the body format.
+    test("includes correct phase in epic body and labels", async () => {
       const manifest = makeManifest({ phase: "implement" });
       delete (manifest.github as Record<string, unknown>).epic;
       mockReturns.ghIssueCreate = 77;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const createCalls = callsTo("ghIssueCreate");
       // Body should contain the phase
@@ -275,8 +277,9 @@ describe("syncGitHub", () => {
       delete (manifest.github as Record<string, unknown>).epic;
       mockErrors.ghIssueCreate = true;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.warnings).toContain("Failed to create epic issue");
       expect(result.epicCreated).toBe(false);
@@ -299,8 +302,9 @@ describe("syncGitHub", () => {
         "phase/plan",
       ];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const editCalls = callsTo("ghIssueEdit");
       expect(editCalls.length).toBeGreaterThanOrEqual(1);
@@ -323,8 +327,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ phase: "validate" });
       mockReturns.ghIssueLabels = ["type/epic", "phase/plan"];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       const editCalls = callsTo("ghIssueEdit");
       const epicEdit = editCalls.find((c) => c.args[1] === 10);
@@ -348,16 +353,15 @@ describe("syncGitHub", () => {
       // Labels already match
       mockReturns.ghIssueLabels = ["type/epic", "phase/design"];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // No edit calls should be made for the epic labels
       const editCalls = callsTo("ghIssueEdit").filter(
         (c) => c.args[1] === 10,
       );
       expect(editCalls).toHaveLength(0);
-      // labelsUpdated should not include the epic's phase label
-      // (could still be 0 if no features need updating)
     });
   });
 
@@ -370,8 +374,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockReturns.ghIssueCreate = 50;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.featuresCreated).toBe(1);
       // Verify mutation returned for caller to apply
@@ -397,8 +402,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockReturns.ghIssueCreate = 51;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const createCalls = callsTo("ghIssueCreate");
       expect(createCalls[0].args[3]).toEqual([
@@ -415,8 +421,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockReturns.ghIssueCreate = 52;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const createCalls = callsTo("ghIssueCreate");
       expect(createCalls[0].args[3]).toEqual([
@@ -430,8 +437,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockErrors.ghIssueCreate = true;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.featuresCreated).toBe(0);
       expect(result.warnings).toContain(
@@ -451,8 +459,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockReturns.ghIssueCreate = 60;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const subCalls = callsTo("ghSubIssueAdd");
       expect(subCalls).toHaveLength(1);
@@ -469,8 +478,9 @@ describe("syncGitHub", () => {
       });
       const manifest = makeManifest({ features: [feature] });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // Should not have called ghSubIssueAdd
       const subCalls = callsTo("ghSubIssueAdd");
@@ -489,18 +499,11 @@ describe("syncGitHub", () => {
         github: { issue: 20 },
       });
       const manifest = makeManifest({ features: [feature] });
-
-      // Return different labels per call: first for epic, second for feature
-      let labelCallCount = 0;
-      mockReturns.ghIssueLabels = undefined; // disable default
-      // We need per-call returns. Overwrite the mock behavior via
-      // a simple counter approach by setting ghIssueLabels to a function-like.
-      // Actually the mock always returns mockReturns.ghIssueLabels.
-      // So we set it to what the feature has:
       mockReturns.ghIssueLabels = ["type/feature", "status/ready"];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       // There should be edit calls. Find the one for issue 20.
       const editCalls = callsTo("ghIssueEdit");
@@ -525,8 +528,9 @@ describe("syncGitHub", () => {
       // Status label already matches: status/ready for "pending"
       mockReturns.ghIssueLabels = ["type/feature", "status/ready"];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // No edit call for feature issue 21
       const featureEdits = callsTo("ghIssueEdit").filter(
@@ -548,8 +552,9 @@ describe("syncGitHub", () => {
       });
       const manifest = makeManifest({ features: [feature] });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.featuresClosed).toBe(1);
       const closeCalls = callsTo("ghIssueClose");
@@ -566,12 +571,11 @@ describe("syncGitHub", () => {
       });
       const manifest = makeManifest({ features: [feature] });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // No ghIssueLabels call for the feature (issue 25)
-      // ghIssueLabels is called for the epic (issue 10), but not for
-      // completed features since they return early after close.
       const labelCalls = callsTo("ghIssueLabels");
       const featureLabelCalls = labelCalls.filter((c) => c.args[1] === 25);
       expect(featureLabelCalls).toHaveLength(0);
@@ -586,8 +590,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feature] });
       mockErrors.ghIssueClose = true;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.featuresClosed).toBe(0);
       expect(result.warnings).toContain(
@@ -603,8 +608,9 @@ describe("syncGitHub", () => {
     test("closes epic when phase is 'done'", async () => {
       const manifest = makeManifest({ phase: "done" });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.epicClosed).toBe(true);
       const closeCalls = callsTo("ghIssueClose");
@@ -616,8 +622,9 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ phase: "done" });
       mockErrors.ghIssueClose = true;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.epicClosed).toBe(false);
       expect(result.warnings).toContain("Failed to close epic");
@@ -626,8 +633,9 @@ describe("syncGitHub", () => {
     test("does not close epic for normal phases", async () => {
       const manifest = makeManifest({ phase: "release" });
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // No close calls for the epic
       const closeCalls = callsTo("ghIssueClose");
@@ -646,8 +654,9 @@ describe("syncGitHub", () => {
       // Labels return normally
       mockReturns.ghIssueLabels = ["status/ready"];
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       // Both features should have been processed (ghIssueLabels called for each + epic)
       const labelCalls = callsTo("ghIssueLabels");
@@ -663,9 +672,10 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({ features: [feat] });
       mockErrors.ghIssueLabels = true;
       const config = makeConfig();
+      const resolved = makeResolved();
 
       // Should not throw
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       // Epic label check returned undefined, so no edit — but sync continued
       expect(result).toBeDefined();
@@ -673,14 +683,15 @@ describe("syncGitHub", () => {
   });
 
   // -------------------------------------------------------
-  // 13. Project board sync
+  // 13. Project board sync (metadata from resolved)
   // -------------------------------------------------------
   describe("project board sync", () => {
-    test("updates board status when config has project metadata", async () => {
+    test("updates board status when resolved has project metadata", async () => {
       const manifest = makeManifest({ phase: "implement" });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // Should call ghProjectItemAdd for the epic
       const addCalls = callsTo("ghProjectItemAdd");
@@ -702,11 +713,12 @@ describe("syncGitHub", () => {
       expect(epicField.args[3]).toBe("opt-implement"); // option ID for "Implement"
     });
 
-    test("skips project sync when config lacks project metadata", async () => {
+    test("skips project sync when resolved lacks project metadata", async () => {
       const manifest = makeManifest({ phase: "design" });
-      const config = makeConfig(); // no project metadata
+      const config = makeConfig();
+      const resolved = makeResolved(); // no project metadata
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       const addCalls = callsTo("ghProjectItemAdd");
       expect(addCalls).toHaveLength(0);
@@ -716,10 +728,11 @@ describe("syncGitHub", () => {
 
     test("warns when project item add fails", async () => {
       const manifest = makeManifest({ phase: "design" });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
       mockErrors.ghProjectItemAdd = true;
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.warnings).toContain(
         "Failed to add #10 to project board",
@@ -731,10 +744,11 @@ describe("syncGitHub", () => {
 
     test("warns when project field set fails", async () => {
       const manifest = makeManifest({ phase: "design" });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
       mockErrors.ghProjectSetField = true;
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.warnings).toContain(
         "Failed to set project status for #10",
@@ -744,13 +758,11 @@ describe("syncGitHub", () => {
 
     test("sets project status to Done when phase is done", async () => {
       const manifest = makeManifest({ phase: "done" });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
-      // There should be project calls. The "done" phase triggers:
-      // 1. Normal phase board sync (PHASE_TO_BOARD_STATUS["done"] ?? "Backlog")
-      // 2. Extra Done board sync in the epic-close block
       const fieldCalls = callsTo("ghProjectSetField");
       const doneCalls = fieldCalls.filter(
         (c) => c.args[3] === "opt-done",
@@ -760,11 +772,12 @@ describe("syncGitHub", () => {
 
     test("warns when target status has no option ID", async () => {
       const manifest = makeManifest({ phase: "design" });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
       // Remove the Design option so there's no match
-      delete (config.github["field-options"] as Record<string, string>)["Design"];
+      delete resolved.fieldOptions!["Design"];
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(
         result.warnings.some((w) =>
@@ -780,11 +793,12 @@ describe("syncGitHub", () => {
         github: { issue: 40 },
       });
       const manifest = makeManifest({ features: [feature] });
-      const config = makeConfigWithProject();
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
       // Labels already correct to avoid extra noise
       mockReturns.ghIssueLabels = ["status/in-progress"];
 
-      await syncGitHub(manifest, config);
+      await syncGitHub(manifest, config, resolved);
 
       // ghProjectItemAdd should be called for both epic and feature
       const addCalls = callsTo("ghProjectItemAdd");
@@ -793,6 +807,29 @@ describe("syncGitHub", () => {
         (c.args[2] as string).includes("/issues/40"),
       );
       expect(featureAdd).toBeDefined();
+    });
+  });
+
+  // -------------------------------------------------------
+  // 14. Resolved without project — issues still sync
+  // -------------------------------------------------------
+  describe("resolved without project metadata", () => {
+    test("syncs issues and labels even without project metadata", async () => {
+      const feature = makeFeature({ slug: "feat-1", status: "pending" });
+      const manifest = makeManifest({ features: [feature] });
+      delete (manifest.github as Record<string, unknown>).epic;
+      mockReturns.ghIssueCreate = 100;
+      const config = makeConfig();
+      // No project fields — only repo
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved);
+
+      expect(result.epicCreated).toBe(true);
+      expect(result.featuresCreated).toBe(1);
+      // No project calls
+      expect(callsTo("ghProjectItemAdd")).toHaveLength(0);
+      expect(callsTo("ghProjectSetField")).toHaveLength(0);
     });
   });
 
@@ -809,19 +846,13 @@ describe("syncGitHub", () => {
         features: [feat1, feat2],
         artifacts: {},
         lastUpdated: "2026-03-29T00:00:00Z",
-        github: { repo: "org/repo" } as unknown as PipelineManifest["github"],
       };
 
-      // First call creates epic (returns 100), subsequent calls create features
-      let createCount = 0;
-      const issueNumbers = [100, 200, 201];
-      // Override: we can't use per-call returns with the simple mock,
-      // so we set ghIssueCreate to the epic number. Feature creates
-      // will also return the same number... Let's just use the default.
       mockReturns.ghIssueCreate = 100;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       expect(result.epicCreated).toBe(true);
       expect(result.epicNumber).toBe(100);
@@ -839,8 +870,9 @@ describe("syncGitHub", () => {
       mockReturns.ghIssueLabels = ["status/ready"];
       mockReturns.ghIssueCreate = 33;
       const config = makeConfig();
+      const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config);
+      const result = await syncGitHub(manifest, config, resolved);
 
       // 1 closed (done-1), 1 created (new-1)
       expect(result.featuresClosed).toBe(1);

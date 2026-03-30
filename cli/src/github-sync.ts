@@ -9,11 +9,14 @@
  */
 
 import type { PipelineManifest, ManifestFeature } from "./manifest";
-import type { BeastmodeConfig, GitHubConfig } from "./config";
+import type { BeastmodeConfig } from "./config";
+import type { ResolvedGitHub } from "./github-discovery";
 import {
   ghIssueCreate,
   ghIssueEdit,
   ghIssueClose,
+  ghIssueReopen,
+  ghIssueState,
   ghIssueLabels,
   ghProjectItemAdd,
   ghProjectSetField,
@@ -31,6 +34,7 @@ export interface SyncResult {
   epicNumber?: number;
   featuresCreated: number;
   featuresClosed: number;
+  featuresReopened: number;
   labelsUpdated: number;
   projectUpdated: boolean;
   epicClosed: boolean;
@@ -73,15 +77,19 @@ const ALL_PHASE_LABELS = [
 /**
  * Sync GitHub state to match the manifest. Stateless — reads manifest,
  * makes GitHub match. Returns SyncResult with mutations for the caller to apply.
+ *
+ * `resolved` provides the runtime-discovered repo and project metadata.
  */
 export async function syncGitHub(
   manifest: PipelineManifest,
   config: BeastmodeConfig,
+  resolved: ResolvedGitHub,
 ): Promise<SyncResult> {
   const result: SyncResult = {
     epicCreated: false,
     featuresCreated: 0,
     featuresClosed: 0,
+    featuresReopened: 0,
     labelsUpdated: 0,
     projectUpdated: false,
     epicClosed: false,
@@ -95,13 +103,7 @@ export async function syncGitHub(
     return result;
   }
 
-  // Need a repo to sync to
-  const repo = manifest.github?.repo;
-  if (!repo) {
-    result.warnings.push("No github.repo in manifest — skipping sync");
-    return result;
-  }
-
+  const repo = resolved.repo;
   const [owner] = repo.split("/");
 
   // --- Epic Sync ---
@@ -149,7 +151,7 @@ export async function syncGitHub(
 
   // Update project board status for epic
   await syncProjectStatus(
-    config.github,
+    resolved,
     owner,
     repo,
     epicNumber,
@@ -160,7 +162,7 @@ export async function syncGitHub(
   // --- Feature Sync ---
 
   for (const feature of manifest.features) {
-    await syncFeature(repo, owner, epicNumber, feature, config.github, result);
+    await syncFeature(repo, owner, epicNumber, feature, resolved, result);
   }
 
   // --- Epic Close (if done) ---
@@ -173,7 +175,7 @@ export async function syncGitHub(
     }
 
     // Set project board to Done
-    await syncProjectStatus(config.github, owner, repo, epicNumber, "Done", result);
+    await syncProjectStatus(resolved, owner, repo, epicNumber, "Done", result);
   }
 
   return result;
@@ -187,7 +189,7 @@ async function syncFeature(
   owner: string,
   epicNumber: number,
   feature: ManifestFeature,
-  githubConfig: GitHubConfig,
+  resolved: ResolvedGitHub,
   result: SyncResult,
 ): Promise<void> {
   // Resolve or create the feature issue number — track locally, never mutate feature
@@ -227,6 +229,17 @@ async function syncFeature(
     return; // No label update needed for closed issues
   }
 
+  // Reopen closed issues that should be open (e.g., after validate regression)
+  const issueState = await ghIssueState(repo, featureNumber);
+  if (issueState === "closed") {
+    const reopened = await ghIssueReopen(repo, featureNumber);
+    if (reopened) {
+      result.featuresReopened++;
+    } else {
+      result.warnings.push(`Failed to reopen feature ${feature.slug}`);
+    }
+  }
+
   // Blast-replace status label
   const targetStatusLabel = STATUS_TO_LABEL[feature.status];
   if (targetStatusLabel) {
@@ -254,7 +267,7 @@ async function syncFeature(
   const featureBoardStatus = featureStatusToBoardStatus(feature.status);
   if (featureBoardStatus) {
     await syncProjectStatus(
-      githubConfig,
+      resolved,
       owner,
       repo,
       featureNumber,
@@ -286,20 +299,20 @@ function featureStatusToBoardStatus(
 
 /**
  * Sync an issue's project board status.
- * Requires Projects V2 metadata in config.
+ * Requires Projects V2 metadata in resolved config.
  */
 async function syncProjectStatus(
-  githubConfig: GitHubConfig,
+  resolved: ResolvedGitHub,
   owner: string,
   repo: string,
   issueNumber: number,
   targetStatus: string,
   result: SyncResult,
 ): Promise<void> {
-  const projectNumber = githubConfig["project-number"];
-  const projectId = githubConfig["project-id"];
-  const fieldId = githubConfig["field-id"];
-  const fieldOptions = githubConfig["field-options"];
+  const projectNumber = resolved.projectNumber;
+  const projectId = resolved.projectId;
+  const fieldId = resolved.fieldId;
+  const fieldOptions = resolved.fieldOptions;
 
   if (!projectNumber || !projectId || !fieldId || !fieldOptions) {
     // Projects V2 not configured — skip silently

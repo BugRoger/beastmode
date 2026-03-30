@@ -168,15 +168,22 @@ export function extractArtifactPaths(output: PhaseOutput): string[] {
  * Find the most recent output.json in a worktree's artifacts directory.
  * The stop hook writes to .beastmode/artifacts/<phase>/*.output.json,
  * NOT to .beastmode/state/<phase>/.
+ *
+ * When epicSlug is provided, only considers output files whose filename
+ * contains the epic slug (boundary-aware to avoid substring false positives).
  */
-export function findWorktreeOutputFile(worktreePath: string, phase: Phase): string | undefined {
+export function findWorktreeOutputFile(worktreePath: string, phase: Phase, epicSlug?: string): string | undefined {
   const dir = resolve(worktreePath, ".beastmode", "artifacts", phase);
   if (!existsSync(dir)) return undefined;
 
-  const matches = readdirSync(dir)
-    .filter((f) => f.endsWith(".output.json"))
-    .sort();
+  let matches = readdirSync(dir)
+    .filter((f) => f.endsWith(".output.json"));
 
+  if (epicSlug) {
+    matches = matches.filter((f) => filenameMatchesEpic(f, epicSlug));
+  }
+
+  matches.sort();
   if (matches.length === 0) return undefined;
   return resolve(dir, matches[matches.length - 1]);
 }
@@ -184,11 +191,54 @@ export function findWorktreeOutputFile(worktreePath: string, phase: Phase): stri
 /**
  * Find and safely load the most recent phase output from a worktree's
  * artifacts directory. Returns undefined on any error.
+ *
+ * When epicSlug is provided, only considers output files belonging to that epic.
  */
-export function loadWorktreePhaseOutput(worktreePath: string, phase: Phase): PhaseOutput | undefined {
-  const file = findWorktreeOutputFile(worktreePath, phase);
+export function loadWorktreePhaseOutput(worktreePath: string, phase: Phase, epicSlug?: string): PhaseOutput | undefined {
+  const file = findWorktreeOutputFile(worktreePath, phase, epicSlug);
   if (!file) return undefined;
   return loadOutput(file);
+}
+
+/**
+ * Check if an output.json filename belongs to a given epic.
+ * Handles three naming conventions:
+ *   YYYY-MM-DD-<epic>.output.json          (epic-level, no feature)
+ *   YYYY-MM-DD-<epic>-<feature>.output.json (feature-level)
+ * Uses boundary-aware matching to avoid substring false positives
+ * (e.g., "foo" should not match "foobar").
+ */
+export function filenameMatchesEpic(filename: string, epicSlug: string): boolean {
+  // Strip the date prefix (YYYY-MM-DD-) and .output.json suffix
+  const stripped = filename.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.output\.json$/, "");
+  // The remaining string is either "<epic>" or "<epic>-<feature>"
+  return stripped === epicSlug || stripped.startsWith(epicSlug + "-");
+}
+
+/**
+ * Check if an output.json filename matches a specific epic+feature combo.
+ * Matches: YYYY-MM-DD-<epic>-<feature>.output.json
+ */
+export function filenameMatchesFeature(filename: string, epicSlug: string, featureSlug: string): boolean {
+  const stripped = filename.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.output\.json$/, "");
+  return stripped === `${epicSlug}-${featureSlug}`;
+}
+
+/**
+ * Find and safely load the phase output for a specific feature from a worktree.
+ * Returns undefined if no matching feature-level output exists.
+ */
+export function loadWorktreeFeatureOutput(worktreePath: string, phase: Phase, epicSlug: string, featureSlug: string): PhaseOutput | undefined {
+  const dir = resolve(worktreePath, ".beastmode", "artifacts", phase);
+  if (!existsSync(dir)) return undefined;
+
+  const matches = readdirSync(dir)
+    .filter((f) => f.endsWith(".output.json"))
+    .filter((f) => filenameMatchesFeature(f, epicSlug, featureSlug))
+    .sort();
+
+  if (matches.length === 0) return undefined;
+  return loadOutput(resolve(dir, matches[matches.length - 1]));
 }
 
 /**

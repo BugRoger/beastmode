@@ -172,36 +172,7 @@ pipeline_field=$(gh api graphql -f query='
 echo "Pipeline field created: $pipeline_field"
 ```
 
-### 6. Write Project Cache
-
-Parse the Pipeline field response and write a local cache for checkpoint sync:
-
-```bash
-# Extract field ID and options from the createProjectV2Field response
-pipeline_field_id=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.id')
-pipeline_options=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.options')
-
-# Build options map: { "Backlog": "option-id", "Design": "option-id", ... }
-options_map=$(echo "$pipeline_options" | jq 'map({(.name): .id}) | add')
-
-# Write cache file
-mkdir -p .beastmode/state
-cat > .beastmode/state/github-project.cache.json <<CACHE
-{
-  "projectId": "$project_id",
-  "projectNumber": $project_number,
-  "statusField": {
-    "id": "$pipeline_field_id",
-    "options": $options_map
-  },
-  "cachedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-}
-CACHE
-
-echo "Cache written: .beastmode/state/github-project.cache.json"
-```
-
-### 7. Link Repo to Project
+### 6. Link Repo to Project
 
 ```bash
 repo_id=$(gh api repos/$owner/$repo --jq '.node_id')
@@ -214,13 +185,17 @@ gh api graphql -f query='
 ' -f projectId="$project_id" -f repoId="$repo_id"
 ```
 
-### 8. Backfill Existing Issues
+### 7. Backfill Existing Issues
 
 Discover any existing `type/epic` and `type/feature` issues and add them to the project with the correct Pipeline status.
 
-Uses the cache written in step 6 — requires `$project_number`, `$project_id`, `$pipeline_field_id`, and `$options_map` from earlier steps.
+Extract field ID and options from the Pipeline field created in step 5:
 
 ```bash
+pipeline_field_id=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.id')
+pipeline_options=$(echo "$pipeline_field" | jq -r '.data.createProjectV2Field.projectV2Field.options')
+options_map=$(echo "$pipeline_options" | jq 'map({(.name): .id}) | add')
+
 echo "Backfilling existing issues into project..."
 
 # Discover existing epics and features (JSON output for parsing)
@@ -309,7 +284,7 @@ else
 fi
 ```
 
-### 9. Enable GitHub in Config
+### 8. Enable GitHub in Config
 
 Write `github.enabled: true` to `.beastmode/config.yaml`:
 
@@ -327,7 +302,7 @@ grep 'enabled: true' .beastmode/config.yaml
 
 If verification fails, print warning but do not STOP — labels and board are already created.
 
-### 10. Print Summary
+### 9. Print Summary
 
 ```
 GitHub State Model Setup Complete
@@ -340,7 +315,6 @@ Labels created (12):
 
 Project: Beastmode Pipeline (#<number>)
 Pipeline field: Backlog | Design | Plan | Implement | Validate | Release | Done
-Cache: .beastmode/state/github-project.cache.json
 Backfilled: <N> issues synced to project
 
 Manual Setup Required (GitHub UI only):

@@ -189,6 +189,46 @@ export async function ghIssueClose(
 }
 
 /**
+ * Reopen a closed GitHub issue.
+ */
+export async function ghIssueReopen(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string } = {},
+): Promise<boolean> {
+  const result = await gh(
+    ["issue", "reopen", String(issueNumber), "--repo", repo],
+    { cwd: opts.cwd },
+  );
+  return result !== undefined;
+}
+
+/**
+ * Get an issue's open/closed state. Returns undefined on failure.
+ */
+export async function ghIssueState(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string } = {},
+): Promise<"open" | "closed" | undefined> {
+  const result = await ghJson<{ state: string }>(
+    [
+      "issue",
+      "view",
+      String(issueNumber),
+      "--repo",
+      repo,
+      "--json",
+      "state",
+    ],
+    { cwd: opts.cwd },
+  );
+  if (result?.state === "OPEN") return "open";
+  if (result?.state === "CLOSED") return "closed";
+  return undefined;
+}
+
+/**
  * Get issue labels. Returns label names or undefined.
  */
 export async function ghIssueLabels(
@@ -266,6 +306,146 @@ export async function ghProjectSetField(
   return data !== undefined;
 }
 
+// ---------------------------------------------------------------------------
+// Discovery functions — runtime-discovered metadata, warn-and-continue
+// ---------------------------------------------------------------------------
+
+/**
+ * Discover the current repo's owner/name from the local git remote.
+ * Returns "owner/repo" or undefined.
+ */
+export async function ghRepoDiscover(
+  opts: { cwd?: string } = {},
+): Promise<string | undefined> {
+  const result = await gh(
+    ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"],
+    opts,
+  );
+  return result?.stdout || undefined;
+}
+
+/**
+ * Discover a Projects V2 board by title. Returns {number, id} or undefined.
+ * Tries user scope first, then organization scope for the project ID.
+ */
+export async function ghProjectDiscover(
+  owner: string,
+  projectName: string,
+  opts: { cwd?: string } = {},
+): Promise<{ number: number; id: string } | undefined> {
+  // Find project number by title
+  const projects = await ghJson<{
+    projects: Array<{ title: string; number: number; id: string }>;
+  }>(["project", "list", "--owner", owner, "--format", "json"], opts);
+  if (!projects?.projects) return undefined;
+
+  const match = projects.projects.find((p) => p.title === projectName);
+  if (!match) return undefined;
+
+  // The list endpoint returns the GraphQL ID directly
+  if (match.id) {
+    return { number: match.number, id: match.id };
+  }
+
+  // Fallback: fetch ID via GraphQL (try user, then org)
+  const id = await ghProjectIdLookup(owner, match.number, opts);
+  if (!id) return undefined;
+
+  return { number: match.number, id };
+}
+
+/**
+ * Lookup project GraphQL ID by number. Tries user scope, falls back to org.
+ */
+async function ghProjectIdLookup(
+  owner: string,
+  projectNumber: number,
+  opts: { cwd?: string } = {},
+): Promise<string | undefined> {
+  // Try user scope
+  const userData = await ghGraphQL<{
+    user: { projectV2: { id: string } };
+  }>(
+    `query($owner: String!, $number: Int!) {
+      user(login: $owner) { projectV2(number: $number) { id } }
+    }`,
+    { owner, number: projectNumber },
+    opts,
+  );
+  if (userData?.user?.projectV2?.id) return userData.user.projectV2.id;
+
+  // Try org scope
+  const orgData = await ghGraphQL<{
+    organization: { projectV2: { id: string } };
+  }>(
+    `query($owner: String!, $number: Int!) {
+      organization(login: $owner) { projectV2(number: $number) { id } }
+    }`,
+    { owner, number: projectNumber },
+    opts,
+  );
+  return orgData?.organization?.projectV2?.id;
+}
+
+/**
+ * Discover a single-select field on a Projects V2 board.
+ * Returns {fieldId, options} or undefined.
+ */
+export async function ghFieldDiscover(
+  projectId: string,
+  fieldName: string,
+  opts: { cwd?: string } = {},
+): Promise<
+  { fieldId: string; options: Record<string, string> } | undefined
+> {
+  const data = await ghGraphQL<{
+    node: {
+      fields: {
+        nodes: Array<{
+          __typename: string;
+          name: string;
+          id: string;
+          options?: Array<{ id: string; name: string }>;
+        }>;
+      };
+    };
+  }>(
+    `query($projectId: ID!) {
+      node(id: $projectId) {
+        ... on ProjectV2 {
+          fields(first: 30) {
+            nodes {
+              __typename
+              ... on ProjectV2SingleSelectField {
+                name
+                id
+                options { id name }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    { projectId },
+    opts,
+  );
+
+  const fields = data?.node?.fields?.nodes;
+  if (!fields) return undefined;
+
+  const field = fields.find(
+    (f) => f.name === fieldName && f.options,
+  );
+  if (!field?.options) return undefined;
+
+  const options: Record<string, string> = {};
+  for (const opt of field.options) {
+    options[opt.name] = opt.id;
+  }
+
+  return { fieldId: field.id, options };
+}
+
 /**
  * Link an issue as a sub-issue of a parent issue.
  */
@@ -275,14 +455,14 @@ export async function ghSubIssueAdd(
   childNumber: number,
   opts: { cwd?: string } = {},
 ): Promise<boolean> {
-  // Get the child's node_id first
+  // Get the child's database ID (integer) — the sub_issues REST API requires it, not node_id
   const [owner, repoName] = repo.split("/");
-  const nodeData = await ghJson<{ id: string }>(
+  const nodeData = await ghJson<{ id: number }>(
     [
       "api",
       `repos/${owner}/${repoName}/issues/${childNumber}`,
       "--jq",
-      "{id: .node_id}",
+      "{id: .id}",
     ],
     { cwd: opts.cwd },
   );
@@ -294,7 +474,7 @@ export async function ghSubIssueAdd(
       `repos/${owner}/${repoName}/issues/${parentNumber}/sub_issues`,
       "--method",
       "POST",
-      "-f",
+      "-F",
       `sub_issue_id=${nodeData.id}`,
     ],
     { cwd: opts.cwd },
