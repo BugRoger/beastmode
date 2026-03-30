@@ -32,6 +32,7 @@
 - ALWAYS colocate interface (SKILL.md) with implementation — discoverability
 - NEVER put shared logic in individual skills — extract to `skills/_shared/`
 - Retro agents are phase-scoped — context walker and meta walker review their phase's domain docs
+- Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number, to survive renumbering
 
 ## Worktree Isolation
 - ALWAYS use `git merge --squash` for releases — one commit per version on main
