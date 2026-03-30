@@ -158,6 +158,12 @@ describe("runPostDispatch", () => {
     });
     writeTestManifest(EPIC_SLUG, manifest);
 
+    // Feature must produce an output.json to be marked completed
+    writePhaseOutput(WORKTREE, "implement", `${EPIC_SLUG}-my-feature`, {
+      status: "completed",
+      artifacts: { features: [{ slug: "my-feature", status: "completed" }] },
+    });
+
     await runPostDispatch({
       worktreePath: WORKTREE,
       projectRoot: TEST_ROOT,
@@ -174,6 +180,30 @@ describe("runPostDispatch", () => {
     expect(otherFeature?.status).toBe("pending");
     // Should NOT advance because other-feature is still pending
     expect(updated.phase).toBe("implement");
+  });
+
+  test("does not mark feature completed when no output.json exists", async () => {
+    const manifest = makeManifest({
+      phase: "implement",
+      features: [
+        { slug: "lazy-feature", plan: "lazy-feature.md", status: "pending" },
+      ],
+    });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // No output.json written — session exited 0 but did no work
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "implement",
+      featureSlug: "lazy-feature",
+      success: true,
+    });
+
+    const updated = readTestManifest(EPIC_SLUG);
+    const feature = updated.features.find((f) => f.slug === "lazy-feature");
+    expect(feature?.status).toBe("pending");
   });
 
   test("advances phase when all features completed", async () => {

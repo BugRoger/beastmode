@@ -15,6 +15,8 @@ import {
   ghIssueCreate,
   ghIssueEdit,
   ghIssueClose,
+  ghIssueReopen,
+  ghIssueState,
   ghIssueLabels,
   ghProjectItemAdd,
   ghProjectSetField,
@@ -32,6 +34,7 @@ export interface SyncResult {
   epicNumber?: number;
   featuresCreated: number;
   featuresClosed: number;
+  featuresReopened: number;
   labelsUpdated: number;
   projectUpdated: boolean;
   epicClosed: boolean;
@@ -86,6 +89,7 @@ export async function syncGitHub(
     epicCreated: false,
     featuresCreated: 0,
     featuresClosed: 0,
+    featuresReopened: 0,
     labelsUpdated: 0,
     projectUpdated: false,
     epicClosed: false,
@@ -223,6 +227,17 @@ async function syncFeature(
       result.warnings.push(`Failed to close feature ${feature.slug}`);
     }
     return; // No label update needed for closed issues
+  }
+
+  // Reopen closed issues that should be open (e.g., after validate regression)
+  const issueState = await ghIssueState(repo, featureNumber);
+  if (issueState === "closed") {
+    const reopened = await ghIssueReopen(repo, featureNumber);
+    if (reopened) {
+      result.featuresReopened++;
+    } else {
+      result.warnings.push(`Failed to reopen feature ${feature.slug}`);
+    }
   }
 
   // Blast-replace status label

@@ -216,6 +216,32 @@ export function filenameMatchesEpic(filename: string, epicSlug: string): boolean
 }
 
 /**
+ * Check if an output.json filename matches a specific epic+feature combo.
+ * Matches: YYYY-MM-DD-<epic>-<feature>.output.json
+ */
+export function filenameMatchesFeature(filename: string, epicSlug: string, featureSlug: string): boolean {
+  const stripped = filename.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.output\.json$/, "");
+  return stripped === `${epicSlug}-${featureSlug}`;
+}
+
+/**
+ * Find and safely load the phase output for a specific feature from a worktree.
+ * Returns undefined if no matching feature-level output exists.
+ */
+export function loadWorktreeFeatureOutput(worktreePath: string, phase: Phase, epicSlug: string, featureSlug: string): PhaseOutput | undefined {
+  const dir = resolve(worktreePath, ".beastmode", "artifacts", phase);
+  if (!existsSync(dir)) return undefined;
+
+  const matches = readdirSync(dir)
+    .filter((f) => f.endsWith(".output.json"))
+    .filter((f) => filenameMatchesFeature(f, epicSlug, featureSlug))
+    .sort();
+
+  if (matches.length === 0) return undefined;
+  return loadOutput(resolve(dir, matches[matches.length - 1]));
+}
+
+/**
  * Validate that a parsed value conforms to the PhaseOutput shape.
  */
 function isValidPhaseOutput(value: unknown): value is PhaseOutput {

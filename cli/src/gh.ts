@@ -189,6 +189,46 @@ export async function ghIssueClose(
 }
 
 /**
+ * Reopen a closed GitHub issue.
+ */
+export async function ghIssueReopen(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string } = {},
+): Promise<boolean> {
+  const result = await gh(
+    ["issue", "reopen", String(issueNumber), "--repo", repo],
+    { cwd: opts.cwd },
+  );
+  return result !== undefined;
+}
+
+/**
+ * Get an issue's open/closed state. Returns undefined on failure.
+ */
+export async function ghIssueState(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string } = {},
+): Promise<"open" | "closed" | undefined> {
+  const result = await ghJson<{ state: string }>(
+    [
+      "issue",
+      "view",
+      String(issueNumber),
+      "--repo",
+      repo,
+      "--json",
+      "state",
+    ],
+    { cwd: opts.cwd },
+  );
+  if (result?.state === "OPEN") return "open";
+  if (result?.state === "CLOSED") return "closed";
+  return undefined;
+}
+
+/**
  * Get issue labels. Returns label names or undefined.
  */
 export async function ghIssueLabels(
@@ -415,14 +455,14 @@ export async function ghSubIssueAdd(
   childNumber: number,
   opts: { cwd?: string } = {},
 ): Promise<boolean> {
-  // Get the child's node_id first
+  // Get the child's database ID (integer) — the sub_issues REST API requires it, not node_id
   const [owner, repoName] = repo.split("/");
-  const nodeData = await ghJson<{ id: string }>(
+  const nodeData = await ghJson<{ id: number }>(
     [
       "api",
       `repos/${owner}/${repoName}/issues/${childNumber}`,
       "--jq",
-      "{id: .node_id}",
+      "{id: .id}",
     ],
     { cwd: opts.cwd },
   );
@@ -434,7 +474,7 @@ export async function ghSubIssueAdd(
       `repos/${owner}/${repoName}/issues/${parentNumber}/sub_issues`,
       "--method",
       "POST",
-      "-f",
+      "-F",
       `sub_issue_id=${nodeData.id}`,
     ],
     { cwd: opts.cwd },
