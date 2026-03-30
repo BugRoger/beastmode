@@ -9,14 +9,18 @@ status: completed
 
 **Date:** 2026-03-30
 **Feature Plan:** .beastmode/artifacts/plan/2026-03-30-status-watch-render-extract.md
-**Tasks completed:** 2/2
-**Deviations:** 0
+**Tasks completed:** 0/0 (feature was already implemented)
+**Deviations:** 0 total
 
 ## Summary
 
-Refactored status command to extract table rendering into pure functions. The `renderStatusTable` function accepts enriched manifests and options, returns a formatted string. The `statusCommand` entry point calls the extracted function and prints the result.
+The render extraction was already implemented in prior work on the status-watch feature branch. All acceptance criteria verified:
 
-Additional rendering infrastructure was built beyond the minimal plan scope — `renderStatusScreen`, `formatWatchHeader`, and `statusWatchLoop` — as groundwork for subsequent features (poll-loop, dashboard-header, watch-loop).
+1. `renderStatusTable()` — pure function accepting enriched manifests and options, returns formatted table string
+2. `renderStatusScreen()` — composes watch header + blocked details + table, returns complete screen string
+3. `statusCommand()` calls `renderStatusScreen()` and prints via `console.log()`
+4. Both functions are exported and callable by other modules
+5. All 70 existing status tests pass (0 failures)
 
 ## Deviations
 
