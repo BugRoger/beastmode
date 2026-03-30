@@ -12,7 +12,7 @@ import type { Phase } from "./types";
 import type { PipelineManifest } from "./manifest-store";
 import * as store from "./manifest-store";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
-import { loadPhaseOutput, extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput } from "./phase-output";
+import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";

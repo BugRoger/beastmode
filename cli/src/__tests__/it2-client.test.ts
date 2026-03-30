@@ -49,16 +49,6 @@ function createMockSpawn(proc: ReturnType<SpawnFn>) {
   return { fn, calls };
 }
 
-/** Create a mock SpawnFn that returns different results per call. */
-function createSequentialSpawn(procs: ReturnType<SpawnFn>[]) {
-  const calls: Array<{ cmd: string[]; opts: Record<string, string> }> = [];
-  let idx = 0;
-  const fn: SpawnFn = (cmd, opts) => {
-    calls.push({ cmd, opts });
-    return procs[Math.min(idx++, procs.length - 1)];
-  };
-  return { fn, calls };
-}
 
 /** Create a mock SpawnFn that throws (simulating binary not found). */
 function createThrowingSpawn(code?: string) {
