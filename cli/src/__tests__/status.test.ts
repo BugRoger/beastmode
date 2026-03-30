@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader } from "../commands/status";
+import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator } from "../commands/status";
 import type { WatchMeta } from "../commands/status";
 import type { EnrichedManifest } from "../state-scanner";
 
@@ -363,5 +363,43 @@ describe("renderStatusTable", () => {
     const direct = renderStatusTable(epics);
     const manual = formatTable(buildStatusRows(epics));
     expect(direct).toBe(manual);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatWatchHeader
+// ---------------------------------------------------------------------------
+
+describe("formatWatchHeader", () => {
+  test("includes timestamp in output", () => {
+    const meta: WatchMeta = { timestamp: "14:30:05", watchRunning: true };
+    const result = formatWatchHeader(meta);
+    expect(result).toContain("14:30:05");
+  });
+
+  test("shows 'running' with green ANSI when watchRunning is true", () => {
+    const meta: WatchMeta = { timestamp: "12:00:00", watchRunning: true };
+    const result = formatWatchHeader(meta);
+    expect(stripAnsi(result)).toContain("running");
+    expect(result).toContain("\x1b[32m");
+  });
+
+  test("shows 'stopped' with dim ANSI when watchRunning is false", () => {
+    const meta: WatchMeta = { timestamp: "12:00:00", watchRunning: false };
+    const result = formatWatchHeader(meta);
+    expect(stripAnsi(result)).toContain("stopped");
+    expect(result).toContain("\x1b[2m");
+  });
+
+  test("includes 'Last updated:' prefix", () => {
+    const meta: WatchMeta = { timestamp: "09:15:30", watchRunning: true };
+    const result = formatWatchHeader(meta);
+    expect(result).toMatch(/^Last updated:/);
+  });
+
+  test("includes 'watch:' label", () => {
+    const meta: WatchMeta = { timestamp: "09:15:30", watchRunning: false };
+    const result = formatWatchHeader(meta);
+    expect(stripAnsi(result)).toContain("watch:");
   });
 });

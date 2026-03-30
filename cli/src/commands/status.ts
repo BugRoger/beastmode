@@ -143,6 +143,17 @@ function padDisplay(str: string, len: number): string {
   return visible >= len ? str : str + " ".repeat(len - visible);
 }
 
+/** Wrap all columns of a StatusRow in bold+inverse ANSI for one render cycle. */
+export function highlightRow(row: StatusRow): StatusRow {
+  const hl = (s: string) => `\x1b[1m\x1b[7m${s}\x1b[0m`;
+  return {
+    name: hl(row.name),
+    phase: hl(row.phase),
+    features: hl(row.features),
+    status: hl(row.status),
+  };
+}
+
 export function formatTable(rows: StatusRow[]): string {
   if (rows.length === 0) return "No epics found.";
 
@@ -174,8 +185,17 @@ export function formatTable(rows: StatusRow[]): string {
 // Render pipeline — pure function, no I/O
 // ---------------------------------------------------------------------------
 
-export function renderStatusTable(epics: EnrichedManifest[], opts: { all?: boolean } = {}): string {
-  const rows = buildStatusRows(epics, opts);
+export function renderStatusTable(
+  epics: EnrichedManifest[],
+  opts: { all?: boolean } = {},
+  changedSlugs?: Set<string>,
+): string {
+  let rows = buildStatusRows(epics, opts);
+  if (changedSlugs && changedSlugs.size > 0) {
+    rows = rows.map(row =>
+      changedSlugs.has(row.name) ? highlightRow(row) : row,
+    );
+  }
   return formatTable(rows);
 }
 
@@ -200,8 +220,9 @@ export function renderStatusScreen(
   epics: EnrichedManifest[],
   opts: { all?: boolean } = {},
   meta?: WatchMeta,
+  changedSlugs?: Set<string>,
 ): string {
-  const table = renderStatusTable(epics, opts);
+  const table = renderStatusTable(epics, opts, changedSlugs);
   if (meta) {
     return formatWatchHeader(meta) + "\n\n" + table;
   }

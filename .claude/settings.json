@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/scripts/generate-output-json.sh\""
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/generate-output.ts\""
           }
         ]
       }
