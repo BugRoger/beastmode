@@ -4,6 +4,10 @@ All notable changes to beastmode.
 
 ---
 
+### v0.46.1 — Design Retro Always (Mar 2026)
+
+- **Always-run design retro** — Design checkpoint now includes a `SKIP SECTION` directive that bypasses the Quick-Exit Check, ensuring every design session produces L2/L3 knowledge records regardless of session size
+
 ### v0.46.0 — Status Watch (Mar 2026)
 
 - **Live watch mode** — `beastmode status --watch` / `-w` turns the one-shot status command into a live-updating terminal dashboard that polls manifest state every 2 seconds

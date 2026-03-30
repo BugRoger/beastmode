@@ -18,3 +18,4 @@ state/design/2026-03-04-restore-phase-retro.md
 state/design/2026-03-04-product-md-rollup.md
 state/design/2026-03-07-meta-retro-rework.md
 state/design/2026-03-08-retro-quick-exit.md
+artifacts/design/2026-03-30-design-retro-always.md
