@@ -502,3 +502,246 @@ describe("renderStatusScreen", () => {
     expect(withoutAll).not.toContain("finished");
   });
 });
+
+// ---------------------------------------------------------------------------
+// buildSnapshot
+// ---------------------------------------------------------------------------
+
+describe("buildSnapshot", () => {
+  test("extracts slug, phase, feature counts, and blocked status", () => {
+    const epics = [
+      makeEpic({
+        slug: "alpha",
+        phase: "implement",
+        features: [
+          { slug: "f1", plan: "p.md", status: "completed" },
+          { slug: "f2", plan: "p.md", status: "pending" },
+        ],
+        blocked: null,
+      }),
+    ];
+    const snap = buildSnapshot(epics);
+    expect(snap).toEqual([
+      { slug: "alpha", phase: "implement", featuresCompleted: 1, featuresTotal: 2, blocked: false },
+    ]);
+  });
+
+  test("marks blocked when epic has blocked gate", () => {
+    const epics = [
+      makeEpic({
+        slug: "stuck",
+        phase: "implement",
+        blocked: { gate: "feature", reason: "blocked" },
+      }),
+    ];
+    const snap = buildSnapshot(epics);
+    expect(snap[0].blocked).toBe(true);
+  });
+
+  test("handles empty features array", () => {
+    const epics = [makeEpic({ slug: "bare", phase: "design", features: [] })];
+    const snap = buildSnapshot(epics);
+    expect(snap[0].featuresCompleted).toBe(0);
+    expect(snap[0].featuresTotal).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// detectChanges
+// ---------------------------------------------------------------------------
+
+describe("detectChanges", () => {
+  test("returns empty set when nothing changed", () => {
+    const snap: StatusSnapshot[] = [
+      { slug: "a", phase: "design", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+    ];
+    expect(detectChanges(snap, snap)).toEqual(new Set());
+  });
+
+  test("detects phase change", () => {
+    const prev: StatusSnapshot[] = [
+      { slug: "a", phase: "design", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+    ];
+    const curr: StatusSnapshot[] = [
+      { slug: "a", phase: "plan", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+    ];
+    expect(detectChanges(prev, curr)).toEqual(new Set(["a"]));
+  });
+
+  test("detects feature completion change", () => {
+    const prev: StatusSnapshot[] = [
+      { slug: "a", phase: "implement", featuresCompleted: 1, featuresTotal: 3, blocked: false },
+    ];
+    const curr: StatusSnapshot[] = [
+      { slug: "a", phase: "implement", featuresCompleted: 2, featuresTotal: 3, blocked: false },
+    ];
+    expect(detectChanges(prev, curr)).toEqual(new Set(["a"]));
+  });
+
+  test("detects blocked status change", () => {
+    const prev: StatusSnapshot[] = [
+      { slug: "a", phase: "implement", featuresCompleted: 0, featuresTotal: 1, blocked: false },
+    ];
+    const curr: StatusSnapshot[] = [
+      { slug: "a", phase: "implement", featuresCompleted: 0, featuresTotal: 1, blocked: true },
+    ];
+    expect(detectChanges(prev, curr)).toEqual(new Set(["a"]));
+  });
+
+  test("detects new epic appearing", () => {
+    const prev: StatusSnapshot[] = [];
+    const curr: StatusSnapshot[] = [
+      { slug: "new-one", phase: "design", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+    ];
+    expect(detectChanges(prev, curr)).toEqual(new Set(["new-one"]));
+  });
+
+  test("ignores unchanged epics in multi-epic set", () => {
+    const prev: StatusSnapshot[] = [
+      { slug: "a", phase: "design", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+      { slug: "b", phase: "implement", featuresCompleted: 1, featuresTotal: 2, blocked: false },
+    ];
+    const curr: StatusSnapshot[] = [
+      { slug: "a", phase: "design", featuresCompleted: 0, featuresTotal: 0, blocked: false },
+      { slug: "b", phase: "implement", featuresCompleted: 2, featuresTotal: 2, blocked: false },
+    ];
+    const changed = detectChanges(prev, curr);
+    expect(changed).toEqual(new Set(["b"]));
+    expect(changed.has("a")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderStatusTable with changedSlugs
+// ---------------------------------------------------------------------------
+
+describe("renderStatusTable with changedSlugs", () => {
+  test("highlights changed rows with bold+inverse ANSI", () => {
+    const epics = [
+      makeEpic({ slug: "changed-one", phase: "implement" }),
+      makeEpic({ slug: "stable-one", phase: "design" }),
+    ];
+    const changedSlugs = new Set(["changed-one"]);
+    const result = renderStatusTable(epics, {}, changedSlugs);
+    const lines = result.split("\n");
+    // Find the line with changed-one — should have bold+inverse
+    const changedLine = lines.find(l => stripAnsi(l).includes("changed-one"));
+    expect(changedLine).toBeDefined();
+    expect(changedLine).toContain("\x1b[1m");
+    expect(changedLine).toContain("\x1b[7m");
+
+    // Stable line should NOT have inverse
+    const stableLine = lines.find(l => stripAnsi(l).includes("stable-one"));
+    expect(stableLine).toBeDefined();
+    expect(stableLine).not.toContain("\x1b[7m");
+  });
+
+  test("does not highlight when changedSlugs is empty", () => {
+    const epics = [makeEpic({ slug: "no-change", phase: "design" })];
+    const result = renderStatusTable(epics, {}, new Set());
+    // Should not contain inverse code
+    expect(result).not.toContain("\x1b[7m");
+  });
+
+  test("does not highlight when changedSlugs is undefined", () => {
+    const epics = [makeEpic({ slug: "no-change", phase: "design" })];
+    const result = renderStatusTable(epics);
+    expect(result).not.toContain("\x1b[7m");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderBlockedDetails
+// ---------------------------------------------------------------------------
+
+describe("renderBlockedDetails", () => {
+  test("returns empty string when no epics are blocked", () => {
+    const epics = [
+      makeEpic({ slug: "happy", phase: "implement", blocked: null }),
+      makeEpic({ slug: "also-happy", phase: "design", blocked: null }),
+    ];
+    expect(renderBlockedDetails(epics)).toBe("");
+  });
+
+  test("returns blocked header and details for one blocked epic", () => {
+    const epics = [
+      makeEpic({ slug: "stuck", phase: "implement", blocked: { gate: "feature", reason: "needs approval" } }),
+      makeEpic({ slug: "happy", phase: "design", blocked: null }),
+    ];
+    const result = renderBlockedDetails(epics);
+    const plain = stripAnsi(result);
+    expect(plain).toContain("Blocked:");
+    expect(plain).toContain("stuck");
+    expect(plain).toContain("feature");
+    expect(plain).toContain("needs approval");
+    expect(plain).not.toContain("happy");
+  });
+
+  test("returns multiple blocked epics", () => {
+    const epics = [
+      makeEpic({ slug: "epic-a", phase: "implement", blocked: { gate: "gate-1", reason: "reason-1" } }),
+      makeEpic({ slug: "epic-b", phase: "validate", blocked: { gate: "gate-2", reason: "reason-2" } }),
+    ];
+    const result = renderBlockedDetails(epics);
+    const plain = stripAnsi(result);
+    expect(plain).toContain("epic-a");
+    expect(plain).toContain("gate-1");
+    expect(plain).toContain("epic-b");
+    expect(plain).toContain("gate-2");
+  });
+
+  test("uses red ANSI coloring for blocked lines", () => {
+    const epics = [
+      makeEpic({ slug: "red", phase: "implement", blocked: { gate: "g", reason: "r" } }),
+    ];
+    const result = renderBlockedDetails(epics);
+    expect(result).toContain("\x1b[31m");
+  });
+
+  test("uses bold+red ANSI for Blocked: header", () => {
+    const epics = [
+      makeEpic({ slug: "x", phase: "implement", blocked: { gate: "g", reason: "r" } }),
+    ];
+    const result = renderBlockedDetails(epics);
+    expect(result).toContain("\x1b[31m");
+    expect(result).toContain("\x1b[1m");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderStatusScreen — blocked details integration
+// ---------------------------------------------------------------------------
+
+describe("renderStatusScreen — blocked details", () => {
+  test("includes blocked section in watch mode when epics are blocked", () => {
+    const epics = [
+      makeEpic({ slug: "blocked-epic", phase: "implement", blocked: { gate: "feature", reason: "waiting" } }),
+    ];
+    const meta: WatchMeta = { timestamp: "14:00:00", watchRunning: true };
+    const result = renderStatusScreen(epics, {}, meta);
+    const plain = stripAnsi(result);
+    expect(plain).toContain("Blocked:");
+    expect(plain).toContain("blocked-epic");
+    expect(plain).toContain("feature");
+    expect(plain).toContain("waiting");
+  });
+
+  test("does not include blocked section when no epics are blocked", () => {
+    const epics = [
+      makeEpic({ slug: "smooth", phase: "implement", blocked: null }),
+    ];
+    const meta: WatchMeta = { timestamp: "14:00:00", watchRunning: true };
+    const result = renderStatusScreen(epics, {}, meta);
+    const plain = stripAnsi(result);
+    expect(plain).not.toContain("Blocked:");
+  });
+
+  test("does not include blocked section in one-shot mode (no meta)", () => {
+    const epics = [
+      makeEpic({ slug: "stuck", phase: "implement", blocked: { gate: "feature", reason: "waiting" } }),
+    ];
+    const result = renderStatusScreen(epics);
+    const plain = stripAnsi(result);
+    expect(plain).not.toContain("Blocked:");
+  });
+});
