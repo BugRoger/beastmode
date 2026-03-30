@@ -60,13 +60,10 @@ function preReconcile(manifest: PipelineManifest, projectRoot: string): Pipeline
   const wtPath = manifest.worktree?.path;
   if (!wtPath || !existsSync(wtPath)) return manifest;
 
-  // Find output file and verify it belongs to THIS epic (the worktree may
-  // contain inherited artifacts from other epics via the branch history).
-  const file = findWorktreeOutputFile(wtPath, manifest.phase as Phase);
+  // Find output file filtered by epic slug (the worktree may contain
+  // inherited artifacts from other epics via the branch history).
+  const file = findWorktreeOutputFile(wtPath, manifest.phase as Phase, manifest.slug);
   if (!file) return manifest;
-
-  const filename = basename(file);
-  if (!filename.includes(manifest.slug)) return manifest;
 
   const output = loadOutput(file);
   if (!output || output.status !== "completed") return manifest;

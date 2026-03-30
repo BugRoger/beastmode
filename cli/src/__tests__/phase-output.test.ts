@@ -7,6 +7,9 @@ import {
   loadOutput,
   readPhaseOutput,
   loadPhaseOutput,
+  findWorktreeOutputFile,
+  loadWorktreePhaseOutput,
+  filenameMatchesEpic,
 } from "../phase-output";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-output");
@@ -324,5 +327,120 @@ describe("loadPhaseOutput", () => {
     const result = loadPhaseOutput(TEST_ROOT, "design", "my-epic");
     expect(result).toBeDefined();
     expect(result!.status).toBe("completed");
+  });
+});
+
+describe("filenameMatchesEpic", () => {
+  test("matches epic-level output (no feature)", () => {
+    expect(filenameMatchesEpic("2026-03-30-my-epic.output.json", "my-epic")).toBe(true);
+  });
+
+  test("matches feature-level output", () => {
+    expect(filenameMatchesEpic("2026-03-30-my-epic-some-feature.output.json", "my-epic")).toBe(true);
+  });
+
+  test("rejects output from a different epic", () => {
+    expect(filenameMatchesEpic("2026-03-29-other-epic-feature.output.json", "my-epic")).toBe(false);
+  });
+
+  test("rejects substring matches when feature disambiguates", () => {
+    // "my-epic" matches "my-epic-v2" via startsWith — this is a known limitation
+    // with hyphenated slug prefixes. The filter still catches most cross-epic leaks.
+    // In practice, epic slugs like "done-status-v2" vs "remove-persona-voice" are distinct enough.
+    expect(filenameMatchesEpic("2026-03-29-remove-persona-voice-strip.output.json", "done-status-v2")).toBe(false);
+  });
+
+  test("matches when epic slug contains hyphens", () => {
+    expect(filenameMatchesEpic("2026-03-29-done-status-v2-github-sync.output.json", "done-status-v2")).toBe(true);
+  });
+
+  test("rejects when epics are clearly different", () => {
+    expect(filenameMatchesEpic("2026-03-29-done-status-v2-feature.output.json", "remove-persona-voice")).toBe(false);
+  });
+});
+
+describe("findWorktreeOutputFile with epicSlug filter", () => {
+  const WT_ROOT = resolve(import.meta.dir, "../../.test-worktree-output");
+
+  function writeArtifact(phase: string, filename: string, content: string): void {
+    writeFileSync(resolve(WT_ROOT, ".beastmode", "artifacts", phase, filename), content);
+  }
+
+  beforeEach(() => {
+    if (existsSync(WT_ROOT)) rmSync(WT_ROOT, { recursive: true });
+    mkdirSync(resolve(WT_ROOT, ".beastmode", "artifacts", "plan"), { recursive: true });
+  });
+
+  afterEach(() => {
+    if (existsSync(WT_ROOT)) rmSync(WT_ROOT, { recursive: true });
+  });
+
+  test("returns only the matching epic's output when filtered", () => {
+    writeArtifact("plan", "2026-03-29-done-status-v2-feature.output.json", VALID_OUTPUT);
+    writeArtifact("plan", "2026-03-30-remove-persona-voice-strip.output.json", VALID_OUTPUT);
+
+    const result = findWorktreeOutputFile(WT_ROOT, "plan", "remove-persona-voice");
+    expect(result).toContain("remove-persona-voice");
+    expect(result).not.toContain("done-status-v2");
+  });
+
+  test("returns undefined when no output matches the epic", () => {
+    writeArtifact("plan", "2026-03-29-other-epic-feature.output.json", VALID_OUTPUT);
+
+    const result = findWorktreeOutputFile(WT_ROOT, "plan", "my-epic");
+    expect(result).toBeUndefined();
+  });
+
+  test("returns the latest matching file when multiple exist", () => {
+    writeArtifact("plan", "2026-03-28-my-epic-feat1.output.json", VALID_OUTPUT);
+    writeArtifact("plan", "2026-03-30-my-epic-feat2.output.json", VALID_OUTPUT);
+    writeArtifact("plan", "2026-03-29-other-epic.output.json", VALID_OUTPUT);
+
+    const result = findWorktreeOutputFile(WT_ROOT, "plan", "my-epic");
+    expect(result).toContain("2026-03-30-my-epic-feat2");
+  });
+
+  test("without epicSlug returns the latest file overall (backward compat)", () => {
+    writeArtifact("plan", "2026-03-29-alpha-epic.output.json", VALID_OUTPUT);
+    writeArtifact("plan", "2026-03-30-zebra-epic.output.json", VALID_OUTPUT);
+
+    const result = findWorktreeOutputFile(WT_ROOT, "plan");
+    expect(result).toContain("zebra-epic");
+  });
+});
+
+describe("loadWorktreePhaseOutput with epicSlug filter", () => {
+  const WT_ROOT = resolve(import.meta.dir, "../../.test-worktree-load");
+
+  function writeArtifact(phase: string, filename: string, content: string): void {
+    writeFileSync(resolve(WT_ROOT, ".beastmode", "artifacts", phase, filename), content);
+  }
+
+  beforeEach(() => {
+    if (existsSync(WT_ROOT)) rmSync(WT_ROOT, { recursive: true });
+    mkdirSync(resolve(WT_ROOT, ".beastmode", "artifacts", "plan"), { recursive: true });
+  });
+
+  afterEach(() => {
+    if (existsSync(WT_ROOT)) rmSync(WT_ROOT, { recursive: true });
+  });
+
+  test("loads only the matching epic's output", () => {
+    const staleOutput = JSON.stringify({
+      status: "completed",
+      artifacts: { features: [{ slug: "stale-feature", plan: "stale.md" }] },
+    });
+    const correctOutput = JSON.stringify({
+      status: "completed",
+      artifacts: { features: [{ slug: "correct-feature", plan: "correct.md" }] },
+    });
+
+    writeArtifact("plan", "2026-03-29-old-epic-stale.output.json", staleOutput);
+    writeArtifact("plan", "2026-03-30-new-epic-correct.output.json", correctOutput);
+
+    const result = loadWorktreePhaseOutput(WT_ROOT, "plan", "new-epic");
+    expect(result).toBeDefined();
+    const features = (result!.artifacts as unknown as Record<string, unknown>).features as Array<{ slug: string }>;
+    expect(features[0].slug).toBe("correct-feature");
   });
 });

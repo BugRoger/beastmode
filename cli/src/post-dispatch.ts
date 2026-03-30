@@ -11,8 +11,8 @@
 import type { Phase } from "./types";
 import type { PipelineManifest } from "./manifest-store";
 import * as store from "./manifest-store";
-import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
-import { loadPhaseOutput, extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput } from "./phase-output";
+import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase, setGitHubEpic, setFeatureGitHubIssue } from "./manifest";
+import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
@@ -48,8 +48,8 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       return;
     }
 
-    // Load phase output from the worktree artifacts dir (where the stop hook writes)
-    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase);
+    // Load phase output from the worktree artifacts dir (filtered by epic slug)
+    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase, opts.epicSlug);
     if (output) {
       console.log(`[post-dispatch] Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
     } else {
@@ -117,7 +117,26 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       if (config.github.enabled) {
         const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
         if (resolved) {
-          await syncGitHub(manifest, config, resolved);
+          const syncResult = await syncGitHub(manifest, config, resolved);
+
+          // Apply mutations back to manifest
+          for (const mutation of syncResult.mutations) {
+            if (mutation.type === "setEpic") {
+              manifest = setGitHubEpic(manifest, mutation.epicNumber, mutation.repo);
+            } else if (mutation.type === "setFeatureIssue") {
+              manifest = setFeatureGitHubIssue(manifest, mutation.featureSlug, mutation.issueNumber);
+            }
+          }
+
+          if (syncResult.mutations.length > 0) {
+            store.save(opts.projectRoot, opts.epicSlug, manifest);
+            console.log(`[post-dispatch] Applied ${syncResult.mutations.length} GitHub mutation(s)`);
+          }
+
+          for (const warning of syncResult.warnings) {
+            console.log(`[post-dispatch] GitHub sync warning: ${warning}`);
+          }
+
           console.log("[post-dispatch] GitHub sync complete");
         } else {
           console.log("[post-dispatch] GitHub discovery failed — skipping sync");

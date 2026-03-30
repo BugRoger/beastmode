@@ -6,7 +6,7 @@
  */
 
 import { resolve } from "node:path";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { WatchLoop } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
@@ -21,7 +21,28 @@ import * as store from "./manifest-store.js";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest.js";
 import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
 import type { Phase } from "./types.js";
-import { loadWorktreePhaseOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
+import { loadWorktreePhaseOutput, extractFeatureStatuses, extractArtifactPaths, filenameMatchesEpic } from "./phase-output.js";
+
+/**
+ * Remove stale output.json files from a worktree's artifacts directory
+ * that don't belong to the current epic. Prevents the stop hook or
+ * reconciliation from picking up outputs from prior epics.
+ */
+function cleanStaleOutputs(worktreePath: string, phase: string, epicSlug: string): void {
+  const dir = resolve(worktreePath, ".beastmode", "artifacts", phase);
+  if (!existsSync(dir)) return;
+
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith(".output.json")) continue;
+    if (filenameMatchesEpic(f, epicSlug)) continue;
+    try {
+      unlinkSync(resolve(dir, f));
+      console.log(`[watch] Cleaned stale output: ${phase}/${f}`);
+    } catch {
+      // Best-effort cleanup
+    }
+  }
+}
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -52,8 +73,8 @@ function reconcileState(opts: {
   let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
   if (!manifest) return undefined;
 
-  // 2. Load output.json from worktree artifacts dir
-  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
+  // 2. Load output.json from worktree artifacts dir (filtered by epic slug)
+  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug);
 
   // 3. Enrich from output.json (features, artifact paths)
   if (output) {
@@ -138,15 +159,20 @@ class ReconcilingFactory implements SessionFactory {
   }
 
   async create(opts: SessionCreateOpts): Promise<SessionHandle> {
-    const handle = await this.inner.create(opts);
     const { projectRoot } = this;
 
+    // Worktree path is deterministic from epic slug — compute before dispatch
     const worktreePath = resolve(
       projectRoot,
       ".claude",
       "worktrees",
-      handle.worktreeSlug,
+      opts.epicSlug,
     );
+
+    // Clean stale output.json from prior epics before dispatching
+    cleanStaleOutputs(worktreePath, opts.phase, opts.epicSlug);
+
+    const handle = await this.inner.create(opts);
 
     const wrappedPromise = handle.promise.then(async (result) => {
       let sessionResult = result;

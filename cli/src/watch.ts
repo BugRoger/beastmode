@@ -14,6 +14,8 @@ import type {
 import type { SessionFactory } from "./session.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 /** Injected dependencies — allows testing without real SDK/scanner. */
 export interface WatchDeps {
@@ -195,7 +197,56 @@ export class WatchLoop {
     epic: EnrichedManifest,
     features: string[],
   ): Promise<void> {
-    for (const featureSlug of features) {
+    // Validate feature provenance when worktree exists: each feature must
+    // have a plan file with matching epic frontmatter. Skip check if worktree
+    // hasn't been created yet (session factory will create it).
+    const worktreePath = resolve(
+      this.config.projectRoot,
+      ".claude",
+      "worktrees",
+      epic.slug,
+    );
+
+    let featuresToDispatch = features;
+
+    if (existsSync(worktreePath)) {
+      const validFeatures = features.filter((featureSlug) => {
+        const feature = epic.features.find((f) => f.slug === featureSlug);
+        if (!feature?.plan) {
+          console.error(`[watch] ${epic.slug}: skipping feature ${featureSlug} — no plan file reference`);
+          return false;
+        }
+        const planPath = resolve(worktreePath, ".beastmode", "artifacts", "plan", feature.plan);
+        if (!existsSync(planPath)) {
+          console.error(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file missing: ${feature.plan}`);
+          return false;
+        }
+        try {
+          const content = readFileSync(planPath, "utf-8");
+          const match = content.match(/^epic:\s*(.+)$/m);
+          if (match) {
+            const fileEpic = match[1].trim().replace(/^['"]|['"]$/g, "");
+            if (fileEpic !== epic.slug) {
+              console.error(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epic.slug}, got ${fileEpic})`);
+              return false;
+            }
+          }
+        } catch {
+          console.error(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file unreadable`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFeatures.length === 0 && features.length > 0) {
+        console.error(`[watch] ${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
+        return;
+      }
+
+      featuresToDispatch = validFeatures;
+    }
+
+    for (const featureSlug of featuresToDispatch) {
       // Don't double-dispatch the same feature
       if (this.tracker.hasFeatureSession(epic.slug, featureSlug)) continue;
 
