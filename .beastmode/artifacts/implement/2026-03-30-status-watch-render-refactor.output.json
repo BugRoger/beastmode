@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "render-refactor",
+        "status": "completed"
+      }
+    ]
+  }
+}

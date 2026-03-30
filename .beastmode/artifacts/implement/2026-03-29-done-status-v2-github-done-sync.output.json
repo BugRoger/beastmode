@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "github-done-sync",
+        "status": "completed"
+      }
+    ]
+  }
+}

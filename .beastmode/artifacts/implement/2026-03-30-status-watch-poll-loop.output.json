@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "poll-loop",
+        "status": "completed"
+      }
+    ]
+  }
+}
