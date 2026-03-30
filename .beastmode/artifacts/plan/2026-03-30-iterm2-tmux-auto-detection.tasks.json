@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-iterm2-tmux-auto-detection.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: iTerm2 environment detection module", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Update DispatchStrategy type and config", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Extend watch-command strategy selection", "wave": 2, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Unit tests for strategy selection", "wave": 3, "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-30T00:15:00.000Z"
+}

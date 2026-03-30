@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {"slug": "auto-detection", "plan": "2026-03-30-iterm2-tmux-auto-detection.md"},
+      {"slug": "it2-client-and-session", "plan": "2026-03-30-iterm2-tmux-it2-client-and-session.md"},
+      {"slug": "reconciliation-notify", "plan": "2026-03-30-iterm2-tmux-reconciliation-notify.md"}
+    ]
+  }
+}

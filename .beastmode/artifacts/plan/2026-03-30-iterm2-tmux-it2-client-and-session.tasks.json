@@ -1,0 +1,11 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-iterm2-tmux-it2-client-and-session.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: It2Client — Error types and interface", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: It2Client — Unit tests", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: ITermSessionFactory — Implementation", "wave": 2, "status": "pending"},
+    {"id": 3, "subject": "Task 3: ITermSessionFactory — Unit tests", "wave": 2, "status": "pending"},
+    {"id": 4, "subject": "Task 4: Wire iterm2 strategy into watch-command and config", "wave": 3, "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-30T00:00:00Z"
+}

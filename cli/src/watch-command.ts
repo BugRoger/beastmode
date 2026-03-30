@@ -15,6 +15,7 @@ import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session
 import { SdkSessionFactory } from "./session.js";
 import { CmuxSessionFactory } from "./cmux-session.js";
 import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
+import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "./iterm2-detect.js";
 import * as worktree from "./worktree.js";
 import { scanEpics } from "./state-scanner.js";
 import * as store from "./manifest-store.js";
@@ -327,27 +328,77 @@ async function logRun(opts: {
   writeFileSync(runsPath, JSON.stringify(runs, null, 2));
 }
 
+/** Result of strategy selection — which strategy was chosen and why. */
+export interface StrategySelection {
+  strategy: "iterm2" | "cmux" | "sdk";
+  sessionId?: string;
+}
+
+/**
+ * Select the dispatch strategy based on config, checking availability
+ * of iTerm2 and cmux in priority order.
+ *
+ * Exported for testability — watchCommand wires the result to a factory.
+ */
+export async function selectStrategy(
+  configured: string,
+  deps: {
+    checkIterm2: typeof iterm2Available;
+    checkCmux: typeof cmuxAvailable;
+  } = { checkIterm2: iterm2Available, checkCmux: cmuxAvailable },
+): Promise<StrategySelection> {
+  if (configured === "iterm2") {
+    const result = await deps.checkIterm2();
+    if (!result.available) {
+      console.error(`[watch] iTerm2 dispatch strategy requested but not available: ${result.reason}`);
+      console.error(IT2_SETUP_INSTRUCTIONS);
+      throw new Error("iTerm2 dispatch strategy unavailable");
+    }
+    console.log(`[watch] Using iTerm2 dispatch strategy (session: ${result.sessionId})`);
+    return { strategy: "iterm2", sessionId: result.sessionId };
+  }
+
+  if (configured === "auto") {
+    const iterm2Result = await deps.checkIterm2();
+    if (iterm2Result.available) {
+      console.log(`[watch] Auto-detected iTerm2 (session: ${iterm2Result.sessionId})`);
+      return { strategy: "iterm2", sessionId: iterm2Result.sessionId };
+    }
+    const cmuxOk = await deps.checkCmux();
+    if (cmuxOk) {
+      console.log("[watch] Using cmux dispatch strategy");
+      return { strategy: "cmux" };
+    }
+    console.log("[watch] Using SDK dispatch strategy");
+    return { strategy: "sdk" };
+  }
+
+  if (configured === "cmux") {
+    const available = await deps.checkCmux();
+    if (available) {
+      console.log("[watch] Using cmux dispatch strategy");
+      return { strategy: "cmux" };
+    }
+    console.error("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
+    return { strategy: "sdk" };
+  }
+
+  return { strategy: "sdk" };
+}
+
 /** Main entry point for `beastmode watch`. */
 export async function watchCommand(_args: string[]): Promise<void> {
   const projectRoot = findProjectRoot();
   const config = loadConfig(projectRoot);
 
-  // Select dispatch strategy based on config
-  const strategy = config.cli["dispatch-strategy"] ?? "sdk";
+  const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk");
   let innerFactory: SessionFactory;
 
-  if (strategy === "cmux" || strategy === "auto") {
-    const available = await cmuxAvailable();
-    if (available) {
-      console.log("[watch] Using cmux dispatch strategy");
-      innerFactory = new CmuxSessionFactory(new CmuxClient());
-    } else if (strategy === "cmux") {
-      console.error("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
-      innerFactory = new SdkSessionFactory(dispatchPhase);
-    } else {
-      innerFactory = new SdkSessionFactory(dispatchPhase);
-    }
+  if (selected.strategy === "cmux") {
+    innerFactory = new CmuxSessionFactory(new CmuxClient());
   } else {
+    // Both "iterm2" (placeholder) and "sdk" use SdkSessionFactory for now
+    // ITermSessionFactory will be added by the it2-client-and-session feature
     innerFactory = new SdkSessionFactory(dispatchPhase);
   }
 
