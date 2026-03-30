@@ -20,9 +20,11 @@ If deviations were tracked during execution, save to `.beastmode/artifacts/imple
     ## Architectural
     - Task N: <description> — User decision: <choice>
 
-If no deviations, skip this step.
+If no deviations, still write this file with "Deviations: 0" and "No deviations" body.
+This file MUST always be written — the stop hook reads its frontmatter to generate
+output.json, which the watch loop uses to detect completion.
 
-Note: The primary implement artifact (the deviation log when it exists) must begin with YAML frontmatter:
+The artifact MUST begin with YAML frontmatter:
 
 ```yaml
 ---

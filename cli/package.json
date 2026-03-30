@@ -1,6 +1,6 @@
 {
   "name": "beastmode",
-  "version": "0.1.0",
+  "version": "0.45.0",
   "type": "module",
   "bin": {
     "beastmode": "src/index.ts"
