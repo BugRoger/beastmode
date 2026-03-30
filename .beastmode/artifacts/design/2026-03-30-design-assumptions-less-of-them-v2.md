@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: slugless-design
+slug: design-assumptions-less-of-them-v2
 ---
 
 ## Problem Statement

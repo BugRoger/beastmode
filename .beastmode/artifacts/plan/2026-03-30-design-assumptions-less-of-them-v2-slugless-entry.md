@@ -1,12 +1,12 @@
 ---
 phase: plan
-epic: slugless-design
+epic: design-assumptions-less-of-them-v2
 feature: slugless-entry
 ---
 
 # Slugless Entry
 
-**Design:** `.beastmode/artifacts/design/2026-03-30-slugless-design.md`
+**Design:** `.beastmode/artifacts/design/2026-03-30-design-assumptions-less-of-them-v2.md`
 
 ## User Stories
 
