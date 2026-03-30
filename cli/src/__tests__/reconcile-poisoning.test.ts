@@ -259,7 +259,7 @@ describe("reconcileState — feature isolation", () => {
     ]));
 
     // Session exited 0 but no output.json written
-    const progress = reconcileState({
+    reconcileState({
       worktreePath: WORKTREE,
       projectRoot: TEST_ROOT,
       epicSlug: EPIC,

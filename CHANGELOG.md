@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.46.0 — Status Watch (Mar 2026)
+
+- **Live watch mode** — `beastmode status --watch` / `-w` turns the one-shot status command into a live-updating terminal dashboard that polls manifest state every 2 seconds
+- **Change highlighting** — Rows that transitioned since last poll render with bold/inverse for one cycle, then revert
+- **Dashboard header** — Shows watch loop running indicator (lockfile-based detection) and blocked gate details per epic
+- **Render refactor** — Extracted status table rendering into a reusable pure function, separated render logic from command handler
+- **Pipeline fixes** — Fixed GitHub sync race conditions, feature isolation in dispatch fan-out, YAML parser quote stripping, cmux session feature-specific output detection, and epic-scoped output provenance
+
 ### v0.45.0 — GitHub No For Real Sync (Mar 2026)
 
 - **Reconciling factory** — Extract state reconciliation and release teardown from `dispatchPhase` into `ReconcilingFactory`, eliminating duplication between SDK and cmux paths

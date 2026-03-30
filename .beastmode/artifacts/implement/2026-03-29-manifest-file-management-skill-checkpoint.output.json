@@ -2,7 +2,10 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "skill-checkpoint", "status": "completed"}
+      {
+        "slug": "skill-checkpoint",
+        "status": "completed"
+      }
     ]
   }
 }

@@ -21,6 +21,7 @@ function makeEpic(features: Array<{ slug: string; status: string }>): EnrichedMa
   return {
     slug: "test-epic",
     phase: "implement",
+    manifestPath: "/tmp/test-epic/manifest.json",
     features: features.map((f) => ({
       slug: f.slug,
       plan: `${f.slug}.md`,
@@ -28,7 +29,7 @@ function makeEpic(features: Array<{ slug: string; status: string }>): EnrichedMa
     })),
     artifacts: {},
     lastUpdated: new Date().toISOString(),
-    blocked: false,
+    blocked: null,
     nextAction: {
       phase: "implement",
       args: ["test-epic"],
@@ -122,8 +123,8 @@ describe("watch dispatch race prevention", () => {
     }
 
     // Each feature should be dispatched at most once in the rescan wave
-    for (const [slug, count] of counts) {
-      expect(count).toBe(1);  // ${slug} should only be dispatched once
+    for (const [, count] of counts) {
+      expect(count).toBe(1);
     }
   });
 

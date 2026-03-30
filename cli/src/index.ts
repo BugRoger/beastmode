@@ -21,7 +21,7 @@ Usage:
   beastmode release <slug>             Create a release
   beastmode cancel <slug>              Cancel and clean up an epic
   beastmode watch                      Autonomous pipeline orchestration
-  beastmode status [--all]              Show pipeline status
+  beastmode status [--all] [--watch|-w] Show pipeline status
   beastmode help                       Show this help message`);
 }
 

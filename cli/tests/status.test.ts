@@ -4,6 +4,9 @@ import {
   formatTable,
   formatFeatures,
   formatStatus,
+  renderWatchIndicator,
+  renderStatusScreen,
+  formatWatchHeader,
   type StatusRow,
 } from "../src/commands/status";
 import type { EnrichedManifest } from "../src/state-scanner";
@@ -281,5 +284,109 @@ describe("formatTable", () => {
     expect(lines).toHaveLength(4);
     expect(stripAnsi(lines[2])).toContain("epic-a");
     expect(stripAnsi(lines[3])).toContain("epic-b");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderWatchIndicator
+// ---------------------------------------------------------------------------
+
+describe("renderWatchIndicator", () => {
+  test("running shows green 'watch: running'", () => {
+    const result = renderWatchIndicator(true);
+    expect(stripAnsi(result)).toBe("watch: running");
+    expect(result).toContain("\x1b[32m"); // green
+  });
+
+  test("stopped shows dim 'watch: stopped'", () => {
+    const result = renderWatchIndicator(false);
+    expect(stripAnsi(result)).toBe("watch: stopped");
+    expect(result).toContain("\x1b[2m"); // dim
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatWatchHeader
+// ---------------------------------------------------------------------------
+
+describe("formatWatchHeader", () => {
+  test("shows timestamp and running status", () => {
+    const result = formatWatchHeader({ timestamp: "14:30:05", watchRunning: true });
+    const visible = stripAnsi(result);
+    expect(visible).toContain("14:30:05");
+    expect(visible).toContain("running");
+    expect(result).toContain("\x1b[32m"); // green for running
+  });
+
+  test("shows timestamp and stopped status", () => {
+    const result = formatWatchHeader({ timestamp: "09:00:00", watchRunning: false });
+    const visible = stripAnsi(result);
+    expect(visible).toContain("09:00:00");
+    expect(visible).toContain("stopped");
+    expect(result).toContain("\x1b[2m"); // dim for stopped
+  });
+
+  test("includes 'Last updated:' prefix", () => {
+    const result = stripAnsi(formatWatchHeader({ timestamp: "12:00:00", watchRunning: true }));
+    expect(result).toContain("Last updated:");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderStatusScreen
+// ---------------------------------------------------------------------------
+
+describe("renderStatusScreen", () => {
+  test("without meta returns same as renderStatusTable (backward compat)", () => {
+    const epics = [makeEpic({ slug: "alpha", phase: "implement" })];
+    const result = renderStatusScreen(epics, { all: false });
+    // Should be just the table, no header
+    const visible = stripAnsi(result);
+    expect(visible).toContain("Epic");
+    expect(visible).toContain("alpha");
+    expect(visible).not.toContain("Last updated:");
+  });
+
+  test("with meta prepends watch header above table", () => {
+    const epics = [makeEpic({ slug: "beta", phase: "design" })];
+    const meta = { timestamp: "10:15:30", watchRunning: true };
+    const result = renderStatusScreen(epics, { all: false }, meta);
+    const visible = stripAnsi(result);
+    // Header should come first
+    expect(visible).toContain("Last updated: 10:15:30");
+    expect(visible).toContain("running");
+    // Table should follow
+    expect(visible).toContain("Epic");
+    expect(visible).toContain("beta");
+  });
+
+  test("header and table are separated by blank line", () => {
+    const epics = [makeEpic({ slug: "gamma", phase: "plan" })];
+    const meta = { timestamp: "23:59:59", watchRunning: false };
+    const result = renderStatusScreen(epics, {}, meta);
+    // Header + \n\n + table
+    expect(result).toContain("\n\n");
+  });
+
+  test("respects all flag with meta", () => {
+    const epics = [
+      makeEpic({ slug: "active", phase: "implement" }),
+      makeEpic({ slug: "finished", phase: "done", nextAction: null }),
+    ];
+    const meta = { timestamp: "08:00:00", watchRunning: true };
+
+    const withoutAll = stripAnsi(renderStatusScreen(epics, { all: false }, meta));
+    const withAll = stripAnsi(renderStatusScreen(epics, { all: true }, meta));
+
+    expect(withoutAll).not.toContain("finished");
+    expect(withAll).toContain("finished");
+  });
+
+  test("empty epics with meta still shows header and no-epics message", () => {
+    const meta = { timestamp: "00:00:00", watchRunning: false };
+    const result = renderStatusScreen([], {}, meta);
+    const visible = stripAnsi(result);
+    expect(visible).toContain("Last updated: 00:00:00");
+    expect(visible).toContain("No epics found.");
   });
 });

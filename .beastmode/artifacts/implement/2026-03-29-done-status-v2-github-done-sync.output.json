@@ -2,7 +2,10 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "github-done-sync", "status": "completed"}
+      {
+        "slug": "github-done-sync",
+        "status": "completed"
+      }
     ]
   }
 }
