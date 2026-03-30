@@ -2,7 +2,12 @@
 
 ## 1. Save Deviation Log
 
-If deviations were tracked during execution, save to `.beastmode/artifacts/implement/YYYY-MM-DD-<design>-<feature-slug>-deviations.md`:
+Save to `.beastmode/artifacts/implement/YYYY-MM-DD-<design>-<feature-slug>.md`:
+
+IMPORTANT: The filename MUST be exactly `YYYY-MM-DD-<design>-<feature-slug>.md` — no
+extra suffixes like `-deviations`. The stop hook derives the output.json filename from
+this basename, and the watch loop matches on `-<epic>-<feature>.output.json`. Any extra
+suffix breaks the match and the watch loop never sees completion.
 
     # Implementation Deviations: <feature-slug>
 
