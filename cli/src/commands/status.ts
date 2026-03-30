@@ -3,6 +3,8 @@ import type { EnrichedManifest } from "../state-scanner";
 import { scanEpics } from "../state-scanner";
 import { findProjectRoot } from "../project-root";
 import { readLockfile } from "../lockfile";
+import { toSnapshots, detectChanges as detectMapChanges } from "../change-detect";
+import type { EpicSnapshot } from "../change-detect";
 
 export interface StatusRow {
   name: string;
@@ -59,6 +61,17 @@ export function renderWatchIndicator(running: boolean): string {
   return running
     ? color("watch: running", ANSI.green)
     : color("watch: stopped", ANSI.dim);
+}
+
+/** Render blocked gate details for the dashboard header. */
+export function renderBlockedDetails(epics: EnrichedManifest[]): string {
+  const blocked = epics.filter(e => e.blocked !== null && e.blocked !== undefined);
+  if (blocked.length === 0) return "";
+  const lines = blocked.map(e => {
+    const b = e.blocked!;
+    return color(`  ${e.slug}: ${b.gate} — ${b.reason}`, ANSI.red);
+  });
+  return color("Blocked:", ANSI.red, ANSI.bold) + "\n" + lines.join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +156,54 @@ function padDisplay(str: string, len: number): string {
   return visible >= len ? str : str + " ".repeat(len - visible);
 }
 
+// ---------------------------------------------------------------------------
+// Change detection — compare two tick snapshots, return changed epic slugs
+// ---------------------------------------------------------------------------
+
+export interface StatusSnapshot {
+  slug: string;
+  phase: string;
+  featuresCompleted: number;
+  featuresTotal: number;
+  blocked: boolean;
+}
+
+/** Build a snapshot from enriched manifests for change comparison. */
+export function buildSnapshot(epics: EnrichedManifest[]): StatusSnapshot[] {
+  return epics.map(epic => ({
+    slug: epic.slug,
+    phase: epic.phase,
+    featuresCompleted: epic.features.filter(f => f.status === "completed").length,
+    featuresTotal: epic.features.length,
+    blocked: epic.blocked !== null,
+  }));
+}
+
+/** Compare two snapshots and return the set of epic slugs that changed. */
+export function detectChanges(prev: StatusSnapshot[], curr: StatusSnapshot[]): Set<string> {
+  const changed = new Set<string>();
+  const prevMap = new Map(prev.map(s => [s.slug, s]));
+
+  for (const c of curr) {
+    const p = prevMap.get(c.slug);
+    if (!p) {
+      // New epic appeared
+      changed.add(c.slug);
+      continue;
+    }
+    if (
+      p.phase !== c.phase ||
+      p.featuresCompleted !== c.featuresCompleted ||
+      p.featuresTotal !== c.featuresTotal ||
+      p.blocked !== c.blocked
+    ) {
+      changed.add(c.slug);
+    }
+  }
+
+  return changed;
+}
+
 /** Wrap all columns of a StatusRow in bold+inverse ANSI for one render cycle. */
 export function highlightRow(row: StatusRow): StatusRow {
   const hl = (s: string) => `\x1b[1m\x1b[7m${s}\x1b[0m`;
@@ -224,23 +285,33 @@ export function renderStatusScreen(
 ): string {
   const table = renderStatusTable(epics, opts, changedSlugs);
   if (meta) {
-    return formatWatchHeader(meta) + "\n\n" + table;
+    const blockedSection = renderBlockedDetails(epics);
+    const parts = [formatWatchHeader(meta)];
+    if (blockedSection) parts.push(blockedSection);
+    parts.push(table);
+    return parts.join("\n\n");
   }
   return table;
 }
 
 // ---------------------------------------------------------------------------
-// Watch loop (placeholder — implemented by Task 1)
+// Watch loop
 // ---------------------------------------------------------------------------
 
 export async function statusWatchLoop(projectRoot: string, all: boolean): Promise<void> {
   const POLL_MS = 2000;
+  let prevSnapshot: Map<string, EpicSnapshot> = new Map();
 
   async function render(): Promise<void> {
     // Clear screen: cursor home + erase display
     process.stdout.write("\x1b[H\x1b[2J");
 
     const { epics } = await scanEpics(projectRoot);
+
+    // Change detection
+    const currSnapshot = toSnapshots(epics);
+    const changedSlugs = detectMapChanges(prevSnapshot, currSnapshot);
+    prevSnapshot = currSnapshot;
 
     const now = new Date();
     const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
@@ -252,7 +323,7 @@ export async function statusWatchLoop(projectRoot: string, all: boolean): Promis
       watchRunning: isWatchRunning(projectRoot),
     };
 
-    const screen = renderStatusScreen(epics, { all }, meta);
+    const screen = renderStatusScreen(epics, { all }, meta, changedSlugs);
     const footer = `\n${color("Ctrl+C to exit", ANSI.dim)}`;
 
     process.stdout.write(`${screen}\n${footer}\n`);

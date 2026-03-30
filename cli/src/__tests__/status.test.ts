@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator } from "../commands/status";
-import type { WatchMeta } from "../commands/status";
+import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, renderBlockedDetails, buildSnapshot, detectChanges, highlightRow } from "../commands/status";
+import type { WatchMeta, StatusSnapshot } from "../commands/status";
 import type { EnrichedManifest } from "../state-scanner";
 
 /**
@@ -401,5 +401,104 @@ describe("formatWatchHeader", () => {
     const meta: WatchMeta = { timestamp: "09:15:30", watchRunning: false };
     const result = formatWatchHeader(meta);
     expect(stripAnsi(result)).toContain("watch:");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderWatchIndicator
+// ---------------------------------------------------------------------------
+
+describe("renderWatchIndicator", () => {
+  test("returns 'watch: running' with green ANSI when true", () => {
+    const result = renderWatchIndicator(true);
+    expect(stripAnsi(result)).toBe("watch: running");
+    expect(result).toContain("\x1b[32m");
+  });
+
+  test("returns 'watch: stopped' with dim ANSI when false", () => {
+    const result = renderWatchIndicator(false);
+    expect(stripAnsi(result)).toBe("watch: stopped");
+    expect(result).toContain("\x1b[2m");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// highlightRow
+// ---------------------------------------------------------------------------
+
+describe("highlightRow", () => {
+  test("wraps all fields in bold+inverse ANSI", () => {
+    const row = { name: "epic-a", phase: "design", features: "1/2", status: "design" };
+    const highlighted = highlightRow(row);
+    // Each field should start with bold (\x1b[1m) + inverse (\x1b[7m)
+    expect(highlighted.name).toContain("\x1b[1m");
+    expect(highlighted.name).toContain("\x1b[7m");
+    expect(highlighted.phase).toContain("\x1b[1m");
+    expect(highlighted.features).toContain("\x1b[1m");
+    expect(highlighted.status).toContain("\x1b[1m");
+  });
+
+  test("preserves original text content", () => {
+    const row = { name: "my-epic", phase: "implement", features: "3/5", status: "implement" };
+    const highlighted = highlightRow(row);
+    expect(stripAnsi(highlighted.name)).toBe("my-epic");
+    expect(stripAnsi(highlighted.phase)).toBe("implement");
+    expect(stripAnsi(highlighted.features)).toBe("3/5");
+    expect(stripAnsi(highlighted.status)).toBe("implement");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderStatusScreen
+// ---------------------------------------------------------------------------
+
+describe("renderStatusScreen", () => {
+  test("returns just the table when meta is undefined", () => {
+    const epics = [makeEpic({ slug: "alpha", phase: "implement" })];
+    const withoutMeta = renderStatusScreen(epics);
+    const tableOnly = renderStatusTable(epics);
+    expect(withoutMeta).toBe(tableOnly);
+  });
+
+  test("prepends watch header when meta is provided", () => {
+    const epics = [makeEpic({ slug: "beta", phase: "design" })];
+    const meta: WatchMeta = { timestamp: "10:00:00", watchRunning: true };
+    const result = renderStatusScreen(epics, {}, meta);
+    const plain = stripAnsi(result);
+    expect(plain).toContain("Last updated: 10:00:00");
+    expect(plain).toContain("running");
+    expect(plain).toContain("beta");
+  });
+
+  test("header is separated from table by blank line", () => {
+    const epics = [makeEpic({ slug: "gamma", phase: "plan" })];
+    const meta: WatchMeta = { timestamp: "11:00:00", watchRunning: false };
+    const result = renderStatusScreen(epics, {}, meta);
+    // Header line, then \n\n, then table
+    expect(result).toContain("\n\n");
+  });
+
+  test("passes changedSlugs through to highlight rows", () => {
+    const epics = [
+      makeEpic({ slug: "changed-one", phase: "implement" }),
+      makeEpic({ slug: "stable-one", phase: "design" }),
+    ];
+    const meta: WatchMeta = { timestamp: "12:00:00", watchRunning: true };
+    const changed = new Set(["changed-one"]);
+    const result = renderStatusScreen(epics, {}, meta, changed);
+    // The changed row should have bold+inverse ANSI
+    expect(result).toContain("\x1b[7m");
+  });
+
+  test("respects all flag with meta", () => {
+    const epics = [
+      makeEpic({ slug: "active", phase: "implement" }),
+      makeEpic({ slug: "finished", phase: "done", nextAction: null }),
+    ];
+    const meta: WatchMeta = { timestamp: "13:00:00", watchRunning: false };
+    const withAll = stripAnsi(renderStatusScreen(epics, { all: true }, meta));
+    const withoutAll = stripAnsi(renderStatusScreen(epics, {}, meta));
+    expect(withAll).toContain("finished");
+    expect(withoutAll).not.toContain("finished");
   });
 });
