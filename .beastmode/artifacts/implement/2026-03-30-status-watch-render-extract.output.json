@@ -1,0 +1,21 @@
+---
+phase: implement
+epic: status-watch
+feature: render-extract
+status: completed
+---
+
+# Implementation: render-extract
+
+**Date:** 2026-03-30
+**Feature Plan:** .beastmode/artifacts/plan/2026-03-30-status-watch-render-extract.md
+**Tasks completed:** 2/2
+**Deviations:** 0 total
+
+No deviations — plan executed exactly as written.
+
+## Changes
+
+- Extracted `renderStatusTable(epics, opts)` — pure function that composes `buildStatusRows` + `formatTable`, returns the formatted string
+- Refactored `statusCommand` to call `renderStatusTable` and print the result
+- All 43 existing tests pass without modification

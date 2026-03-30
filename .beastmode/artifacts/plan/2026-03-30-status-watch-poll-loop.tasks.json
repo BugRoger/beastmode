@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-status-watch-poll-loop.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add --watch/-w flag parsing to status command", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Implement watch loop with ANSI redraw and SIGINT cleanup", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Write tests for watch loop components", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-30T10:00:00Z"
+}

@@ -140,6 +140,15 @@ export function formatTable(rows: StatusRow[]): string {
 }
 
 // ---------------------------------------------------------------------------
+// Render pipeline — pure function, no I/O
+// ---------------------------------------------------------------------------
+
+export function renderStatusTable(epics: EnrichedManifest[], opts: { all?: boolean } = {}): string {
+  const rows = buildStatusRows(epics, opts);
+  return formatTable(rows);
+}
+
+// ---------------------------------------------------------------------------
 // Command entry point
 // ---------------------------------------------------------------------------
 
@@ -147,6 +156,5 @@ export async function statusCommand(_config: BeastmodeConfig, args: string[] = [
   const all = args.includes("--all");
   const projectRoot = findProjectRoot();
   const { epics } = await scanEpics(projectRoot);
-  const rows = buildStatusRows(epics, { all });
-  console.log(formatTable(rows));
+  console.log(renderStatusTable(epics, { all }));
 }
