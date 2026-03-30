@@ -78,6 +78,7 @@ function parseSimpleYaml(content: string): Record<string, unknown> {
       if (value === "true") parent[key] = true;
       else if (value === "false") parent[key] = false;
       else if (/^\d+$/.test(value)) parent[key] = parseInt(value, 10);
+      else if (/^["'].*["']$/.test(value)) parent[key] = value.slice(1, -1);
       else parent[key] = value;
     }
   }

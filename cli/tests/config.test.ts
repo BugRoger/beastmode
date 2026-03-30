@@ -34,7 +34,7 @@ cli:
 
     const config = loadConfig(tempDir);
     expect(config.github.enabled).toBe(true);
-    expect(config.github["project-name"]).toBe('"Test Project"');
+    expect(config.github["project-name"]).toBe("Test Project");
     expect(config.cli.interval).toBe(30);
     expect(config.gates.implement?.["architectural-deviation"]).toBe("auto");
     expect(config.gates.implement?.["blocked-task-decision"]).toBe("human");

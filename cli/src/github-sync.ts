@@ -19,6 +19,7 @@ import {
   ghIssueState,
   ghIssueLabels,
   ghProjectItemAdd,
+  ghProjectItemDelete,
   ghProjectSetField,
   ghSubIssueAdd,
 } from "./gh";
@@ -263,37 +264,32 @@ async function syncFeature(
     }
   }
 
-  // Update project board status for feature
-  const featureBoardStatus = featureStatusToBoardStatus(feature.status);
-  if (featureBoardStatus) {
-    await syncProjectStatus(
-      resolved,
-      owner,
-      repo,
-      featureNumber,
-      featureBoardStatus,
-      result,
-    );
-  }
+  // Remove feature from project board — only epics belong there
+  await removeFromProject(resolved, owner, repo, featureNumber, result);
 }
 
 /**
- * Map feature status to project board status.
+ * Remove an issue from the project board (if present).
+ * Uses ghProjectItemAdd to get the item ID (idempotent), then deletes it.
  */
-function featureStatusToBoardStatus(
-  status: ManifestFeature["status"],
-): string | undefined {
-  switch (status) {
-    case "pending":
-      return "Plan";
-    case "in-progress":
-      return "Implement";
-    case "blocked":
-      return "Plan";
-    case "completed":
-      return "Done";
-    default:
-      return undefined;
+async function removeFromProject(
+  resolved: ResolvedGitHub,
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  result: SyncResult,
+): Promise<void> {
+  const projectNumber = resolved.projectNumber;
+  const projectId = resolved.projectId;
+  if (!projectNumber || !projectId) return;
+
+  const issueUrl = `https://github.com/${repo}/issues/${issueNumber}`;
+  const itemId = await ghProjectItemAdd(projectNumber, owner, issueUrl);
+  if (!itemId) return;
+
+  const deleted = await ghProjectItemDelete(projectId, itemId);
+  if (!deleted) {
+    result.warnings.push(`Failed to remove #${issueNumber} from project board`);
   }
 }
 

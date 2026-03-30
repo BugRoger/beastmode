@@ -379,19 +379,25 @@ async function reconcileEpic(
   if (!manifest.github) return;
 
   try {
-    let current = manifest;
-    watchLog(`[watch] ${current.slug}: reconciling GitHub (phase: ${current.phase})`);
-    const result = await syncGitHub(current, config, resolved);
+    watchLog(`[watch] ${manifest.slug}: reconciling GitHub (phase: ${manifest.phase})`);
+    const result = await syncGitHub(manifest, config, resolved);
 
-    for (const mutation of result.mutations) {
-      if (mutation.type === "setEpic") {
-        current = setGitHubEpic(current, mutation.epicNumber, mutation.repo);
-      } else if (mutation.type === "setFeatureIssue") {
-        current = setFeatureGitHubIssue(current, mutation.featureSlug, mutation.issueNumber);
-      }
-    }
-
+    // Re-read the manifest FRESH from disk before applying mutations.
+    // syncGitHub takes a long time (many API calls). During that window,
+    // reconcileState may have updated feature statuses on disk.
+    // Applying mutations to the stale scan-time manifest would clobber those updates.
     if (result.mutations.length > 0) {
+      let current = store.load(projectRoot, manifest.slug);
+      if (!current) return; // manifest removed during sync — bail
+
+      for (const mutation of result.mutations) {
+        if (mutation.type === "setEpic") {
+          current = setGitHubEpic(current, mutation.epicNumber, mutation.repo);
+        } else if (mutation.type === "setFeatureIssue") {
+          current = setFeatureGitHubIssue(current, mutation.featureSlug, mutation.issueNumber);
+        }
+      }
+
       store.save(projectRoot, current.slug, current);
     }
 
@@ -403,13 +409,13 @@ async function reconcileEpic(
     if (result.projectUpdated) actions.push("board updated");
 
     if (actions.length > 0) {
-      watchLog(`[watch] ${current.slug}: GitHub reconciled (${actions.join(", ")})`);
+      watchLog(`[watch] ${manifest.slug}: GitHub reconciled (${actions.join(", ")})`);
     } else {
-      watchLog(`[watch] ${current.slug}: GitHub in sync`);
+      watchLog(`[watch] ${manifest.slug}: GitHub in sync`);
     }
 
     for (const warning of result.warnings) {
-      watchLog(`[watch] ${current.slug}: sync warning: ${warning}`);
+      watchLog(`[watch] ${manifest.slug}: sync warning: ${warning}`);
     }
   } catch (err) {
     watchErr(`[watch] ${manifest.slug}: GitHub reconcile failed:`, err);

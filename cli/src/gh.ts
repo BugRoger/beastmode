@@ -306,6 +306,29 @@ export async function ghProjectSetField(
   return data !== undefined;
 }
 
+/**
+ * Remove an item from a Projects V2 board via GraphQL.
+ */
+export async function ghProjectItemDelete(
+  projectId: string,
+  itemId: string,
+  opts: { cwd?: string } = {},
+): Promise<boolean> {
+  const data = await ghGraphQL(
+    `mutation($projectId: ID!, $itemId: ID!) {
+      deleteProjectV2Item(input: {
+        projectId: $projectId
+        itemId: $itemId
+      }) {
+        deletedItemId
+      }
+    }`,
+    { projectId, itemId },
+    { cwd: opts.cwd },
+  );
+  return data !== undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Discovery functions — runtime-discovered metadata, warn-and-continue
 // ---------------------------------------------------------------------------

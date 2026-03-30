@@ -30,7 +30,7 @@ interface DiscoveryCache extends ResolvedGitHub {
 }
 
 const CACHE_FILENAME = "github-discovery.cache.json";
-const FIELD_NAME = "Pipeline";
+const FIELD_NAME = "Status";
 
 function cachePath(projectRoot: string): string {
   return resolve(projectRoot, ".beastmode", "state", CACHE_FILENAME);
