@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "call-site-migration",
+        "status": "completed"
+      }
+    ]
+  }
+}
