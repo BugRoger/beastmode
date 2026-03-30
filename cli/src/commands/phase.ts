@@ -57,7 +57,7 @@ export async function phaseCommand(
   }
 
   // Seed manifest for design phase so runPostDispatch can enrich it
-  const epicSlug = args[0] || worktreeSlug;
+  const epicSlug = phase === "design" ? worktreeSlug : (args[0] || worktreeSlug);
   if (phase === "design" && !store.manifestExists(projectRoot, epicSlug)) {
     store.create(projectRoot, epicSlug, {
       worktree: { branch: `feature/${worktreeSlug}`, path: cwd },
@@ -114,8 +114,7 @@ export async function phaseCommand(
 
 function deriveWorktreeSlug(phase: Phase, args: string[]): string {
   if (phase === "design") {
-    const topic = args.join(" ");
-    return slugify(topic || "untitled");
+    return randomHex(6);
   }
   // All non-design phases use the epic slug directly
   return args[0] || "default";
@@ -129,6 +128,15 @@ export function slugify(input: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+/** Generate a random hex string of the specified length. */
+export function randomHex(length: number): string {
+  const bytes = new Uint8Array(Math.ceil(length / 2));
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, length);
 }
 
 function formatDuration(ms: number): string {

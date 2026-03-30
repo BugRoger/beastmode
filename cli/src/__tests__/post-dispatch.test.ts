@@ -264,4 +264,103 @@ describe("runPostDispatch", () => {
     // If we got here without throwing, the test passes
     expect(true).toBe(true);
   });
+
+  test("design phase with slug in output attempts rename (non-blocking on failure)", async () => {
+    const manifest = makeManifest({ phase: "design" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Write a design output with a slug field (simulating PRD frontmatter → output.json)
+    writePhaseOutput(WORKTREE, "design", EPIC_SLUG, {
+      status: "completed",
+      artifacts: { design: "some-prd.md", slug: "real-feature-name" },
+    });
+
+    // This will try to rename but fail (no git repo in test env).
+    // The important thing: it should NOT throw and should still advance the phase.
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "design",
+      success: true,
+    });
+
+    // Phase should still advance to plan despite rename failure
+    const updated = readTestManifest(EPIC_SLUG);
+    expect(updated.phase).toBe("plan");
+  });
+
+  test("non-design phase with slug in output does not trigger rename", async () => {
+    const manifest = makeManifest({ phase: "plan" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Write plan output that happens to have a slug field
+    writePhaseOutput(WORKTREE, "plan", EPIC_SLUG, {
+      status: "completed",
+      artifacts: {
+        features: [{ slug: "feat-a", plan: "feat-a.md" }],
+        slug: "should-be-ignored",
+      },
+    });
+
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "plan",
+      success: true,
+    });
+
+    // Manifest slug should remain unchanged — rename was not triggered
+    const updated = readTestManifest(EPIC_SLUG);
+    expect(updated.slug).toBe(EPIC_SLUG);
+  });
+
+  test("design phase without slug in output skips rename", async () => {
+    const manifest = makeManifest({ phase: "design" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Write design output WITHOUT a slug field
+    writePhaseOutput(WORKTREE, "design", EPIC_SLUG, {
+      status: "completed",
+      artifacts: { design: "some-prd.md" },
+    });
+
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "design",
+      success: true,
+    });
+
+    // Manifest should still be under the original slug, phase advanced
+    const updated = readTestManifest(EPIC_SLUG);
+    expect(updated.slug).toBe(EPIC_SLUG);
+    expect(updated.phase).toBe("plan");
+  });
+
+  test("design phase where slug matches epicSlug skips rename", async () => {
+    const manifest = makeManifest({ phase: "design" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Write design output where slug === epicSlug (no rename needed)
+    writePhaseOutput(WORKTREE, "design", EPIC_SLUG, {
+      status: "completed",
+      artifacts: { design: "some-prd.md", slug: EPIC_SLUG },
+    });
+
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "design",
+      success: true,
+    });
+
+    // No rename, just advance
+    const updated = readTestManifest(EPIC_SLUG);
+    expect(updated.slug).toBe(EPIC_SLUG);
+    expect(updated.phase).toBe("plan");
+  });
 });

@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "slug-proposal-gate",
+        "status": "completed"
+      }
+    ]
+  }
+}

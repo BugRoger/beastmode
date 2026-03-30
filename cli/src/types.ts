@@ -31,6 +31,7 @@ export interface PhaseResult {
 /** Phase-specific artifact shapes for output files */
 export interface DesignArtifacts {
   design: string; // path to PRD
+  slug?: string;  // real slug from PRD frontmatter (for post-dispatch rename)
 }
 
 export interface PlanArtifacts {

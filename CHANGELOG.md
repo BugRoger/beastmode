@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.48.0 — Slugless Design Entry (Mar 2026)
+
+- **Slugless design entry** — `beastmode design` takes no arguments; generates random hex temp slug, asks "What are you trying to solve?" before any codebase exploration
+- **Slug proposal gate** — Design checkpoint proposes a slug after decision tree completion, user confirms or overrides via gated decision
+- **Post-dispatch rename** — CLI reads real slug from output.json and renames worktree dir, git branch, manifest file, manifest internals, and PRD artifact
+- **Auto-suffix collision handling** — `-v2` through `-v99` when slug collides with existing worktree/branch
+- **Graceful rename failure** — System continues under hex name if rename fails
+- **Artifact rename fix** — Renamed artifacts from `slugless-design` to `design-assumptions-less-of-them-v2` for consistency
+
 ### v0.47.0 — iTerm2 Dispatch Strategy (Mar 2026)
 
 - **iTerm2 dispatch strategy** — New `dispatch-strategy: iterm2` uses the `it2` CLI for native tab-per-epic and split-pane-per-phase pipeline visibility in iTerm2

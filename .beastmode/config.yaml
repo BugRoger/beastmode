@@ -7,6 +7,7 @@ gates:
     decision-tree: human              # INTERACTIVE — walk every branch of the design tree
     gray-areas: human                 # INTERACTIVE — second pass for big-picture blind spots
     prd-approval: human               # APPROVAL — approve before documenting
+    slug-proposal: human              # APPROVAL — confirm or override proposed slug
 
   plan:
     feature-set-approval: auto           # APPROVAL — approve the full set of features

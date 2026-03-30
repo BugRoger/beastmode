@@ -14,7 +14,7 @@ function printHelp(): void {
   console.log(`beastmode v${VERSION}
 
 Usage:
-  beastmode design <topic>             Start a new design
+  beastmode design [topic]             Start a new design
   beastmode plan <slug>                Plan features for a design
   beastmode implement <slug> [feature] Implement a feature
   beastmode validate <slug>            Run validation checks

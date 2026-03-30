@@ -72,7 +72,7 @@ export function buildOutput(
     case "design":
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
-        artifacts: { design: artifactPath },
+        artifacts: { design: artifactPath, slug: fm.slug },
       };
 
     case "plan": {
