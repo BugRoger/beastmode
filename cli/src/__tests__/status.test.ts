@@ -745,3 +745,83 @@ describe("renderStatusScreen — blocked details", () => {
     expect(plain).not.toContain("Blocked:");
   });
 });
+
+// ---------------------------------------------------------------------------
+// renderStatusScreen — watch mode integration
+// ---------------------------------------------------------------------------
+
+describe("renderStatusScreen (watch mode)", () => {
+  test("includes watch header with timestamp when meta is provided", () => {
+    const epics = [makeEpic({ slug: "alpha", phase: "implement" })];
+    const meta: WatchMeta = { timestamp: "14:30:05", watchRunning: true };
+    const result = renderStatusScreen(epics, {}, meta);
+    expect(result).toContain("14:30:05");
+    expect(result).toContain("Last updated:");
+  });
+
+  test("includes status table content from manifests", () => {
+    const epics = [
+      makeEpic({ slug: "my-epic", phase: "implement", features: [
+        { slug: "f1", plan: "p.md", status: "completed" },
+        { slug: "f2", plan: "p.md", status: "pending" },
+      ] }),
+    ];
+    const meta: WatchMeta = { timestamp: "10:00:00", watchRunning: false };
+    const result = stripAnsi(renderStatusScreen(epics, {}, meta));
+    expect(result).toContain("my-epic");
+    expect(result).toContain("implement");
+    expect(result).toContain("1/2");
+  });
+
+  test("includes watch running indicator when watch is active", () => {
+    const epics = [makeEpic({ slug: "e", phase: "design" })];
+    const meta: WatchMeta = { timestamp: "12:00:00", watchRunning: true };
+    const result = stripAnsi(renderStatusScreen(epics, {}, meta));
+    expect(result).toContain("running");
+  });
+
+  test("includes watch stopped indicator when watch is inactive", () => {
+    const epics = [makeEpic({ slug: "e", phase: "design" })];
+    const meta: WatchMeta = { timestamp: "12:00:00", watchRunning: false };
+    const result = stripAnsi(renderStatusScreen(epics, {}, meta));
+    expect(result).toContain("stopped");
+  });
+
+  test("returns just the table when no meta is provided (one-shot mode)", () => {
+    const epics = [makeEpic({ slug: "one-shot", phase: "plan" })];
+    const withMeta = renderStatusScreen(epics, {}, { timestamp: "09:00:00", watchRunning: false });
+    const withoutMeta = renderStatusScreen(epics, {});
+    // Without meta should not have the watch header
+    expect(withoutMeta).not.toContain("Last updated:");
+    // With meta should have it
+    expect(withMeta).toContain("Last updated:");
+  });
+
+  test("highlights changed rows when changedSlugs are provided", () => {
+    const epics = [
+      makeEpic({ slug: "changed-epic", phase: "implement" }),
+      makeEpic({ slug: "stable-epic", phase: "design" }),
+    ];
+    const meta: WatchMeta = { timestamp: "15:00:00", watchRunning: true };
+    const changedSlugs = new Set(["changed-epic"]);
+    const result = renderStatusScreen(epics, {}, meta, changedSlugs);
+    // Changed row should have bold+inverse ANSI codes (\x1b[1m\x1b[7m)
+    expect(result).toContain("\x1b[1m\x1b[7m");
+    // The changed epic name should be wrapped in highlight
+    // Find the line with "changed-epic" — it should have highlight codes
+    const lines = result.split("\n");
+    const changedLine = lines.find(l => l.includes("changed-epic"));
+    expect(changedLine).toContain("\x1b[7m"); // inverse attribute
+  });
+
+  test("does not highlight unchanged rows", () => {
+    const epics = [
+      makeEpic({ slug: "stable-epic", phase: "design" }),
+    ];
+    const meta: WatchMeta = { timestamp: "15:00:00", watchRunning: true };
+    const changedSlugs = new Set<string>(); // nothing changed
+    const result = renderStatusScreen(epics, {}, meta, changedSlugs);
+    // Should NOT have bold+inverse
+    expect(result).not.toContain("\x1b[7m");
+  });
+});
