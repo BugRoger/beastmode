@@ -23,6 +23,7 @@ import {
 } from "../worktree";
 import { runPostDispatch } from "../post-dispatch";
 import * as store from "../manifest-store";
+import { createLogger } from "../logger";
 
 /**
  * Execute a phase command. Called directly from the top-level router.
@@ -39,7 +40,9 @@ export async function phaseCommand(
   phase: Phase,
   args: string[],
   _config: BeastmodeConfig,
+  verbosity: number = 0,
 ): Promise<void> {
+  const logger = createLogger(verbosity, "beastmode");
   const inWorktree = await isInsideWorktree();
   const projectRoot = inWorktree
     ? await resolveMainCheckoutRoot()
@@ -64,9 +67,8 @@ export async function phaseCommand(
     });
   }
 
-  console.log(`[beastmode] Phase: ${phase}`);
-  console.log(`[beastmode] Worktree: ${cwd}`);
-  console.log("");
+  logger.log(`Phase: ${phase}`);
+  logger.log(`Worktree: ${cwd}`);
 
   const result = await runInteractive({ phase, args, cwd });
 
@@ -81,26 +83,24 @@ export async function phaseCommand(
       epicSlug,
       phase,
       success: result.exit_status === "success",
+      logger,
     });
   }
 
-  console.log("");
-  console.log(
-    `[beastmode] ${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`,
-  );
+  logger.log(`${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`);
 
   // Release teardown: only from main checkout (watch loop handles its own)
   if (!inWorktree && phase === "release" && result.exit_status === "success") {
     try {
-      console.log("[beastmode] Release successful — removing worktree...");
+      logger.log("Release successful — removing worktree...");
 
       await removeWorktree(worktreeSlug, { cwd: projectRoot });
-      console.log("[beastmode] Worktree removed");
+      logger.log("Worktree removed");
 
-      console.log("[beastmode] Release teardown complete");
+      logger.log("Release teardown complete");
     } catch (err) {
-      console.error("[beastmode] Release teardown failed:", err);
-      console.error("[beastmode] Worktree preserved for manual cleanup");
+      logger.error(`Release teardown failed: ${err instanceof Error ? err.message : String(err)}`);
+      logger.error("Worktree preserved for manual cleanup");
     }
   }
 

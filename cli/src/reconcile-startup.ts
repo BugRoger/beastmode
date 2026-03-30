@@ -11,6 +11,8 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import type { CmuxClientLike, CmuxWorkspace } from "./cmux-types.js";
 import type { DispatchedSession, SessionResult } from "./watch-types.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
+import { createLogger } from "./logger.js";
+import type { Logger } from "./logger.js";
 
 /** Result of a reconciliation pass. */
 export interface ReconcileResult {
@@ -161,8 +163,10 @@ export async function reconcileStartup(opts: {
   tracker: DispatchTracker;
   knownEpicSlugs: string[];
   projectRoot: string;
+  logger?: Logger;
 }): Promise<ReconcileResult> {
   const { client, tracker, knownEpicSlugs, projectRoot } = opts;
+  const logger = opts.logger ?? createLogger(0, "beastmode");
   const knownSlugs = new Set(knownEpicSlugs);
 
   const result: ReconcileResult = {
@@ -225,8 +229,8 @@ export async function reconcileStartup(opts: {
           remainingSurfaces--;
         } catch {
           // Best-effort — log and continue
-          console.warn(
-            `[reconcile] Failed to close dead surface ${surface.id} in workspace ${workspace.name}`,
+          logger.warn(
+            `Failed to close dead surface ${surface.id} in workspace ${workspace.name}`,
           );
         }
       }
@@ -239,8 +243,8 @@ export async function reconcileStartup(opts: {
         await client.closeWorkspace(workspace.id);
         result.closedWorkspaces++;
       } catch {
-        console.warn(
-          `[reconcile] Failed to close empty workspace ${workspace.name}`,
+        logger.warn(
+          `Failed to close empty workspace ${workspace.name}`,
         );
       }
     }
@@ -251,8 +255,8 @@ export async function reconcileStartup(opts: {
     result.closedSurfaces > 0 ||
     result.closedWorkspaces > 0
   ) {
-    console.log(
-      `[reconcile] Startup: adopted ${result.adopted} surface(s), closed ${result.closedSurfaces} dead surface(s), removed ${result.closedWorkspaces} empty workspace(s), skipped ${result.skipped} non-beastmode workspace(s)`,
+    logger.log(
+      `Startup: adopted ${result.adopted} surface(s), closed ${result.closedSurfaces} dead surface(s), removed ${result.closedWorkspaces} empty workspace(s), skipped ${result.skipped} non-beastmode workspace(s)`,
     );
   }
 

@@ -7,6 +7,8 @@
 
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
+import { createLogger } from "./logger.js";
+import type { Logger } from "./logger.js";
 import type { LockfileInfo } from "./watch-types.js";
 
 const LOCKFILE_NAME = ".beastmode-watch.lock";
@@ -43,7 +45,8 @@ export function readLockfile(projectRoot: string): LockfileInfo | null {
  * If a stale lockfile exists (dead PID), removes it and acquires.
  * If an active lockfile exists, returns false.
  */
-export function acquireLock(projectRoot: string): boolean {
+export function acquireLock(projectRoot: string, logger?: Logger): boolean {
+  const log = logger ?? createLogger(0, "beastmode");
   const existing = readLockfile(projectRoot);
 
   if (existing) {
@@ -51,9 +54,7 @@ export function acquireLock(projectRoot: string): boolean {
       return false;
     }
     // Stale lockfile — remove it
-    console.log(
-      `[watch] Removing stale lockfile (PID ${existing.pid} no longer running)`,
-    );
+    log.warn(`Removing stale lockfile (PID ${existing.pid} no longer running)`);
     releaseLock(projectRoot);
   }
 

@@ -3,7 +3,7 @@
   "artifacts": {
     "features": [
       {
-        "slug": "reconciliation-notify",
+        "slug": "logger-module",
         "status": "completed"
       }
     ]

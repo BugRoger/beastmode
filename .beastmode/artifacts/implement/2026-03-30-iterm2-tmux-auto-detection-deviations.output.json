@@ -2,7 +2,10 @@
   "status": "completed",
   "artifacts": {
     "features": [
-      {"slug": "auto-detection", "status": "completed"}
+      {
+        "slug": "auto-detection",
+        "status": "completed"
+      }
     ]
   }
 }

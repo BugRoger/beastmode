@@ -354,7 +354,7 @@ export async function statusWatchLoop(projectRoot: string, all: boolean): Promis
 // Command entry point
 // ---------------------------------------------------------------------------
 
-export async function statusCommand(_config: BeastmodeConfig, args: string[] = []): Promise<void> {
+export async function statusCommand(_config: BeastmodeConfig, args: string[] = [], _verbosity: number = 0): Promise<void> {
   const all = args.includes("--all");
   const watch = args.includes("--watch") || args.includes("-w");
   const projectRoot = findProjectRoot();
@@ -365,5 +365,5 @@ export async function statusCommand(_config: BeastmodeConfig, args: string[] = [
   }
 
   const { epics } = await scanEpics(projectRoot);
-  console.log(renderStatusScreen(epics, { all }));
+  process.stdout.write(renderStatusScreen(epics, { all }) + "\n");
 }

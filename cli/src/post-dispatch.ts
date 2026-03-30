@@ -10,13 +10,14 @@
 
 import type { Phase } from "./types";
 import type { PipelineManifest } from "./manifest-store";
+import type { Logger } from "./logger";
 import * as store from "./manifest-store";
-import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase, setGitHubEpic, setFeatureGitHubIssue } from "./manifest";
+import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
 import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
-import { renameEpicSlug } from "./rename-slug";
+import { createLogger } from "./logger";
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {
@@ -32,6 +33,8 @@ export interface PostDispatchOptions {
   featureSlug?: string;
   /** Whether the phase succeeded */
   success: boolean;
+  /** Optional logger — defaults to createLogger(0, "post-dispatch") */
+  logger?: Logger;
 }
 
 /**
@@ -42,33 +45,29 @@ export interface PostDispatchOptions {
  * failure never blocks the pipeline.
  */
 export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> {
+  const logger = opts.logger ?? createLogger(0, "post-dispatch");
   try {
     // Early exit on failure — no manifest/sync updates
     if (!opts.success) {
-      console.log(`[post-dispatch] Phase ${opts.phase} failed for ${opts.epicSlug} — skipping updates`);
+      logger.log(`Phase ${opts.phase} failed for ${opts.epicSlug} — skipping updates`);
       return;
     }
 
-    // Load phase output from the worktree artifacts dir.
-    // For implement fan-out (featureSlug present), load the feature-specific output
-    // instead of the epic-level one — prevents one feature's output from marking
-    // other features completed via enrich.
-    const output = opts.featureSlug
-      ? loadWorktreeFeatureOutput(opts.worktreePath, opts.phase, opts.epicSlug, opts.featureSlug)
-      : loadWorktreePhaseOutput(opts.worktreePath, opts.phase, opts.epicSlug);
+    // Load phase output from the worktree artifacts dir (where the stop hook writes)
+    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase);
     if (output) {
-      console.log(`[post-dispatch] Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
+      logger.debug(`Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
     } else {
-      console.log(`[post-dispatch] No phase output found for ${opts.phase}/${opts.epicSlug} — continuing without enrichment`);
+      logger.debug(`No phase output found for ${opts.phase}/${opts.epicSlug} — continuing without enrichment`);
     }
 
     // Load the manifest
     let manifest = store.load(opts.projectRoot, opts.epicSlug);
     if (!manifest) {
-      console.log(`[post-dispatch] No manifest found for ${opts.epicSlug} — cannot update`);
+      logger.debug(`No manifest found for ${opts.epicSlug} — cannot update`);
       return;
     }
-    console.log(`[post-dispatch] Loaded manifest for ${opts.epicSlug} (phase: ${manifest.phase})`);
+    logger.debug(`Loaded manifest for ${opts.epicSlug} (phase: ${manifest.phase})`);
 
     // Enrich manifest from phase output
     if (output) {
@@ -90,74 +89,36 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
         artifacts: artifactPaths.length > 0 ? artifactPaths : undefined,
       });
       store.save(opts.projectRoot, opts.epicSlug, manifest);
-      console.log(`[post-dispatch] Enriched manifest (artifacts: ${artifactPaths.length}, features: ${featureStatuses.length})`);
+      logger.debug(`Enriched manifest (artifacts: ${artifactPaths.length}, features: ${featureStatuses.length})`);
     }
 
-    // Design post-dispatch rename: rename hex slug to real slug from PRD
-    // Scope guard: only runs after design phase, only when output contains a slug
-    // that differs from the current epic slug.
-    let activeSlug = opts.epicSlug;
-    if (opts.phase === "design" && output) {
-      const designArtifacts = output.artifacts as unknown as Record<string, unknown>;
-      const realSlug = typeof designArtifacts.slug === "string" ? designArtifacts.slug : undefined;
-      if (realSlug && realSlug !== opts.epicSlug) {
-        try {
-          const renameResult = await renameEpicSlug({
-            hexSlug: opts.epicSlug,
-            realSlug,
-            projectRoot: opts.projectRoot,
-          });
-          if (renameResult.renamed) {
-            activeSlug = renameResult.finalSlug;
-            // Re-load the manifest under the new slug (rename-slug already updated it)
-            manifest = store.load(opts.projectRoot, activeSlug) ?? manifest;
-            console.log(`[post-dispatch] Renamed epic: ${opts.epicSlug} -> ${activeSlug}`);
-          } else if (renameResult.error) {
-            console.log(`[post-dispatch] Rename failed (non-blocking): ${renameResult.error}`);
-            console.log(`[post-dispatch] Continuing under hex name: ${opts.epicSlug}`);
-          }
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.log(`[post-dispatch] Rename error (non-blocking): ${msg}`);
-        }
-      }
-    }
-
-    // Handle implement fan-out: mark individual feature as completed
-    // Only mark completed if the feature produced its own output.json — a session
-    // that exits 0 without writing an artifact did not actually implement anything.
+    // Handle implement fan-out: mark individual feature as completed only if output confirms
     if (opts.phase === "implement" && opts.featureSlug) {
       const featureOutput = loadWorktreeFeatureOutput(opts.worktreePath, opts.phase, opts.epicSlug, opts.featureSlug);
       if (featureOutput?.status === "completed") {
         manifest = markFeature(manifest, opts.featureSlug, "completed");
-        store.save(opts.projectRoot, activeSlug, manifest);
-        console.log(`[post-dispatch] Marked feature ${opts.featureSlug} as completed (output verified)`);
+        store.save(opts.projectRoot, opts.epicSlug, manifest);
+        logger.debug(`Marked feature ${opts.featureSlug} as completed (output verified)`);
       } else {
-        console.log(`[post-dispatch] Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
+        logger.debug(`Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
       }
     }
 
-    // Handle validate regression: only regress when output explicitly reports failure.
-    // Missing output with a successful session is not a failure — the skill just didn't write one.
-    if (opts.phase === "validate" && output && output.status !== "completed") {
+    // Handle validate regression: if validate didn't complete, regress to implement
+    if (opts.phase === "validate" && output?.status !== "completed") {
       manifest = regressPhase(manifest, "implement");
-      store.save(opts.projectRoot, activeSlug, manifest);
-      console.log(`[post-dispatch] Regressed phase: validate -> implement (features reset to pending)`);
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
+      logger.debug(`Regressed phase: validate -> implement (features reset to pending)`);
     }
 
-    // For validate advancement: if session succeeded but no output, synthesize completed
-    const effectiveOutput = (!output && opts.phase === "validate")
-      ? { status: "completed" as const, artifacts: { report: "", passed: true } as const }
-      : output;
-
     // Determine whether to advance the phase
-    const nextPhase = shouldAdvance(manifest, effectiveOutput);
+    const nextPhase = shouldAdvance(manifest, output);
     if (nextPhase) {
       manifest = advancePhase(manifest, nextPhase);
-      store.save(opts.projectRoot, activeSlug, manifest);
-      console.log(`[post-dispatch] Advanced phase: ${opts.phase} -> ${nextPhase}`);
+      store.save(opts.projectRoot, opts.epicSlug, manifest);
+      logger.log(`Advanced phase: ${opts.phase} -> ${nextPhase}`);
     } else {
-      console.log(`[post-dispatch] No phase advancement for ${opts.phase}`);
+      logger.debug(`No phase advancement for ${opts.phase}`);
     }
 
     // Sync to GitHub — warn-and-continue
@@ -166,37 +127,18 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       if (config.github.enabled) {
         const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
         if (resolved) {
-          const syncResult = await syncGitHub(manifest, config, resolved);
-
-          // Apply mutations back to manifest
-          for (const mutation of syncResult.mutations) {
-            if (mutation.type === "setEpic") {
-              manifest = setGitHubEpic(manifest, mutation.epicNumber, mutation.repo);
-            } else if (mutation.type === "setFeatureIssue") {
-              manifest = setFeatureGitHubIssue(manifest, mutation.featureSlug, mutation.issueNumber);
-            }
-          }
-
-          if (syncResult.mutations.length > 0) {
-            store.save(opts.projectRoot, activeSlug, manifest);
-            console.log(`[post-dispatch] Applied ${syncResult.mutations.length} GitHub mutation(s)`);
-          }
-
-          for (const warning of syncResult.warnings) {
-            console.log(`[post-dispatch] GitHub sync warning: ${warning}`);
-          }
-
-          console.log("[post-dispatch] GitHub sync complete");
+          await syncGitHub(manifest, config, resolved);
+          logger.debug("GitHub sync complete");
         } else {
-          console.log("[post-dispatch] GitHub discovery failed — skipping sync");
+          logger.debug("GitHub discovery failed — skipping sync");
         }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.log(`[post-dispatch] GitHub sync failed (non-blocking): ${message}`);
+      logger.warn(`GitHub sync failed (non-blocking): ${message}`);
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.log(`[post-dispatch] Unexpected error (non-blocking): ${message}`);
+    logger.warn(`Unexpected error (non-blocking): ${message}`);
   }
 }

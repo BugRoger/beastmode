@@ -18,49 +18,51 @@ import {
 } from "../worktree";
 import * as store from "../manifest-store";
 import { cancel } from "../manifest";
+import type { Logger } from "../logger";
+import { createLogger } from "../logger";
 
 export async function cancelCommand(
   args: string[],
   config: BeastmodeConfig,
+  verbosity: number = 0,
 ): Promise<void> {
+  const logger = createLogger(verbosity, "beastmode");
   const slug = args[0];
   if (!slug) {
-    console.error("Usage: beastmode cancel <slug>");
+    logger.error("Usage: beastmode cancel <slug>");
     process.exit(1);
   }
 
   const projectRoot = process.cwd();
 
-  console.log(`[beastmode] Cancel: ${slug}`);
-  console.log("");
+  logger.log(`Cancel: ${slug}`);
 
   // Step 1+2: Remove worktree and delete branch
   try {
     await removeWorktree(slug, { cwd: projectRoot, deleteBranch: true });
-    console.log("[beastmode] Worktree removed, branch deleted");
+    logger.log("Worktree removed, branch deleted");
   } catch (err) {
-    console.warn(
-      `[beastmode] Warning: worktree removal failed (may already be cleaned up): ${err instanceof Error ? err.message : err}`,
+    logger.warn(
+      `Worktree removal failed (may already be cleaned up): ${err instanceof Error ? err.message : err}`,
     );
   }
 
   // Step 3: Update manifest phase to cancelled
   try {
     updateManifestCancelled(projectRoot, slug);
-    console.log("[beastmode] Manifest updated: phase = cancelled");
+    logger.log("Manifest updated: phase = cancelled");
   } catch (err) {
-    console.warn(
-      `[beastmode] Warning: manifest update failed: ${err instanceof Error ? err.message : err}`,
+    logger.warn(
+      `Manifest update failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 
   // Step 4: Close GitHub epic as not_planned
   if (config.github.enabled) {
-    await closeGitHubEpic(projectRoot, slug);
+    await closeGitHubEpic(projectRoot, slug, logger);
   }
 
-  console.log("");
-  console.log(`[beastmode] Cancel complete: ${slug}`);
+  logger.log(`Cancel complete: ${slug}`);
 }
 
 /**
@@ -83,6 +85,7 @@ function updateManifestCancelled(
 async function closeGitHubEpic(
   projectRoot: string,
   slug: string,
+  logger: Logger,
 ): Promise<void> {
   const manifest = store.load(projectRoot, slug);
   if (!manifest) return;
@@ -105,15 +108,15 @@ async function closeGitHubEpic(
     const exitCode = await proc.exited;
 
     if (exitCode === 0) {
-      console.log(`[beastmode] GitHub epic #${epicNumber} closed as not_planned`);
+      logger.log(`GitHub epic #${epicNumber} closed as not_planned`);
     } else {
-      console.warn(
-        `[beastmode] Warning: GitHub close failed: ${stderr.trim()}`,
+      logger.warn(
+        `GitHub close failed: ${stderr.trim()}`,
       );
     }
   } catch (err) {
-    console.warn(
-      `[beastmode] Warning: GitHub close failed: ${err instanceof Error ? err.message : err}`,
+    logger.warn(
+      `GitHub close failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 }

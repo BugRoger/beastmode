@@ -8,6 +8,8 @@
 import { resolve } from "node:path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { loadConfig } from "./config.js";
+import { createLogger } from "./logger.js";
+import type { Logger } from "./logger.js";
 import { WatchLoop } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
 import type { SessionResult } from "./watch-types.js";
@@ -24,7 +26,7 @@ import * as store from "./manifest-store.js";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest.js";
 import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
 import type { Phase } from "./types.js";
-import { loadWorktreePhaseOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
+import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -41,7 +43,8 @@ function findProjectRoot(from: string = process.cwd()): string {
  * and uses it to enrich/advance the manifest. Same logic as post-dispatch,
  * reading from the correct location (.beastmode/artifacts/<phase>/).
  */
-function reconcileState(opts: {
+/** @internal Exported for testing. */
+export function reconcileState(opts: {
   worktreePath: string;
   projectRoot: string;
   epicSlug: string;
@@ -55,8 +58,10 @@ function reconcileState(opts: {
   let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
   if (!manifest) return undefined;
 
-  // 2. Load output.json from worktree artifacts dir
-  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
+  // 2. Load output.json — feature-specific when fan-out, epic-level otherwise
+  const output = opts.featureSlug
+    ? loadWorktreeFeatureOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug, opts.featureSlug)
+    : loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
 
   // 3. Enrich from output.json (features, artifact paths)
   if (output) {
@@ -90,8 +95,8 @@ function reconcileState(opts: {
     });
   }
 
-  // 4. Handle implement fan-out: mark specific feature completed
-  if (opts.phase === "implement" && opts.featureSlug) {
+  // 4. Handle implement fan-out: mark specific feature completed only if output confirms
+  if (opts.phase === "implement" && opts.featureSlug && output?.status === "completed") {
     manifest = markFeature(manifest, opts.featureSlug, "completed");
   }
 
@@ -134,15 +139,17 @@ function readProgress(
 class ReconcilingFactory implements SessionFactory {
   private inner: SessionFactory;
   private projectRoot: string;
+  private logger: Logger;
 
-  constructor(inner: SessionFactory, projectRoot: string) {
+  constructor(inner: SessionFactory, projectRoot: string, logger: Logger) {
     this.inner = inner;
     this.projectRoot = projectRoot;
+    this.logger = logger;
   }
 
   async create(opts: SessionCreateOpts): Promise<SessionHandle> {
     const handle = await this.inner.create(opts);
-    const { projectRoot } = this;
+    const { projectRoot, logger } = this;
 
     const worktreePath = resolve(
       projectRoot,
@@ -157,22 +164,22 @@ class ReconcilingFactory implements SessionFactory {
       // Release teardown: archive, remove on success
       if (opts.phase === "release" && sessionResult.success) {
         try {
-          console.log(`[watch] ${opts.epicSlug}: release teardown — archiving branch...`);
+          logger.log(`${opts.epicSlug}: release teardown — archiving branch...`);
           const tagName = await worktree.archive(handle.worktreeSlug, { cwd: projectRoot });
-          console.log(`[watch] ${opts.epicSlug}: archived as ${tagName}`);
+          logger.log(`${opts.epicSlug}: archived as ${tagName}`);
 
           await worktree.remove(handle.worktreeSlug, { cwd: projectRoot });
-          console.log(`[watch] ${opts.epicSlug}: worktree removed`);
+          logger.log(`${opts.epicSlug}: worktree removed`);
 
           // Mark manifest as done so scanner skips it
           const doneManifest = store.load(projectRoot, opts.epicSlug);
           if (doneManifest) {
             store.save(projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
           }
-          console.log(`[watch] ${opts.epicSlug}: manifest marked done`);
+          logger.log(`${opts.epicSlug}: manifest marked done`);
         } catch (err) {
-          console.error(`[watch] ${opts.epicSlug}: release teardown failed:`, err);
-          console.error(`[watch] ${opts.epicSlug}: worktree preserved for manual cleanup`);
+          logger.error(`${opts.epicSlug}: release teardown failed: ${err}`);
+          logger.error(`${opts.epicSlug}: worktree preserved for manual cleanup`);
           sessionResult = { ...sessionResult, success: false };
         }
       }
@@ -348,40 +355,41 @@ export async function selectStrategy(
     checkIterm2: typeof iterm2Available;
     checkCmux: typeof cmuxAvailable;
   } = { checkIterm2: iterm2Available, checkCmux: cmuxAvailable },
+  logger: Logger = createLogger(0, "watch"),
 ): Promise<StrategySelection> {
   if (configured === "iterm2") {
     const result = await deps.checkIterm2();
     if (!result.available) {
-      console.error(`[watch] iTerm2 dispatch strategy requested but not available: ${result.reason}`);
-      console.error(IT2_SETUP_INSTRUCTIONS);
+      logger.error(`iTerm2 dispatch strategy requested but not available: ${result.reason}`);
+      logger.error(IT2_SETUP_INSTRUCTIONS);
       throw new Error("iTerm2 dispatch strategy unavailable");
     }
-    console.log(`[watch] Using iTerm2 dispatch strategy (session: ${result.sessionId})`);
+    logger.log(`Using iTerm2 dispatch strategy (session: ${result.sessionId})`);
     return { strategy: "iterm2", sessionId: result.sessionId };
   }
 
   if (configured === "auto") {
     const iterm2Result = await deps.checkIterm2();
     if (iterm2Result.available) {
-      console.log(`[watch] Auto-detected iTerm2 (session: ${iterm2Result.sessionId})`);
+      logger.log(`Auto-detected iTerm2 (session: ${iterm2Result.sessionId})`);
       return { strategy: "iterm2", sessionId: iterm2Result.sessionId };
     }
     const cmuxOk = await deps.checkCmux();
     if (cmuxOk) {
-      console.log("[watch] Using cmux dispatch strategy");
+      logger.log("Using cmux dispatch strategy");
       return { strategy: "cmux" };
     }
-    console.log("[watch] Using SDK dispatch strategy");
+    logger.log("Using SDK dispatch strategy");
     return { strategy: "sdk" };
   }
 
   if (configured === "cmux") {
     const available = await deps.checkCmux();
     if (available) {
-      console.log("[watch] Using cmux dispatch strategy");
+      logger.log("Using cmux dispatch strategy");
       return { strategy: "cmux" };
     }
-    console.error("[watch] cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
+    logger.warn("cmux not available but dispatch-strategy is 'cmux'. Falling back to SDK.");
     return { strategy: "sdk" };
   }
 
@@ -389,11 +397,12 @@ export async function selectStrategy(
 }
 
 /** Main entry point for `beastmode watch`. */
-export async function watchCommand(_args: string[]): Promise<void> {
+export async function watchCommand(_args: string[], verbosity: number = 0): Promise<void> {
   const projectRoot = findProjectRoot();
   const config = loadConfig(projectRoot);
+  const logger = createLogger(verbosity, "watch");
 
-  const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk");
+  const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk", undefined, logger);
   let innerFactory: SessionFactory;
 
   if (selected.strategy === "cmux") {
@@ -404,12 +413,13 @@ export async function watchCommand(_args: string[]): Promise<void> {
     innerFactory = new SdkSessionFactory(dispatchPhase);
   }
 
-  const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot);
+  const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot, logger);
 
   const deps: WatchDeps = {
     scanEpics,
     sessionFactory,
     logRun,
+    logger,
   };
 
   const loop = new WatchLoop(

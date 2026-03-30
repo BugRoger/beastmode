@@ -24,6 +24,7 @@
 - GitHub state externalization with Epic > Feature issue hierarchy, label-based state machines, and project board visibility — enables autonomous daemon operation and human observability
 - Pipeline orchestration via `beastmode watch` — TypeScript CLI watch loop drives epics through plan -> release with parallel SDK session dispatching, per-feature implement fan-out, pre-merge conflict simulation, and cost tracking
 - Optional cmux terminal multiplexer integration — live pipeline visibility with workspace-per-epic surface model, desktop notifications on errors/blocks, automatic cleanup on release, zero-regression fallback to SDK dispatch
+- Centralized verbosity-gated logging — `createLogger(verbosity, slug)` factory with four tiers (0-3), `-v` flag stacking on all CLI commands, stderr/stdout stream split, consistent `HH:MM:SS slug: message` format replacing all ad-hoc console output
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval

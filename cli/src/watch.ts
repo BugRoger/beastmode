@@ -12,27 +12,13 @@ import type {
   WatchConfig,
 } from "./watch-types.js";
 import type { SessionFactory } from "./session.js";
+import type { Logger } from "./logger.js";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
-
-// --- Timestamped logging ---
-
-function ts(): string {
-  return new Date().toISOString().slice(11, 19);
-}
-
-/** Log with timestamp. */
-export function watchLog(msg: string): void {
-  console.log(`${ts()} ${msg}`);
-}
-
-/** Error log with timestamp. */
-export function watchErr(msg: string, ...args: unknown[]): void {
-  console.error(`${ts()} ${msg}`, ...args);
-}
+import { createLogger } from "./logger.js";
 
 // --- Version banner ---
 
@@ -61,6 +47,8 @@ export interface WatchDeps {
     result: SessionResult;
     projectRoot: string;
   }) => Promise<void>;
+  /** Scoped logger. Falls back to createLogger(0, "watch") if omitted. */
+  logger?: Logger;
 }
 
 export class WatchLoop {
@@ -69,9 +57,11 @@ export class WatchLoop {
   private tracker = new DispatchTracker();
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
+  private logger: Logger;
   constructor(config: WatchConfig, deps: WatchDeps) {
     this.config = config;
     this.deps = deps;
+    this.logger = deps.logger ?? createLogger(0, "watch");
   }
 
   /**
@@ -80,14 +70,14 @@ export class WatchLoop {
    */
   async start(): Promise<void> {
     if (!acquireLock(this.config.projectRoot)) {
-      const msg = "[watch] Another watch process is already running. Exiting.";
-      watchErr(msg);
+      const msg = "Another watch process is already running. Exiting.";
+      this.logger.error(msg);
       throw new Error(msg);
     }
 
     this.running = true;
     const version = resolveVersion(this.config.projectRoot);
-    watchLog(`[watch] Started ${version} (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`);
+    this.logger.log(`Started ${version} (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`);
 
     this.setupSignalHandlers();
 
@@ -108,18 +98,18 @@ export class WatchLoop {
       this.pollTimer = null;
     }
 
-    watchLog("[watch] Shutting down...");
+    this.logger.log("Shutting down...");
 
     if (this.tracker.size > 0) {
-      watchLog(
-        `[watch] Waiting for ${this.tracker.size} active session(s)...`,
+      this.logger.log(
+        `Waiting for ${this.tracker.size} active session(s)...`,
       );
       this.tracker.abortAll();
       await this.tracker.waitAll(30_000);
     }
 
     releaseLock(this.config.projectRoot);
-    watchLog("[watch] Stopped.");
+    this.logger.log("Stopped.");
   }
 
   /** Get the dispatch tracker (for testing/status). */
@@ -145,7 +135,7 @@ export class WatchLoop {
       const result = await this.deps.scanEpics(this.config.projectRoot);
       epics = Array.isArray(result) ? result : result.epics;
     } catch (err) {
-      watchErr("[watch] State scan failed:", err);
+      this.logger.error(`State scan failed: ${err}`);
       return;
     }
 
@@ -157,11 +147,11 @@ export class WatchLoop {
   private async processEpic(epic: EnrichedManifest): Promise<void> {
     // Skip epics blocked on human gates
     if (epic.blocked) {
-      watchLog(
-        `[watch] ${epic.slug}: paused — human gate requires manual intervention`,
+      this.logger.log(
+        `${epic.slug}: paused — human gate requires manual intervention`,
       );
-      watchLog(
-        `[watch]   Run: beastmode ${epic.phase} ${epic.slug}`,
+      this.logger.detail(
+        `  Run: beastmode ${epic.phase} ${epic.slug}`,
       );
       return;
     }
@@ -193,8 +183,8 @@ export class WatchLoop {
 
     const abortController = new AbortController();
 
-    watchLog(
-      `[watch] ${epic.slug}: dispatching ${action.phase} ${action.args.join(" ")}`,
+    this.logger.log(
+      `${epic.slug}: dispatching ${action.phase} ${action.args.join(" ")}`,
     );
 
     try {
@@ -220,9 +210,8 @@ export class WatchLoop {
       this.watchSession(session);
     } catch (err) {
       this.tracker.unreserve(epic.slug, action.phase);
-      watchErr(
-        `[watch] ${epic.slug}: failed to dispatch ${action.phase}:`,
-        err,
+      this.logger.error(
+        `${epic.slug}: failed to dispatch ${action.phase}: ${err}`,
       );
     }
   }
@@ -247,12 +236,12 @@ export class WatchLoop {
       const validFeatures = features.filter((featureSlug) => {
         const feature = epic.features.find((f) => f.slug === featureSlug);
         if (!feature?.plan) {
-          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — no plan file reference`);
+          this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — no plan file reference`);
           return false;
         }
         const planPath = resolve(worktreePath, ".beastmode", "artifacts", "plan", feature.plan);
         if (!existsSync(planPath)) {
-          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file missing: ${feature.plan}`);
+          this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — plan file missing: ${feature.plan}`);
           return false;
         }
         try {
@@ -261,19 +250,19 @@ export class WatchLoop {
           if (match) {
             const fileEpic = match[1].trim().replace(/^['"]|['"]$/g, "");
             if (fileEpic !== epic.slug) {
-              watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epic.slug}, got ${fileEpic})`);
+              this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epic.slug}, got ${fileEpic})`);
               return false;
             }
           }
         } catch {
-          watchErr(`[watch] ${epic.slug}: skipping feature ${featureSlug} — plan file unreadable`);
+          this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — plan file unreadable`);
           return false;
         }
         return true;
       });
 
       if (validFeatures.length === 0 && features.length > 0) {
-        watchErr(`[watch] ${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
+        this.logger.error(`${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
         return;
       }
 
@@ -290,8 +279,8 @@ export class WatchLoop {
 
       const abortController = new AbortController();
 
-      watchLog(
-        `[watch] ${epic.slug}: dispatching implement ${epic.slug} ${featureSlug}`,
+      this.logger.log(
+        `${epic.slug}: dispatching implement ${epic.slug} ${featureSlug}`,
       );
 
       try {
@@ -319,9 +308,8 @@ export class WatchLoop {
         this.watchSession(session);
       } catch (err) {
         this.tracker.unreserve(epic.slug, "implement", featureSlug);
-        watchErr(
-          `[watch] ${epic.slug}: failed to dispatch implement for ${featureSlug}:`,
-          err,
+        this.logger.error(
+          `${epic.slug}: failed to dispatch implement for ${featureSlug}: ${err}`,
         );
       }
     }
@@ -343,8 +331,8 @@ export class WatchLoop {
         const progressLabel = result.progress
           ? ` [${result.progress.completed}/${result.progress.total}]`
           : "";
-        watchLog(
-          `[watch] ${session.epicSlug}: ${session.phase}${featureLabel} ${status}${progressLabel} ($${result.costUsd.toFixed(2)}, ${(result.durationMs / 1000).toFixed(0)}s)`,
+        this.logger.log(
+          `${session.epicSlug}: ${session.phase}${featureLabel} ${status}${progressLabel} ($${result.costUsd.toFixed(2)}, ${(result.durationMs / 1000).toFixed(0)}s)`,
         );
 
         // Log the run
@@ -357,7 +345,7 @@ export class WatchLoop {
             projectRoot: this.config.projectRoot,
           });
         } catch (err) {
-          watchErr("[watch] Failed to log run:", err);
+          this.logger.warn(`Failed to log run: ${err}`);
         }
 
         // Event-driven re-scan: immediately process this epic again
@@ -368,9 +356,8 @@ export class WatchLoop {
       .catch((err) => {
         this.tracker.remove(session.id);
         if (err?.name !== "AbortError") {
-          watchErr(
-            `[watch] ${session.epicSlug}: session error:`,
-            err,
+          this.logger.error(
+            `${session.epicSlug}: session error: ${err}`,
           );
         }
       });
@@ -386,7 +373,7 @@ export class WatchLoop {
         await this.processEpic(epic);
       }
     } catch (err) {
-      watchErr(`[watch] Re-scan of ${epicSlug} failed:`, err);
+      this.logger.warn(`Re-scan of ${epicSlug} failed: ${err}`);
     }
   }
 
@@ -401,7 +388,7 @@ export class WatchLoop {
 
   private setupSignalHandlers(): void {
     const handler = async () => {
-      watchLog("\n[watch] Received SIGINT — initiating graceful shutdown...");
+      this.logger.log("Received SIGINT — initiating graceful shutdown...");
       await this.stop();
       process.exit(0);
     };

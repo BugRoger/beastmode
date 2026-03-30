@@ -1,0 +1,14 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-watch-output-noise-call-site-migration.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create logger module (logger.ts)", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add -v flag parsing to args.ts", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Migrate watch.ts to logger", "wave": 2, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Migrate watch-command.ts to logger", "wave": 2, "status": "pending"},
+    {"id": 4, "subject": "Task 4: Migrate post-dispatch.ts to logger", "wave": 2, "status": "pending"},
+    {"id": 5, "subject": "Task 5: Migrate remaining CLI files to logger", "wave": 2, "status": "pending"},
+    {"id": 6, "subject": "Task 6: Write tests, update existing tests", "wave": 3, "status": "pending"},
+    {"id": 7, "subject": "Task 7: Final validation", "wave": 4, "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-30T00:00:00Z"
+}

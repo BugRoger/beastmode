@@ -13,6 +13,8 @@ import {
   ghProjectDiscover,
   ghFieldDiscover,
 } from "./gh";
+import { createLogger } from "./logger.js";
+import type { Logger } from "./logger.js";
 
 /** Resolved GitHub metadata — the sync engine's input. */
 export interface ResolvedGitHub {
@@ -94,7 +96,10 @@ function writeCache(
 export async function discoverGitHub(
   projectRoot: string,
   projectName?: string,
+  logger?: Logger,
 ): Promise<ResolvedGitHub | undefined> {
+  const log = logger ?? createLogger(0, "beastmode");
+
   // Cache hit?
   const cached = readCache(projectRoot, projectName);
   if (cached) return cached;
@@ -102,7 +107,7 @@ export async function discoverGitHub(
   // Discover repo — hard requirement
   const repo = await ghRepoDiscover({ cwd: projectRoot });
   if (!repo) {
-    console.error("WARNING: GitHub repo discovery failed — is gh authenticated?");
+    log.warn("GitHub repo discovery failed — is gh authenticated?");
     return undefined;
   }
 

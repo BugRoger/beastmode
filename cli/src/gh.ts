@@ -5,6 +5,9 @@
  * and log a warning to stderr. Never throws.
  */
 
+import { createLogger } from "./logger.js";
+import type { Logger } from "./logger.js";
+
 export interface GhResult {
   stdout: string;
   stderr: string;
@@ -17,8 +20,9 @@ export interface GhResult {
  */
 export async function gh(
   args: string[],
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<GhResult | undefined> {
+  const log = opts.logger ?? createLogger(0, "beastmode");
   try {
     const proc = Bun.spawn(["gh", ...args], {
       cwd: opts.cwd,
@@ -34,16 +38,16 @@ export async function gh(
     const exitCode = await proc.exited;
 
     if (exitCode !== 0) {
-      console.error(
-        `WARNING: gh ${args[0]} failed (exit ${exitCode}): ${stderr.trim()}`,
+      log.warn(
+        `gh ${args[0]} failed (exit ${exitCode}): ${stderr.trim()}`,
       );
       return undefined;
     }
 
     return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
   } catch (err) {
-    console.error(
-      `WARNING: gh ${args[0]} failed: ${err instanceof Error ? err.message : String(err)}`,
+    log.warn(
+      `gh ${args[0]} failed: ${err instanceof Error ? err.message : String(err)}`,
     );
     return undefined;
   }
@@ -54,14 +58,15 @@ export async function gh(
  */
 export async function ghJson<T = unknown>(
   args: string[],
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<T | undefined> {
   const result = await gh(args, opts);
   if (!result) return undefined;
   try {
     return JSON.parse(result.stdout) as T;
   } catch {
-    console.error(`WARNING: gh ${args[0]} returned non-JSON output`);
+    const log = opts.logger ?? createLogger(0, "beastmode");
+    log.warn(`gh ${args[0]} returned non-JSON output`);
     return undefined;
   }
 }
@@ -73,7 +78,7 @@ export async function ghJson<T = unknown>(
 export async function ghGraphQL<T = unknown>(
   query: string,
   variables: Record<string, string | number> = {},
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<T | undefined> {
   const args: string[] = ["api", "graphql", "-f", `query=${query}`];
   for (const [key, value] of Object.entries(variables)) {
@@ -90,7 +95,8 @@ export async function ghGraphQL<T = unknown>(
     const parsed = JSON.parse(result.stdout);
     return parsed.data as T;
   } catch {
-    console.error(`WARNING: gh api graphql returned non-JSON output`);
+    const log = opts.logger ?? createLogger(0, "beastmode");
+    log.warn(`gh api graphql returned non-JSON output`);
     return undefined;
   }
 }

@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-watch-output-noise-flag-parsing.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add parseVerbosity() to args.ts and update ParsedCommand", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add unit tests for parseVerbosity flag parsing", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Thread verbosity through command router in index.ts", "wave": 2, "status": "pending", "dependsOn": [0, 1]}
+  ],
+  "lastUpdated": "2026-03-30T00:00:00Z"
+}

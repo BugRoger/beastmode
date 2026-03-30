@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.49.0 — Watch Output Noise (Mar 2026)
+
+- **Centralized logger** — New `createLogger(verbosity, slug)` factory in `cli/src/logger.ts` with level-gated methods: `log()` (L0), `detail()` (L1), `debug()` (L2), `trace()` (L3), `warn()`/`error()` (stderr)
+- **Verbosity flags** — `-v`/`-vv`/`-vvv` flag parsing on all CLI commands (watch, phase, cancel, status)
+- **Full call-site migration** — All 70 `console.log`/`console.error` calls replaced with logger equivalents across 13 CLI files
+- **Consistent output format** — `HH:MM:SS slug: message` across all commands
+- **stderr/stdout split** — warn/error always write to stderr, info/debug to stdout
+- **Fix** — Restored feature-isolation guards removed during call-site migration
+
 ### v0.48.0 — Slugless Design Entry (Mar 2026)
 
 - **Slugless design entry** — `beastmode design` takes no arguments; generates random hex temp slug, asks "What are you trying to solve?" before any codebase exploration

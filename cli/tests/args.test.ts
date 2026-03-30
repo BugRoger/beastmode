@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs } from "../src/args";
+import { parseArgs, parseVerbosity } from "../src/args";
 import { slugify } from "../src/commands/phase";
 
 describe("parseArgs", () => {
@@ -66,6 +66,89 @@ describe("parseArgs", () => {
     } finally {
       process.exit = origExit;
     }
+  });
+});
+
+describe("parseVerbosity", () => {
+  test("-v produces verbosity 1", () => {
+    const result = parseVerbosity(["-v", "my-slug"]);
+    expect(result.verbosity).toBe(1);
+    expect(result.rest).toEqual(["my-slug"]);
+  });
+
+  test("-vv produces verbosity 2", () => {
+    const result = parseVerbosity(["-vv", "my-slug"]);
+    expect(result.verbosity).toBe(2);
+    expect(result.rest).toEqual(["my-slug"]);
+  });
+
+  test("-vvv produces verbosity 3", () => {
+    const result = parseVerbosity(["-vvv", "my-slug"]);
+    expect(result.verbosity).toBe(3);
+    expect(result.rest).toEqual(["my-slug"]);
+  });
+
+  test("separate -v flags are summed", () => {
+    const result = parseVerbosity(["-v", "-v", "-v", "my-slug"]);
+    expect(result.verbosity).toBe(3);
+    expect(result.rest).toEqual(["my-slug"]);
+  });
+
+  test("mixed -v and -vv flags are summed", () => {
+    const result = parseVerbosity(["-v", "-vv", "my-slug"]);
+    expect(result.verbosity).toBe(3);
+    expect(result.rest).toEqual(["my-slug"]);
+  });
+
+  test("no flags produces verbosity 0", () => {
+    const result = parseVerbosity(["my-slug", "my-feature"]);
+    expect(result.verbosity).toBe(0);
+    expect(result.rest).toEqual(["my-slug", "my-feature"]);
+  });
+
+  test("flags are stripped from positional args", () => {
+    const result = parseVerbosity(["my-slug", "-vv", "my-feature"]);
+    expect(result.verbosity).toBe(2);
+    expect(result.rest).toEqual(["my-slug", "my-feature"]);
+  });
+
+  test("empty args produces verbosity 0", () => {
+    const result = parseVerbosity([]);
+    expect(result.verbosity).toBe(0);
+    expect(result.rest).toEqual([]);
+  });
+});
+
+describe("parseArgs verbosity", () => {
+  test("watch -v produces verbosity 1", () => {
+    const result = parseArgs(["bun", "index.ts", "watch", "-v"]);
+    expect(result.command).toBe("watch");
+    expect(result.verbosity).toBe(1);
+    expect(result.args).toEqual([]);
+  });
+
+  test("status -vvv produces verbosity 3", () => {
+    const result = parseArgs(["bun", "index.ts", "status", "-vvv"]);
+    expect(result.command).toBe("status");
+    expect(result.verbosity).toBe(3);
+    expect(result.args).toEqual([]);
+  });
+
+  test("implement with -vv strips flag from args", () => {
+    const result = parseArgs(["bun", "index.ts", "implement", "-vv", "my-slug", "my-feature"]);
+    expect(result.command).toBe("implement");
+    expect(result.verbosity).toBe(2);
+    expect(result.args).toEqual(["my-slug", "my-feature"]);
+  });
+
+  test("no -v flag defaults to verbosity 0", () => {
+    const result = parseArgs(["bun", "index.ts", "watch"]);
+    expect(result.verbosity).toBe(0);
+  });
+
+  test("help with no args defaults to verbosity 0", () => {
+    const result = parseArgs(["bun", "index.ts"]);
+    expect(result.verbosity).toBe(0);
   });
 });
 

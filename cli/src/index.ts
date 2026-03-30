@@ -2,6 +2,7 @@
 
 import { parseArgs } from "./args";
 import { loadConfig } from "./config";
+import { createLogger } from "./logger";
 import { phaseCommand } from "./commands/phase";
 import { watchCommand } from "./commands/watch";
 import { statusCommand } from "./commands/status";
@@ -11,7 +12,7 @@ import { isValidPhase } from "./types";
 const VERSION = "0.1.0";
 
 function printHelp(): void {
-  console.log(`beastmode v${VERSION}
+  process.stdout.write(`beastmode v${VERSION}
 
 Usage:
   beastmode design [topic]             Start a new design
@@ -22,28 +23,32 @@ Usage:
   beastmode cancel <slug>              Cancel and clean up an epic
   beastmode watch                      Autonomous pipeline orchestration
   beastmode status [--all] [--watch|-w] Show pipeline status
-  beastmode help                       Show this help message`);
+  beastmode help                       Show this help message
+
+Flags:
+  -v, -vv, -vvv                    Increase output verbosity
+`);
 }
 
 async function main(): Promise<void> {
-  const { command, args } = parseArgs(process.argv);
+  const { command, args, verbosity } = parseArgs(process.argv);
   const projectRoot = process.cwd();
   const config = loadConfig(projectRoot);
 
   if (isValidPhase(command)) {
-    await phaseCommand(command, args, config);
+    await phaseCommand(command, args, config, verbosity);
     return;
   }
 
   switch (command) {
     case "watch":
-      await watchCommand(config);
+      await watchCommand(config, verbosity);
       break;
     case "status":
-      await statusCommand(config, args);
+      await statusCommand(config, args, verbosity);
       break;
     case "cancel":
-      await cancelCommand(args, config);
+      await cancelCommand(args, config, verbosity);
       break;
     case "help":
       printHelp();
@@ -52,6 +57,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error(err);
+  const logger = createLogger(0, "beastmode");
+  logger.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

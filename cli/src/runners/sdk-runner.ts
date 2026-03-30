@@ -9,17 +9,21 @@
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import type { Phase, PhaseResult } from "../types";
+import { createLogger } from "../logger.js";
+import type { Logger } from "../logger.js";
 
 export interface SdkRunnerOptions {
   phase: Phase;
   args: string[];
   cwd: string;
+  logger?: Logger;
 }
 
 export async function runPhaseWithSdk(
   options: SdkRunnerOptions,
 ): Promise<PhaseResult> {
   const { phase, args, cwd } = options;
+  const logger = options.logger ?? createLogger(0, "beastmode");
   const prompt = `/beastmode:${phase} ${args.join(" ")}`.trim();
 
   const startTime = Date.now();
@@ -57,8 +61,8 @@ export async function runPhaseWithSdk(
         sessionId = message.session_id as string;
       }
 
-      // Debug: log message types to stderr
-      if (process.env.BEASTMODE_DEBUG) {
+      // Debug: log message types
+      {
         const summary: Record<string, unknown> = { type: message.type };
         if ((message as any).subtype) summary.subtype = (message as any).subtype;
         if (message.type === "stream_event") {
@@ -72,7 +76,7 @@ export async function runPhaseWithSdk(
             numTurns: (message as any).num_turns,
           };
         }
-        console.error(`[debug] msg #${messageCount}: ${JSON.stringify(summary)}`);
+        logger.trace(`msg #${messageCount}: ${JSON.stringify(summary)}`);
       }
 
       // Stream text deltas to terminal in real time
@@ -107,14 +111,12 @@ export async function runPhaseWithSdk(
       }
     }
 
-    if (process.env.BEASTMODE_DEBUG) {
-      console.error(`[debug] total messages: ${messageCount}, session: ${sessionId}`);
-    }
+    logger.trace(`total messages: ${messageCount}, session: ${sessionId}`);
   } catch (err: any) {
     // AbortError from controller during SIGINT is expected
     if (!abortController.signal.aborted) {
       exitStatus = "error";
-      console.error(`\n[beastmode] Phase error: ${err.message}`);
+      logger.error(`Phase error: ${err.message}`);
     }
   } finally {
     process.off("SIGINT", onSigint);
