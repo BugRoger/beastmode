@@ -26,7 +26,7 @@ import * as store from "./manifest-store.js";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest.js";
 import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
 import type { Phase } from "./types.js";
-import { loadWorktreePhaseOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
+import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -43,7 +43,8 @@ function findProjectRoot(from: string = process.cwd()): string {
  * and uses it to enrich/advance the manifest. Same logic as post-dispatch,
  * reading from the correct location (.beastmode/artifacts/<phase>/).
  */
-function reconcileState(opts: {
+/** @internal Exported for testing. */
+export function reconcileState(opts: {
   worktreePath: string;
   projectRoot: string;
   epicSlug: string;
@@ -57,8 +58,10 @@ function reconcileState(opts: {
   let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
   if (!manifest) return undefined;
 
-  // 2. Load output.json from worktree artifacts dir
-  const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
+  // 2. Load output.json — feature-specific when fan-out, epic-level otherwise
+  const output = opts.featureSlug
+    ? loadWorktreeFeatureOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug, opts.featureSlug)
+    : loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
 
   // 3. Enrich from output.json (features, artifact paths)
   if (output) {
@@ -92,8 +95,8 @@ function reconcileState(opts: {
     });
   }
 
-  // 4. Handle implement fan-out: mark specific feature completed
-  if (opts.phase === "implement" && opts.featureSlug) {
+  // 4. Handle implement fan-out: mark specific feature completed only if output confirms
+  if (opts.phase === "implement" && opts.featureSlug && output?.status === "completed") {
     manifest = markFeature(manifest, opts.featureSlug, "completed");
   }
 

@@ -13,7 +13,7 @@ import type { PipelineManifest } from "./manifest-store";
 import type { Logger } from "./logger";
 import * as store from "./manifest-store";
 import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
-import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput } from "./phase-output";
+import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
@@ -92,11 +92,16 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       logger.debug(`Enriched manifest (artifacts: ${artifactPaths.length}, features: ${featureStatuses.length})`);
     }
 
-    // Handle implement fan-out: mark individual feature as completed
+    // Handle implement fan-out: mark individual feature as completed only if output confirms
     if (opts.phase === "implement" && opts.featureSlug) {
-      manifest = markFeature(manifest, opts.featureSlug, "completed");
-      store.save(opts.projectRoot, opts.epicSlug, manifest);
-      logger.debug(`Marked feature ${opts.featureSlug} as completed`);
+      const featureOutput = loadWorktreeFeatureOutput(opts.worktreePath, opts.phase, opts.epicSlug, opts.featureSlug);
+      if (featureOutput?.status === "completed") {
+        manifest = markFeature(manifest, opts.featureSlug, "completed");
+        store.save(opts.projectRoot, opts.epicSlug, manifest);
+        logger.debug(`Marked feature ${opts.featureSlug} as completed (output verified)`);
+      } else {
+        logger.debug(`Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
+      }
     }
 
     // Handle validate regression: if validate didn't complete, regress to implement
