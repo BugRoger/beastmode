@@ -1,0 +1,7 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-remove-dead-gates-config-cleanup.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Remove dead gate entries from config.yaml", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T00:00:00Z"
+}

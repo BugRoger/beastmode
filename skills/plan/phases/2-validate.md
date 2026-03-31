@@ -66,23 +66,3 @@ Present a consolidated view before approval:
 ```
 
 This is read-only — do NOT ask new questions here.
-
-## 5. [GATE|plan.feature-set-approval]
-
-This is the final approval gate. Read `.beastmode/config.yaml` → resolve mode for `plan.feature-set-approval`.
-Default: `human`.
-
-### [GATE-OPTION|human] User Approval
-
-Ask: "Feature plans complete. Ready to save and proceed to implementation?"
-
-Options:
-- Yes, save and continue
-- No, let's revise [specify what]
-
-Wait for user response before continuing.
-
-### [GATE-OPTION|auto] Self-Approve
-
-Log: "Gate `plan.feature-set-approval` → auto: approved"
-Proceed to checkpoint.

@@ -1,11 +1,7 @@
 {
   "status": "completed",
   "artifacts": {
-<<<<<<<< HEAD:.beastmode/artifacts/validate/2026-03-31-github-sync-watch-loop.output.json
-    "report": "/Users/D038720/Code/github.com/bugroger/beastmode/.claude/worktrees/github-sync-watch-loop/.beastmode/artifacts/validate/2026-03-31-github-sync-watch-loop.md",
-========
-    "report": "/Users/D038720/Code/github.com/bugroger/beastmode/.claude/worktrees/github-issue-enrichment/.beastmode/artifacts/validate/2026-03-31-github-issue-enrichment.md",
->>>>>>>> feature/github-issue-enrichment:.beastmode/artifacts/validate/2026-03-31-github-issue-enrichment.output.json
+    "report": "/Users/D038720/Code/github.com/bugroger/beastmode/.claude/worktrees/remove-dead-gates/.beastmode/artifacts/validate/2026-03-31-github-issue-enrichment.md",
     "passed": true
   }
 }

@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.54.1 — Remove Dead Gates (Mar 2026)
+
+- **Plan gate removal** — Deleted `feature-set-approval` and `feature-approval` gates from plan execute and validate skills; steps renumbered
+- **Slug gate collapse** — Collapsed `slug-proposal` gate in design checkpoint to auto-derive behavior (Claude synthesizes slug from problem statement, no prompt)
+- **Config cleanup** — Removed `plan.feature-set-approval`, `plan.feature-approval`, and `design.slug-proposal` entries from `config.yaml`
+
 ### v0.54.0 — Retro Consolidation (Mar 2026)
 
 - **Release-only retro** — Retro runs once at release with all phase artifacts instead of after every phase checkpoint, producing a coherent cross-phase knowledge update
