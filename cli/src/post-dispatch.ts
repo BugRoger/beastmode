@@ -96,7 +96,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     // Design post-dispatch rename: rename hex slug to real slug from PRD
     let activeSlug = opts.epicSlug;
     if (opts.phase === "design" && output) {
-      const designArtifacts = output.artifacts as Record<string, unknown>;
+      const designArtifacts = output.artifacts as unknown as Record<string, unknown>;
       const realSlug = typeof designArtifacts.slug === "string" ? designArtifacts.slug : undefined;
       if (realSlug && realSlug !== opts.epicSlug) {
         try {

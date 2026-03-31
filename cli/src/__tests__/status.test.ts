@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, renderBlockedDetails, buildSnapshot, detectChanges, highlightRow, computeWaveInfo, formatWaveIndicator, computeWaveDetails, renderWaveVerbose, renderStatusOutput } from "../commands/status";
-import type { WatchMeta, StatusSnapshot, WaveInfo, WaveDetail } from "../commands/status";
+import type { WatchMeta, StatusSnapshot } from "../commands/status";
 import type { EnrichedManifest } from "../state-scanner";
 
 /**
