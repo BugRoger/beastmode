@@ -9,7 +9,7 @@ import type {
   PipelineManifest,
   ManifestFeature,
 } from "./manifest-store";
-import type { Phase, PhaseOutput } from "./types";
+import type { Phase } from "./types";
 import type { GatesConfig } from "./config";
 
 // Re-export types so consumers can import from either module
@@ -70,35 +70,6 @@ export function enrich(
     ...manifest,
     features,
     artifacts,
-    lastUpdated: now(),
-  };
-}
-
-/**
- * Advance the manifest to a new phase.
- */
-export function advancePhase(
-  manifest: PipelineManifest,
-  newPhase: Phase,
-): PipelineManifest {
-  return {
-    ...manifest,
-    phase: newPhase,
-    lastUpdated: now(),
-  };
-}
-
-/**
- * Regress the manifest to a prior phase. Resets ALL features to "pending".
- */
-export function regressPhase(
-  manifest: PipelineManifest,
-  phase: Phase,
-): PipelineManifest {
-  return {
-    ...manifest,
-    phase,
-    features: manifest.features.map((f) => ({ ...f, status: "pending" as const })),
     lastUpdated: now(),
   };
 }
@@ -195,64 +166,6 @@ export function checkBlocked(
   }
 
   return null;
-}
-
-// --- Phase sequence ---
-
-const PHASE_SEQUENCE: Partial<Record<Phase, Phase>> = {
-  design: "plan",
-  plan: "implement",
-  implement: "validate",
-  validate: "release",
-  release: "done",
-};
-
-/**
- * Check if the phase output artifacts contain features.
- */
-function outputHasFeatures(output: PhaseOutput): boolean {
-  const artifacts = output.artifacts as unknown as Record<string, unknown>;
-  const features = artifacts?.features;
-  return Array.isArray(features) && features.length > 0;
-}
-
-/**
- * Determine if the pipeline should advance to the next phase.
- * Returns the next phase, or null if no advancement should occur.
- */
-export function shouldAdvance(
-  manifest: PipelineManifest,
-  output: PhaseOutput | undefined,
-): Phase | null {
-  const nextPhase = PHASE_SEQUENCE[manifest.phase];
-  if (!nextPhase) return null;
-
-  switch (manifest.phase) {
-    case "design":
-      return nextPhase;
-
-    case "plan": {
-      if (!output) return null;
-      return outputHasFeatures(output) ? nextPhase : null;
-    }
-
-    case "implement": {
-      if (manifest.features.length === 0) return null;
-      const allCompleted = manifest.features.every(
-        (f) => f.status === "completed",
-      );
-      return allCompleted ? nextPhase : null;
-    }
-
-    case "validate":
-      return output?.status === "completed" ? nextPhase : null;
-
-    case "release":
-      return output?.status === "completed" ? nextPhase : null;
-
-    default:
-      return null;
-  }
 }
 
 /**

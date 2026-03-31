@@ -1,12 +1,36 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-03-31-xstate-pipeline-machine-consumer-swap.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Wire persist action to manifest-store", "wave": 1, "status": "pending"},
-    {"id": 1, "subject": "Task 1: Rewrite post-dispatch.ts as thin event router", "wave": 1, "status": "pending"},
-    {"id": 2, "subject": "Task 2: Swap state-scanner to use machine metadata for dispatch", "wave": 2, "status": "pending"},
-    {"id": 3, "subject": "Task 3: Update cancel command to use machine", "wave": 2, "status": "pending"},
-    {"id": 4, "subject": "Task 4: Delete dead code from manifest.ts", "wave": 3, "status": "pending"},
-    {"id": 5, "subject": "Task 5: Full test suite verification and fixes", "wave": 4, "status": "pending"}
+    {
+      "id": 0,
+      "subject": "Task 0: Rewrite state-scanner preReconcile to use machine events",
+      "wave": 1,
+      "status": "pending"
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Rewrite watch-command reconcileState to use machine events",
+      "wave": 1,
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Delete dead code from manifest.ts",
+      "wave": 2,
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Update test suites for deleted functions",
+      "wave": 2,
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Full test suite verification",
+      "wave": 3,
+      "status": "pending"
+    }
   ],
-  "lastUpdated": "2026-03-31T00:00:00Z"
+  "lastUpdated": "2026-03-31T12:00:00Z"
 }

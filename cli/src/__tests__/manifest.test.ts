@@ -12,7 +12,6 @@ import {
 import type { PipelineManifest, ManifestFeature } from "../manifest-store";
 import {
   enrich,
-  advancePhase,
   getPendingFeatures,
 } from "../manifest";
 
@@ -172,16 +171,4 @@ describe("manifest-store core operations", () => {
     expect(loaded.features).toHaveLength(2);
   });
 
-  test("advancePhase updates phase field (pure, then save roundtrip)", () => {
-    create(TEST_ROOT, "advance-epic");
-    const initial = get(TEST_ROOT, "advance-epic");
-
-    const advanced = advancePhase(initial, "plan");
-    save(TEST_ROOT, "advance-epic", advanced);
-    expect(advanced.phase).toBe("plan");
-
-    // Verify persistence
-    const loaded = get(TEST_ROOT, "advance-epic");
-    expect(loaded.phase).toBe("plan");
-  });
 });

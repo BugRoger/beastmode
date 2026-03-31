@@ -23,10 +23,12 @@ import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "./iterm2-detect.js";
 import * as worktree from "./worktree.js";
 import { scanEpics } from "./state-scanner.js";
 import * as store from "./manifest-store.js";
-import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest.js";
-import type { PipelineManifest, ManifestFeature } from "./manifest-store.js";
+import type { PipelineManifest } from "./manifest-store.js";
 import type { Phase } from "./types.js";
-import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output.js";
+import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output.js";
+import { epicMachine } from "./pipeline-machine/index.js";
+import { createActor } from "xstate";
+import type { EpicContext, EpicEvent } from "./pipeline-machine/index.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -55,7 +57,7 @@ export function reconcileState(opts: {
   if (!opts.success) return readProgress(opts.projectRoot, opts.epicSlug);
 
   // 1. Load manifest — if it's gone (e.g. release teardown removed it), bail
-  let manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
+  const manifest: PipelineManifest | undefined = store.load(opts.projectRoot, opts.epicSlug);
   if (!manifest) return undefined;
 
   // 2. Load output.json — feature-specific when fan-out, epic-level otherwise
@@ -63,58 +65,97 @@ export function reconcileState(opts: {
     ? loadWorktreeFeatureOutput(opts.worktreePath, opts.phase as Phase, opts.epicSlug, opts.featureSlug)
     : loadWorktreePhaseOutput(opts.worktreePath, opts.phase as Phase);
 
-  // 3. Enrich from output.json (features, artifact paths)
-  if (output) {
-    const featureStatuses = extractFeatureStatuses(output);
-    const artifactPaths = extractArtifactPaths(output);
+  // 3. Hydrate ephemeral actor at the manifest's current phase
+  const epicContext = manifest as unknown as EpicContext;
+  const resolvedSnapshot = epicMachine.resolveState({
+    value: manifest.phase,
+    context: epicContext,
+  });
+  const actor = createActor(epicMachine, { snapshot: resolvedSnapshot });
+  actor.start();
 
-    const features: ManifestFeature[] | undefined =
-      featureStatuses.length > 0
-        ? featureStatuses.map((f) => {
-            const raw = (output.artifacts as unknown as Record<string, unknown>).features;
-            const planFile = Array.isArray(raw)
-              ? (raw.find(
-                  (r: unknown) =>
-                    typeof r === "object" &&
-                    r !== null &&
-                    (r as Record<string, unknown>).slug === f.slug,
-                ) as Record<string, unknown> | undefined)?.plan
-              : undefined;
-            return {
-              slug: f.slug,
-              plan: typeof planFile === "string" ? planFile : "",
-              status: (f.status === "unknown" ? "pending" : f.status) as ManifestFeature["status"],
-            };
-          })
-        : undefined;
-
-    manifest = enrich(manifest, {
-      phase: opts.phase as Phase,
-      features,
-      artifacts: artifactPaths.length > 0 ? artifactPaths : undefined,
-    });
+  // 4. Map output to machine events and send them
+  const events = mapOutputToEvents(opts.phase as Phase, output, opts.featureSlug);
+  for (const event of events) {
+    actor.send(event);
   }
 
-  // 4. Handle implement fan-out: mark specific feature completed only if output confirms
-  if (opts.phase === "implement" && opts.featureSlug && output?.status === "completed") {
-    manifest = markFeature(manifest, opts.featureSlug, "completed");
-  }
+  // 5. Extract resulting state and persist
+  const finalSnapshot = actor.getSnapshot();
+  const finalPhase = (typeof finalSnapshot.value === "string"
+    ? finalSnapshot.value
+    : manifest.phase) as Phase;
+  store.save(opts.projectRoot, opts.epicSlug, {
+    ...(finalSnapshot.context as unknown as PipelineManifest),
+    phase: finalPhase,
+  } as PipelineManifest);
 
-  // 5. Handle validate regression
-  if (opts.phase === "validate" && output?.status !== "completed") {
-    manifest = regressPhase(manifest, "implement" as Phase);
-  }
-
-  // 6. Determine phase advancement
-  const nextPhase = shouldAdvance(manifest, output);
-  if (nextPhase) {
-    manifest = advancePhase(manifest, nextPhase);
-  }
-
-  // 7. Persist
-  store.save(opts.projectRoot, opts.epicSlug, manifest);
+  actor.stop();
 
   return readProgress(opts.projectRoot, opts.epicSlug);
+}
+
+/**
+ * Map phase output to machine events for reconcileState.
+ * Mirrors the event-mapping logic from post-dispatch.ts.
+ */
+function mapOutputToEvents(
+  phase: Phase,
+  output: ReturnType<typeof loadWorktreePhaseOutput>,
+  featureSlug?: string,
+): EpicEvent[] {
+  const events: EpicEvent[] = [];
+
+  switch (phase) {
+    case "design": {
+      const artifacts = output?.artifacts as Record<string, unknown> | undefined;
+      const realSlug = artifacts?.slug as string | undefined;
+      events.push({ type: "DESIGN_COMPLETED", realSlug });
+      break;
+    }
+    case "plan": {
+      const artifacts = output?.artifacts as Record<string, unknown> | undefined;
+      const rawFeatures = artifacts?.features;
+      const features: Array<{ slug: string; plan: string }> = [];
+      if (Array.isArray(rawFeatures)) {
+        for (const entry of rawFeatures) {
+          if (typeof entry === "object" && entry !== null && typeof (entry as Record<string, unknown>).slug === "string") {
+            const rec = entry as Record<string, unknown>;
+            features.push({
+              slug: rec.slug as string,
+              plan: typeof rec.plan === "string" ? rec.plan : "",
+            });
+          }
+        }
+      }
+      events.push({ type: "PLAN_COMPLETED", features });
+      break;
+    }
+    case "implement": {
+      if (featureSlug && output?.status === "completed") {
+        events.push({ type: "FEATURE_COMPLETED", featureSlug });
+      }
+      // Always attempt IMPLEMENT_COMPLETED — guard checks allFeaturesCompleted
+      events.push({ type: "IMPLEMENT_COMPLETED" });
+      break;
+    }
+    case "validate": {
+      if (output?.status === "completed") {
+        events.push({ type: "VALIDATE_COMPLETED" });
+      } else {
+        events.push({ type: "VALIDATE_FAILED" });
+      }
+      break;
+    }
+    case "release": {
+      if (output?.status === "completed") {
+        events.push({ type: "RELEASE_COMPLETED" });
+      }
+      break;
+    }
+  }
+
+  return events;
 }
 
 /** Read feature progress from the pipeline manifest. */

@@ -1,16 +1,12 @@
 import { describe, test, expect } from "bun:test";
 import type { PipelineManifest, ManifestFeature } from "../manifest-store";
-import type { PhaseOutput, PlanArtifacts } from "../types";
 import type { GatesConfig } from "../config";
 import {
   enrich,
-  advancePhase,
-  regressPhase,
   markFeature,
   setGitHubEpic,
   setFeatureGitHubIssue,
   checkBlocked,
-  shouldAdvance,
   getPendingFeatures,
 } from "../manifest";
 
@@ -106,51 +102,6 @@ describe("enrich", () => {
   });
 });
 
-// --- advancePhase ---
-
-describe("advancePhase", () => {
-  test("sets phase and updates lastUpdated", () => {
-    const manifest = makeManifest({ phase: "design" });
-    const result = advancePhase(manifest, "plan");
-
-    expect(result.phase).toBe("plan");
-    expect(result.lastUpdated).not.toBe(manifest.lastUpdated);
-  });
-
-  test("returns new object, does not mutate input", () => {
-    const manifest = makeManifest({ phase: "design" });
-    const result = advancePhase(manifest, "plan");
-
-    expect(result).not.toBe(manifest);
-    expect(manifest.phase).toBe("design");
-  });
-});
-
-// --- regressPhase ---
-
-describe("regressPhase", () => {
-  test("resets all features to pending", () => {
-    const manifest = makeManifest({
-      phase: "validate",
-      features: [
-        makeFeature({ slug: "a", status: "completed" }),
-        makeFeature({ slug: "b", status: "in-progress" }),
-        makeFeature({ slug: "c", status: "blocked" }),
-      ],
-    });
-
-    const result = regressPhase(manifest, "implement");
-
-    expect(result.features.every((f) => f.status === "pending")).toBe(true);
-  });
-
-  test("sets phase correctly", () => {
-    const manifest = makeManifest({ phase: "validate" });
-    const result = regressPhase(manifest, "implement");
-
-    expect(result.phase).toBe("implement");
-  });
-});
 
 // --- markFeature ---
 
@@ -253,110 +204,6 @@ describe("checkBlocked", () => {
   });
 });
 
-// --- shouldAdvance ---
-
-describe("shouldAdvance", () => {
-  test("design -> plan (always)", () => {
-    const manifest = makeManifest({ phase: "design" });
-    expect(shouldAdvance(manifest, undefined)).toBe("plan");
-  });
-
-  test("plan -> implement (when features in output)", () => {
-    const manifest = makeManifest({ phase: "plan" });
-    const output: PhaseOutput = {
-      status: "completed",
-      artifacts: {
-        features: [{ slug: "feat-a", plan: "plan.md" }],
-      } as PlanArtifacts,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBe("implement");
-  });
-
-  test("plan -> null (when no features)", () => {
-    const manifest = makeManifest({ phase: "plan" });
-    const output: PhaseOutput = {
-      status: "completed",
-      artifacts: { design: "design.md" } as any,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBeNull();
-  });
-
-  test("implement -> validate (all features completed)", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [
-        makeFeature({ slug: "a", status: "completed" }),
-        makeFeature({ slug: "b", status: "completed" }),
-      ],
-    });
-
-    expect(shouldAdvance(manifest, undefined)).toBe("validate");
-  });
-
-  test("implement -> null (features still pending)", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [
-        makeFeature({ slug: "a", status: "completed" }),
-        makeFeature({ slug: "b", status: "pending" }),
-      ],
-    });
-
-    expect(shouldAdvance(manifest, undefined)).toBeNull();
-  });
-
-  test("validate -> release (output completed)", () => {
-    const manifest = makeManifest({ phase: "validate" });
-    const output: PhaseOutput = {
-      status: "completed",
-      artifacts: { report: "report.md", passed: true } as any,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBe("release");
-  });
-
-  test("validate -> null (output not completed)", () => {
-    const manifest = makeManifest({ phase: "validate" });
-    const output: PhaseOutput = {
-      status: "error",
-      artifacts: { report: "report.md", passed: false } as any,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBeNull();
-  });
-
-  test("release -> done (output completed)", () => {
-    const manifest = makeManifest({ phase: "release" });
-    const output: PhaseOutput = {
-      status: "completed",
-      artifacts: { version: "1.0.0" } as any,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBe("done");
-  });
-
-  test("release -> null (output not completed)", () => {
-    const manifest = makeManifest({ phase: "release" });
-    const output: PhaseOutput = {
-      status: "error",
-      artifacts: { version: "1.0.0" } as any,
-    };
-
-    expect(shouldAdvance(manifest, output)).toBeNull();
-  });
-
-  test("done -> null (terminal)", () => {
-    const manifest = makeManifest({ phase: "done" });
-    expect(shouldAdvance(manifest, undefined)).toBeNull();
-  });
-
-  test("cancelled -> null (terminal)", () => {
-    const manifest = makeManifest({ phase: "cancelled" });
-    expect(shouldAdvance(manifest, undefined)).toBeNull();
-  });
-});
 
 // --- getPendingFeatures ---
 
