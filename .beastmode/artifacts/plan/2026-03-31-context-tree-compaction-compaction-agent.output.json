@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "compaction-agent",
+        "plan": "2026-03-31-context-tree-compaction-compaction-agent.md"
+      },
+      {
+        "slug": "compact-cli",
+        "plan": "2026-03-31-context-tree-compaction-compact-cli.md"
+      },
+      {
+        "slug": "retro-value-gate",
+        "plan": "2026-03-31-context-tree-compaction-retro-value-gate.md"
+      },
+      {
+        "slug": "release-compaction",
+        "plan": "2026-03-31-context-tree-compaction-release-compaction.md"
+      }
+    ]
+  }
+}

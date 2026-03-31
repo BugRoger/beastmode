@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.50.0 — Context Tree Compaction (Mar 2026)
+
+- **Retro value-add gate** — Both retro walkers (context, meta) now check four criteria before creating L3 records: rationale, constraints, provenance, dissenting context. Redundant L3s that merely restate their parent L2 are silently skipped
+- **Compaction agent** — New utility agent (`agents/compaction.md`) audits the full context tree with three ordered operations: staleness removal, L3 restatement folding, and L0 promotion detection for rules duplicated across 3+ phases
+- **`beastmode compact` CLI** — On-demand context tree audit command, always runs regardless of release cadence
+- **Release compaction integration** — Automatic compaction every 5 releases, runs before retro in checkpoint phase to prevent creating-then-immediately-deleting records
+
 ### v0.49.0 — Watch Output Noise (Mar 2026)
 
 - **Centralized logger** — New `createLogger(verbosity, slug)` factory in `cli/src/logger.ts` with level-gated methods: `log()` (L0), `detail()` (L1), `debug()` (L2), `trace()` (L3), `warn()`/`error()` (stderr)

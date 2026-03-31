@@ -14,7 +14,7 @@
 - NEVER mix domain concerns — State tracks features, Context documents knowledge, Meta captures process knowledge
 - ALWAYS write phase artifacts to `artifacts/<phase>/` — retro promotes to `context/` and `meta/`
 - Manifest JSON is the operational authority for feature lifecycle via manifest-store.ts (filesystem) and manifest.ts (pure state machine), with top-level `phase` field as the single phase source of truth; manifests live in `.beastmode/state/` (gitignored); GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled — repo files remain the content store
-- Write protection: phases write `artifacts/` only, retro promotes — prevents unauthorized knowledge edits
+- Write protection: phases write `artifacts/` only, retro promotes and compaction agent prunes — prevents unauthorized knowledge edits
 - Meta has two L2 domains per phase: process.md and workarounds.md — separates process patterns from beastmode feedback
 - Meta L3 records are topic-clustered with confidence tags — no date prefixes, observations accumulate by topic
 - ALWAYS structure artifacts/ as phase subdirs for committed skill outputs — no L1 index files in artifacts/
@@ -28,7 +28,7 @@
 - 3-checkpoint triggers retro agents — context walker + meta walker in parallel
 
 ## Component Architecture
-- Skills (workflow verbs) in `/skills/`, shared utilities in `skills/_shared/`, retro agents in `/agents/` — separation of concerns
+- Skills (workflow verbs) in `/skills/`, shared utilities in `skills/_shared/`, retro agents and utility agents (compaction) in `/agents/` — separation of concerns
 - ALWAYS colocate interface (SKILL.md) with implementation — discoverability
 - NEVER put shared logic in individual skills — extract to `skills/_shared/`
 - Retro agents are phase-scoped — context walker and meta walker review their phase's domain docs
@@ -59,7 +59,8 @@
 - ALWAYS run retro before release commit — context walker + meta walker in parallel
 - Retro reconciliation is artifact-scoped — only checks docs relevant to the new state artifact
 - NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating
+- Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 - L0 promotion happens only during release phase via L0 proposal files in state/release/ — controlled rollup
-- NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
+- NEVER write to context/ or meta/ directly from phases — retro and the compaction agent are the sole gatekeepers
 - Meta promotion is confidence-gated: [HIGH] immediate, [MEDIUM]+3 to L1, [LOW]+3 to [MEDIUM] — graduated trust
 - Four retro gates aligned to hierarchy: retro.records (L3), retro.context (L2), retro.phase (L1), retro.beastmode (L0) — bottom-up approval

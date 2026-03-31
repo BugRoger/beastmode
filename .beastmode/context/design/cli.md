@@ -1,10 +1,11 @@
 # CLI Architecture
 
 ## Command Structure
-- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch` and `status` — all commands accept `-v`/`-vv`/`-vvv` flags for verbosity control
+- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `status`, and `compact`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
 - `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, blocked gate details, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
+- `beastmode compact` dispatches the compaction agent via existing session dispatch pattern — operates on the shared context tree without a worktree, always runs regardless of 5-release counter, produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
@@ -57,14 +58,3 @@
 - output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
 - Artifact frontmatter schema per phase: design (phase, slug), plan (phase, epic, feature), implement (phase, epic, feature, status), validate (phase, slug, status), release (phase, slug, bump)
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch
-
-## Logger
-- ALWAYS use `createLogger(verbosity, slug)` factory from `logger.ts` for all CLI output — no direct console.log or console.error anywhere in CLI code
-- Logger methods: `log()` (level 0, always shown), `detail()` (level 1, `-v`), `debug()` (level 2, `-vv`), `trace()` (level 3, `-vvv`), plus `warn()` and `error()` (always shown, always stderr)
-- Sub-detail lines use indented format (two spaces, no slug prefix) for continuation output
-- Per-epic instances: watch loop creates `createLogger(v, epicSlug)` per dispatched epic; system-level uses `createLogger(v, "beastmode")`
-- Flag parsing: count `-v` occurrences in argv — `-v` = 1, `-vv` = 2, `-vvv` = 3, `-v -v -v` = 3
-- ALWAYS default to verbosity 0 across all commands (watch, phase, cancel, status) — no special casing
-- ALWAYS route `warn()` and `error()` to stderr regardless of verbosity — `log()`/`detail()`/`debug()`/`trace()` to stdout
-- Status `--watch` dashboard writes directly to stdout via ANSI escape codes — not affected by verbosity flags
-- Existing `watchLog()`/`watchErr()` and `[watch]`/`[post-dispatch]`/`[beastmode]` prefix patterns are removed

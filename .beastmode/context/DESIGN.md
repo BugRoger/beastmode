@@ -3,7 +3,7 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, and centralized verbosity-gated logging with `-v`/`-vv`/`-vvv` flag stacking across all CLI commands
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and periodic compaction agent (staleness removal, restatement folding, L0 promotion detection) triggered every 5 releases or via `beastmode compact`
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
@@ -15,10 +15,11 @@
 - Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
 - Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number
-- NEVER write to context/ or meta/ directly from phases — retro is the sole gatekeeper
+- NEVER write to context/ or meta/ directly from phases — retro and the compaction agent are the sole gatekeepers
 - Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
 - Meta walker mirrors context walker algorithm — L1 quick-check, L2 deep-check, L3 record management with confidence-gated promotion
 - NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating
+- Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 
 ## Task Runner
 - ALWAYS track tasks via TodoWrite — one in_progress at a time
@@ -27,6 +28,7 @@
 
 ## Release Workflow
 - ALWAYS run retro from checkpoint before merge — consistent across all five phases
+- ALWAYS run compaction before retro in release — every 5 releases, tracked via `.beastmode/state/.last-compaction`
 - ALWAYS commit per phase on the feature branch — each phase persists work at checkpoint for cross-session durability
 - ALWAYS squash-merge feature branch at release — per-phase commits collapse to one clean commit on main
 - ALWAYS archive branch tip before squash merge
@@ -72,7 +74,7 @@ Manifest JSON is the operational authority for feature lifecycle, located at `.b
 context/design/github-state-model.md
 
 ## Pipeline Orchestration
-TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispatches agent sessions in CLI-owned worktrees to drive epics through plan -> release in parallel. Dispatch uses a strategy pattern: `DispatchedSession` interface with `SdkSession` (SDK `query()`) and `CmuxSession` (cmux terminal surface) implementations. A `SessionFactory` selects the strategy based on cmux availability and config. No concurrency cap — API rate limits are the natural governor. Per-epic scoped logger instances via `createLogger(verbosity, epicSlug)`; system-level messages use `beastmode` as slug prefix. Fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates, pauses epic and logs to stdout on human gates. Event-driven re-scan on session completion with 60-second poll as safety net.
+TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispatches agent sessions in CLI-owned worktrees to drive epics through plan -> release in parallel. Dispatch uses a strategy pattern: `DispatchedSession` interface with `SdkSession` (SDK `query()`) and `CmuxSession` (cmux terminal surface) implementations. A `SessionFactory` selects the strategy based on cmux availability and config. No concurrency cap — API rate limits are the natural governor. Fan-out per feature at implement. Design phase is excluded (interactive). Respects config.yaml gates, pauses epic and logs to stdout on human gates. Event-driven re-scan on session completion with 60-second poll as safety net.
 
 1. ALWAYS use manifest files as the authority for orchestration decisions — scanner reads manifest.phase for epic state, not GitHub labels or marker files
 2. NEVER orchestrate design phase — interactive by nature, requires human collaboration
@@ -85,7 +87,7 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 context/design/orchestration.md
 
 ## CLI Architecture
-TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`) and autonomous pipeline orchestration (`beastmode watch`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle, manifest lifecycle, and GitHub sync. Manifest logic split into two modules: manifest-store.ts (filesystem boundary — get, list, save, create, validate) and manifest.ts (pure state machine — enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance). After every phase dispatch, a Stop hook auto-generates output.json from artifact frontmatter, then the CLI enriches the manifest and runs syncGitHub(manifest, config). Manifest uses flat-file convention: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json`, local-only and gitignored. Skills write artifacts to `artifacts/<phase>/` only. Status command provides compact table (Epic | Phase | Features | Status) with --verbose flag and a `--watch`/`-w` live dashboard mode that polls every 2 seconds, redraws via ANSI escape sequences, highlights changed rows for one cycle, and shows watch loop running state via lockfile detection. Cost tracking removed from scanner and status. GatesConfig extended with validate phase. Centralized logger module (`logger.ts`) with `createLogger(verbosity, slug)` factory, four verbosity tiers (0-3) controlled by `-v` flag stacking, stderr/stdout stream split, consistent `HH:MM:SS slug: message` format replacing all ad-hoc console output.
+TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides manual phase execution (`beastmode <phase> <slug>`), autonomous pipeline orchestration (`beastmode watch`), and standalone context tree compaction (`beastmode compact`). Lives in `cli/` with its own `package.json`, separate from the plugin's markdown skills. Owns worktree lifecycle, manifest lifecycle, and GitHub sync. Manifest logic split into two modules: manifest-store.ts (filesystem boundary — get, list, save, create, validate) and manifest.ts (pure state machine — enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance). After every phase dispatch, a Stop hook auto-generates output.json from artifact frontmatter, then the CLI enriches the manifest and runs syncGitHub(manifest, config). Manifest uses flat-file convention: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json`, local-only and gitignored. Skills write artifacts to `artifacts/<phase>/` only. Status command provides compact table (Epic | Phase | Features | Status) with --verbose flag and a `--watch`/`-w` live dashboard mode that polls every 2 seconds, redraws via ANSI escape sequences, highlights changed rows for one cycle, and shows watch loop running state via lockfile detection. Cost tracking removed from scanner and status. GatesConfig extended with validate phase.
 
 1. ALWAYS use CLI for phase execution, pipeline orchestration, manifest management, and GitHub sync — no Justfile, CLI is the sole entry point
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
@@ -97,9 +99,6 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 8. ALWAYS use flat-file manifest path convention — state/YYYY-MM-DD-<slug>.manifest.json, no directory-per-slug
 9. ALWAYS use findProjectRoot() in status command — not process.cwd(), works from subdirectories
 10. ALWAYS use polling for status --watch (2-second interval) — no filesystem events, no new dependencies, pure ANSI escape codes over stdout
-11. ALWAYS use createLogger(verbosity, slug) for all CLI output — no direct console.log/error, centralized logger is the sole output path
-12. ALWAYS route errors and warnings to stderr, info and debug to stdout — stream separation enables clean piping
-13. ALWAYS default to verbosity 0 (quiet) across all commands — state transitions and errors only, no special casing between manual and watch mode
 
 context/design/cli.md
 
@@ -125,3 +124,14 @@ Optional terminal multiplexer integration that provides live visibility into the
 5. NEVER require cmux — `cmuxAvailable()` check plus `cmux.enabled` config means zero regression risk
 
 context/design/cmux-integration.md
+
+## Context Tree Compaction
+Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks proposed L3 records against their parent L2 before creation (must add rationale, constraints, provenance, or dissenting context — otherwise silently skipped), and a compaction agent that audits the existing tree in fixed order (staleness removal, restatement folding, L0 promotion detection). Compaction is a utility agent with no phase lifecycle. Runs in release every 5 releases (before retro) or standalone via `beastmode compact`.
+
+1. ALWAYS apply value-add gate in retro walkers before creating L3 — skip pure restatements of L2
+2. ALWAYS run compaction before retro in release — clean baseline for retro
+3. ALWAYS use fixed compaction order: staleness, restatement, L0 promotion — earlier steps reduce false positives
+4. NEVER auto-resolve ambiguous staleness — flag for human review
+5. ALWAYS preserve `.gitkeep` in emptied L3 directories — structural invariant
+
+context/design/compaction.md
