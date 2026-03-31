@@ -1,9 +1,11 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-03-31-github-issue-enrichment-manifest-summary.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Add summary/description type fields", "status": "pending", "wave": 1},
-    {"id": 1, "subject": "Task 1: Propagate summary/description through enrichment pipeline", "status": "pending", "wave": 2},
-    {"id": 2, "subject": "Task 2: Add tests for summary/description fields", "status": "pending", "wave": 3}
+    {
+      "id": 0,
+      "subject": "Task 0: Verify and test manifest-summary implementation",
+      "status": "completed"
+    }
   ],
-  "lastUpdated": "2026-03-31T12:00:00Z"
+  "lastUpdated": "2026-03-31T14:06:00Z"
 }

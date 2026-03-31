@@ -33,6 +33,7 @@ export function enrich(
     phase: Phase;
     features?: ManifestFeature[];
     artifacts?: string[];
+    summary?: { problem: string; solution: string };
   },
 ): PipelineManifest {
   let features = [...manifest.features];
@@ -47,6 +48,7 @@ export function enrich(
           ...existing,
           plan: incoming.plan,
           status: incoming.status,
+          ...(incoming.description !== undefined && { description: incoming.description }),
         };
         if (incoming.github) {
           merged.github = incoming.github;
@@ -70,6 +72,7 @@ export function enrich(
     ...manifest,
     features,
     artifacts,
+    summary: phaseOutput.summary ?? manifest.summary,
     lastUpdated: now(),
   };
 }
@@ -126,6 +129,44 @@ export function setFeatureGitHubIssue(
 
   const features = manifest.features.map((f, i) =>
     i === idx ? { ...f, github: { issue: issueNumber } } : f,
+  );
+
+  return {
+    ...manifest,
+    features,
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Set the body hash on the epic's GitHub block.
+ */
+export function setEpicBodyHash(
+  manifest: PipelineManifest,
+  bodyHash: string,
+): PipelineManifest {
+  if (!manifest.github) return manifest;
+  return {
+    ...manifest,
+    github: { ...manifest.github, bodyHash },
+    lastUpdated: now(),
+  };
+}
+
+/**
+ * Set the body hash on a feature's GitHub block.
+ * Returns manifest unchanged if the feature is not found or has no github block.
+ */
+export function setFeatureBodyHash(
+  manifest: PipelineManifest,
+  featureSlug: string,
+  bodyHash: string,
+): PipelineManifest {
+  const idx = manifest.features.findIndex((f) => f.slug === featureSlug);
+  if (idx === -1 || !manifest.features[idx].github) return manifest;
+
+  const features = manifest.features.map((f, i) =>
+    i === idx ? { ...f, github: { ...f.github!, bodyHash } } : f,
   );
 
   return {

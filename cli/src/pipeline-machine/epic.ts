@@ -4,6 +4,7 @@ import { hasFeatures, allFeaturesCompleted, outputCompleted } from "./guards";
 import {
   computeEnrichFeatures,
   computeRenameSlug,
+  computeSetSummary,
   computeSetFeatures,
   computeResetFeatures,
   computeMarkFeatureCompleted,
@@ -28,6 +29,10 @@ export const epicMachine = setup({
     }),
     renameSlug: assign({
       slug: ({ context, event }) => computeRenameSlug(context, event),
+      lastUpdated: () => new Date().toISOString(),
+    }),
+    setSummary: assign({
+      summary: ({ context, event }) => computeSetSummary(context, event),
       lastUpdated: () => new Date().toISOString(),
     }),
     setFeatures: assign({
@@ -63,7 +68,7 @@ export const epicMachine = setup({
       on: {
         DESIGN_COMPLETED: {
           target: "plan",
-          actions: ["renameSlug", "persist"],
+          actions: ["renameSlug", "setSummary", "persist"],
         },
         CANCEL: {
           target: "cancelled",

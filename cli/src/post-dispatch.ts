@@ -21,6 +21,7 @@ import type { EpicContext, EpicEvent } from "./pipeline-machine";
 import * as store from "./manifest-store";
 import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
+import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "./manifest";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
 import { createLogger } from "./logger";
@@ -129,7 +130,30 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
         if (resolved) {
           const updatedManifest = store.load(opts.projectRoot, opts.epicSlug);
           if (updatedManifest) {
-            await syncGitHub(updatedManifest, config, resolved);
+            const syncResult = await syncGitHub(updatedManifest, config, resolved);
+
+            // Apply sync mutations (issue numbers, body hashes) back to manifest
+            if (syncResult.mutations.length > 0) {
+              let mutated = updatedManifest;
+              for (const m of syncResult.mutations) {
+                switch (m.type) {
+                  case "setEpic":
+                    mutated = setGitHubEpic(mutated, m.epicNumber, m.repo);
+                    break;
+                  case "setFeatureIssue":
+                    mutated = setFeatureGitHubIssue(mutated, m.featureSlug, m.issueNumber);
+                    break;
+                  case "setEpicBodyHash":
+                    mutated = setEpicBodyHash(mutated, m.bodyHash);
+                    break;
+                  case "setFeatureBodyHash":
+                    mutated = setFeatureBodyHash(mutated, m.featureSlug, m.bodyHash);
+                    break;
+                }
+              }
+              store.save(opts.projectRoot, opts.epicSlug, mutated);
+            }
+
             logger.debug("GitHub sync complete");
           }
         } else {
@@ -165,7 +189,8 @@ function mapToEvents(
     case "design": {
       const artifacts = output?.artifacts as Record<string, unknown> | undefined;
       const realSlug = artifacts?.slug as string | undefined;
-      events.push({ type: "DESIGN_COMPLETED", realSlug });
+      const summary = artifacts?.summary as { problem: string; solution: string } | undefined;
+      events.push({ type: "DESIGN_COMPLETED", realSlug, summary });
       break;
     }
 
@@ -227,12 +252,12 @@ function mapToEvents(
  */
 function extractFeaturesFromOutput(
   output: ReturnType<typeof loadWorktreePhaseOutput>,
-): Array<{ slug: string; plan: string }> {
+): Array<{ slug: string; plan: string; description?: string }> {
   if (!output) return [];
   const artifacts = output.artifacts as unknown as Record<string, unknown>;
   if (!artifacts || !Array.isArray(artifacts.features)) return [];
 
-  const features: Array<{ slug: string; plan: string }> = [];
+  const features: Array<{ slug: string; plan: string; description?: string }> = [];
   for (const entry of artifacts.features) {
     if (
       typeof entry === "object" &&
@@ -243,6 +268,7 @@ function extractFeaturesFromOutput(
       features.push({
         slug: rec.slug as string,
         plan: typeof rec.plan === "string" ? rec.plan : "",
+        description: typeof rec.description === "string" ? rec.description : undefined,
       });
     }
   }

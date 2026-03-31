@@ -28,12 +28,13 @@ export interface ManifestFeature {
   plan: string;
   description?: string;
   status: "pending" | "in-progress" | "completed" | "blocked";
-  github?: { issue: number };
+  github?: { issue: number; bodyHash?: string };
 }
 
 export interface ManifestGitHub {
   epic: number;
   repo: string;
+  bodyHash?: string;
 }
 
 export interface PipelineManifest {

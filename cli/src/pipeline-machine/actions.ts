@@ -13,6 +13,7 @@ export function computeEnrichFeatures(context: EpicContext, event: EpicEvent): E
     const incoming = event.features.map((f) => ({
       slug: f.slug,
       plan: f.plan,
+      description: f.description,
       status: "pending" as const,
     }));
     const existingBySlug = new Map(context.features.map((f) => [f.slug, f]));
@@ -33,11 +34,19 @@ export function computeRenameSlug(context: EpicContext, event: EpicEvent): strin
   return context.slug;
 }
 
+export function computeSetSummary(context: EpicContext, event: EpicEvent): EpicContext["summary"] {
+  if (event.type === "DESIGN_COMPLETED" && event.summary) {
+    return event.summary;
+  }
+  return context.summary;
+}
+
 export function computeSetFeatures(event: EpicEvent): EpicContext["features"] {
   if (event.type === "PLAN_COMPLETED") {
     return event.features.map((f) => ({
       slug: f.slug,
       plan: f.plan,
+      description: f.description,
       status: "pending" as const,
     }));
   }

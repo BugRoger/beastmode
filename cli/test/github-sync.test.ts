@@ -50,6 +50,16 @@ mock.module("../src/gh", () => ({
     if (mockErrors.ghIssueClose) return false;
     return mockReturns.ghIssueClose ?? true;
   },
+  ghIssueState: async (...args: unknown[]) => {
+    trackCall("ghIssueState", ...args);
+    if (mockErrors.ghIssueState) return undefined;
+    return mockReturns.ghIssueState ?? "open";
+  },
+  ghIssueReopen: async (...args: unknown[]) => {
+    trackCall("ghIssueReopen", ...args);
+    if (mockErrors.ghIssueReopen) return false;
+    return mockReturns.ghIssueReopen ?? true;
+  },
   ghIssueLabels: async (...args: unknown[]) => {
     trackCall("ghIssueLabels", ...args);
     if (mockErrors.ghIssueLabels) return undefined;
@@ -69,6 +79,11 @@ mock.module("../src/gh", () => ({
     trackCall("ghSubIssueAdd", ...args);
     if (mockErrors.ghSubIssueAdd) return false;
     return mockReturns.ghSubIssueAdd ?? true;
+  },
+  ghProjectItemDelete: async (...args: unknown[]) => {
+    trackCall("ghProjectItemDelete", ...args);
+    if (mockErrors.ghProjectItemDelete) return false;
+    return mockReturns.ghProjectItemDelete ?? true;
   },
 }));
 
@@ -309,12 +324,13 @@ describe("syncGitHub", () => {
       const editCalls = callsTo("ghIssueEdit");
       expect(editCalls.length).toBeGreaterThanOrEqual(1);
 
-      // Find the epic label edit (issue 10)
-      const epicEdit = editCalls.find(
-        (c) => c.args[0] === "org/repo" && c.args[1] === 10,
+      // Find the epic label edit (has removeLabels, not body update)
+      const epicLabelEdit = editCalls.find(
+        (c) => c.args[0] === "org/repo" && c.args[1] === 10 &&
+          (c.args[2] as Record<string, unknown>).removeLabels !== undefined,
       );
-      expect(epicEdit).toBeDefined();
-      const edits = epicEdit!.args[2] as {
+      expect(epicLabelEdit).toBeDefined();
+      const edits = epicLabelEdit!.args[2] as {
         removeLabels: string[];
         addLabels: string[];
       };
@@ -332,9 +348,12 @@ describe("syncGitHub", () => {
       const result = await syncGitHub(manifest, config, resolved);
 
       const editCalls = callsTo("ghIssueEdit");
-      const epicEdit = editCalls.find((c) => c.args[1] === 10);
-      expect(epicEdit).toBeDefined();
-      const edits = epicEdit!.args[2] as {
+      const epicLabelEdit = editCalls.find(
+        (c) => c.args[1] === 10 &&
+          (c.args[2] as Record<string, unknown>).removeLabels !== undefined,
+      );
+      expect(epicLabelEdit).toBeDefined();
+      const edits = epicLabelEdit!.args[2] as {
         removeLabels: string[];
         addLabels: string[];
       };
@@ -357,11 +376,12 @@ describe("syncGitHub", () => {
 
       await syncGitHub(manifest, config, resolved);
 
-      // No edit calls should be made for the epic labels
-      const editCalls = callsTo("ghIssueEdit").filter(
-        (c) => c.args[1] === 10,
+      // No label edit calls should be made for the epic
+      const labelEditCalls = callsTo("ghIssueEdit").filter(
+        (c) => c.args[1] === 10 &&
+          (c.args[2] as Record<string, unknown>).removeLabels !== undefined,
       );
-      expect(editCalls).toHaveLength(0);
+      expect(labelEditCalls).toHaveLength(0);
     });
   });
 
@@ -505,11 +525,14 @@ describe("syncGitHub", () => {
 
       const result = await syncGitHub(manifest, config, resolved);
 
-      // There should be edit calls. Find the one for issue 20.
+      // Find the feature label edit (has removeLabels, not body update)
       const editCalls = callsTo("ghIssueEdit");
-      const featureEdit = editCalls.find((c) => c.args[1] === 20);
-      expect(featureEdit).toBeDefined();
-      const edits = featureEdit!.args[2] as {
+      const featureLabelEdit = editCalls.find(
+        (c) => c.args[1] === 20 &&
+          (c.args[2] as Record<string, unknown>).removeLabels !== undefined,
+      );
+      expect(featureLabelEdit).toBeDefined();
+      const edits = featureLabelEdit!.args[2] as {
         removeLabels: string[];
         addLabels: string[];
       };
@@ -532,11 +555,12 @@ describe("syncGitHub", () => {
 
       await syncGitHub(manifest, config, resolved);
 
-      // No edit call for feature issue 21
-      const featureEdits = callsTo("ghIssueEdit").filter(
-        (c) => c.args[1] === 21,
+      // No label edit call for feature issue 21 (body edit may exist)
+      const featureLabelEdits = callsTo("ghIssueEdit").filter(
+        (c) => c.args[1] === 21 &&
+          (c.args[2] as Record<string, unknown>).removeLabels !== undefined,
       );
-      expect(featureEdits).toHaveLength(0);
+      expect(featureLabelEdits).toHaveLength(0);
     });
   });
 

@@ -28,6 +28,9 @@ export interface ArtifactFrontmatter {
   feature?: string;
   status?: string;
   bump?: string;
+  description?: string;
+  problem?: string;
+  solution?: string;
 }
 
 /**
@@ -69,11 +72,15 @@ export function buildOutput(
   artifactsDir: string,
 ): PhaseOutput | undefined {
   switch (fm.phase) {
-    case "design":
+    case "design": {
+      const summary = fm.problem && fm.solution
+        ? { problem: fm.problem, solution: fm.solution }
+        : undefined;
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
-        artifacts: { design: artifactPath, slug: fm.slug },
+        artifacts: { design: artifactPath, slug: fm.slug, summary },
       };
+    }
 
     case "plan": {
       const epic = fm.epic ?? fm.slug;
@@ -124,13 +131,13 @@ export function buildOutput(
 export function scanPlanFeatures(
   artifactsDir: string,
   epic: string | undefined,
-): Array<{ slug: string; plan: string }> {
+): Array<{ slug: string; plan: string; description?: string }> {
   if (!epic) return [];
 
   const planDir = join(artifactsDir, "plan");
   if (!existsSync(planDir)) return [];
 
-  const features: Array<{ slug: string; plan: string }> = [];
+  const features: Array<{ slug: string; plan: string; description?: string }> = [];
 
   for (const filename of readdirSync(planDir)) {
     if (!filename.endsWith(".md")) continue;
@@ -151,6 +158,7 @@ export function scanPlanFeatures(
     features.push({
       slug: fm.feature,
       plan: basename(filePath, ".md") + ".md",
+      description: fm.description,
     });
   }
 
