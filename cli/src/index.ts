@@ -8,6 +8,7 @@ import { watchCommand } from "./commands/watch";
 import { statusCommand } from "./commands/status";
 import { cancelCommand } from "./commands/cancel";
 import { compactCommand } from "./commands/compact";
+import { dashboardCommand } from "./commands/dashboard";
 import { isValidPhase } from "./types";
 
 const VERSION = "0.1.0";
@@ -25,6 +26,7 @@ Usage:
   beastmode compact                    Audit and compact the context tree
   beastmode watch                      Autonomous pipeline orchestration
   beastmode status [--all] [--watch|-w] Show pipeline status
+  beastmode dashboard                  Fullscreen pipeline dashboard
   beastmode help                       Show this help message
 
 Flags:
@@ -48,6 +50,9 @@ async function main(): Promise<void> {
       break;
     case "status":
       await statusCommand(config, args, verbosity);
+      break;
+    case "dashboard":
+      await dashboardCommand(config, args, verbosity);
       break;
     case "cancel":
       await cancelCommand(args, config, verbosity);

@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-fullscreen-dashboard-shared-data-extract.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create shared/status-data.ts with extracted data functions", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Rewire status.ts to import from shared module", "wave": 2, "depends": [0], "status": "pending"},
+    {"id": 2, "subject": "Task 2: Update test imports and verify all tests pass", "wave": 2, "depends": [0], "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-31T00:00:00Z"
+}

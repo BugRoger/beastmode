@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-fullscreen-dashboard-watchloop-events.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Define WatchLoop event types", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Refactor WatchLoop to extend EventEmitter", "wave": 2, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Create logger event subscriber", "wave": 3, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Write unit tests for event emission", "wave": 3, "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-31T00:00:00Z"
+}

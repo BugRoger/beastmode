@@ -10,9 +10,11 @@ import type {
   DispatchedSession,
   SessionResult,
   WatchConfig,
+  WatchLoopEventMap,
 } from "./watch-types.js";
 import type { SessionFactory } from "./session.js";
 import type { Logger } from "./logger.js";
+import { EventEmitter } from "node:events";
 import { DispatchTracker } from "./dispatch-tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
@@ -51,7 +53,7 @@ export interface WatchDeps {
   logger?: Logger;
 }
 
-export class WatchLoop {
+export class WatchLoop extends EventEmitter {
   private config: WatchConfig;
   private deps: WatchDeps;
   private tracker = new DispatchTracker();
@@ -59,9 +61,18 @@ export class WatchLoop {
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private logger: Logger;
   constructor(config: WatchConfig, deps: WatchDeps) {
+    super();
     this.config = config;
     this.deps = deps;
     this.logger = deps.logger ?? createLogger(0, "watch");
+  }
+
+  /** Type-safe emit helper. */
+  private emitTyped<K extends keyof WatchLoopEventMap>(
+    event: K,
+    ...args: WatchLoopEventMap[K]
+  ): boolean {
+    return this.emit(event, ...args);
   }
 
   /**
@@ -78,8 +89,11 @@ export class WatchLoop {
     this.running = true;
     const version = resolveVersion(this.config.projectRoot);
     this.logger.log(`Started ${version} (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`);
+    this.emitTyped('started', { version, pid: process.pid, intervalSeconds: this.config.intervalSeconds });
 
-    this.setupSignalHandlers();
+    if (this.config.installSignalHandlers !== false) {
+      this.setupSignalHandlers();
+    }
 
     // Initial scan
     await this.tick();
@@ -110,6 +124,7 @@ export class WatchLoop {
 
     releaseLock(this.config.projectRoot);
     this.logger.log("Stopped.");
+    this.emitTyped('stopped');
   }
 
   /** Get the dispatch tracker (for testing/status). */
@@ -139,12 +154,14 @@ export class WatchLoop {
       return;
     }
 
+    let dispatched = 0;
     for (const epic of epics) {
-      await this.processEpic(epic);
+      dispatched += await this.processEpic(epic);
     }
+    this.emitTyped('scan-complete', { epicsScanned: epics.length, dispatched });
   }
 
-  private async processEpic(epic: EnrichedManifest): Promise<void> {
+  private async processEpic(epic: EnrichedManifest): Promise<number> {
     // Skip epics blocked on human gates
     if (epic.blocked) {
       this.logger.log(
@@ -153,29 +170,30 @@ export class WatchLoop {
       this.logger.detail(
         `  Run: beastmode ${epic.phase} ${epic.slug}`,
       );
-      return;
+      this.emitTyped('epic-blocked', { epicSlug: epic.slug, gate: epic.blocked.gate, reason: epic.blocked.reason });
+      return 0;
     }
 
     // Skip epics with no actionable next step
-    if (!epic.nextAction) return;
+    if (!epic.nextAction) return 0;
 
     const { nextAction } = epic;
 
     if (nextAction.type === "fan-out" && nextAction.features) {
       // Implement phase: dispatch one session per pending feature
-      await this.dispatchFanOut(epic, nextAction.features);
+      return this.dispatchFanOut(epic, nextAction.features);
     } else {
       // Single phase dispatch
-      await this.dispatchSingle(epic);
+      return this.dispatchSingle(epic);
     }
   }
 
-  private async dispatchSingle(epic: EnrichedManifest): Promise<void> {
+  private async dispatchSingle(epic: EnrichedManifest): Promise<number> {
     const action = epic.nextAction!;
 
     // Don't dispatch if the epic worktree is already in use by another phase
-    if (this.tracker.hasPhaseSession(epic.slug, action.phase)) return;
-    if (this.tracker.hasEpicWorktreeSession(epic.slug)) return;
+    if (this.tracker.hasPhaseSession(epic.slug, action.phase)) return 0;
+    if (this.tracker.hasEpicWorktreeSession(epic.slug)) return 0;
 
     // Reserve the slot synchronously before the async create to prevent
     // concurrent rescans from dispatching the same phase.
@@ -207,19 +225,23 @@ export class WatchLoop {
       };
 
       this.tracker.add(session);
+      this.emitTyped('session-started', { epicSlug: epic.slug, phase: action.phase, sessionId: session.id });
       this.watchSession(session);
+      return 1;
     } catch (err) {
       this.tracker.unreserve(epic.slug, action.phase);
       this.logger.error(
         `${epic.slug}: failed to dispatch ${action.phase}: ${err}`,
       );
+      this.emitTyped('error', { epicSlug: epic.slug, message: `Failed to dispatch ${action.phase}: ${err}` });
+      return 0;
     }
   }
 
   private async dispatchFanOut(
     epic: EnrichedManifest,
     features: string[],
-  ): Promise<void> {
+  ): Promise<number> {
     // Validate feature provenance when worktree exists: each feature must
     // have a plan file with matching epic frontmatter. Skip check if worktree
     // hasn't been created yet (session factory will create it).
@@ -263,11 +285,14 @@ export class WatchLoop {
 
       if (validFeatures.length === 0 && features.length > 0) {
         this.logger.error(`${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
-        return;
+        this.emitTyped('error', { epicSlug: epic.slug, message: `BLOCKED — all ${features.length} features failed provenance check` });
+        return 0;
       }
 
       featuresToDispatch = validFeatures;
     }
+
+    let count = 0;
 
     for (const featureSlug of featuresToDispatch) {
       // Don't double-dispatch the same feature
@@ -305,14 +330,19 @@ export class WatchLoop {
         };
 
         this.tracker.add(session);
+        this.emitTyped('session-started', { epicSlug: epic.slug, featureSlug, phase: 'implement', sessionId: session.id });
         this.watchSession(session);
+        count++;
       } catch (err) {
         this.tracker.unreserve(epic.slug, "implement", featureSlug);
         this.logger.error(
           `${epic.slug}: failed to dispatch implement for ${featureSlug}: ${err}`,
         );
+        this.emitTyped('error', { epicSlug: epic.slug, message: `Failed to dispatch implement for ${featureSlug}: ${err}` });
       }
     }
+
+    return count;
   }
 
   /**
@@ -334,6 +364,14 @@ export class WatchLoop {
         this.logger.log(
           `${session.epicSlug}: ${session.phase}${featureLabel} ${status}${progressLabel} ($${result.costUsd.toFixed(2)}, ${(result.durationMs / 1000).toFixed(0)}s)`,
         );
+        this.emitTyped('session-completed', {
+          epicSlug: session.epicSlug,
+          featureSlug: session.featureSlug,
+          phase: session.phase,
+          success: result.success,
+          durationMs: result.durationMs,
+          costUsd: result.costUsd,
+        });
 
         // Log the run
         try {
@@ -359,6 +397,7 @@ export class WatchLoop {
           this.logger.error(
             `${session.epicSlug}: session error: ${err}`,
           );
+          this.emitTyped('error', { epicSlug: session.epicSlug, message: `Session error: ${err}` });
         }
       });
   }

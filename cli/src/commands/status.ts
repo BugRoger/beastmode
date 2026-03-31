@@ -5,20 +5,11 @@ import { findProjectRoot } from "../project-root";
 import { readLockfile } from "../lockfile";
 import { toSnapshots, detectChanges as detectMapChanges } from "../change-detect";
 import type { EpicSnapshot } from "../change-detect";
+import { buildStatusRows as sharedBuildStatusRows } from "../shared/status-data";
+import type { StatusRow, WatchMeta } from "../shared/status-data";
 
-export interface StatusRow {
-  name: string;
-  phase: string;
-  features: string;
-  status: string;
-}
-
-export interface WatchMeta {
-  /** Human-readable last-updated time */
-  timestamp: string;
-  /** Whether the watch loop lockfile exists and PID is alive */
-  watchRunning: boolean;
-}
+export type { StatusRow, WatchMeta, StatusSnapshot } from "../shared/status-data";
+export { PHASE_ORDER, buildSnapshot, detectChanges } from "../shared/status-data";
 
 // ---------------------------------------------------------------------------
 // ANSI color helpers (no dependencies)
@@ -110,37 +101,15 @@ export function formatStatus(epic: EnrichedManifest): string {
 }
 
 // ---------------------------------------------------------------------------
-// Row building — sort by phase lifecycle, then alpha
+// Row building — delegates to shared module with ANSI formatters
 // ---------------------------------------------------------------------------
 
-const PHASE_ORDER: Record<string, number> = {
-  cancelled: -1,
-  design: 0,
-  plan: 1,
-  implement: 2,
-  validate: 3,
-  release: 4,
-  done: 5,
-};
-
 export function buildStatusRows(epics: EnrichedManifest[], opts: { all?: boolean } = {}): StatusRow[] {
-  const filtered = opts.all
-    ? epics
-    : epics.filter(e => e.phase !== "done" && e.phase !== "cancelled");
-
-  return filtered
-    .sort((a, b) => {
-      const aPhase = PHASE_ORDER[a.phase] ?? 99;
-      const bPhase = PHASE_ORDER[b.phase] ?? 99;
-      if (aPhase !== bPhase) return bPhase - aPhase; // furthest phase first
-      return a.slug.localeCompare(b.slug);
-    })
-    .map(epic => ({
-      name: epic.slug,
-      phase: colorPhase(epic.phase),
-      features: formatFeatures(epic),
-      status: formatStatus(epic),
-    }));
+  return sharedBuildStatusRows(epics, opts, {
+    colorPhase,
+    formatFeatures,
+    formatStatus,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -157,52 +126,8 @@ function padDisplay(str: string, len: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Change detection — compare two tick snapshots, return changed epic slugs
+// Row highlight — flash changed rows for one render cycle
 // ---------------------------------------------------------------------------
-
-export interface StatusSnapshot {
-  slug: string;
-  phase: string;
-  featuresCompleted: number;
-  featuresTotal: number;
-  blocked: boolean;
-}
-
-/** Build a snapshot from enriched manifests for change comparison. */
-export function buildSnapshot(epics: EnrichedManifest[]): StatusSnapshot[] {
-  return epics.map(epic => ({
-    slug: epic.slug,
-    phase: epic.phase,
-    featuresCompleted: epic.features.filter(f => f.status === "completed").length,
-    featuresTotal: epic.features.length,
-    blocked: epic.blocked !== null,
-  }));
-}
-
-/** Compare two snapshots and return the set of epic slugs that changed. */
-export function detectChanges(prev: StatusSnapshot[], curr: StatusSnapshot[]): Set<string> {
-  const changed = new Set<string>();
-  const prevMap = new Map(prev.map(s => [s.slug, s]));
-
-  for (const c of curr) {
-    const p = prevMap.get(c.slug);
-    if (!p) {
-      // New epic appeared
-      changed.add(c.slug);
-      continue;
-    }
-    if (
-      p.phase !== c.phase ||
-      p.featuresCompleted !== c.featuresCompleted ||
-      p.featuresTotal !== c.featuresTotal ||
-      p.blocked !== c.blocked
-    ) {
-      changed.add(c.slug);
-    }
-  }
-
-  return changed;
-}
 
 /** Wrap all columns of a StatusRow in bold+inverse ANSI for one render cycle. */
 export function highlightRow(row: StatusRow): StatusRow {
