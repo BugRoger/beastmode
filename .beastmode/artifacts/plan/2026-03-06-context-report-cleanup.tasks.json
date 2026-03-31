@@ -1,8 +1,0 @@
-{
-  "planPath": ".beastmode/state/plan/2026-03-06-context-report-cleanup.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Clean up visual-language.md", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Clean up context-report.md", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-06T22:45:00Z"
-}

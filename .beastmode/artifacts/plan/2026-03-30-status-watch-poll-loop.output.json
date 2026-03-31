@@ -1,0 +1,31 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "poll-loop",
+        "plan": "2026-03-30-status-watch-poll-loop.md"
+      },
+      {
+        "slug": "render-extract",
+        "plan": "2026-03-30-status-watch-render-extract.md"
+      },
+      {
+        "slug": "change-highlight",
+        "plan": "2026-03-30-status-watch-change-highlight.md"
+      },
+      {
+        "slug": "watch-loop",
+        "plan": "2026-03-30-status-watch-watch-loop.md"
+      },
+      {
+        "slug": "dashboard-header",
+        "plan": "2026-03-30-status-watch-dashboard-header.md"
+      },
+      {
+        "slug": "render-refactor",
+        "plan": "2026-03-30-status-watch-render-refactor.md"
+      }
+    ]
+  }
+}

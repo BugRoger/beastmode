@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-status-watch-render-refactor.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Extract renderStatusScreen pure function", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Add --watch / -w flag parsing", "status": "completed"},
-    {"id": 2, "subject": "Task 2: Add unit tests for renderStatusScreen and watch header", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-30T00:00:00Z"
-}

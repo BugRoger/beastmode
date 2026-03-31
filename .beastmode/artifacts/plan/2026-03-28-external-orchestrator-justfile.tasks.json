@@ -1,8 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-28-external-orchestrator-justfile.md",
-  "manifest": ".beastmode/state/plan/2026-03-28-external-orchestrator.manifest.json",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Create Justfile with all phase recipes", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-28T17:05:00Z"
-}

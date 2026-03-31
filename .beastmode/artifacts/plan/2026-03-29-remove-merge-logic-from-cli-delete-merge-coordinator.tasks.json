@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-29-remove-merge-logic-from-cli-delete-merge-coordinator.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Delete merge-coordinator module and tests", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Remove merge-coordinator references from watch.ts", "status": "completed"},
-    {"id": 2, "subject": "Task 2: Validate — compile check and grep for stragglers", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-29T17:00:00.000Z"
-}

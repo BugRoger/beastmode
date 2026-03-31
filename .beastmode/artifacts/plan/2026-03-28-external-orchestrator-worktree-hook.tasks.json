@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-28-external-orchestrator-worktree-hook.md",
-  "manifest": ".beastmode/state/plan/2026-03-28-external-orchestrator.manifest.json",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Create worktree-create.sh hook script", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Register WorktreeCreate hook in hooks.json", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-28T17:25:00Z"
-}

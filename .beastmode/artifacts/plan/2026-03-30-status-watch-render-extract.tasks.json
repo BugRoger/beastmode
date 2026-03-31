@@ -1,8 +1,0 @@
-{
-  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-status-watch-render-extract.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Extract renderStatusTable function", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Verify all existing tests pass", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-30T00:01:00Z"
-}

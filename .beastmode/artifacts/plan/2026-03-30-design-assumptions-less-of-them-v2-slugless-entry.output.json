@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "slugless-entry",
+        "plan": "2026-03-30-design-assumptions-less-of-them-v2-slugless-entry.md"
+      },
+      {
+        "slug": "slug-proposal-gate",
+        "plan": "2026-03-30-design-assumptions-less-of-them-v2-slug-proposal-gate.md"
+      },
+      {
+        "slug": "post-dispatch-rename",
+        "plan": "2026-03-30-design-assumptions-less-of-them-v2-post-dispatch-rename.md"
+      }
+    ]
+  }
+}

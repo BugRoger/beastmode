@@ -1,8 +1,0 @@
-{
-  "planPath": ".beastmode/state/plan/2026-03-06-remove-state-l1-indices.md",
-  "tasks": [
-    {"id": 1, "subject": "Task 1: Delete State L1 Index Files", "status": "completed"},
-    {"id": 2, "subject": "Task 2: Update Release Skill", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-06T00:00:00Z"
-}

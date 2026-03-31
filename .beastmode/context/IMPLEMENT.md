@@ -33,3 +33,12 @@
 - Error hierarchy: CmuxError base, CmuxConnectionError, CmuxProtocolError, CmuxTimeoutError
 - Close operations are idempotent — "not found" errors are swallowed, connection errors always rethrow
 - No retry logic or caching in the client — callers handle retry policy
+
+## Pipeline Machine
+- Two XState v5 machines in cli/src/pipeline-machine/: epicMachine (7 states) and featureMachine (4 states)
+1. ALWAYS use the setup() API — declare guards, actions, and actors in setup() before createMachine()
+2. ALWAYS place assign() calls inside setup() actions with pure compute functions in actions.ts — XState v5.30 requires this for type inference
+3. Every state node declares meta.dispatchType (single/fan-out/skip) — watch loop reads dispatch from state metadata
+4. Services use fromPromise with injectable functions — machine stays decoupled from I/O
+5. Guards are standalone pure functions checked against event payloads, not external state
+6. CANCEL event must be valid from every non-terminal epic state
