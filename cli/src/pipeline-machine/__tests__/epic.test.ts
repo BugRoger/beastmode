@@ -511,4 +511,36 @@ describe("action effects", () => {
     actor.send({ type: "CANCEL" });
     expect(actor.getSnapshot().context.blocked).toBeNull();
   });
+
+  test("setFeatures preserves wave field from PLAN_COMPLETED", () => {
+    const actor = startActor();
+    actor.send({ type: "DESIGN_COMPLETED" });
+    actor.send({
+      type: "PLAN_COMPLETED",
+      features: [
+        { slug: "base", plan: "plan-base", wave: 1 },
+        { slug: "api", plan: "plan-api", wave: 2 },
+        { slug: "ui", plan: "plan-ui", wave: 2 },
+      ],
+    });
+    const features = actor.getSnapshot().context.features;
+    expect(features).toHaveLength(3);
+    expect(features[0].wave).toBe(1);
+    expect(features[1].wave).toBe(2);
+    expect(features[2].wave).toBe(2);
+  });
+
+  test("setFeatures omits wave when not provided (backwards compat)", () => {
+    const actor = startActor();
+    actor.send({ type: "DESIGN_COMPLETED" });
+    actor.send({
+      type: "PLAN_COMPLETED",
+      features: [
+        { slug: "legacy", plan: "plan-legacy" },
+      ],
+    });
+    const features = actor.getSnapshot().context.features;
+    expect(features).toHaveLength(1);
+    expect(features[0].wave).toBeUndefined();
+  });
 });
