@@ -5,8 +5,8 @@
 - NEVER bump version without conventional commit evidence — traceability
 
 ## Commit Sequence
-- ALWAYS run retro from checkpoint before merge — retro needs the worktree intact, consistent across all five phases
-- ALWAYS run compaction before retro in release (every 5 releases) — retro works against a clean baseline, tracked via `.beastmode/state/.last-compaction`
+- ALWAYS run retro from release checkpoint before merge — retro runs only at release, needs the worktree intact
+- Compaction is manual-only via `beastmode compact` — decoupled from the release pipeline
 - ALWAYS commit at each phase checkpoint on the feature branch — work persists across ephemeral per-session worktrees
 - ALWAYS squash-merge at release — per-phase commits on the feature branch collapse to one clean commit on main
 - ALWAYS use GitHub release style commit messages — consistency

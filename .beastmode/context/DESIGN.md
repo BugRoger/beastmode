@@ -3,22 +3,21 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and periodic compaction agent (staleness removal, restatement folding, L0 promotion detection) triggered every 5 releases or via `beastmode compact`
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and on-demand compaction agent (staleness removal, restatement folding, L0 promotion detection) via `beastmode compact`
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 - NEVER use @imports between hierarchy levels — convention-based paths only
-- Four data domains: Artifacts (committed skill outputs in `artifacts/`), State (gitignored pipeline manifests in `state/`), Context (published knowledge), Meta (process knowledge with process + workarounds domains). Manifest JSON is the operational authority for feature lifecycle via manifest-store.ts (filesystem boundary) and manifest.ts (pure state machine); GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled
+- Three data domains: Artifacts (committed skill outputs in `artifacts/`), State (gitignored pipeline manifests in `state/`), Context (published knowledge). Manifest JSON is the operational authority for feature lifecycle via manifest-store.ts (filesystem boundary) and manifest.ts (pure state machine); GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled
 - ALWAYS create a matching L3 directory for every L2 file — structural invariant for retro expansion
 - State has no L1 index files — only empty phase subdirs with .gitkeep as workflow containers
 - research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
 - Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
 - Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number
-- NEVER write to context/ or meta/ directly from phases — retro and the compaction agent are the sole gatekeepers
+- NEVER write to context/ directly from phases — retro and the compaction agent are the sole gatekeepers
 - Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
-- Meta walker mirrors context walker algorithm — L1 quick-check, L2 deep-check, L3 record management with confidence-gated promotion
-- NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating
+- Retro runs once at release with all phase artifacts — context walker processes the full cycle in a single pass
 - Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 
 ## Task Runner
@@ -27,8 +26,8 @@
 - Gate steps (`## N. [GATE|...]`) are structural — cannot be bypassed
 
 ## Release Workflow
-- ALWAYS run retro from checkpoint before merge — consistent across all five phases
-- ALWAYS run compaction before retro in release — every 5 releases, tracked via `.beastmode/state/.last-compaction`
+- ALWAYS run retro from release checkpoint before merge — retro runs only at release, not per-phase
+- Compaction is manual-only via `beastmode compact` — decoupled from the release pipeline
 - ALWAYS commit per phase on the feature branch — each phase persists work at checkpoint for cross-session durability
 - ALWAYS squash-merge feature branch at release — per-phase commits collapse to one clean commit on main
 - ALWAYS archive branch tip before squash merge
@@ -138,10 +137,10 @@ Optional terminal multiplexer integration that provides live visibility into the
 context/design/cmux-integration.md
 
 ## Context Tree Compaction
-Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks proposed L3 records against their parent L2 before creation (must add rationale, constraints, provenance, or dissenting context — otherwise silently skipped), and a compaction agent that audits the existing tree in fixed order (staleness removal, restatement folding, L0 promotion detection). Compaction is a utility agent with no phase lifecycle. Runs in release every 5 releases (before retro) or standalone via `beastmode compact`.
+Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks proposed L3 records against their parent L2 before creation (must add rationale, constraints, provenance, or dissenting context — otherwise silently skipped), and a compaction agent that audits the existing tree in fixed order (staleness removal, restatement folding, L0 promotion detection). Compaction is a utility agent with no phase lifecycle. Runs on-demand via `beastmode compact`.
 
 1. ALWAYS apply value-add gate in retro walkers before creating L3 — skip pure restatements of L2
-2. ALWAYS run compaction before retro in release — clean baseline for retro
+2. Compaction is manual-only via `beastmode compact` — decoupled from release pipeline
 3. ALWAYS use fixed compaction order: staleness, restatement, L0 promotion — earlier steps reduce false positives
 4. NEVER auto-resolve ambiguous staleness — flag for human review
 5. ALWAYS preserve `.gitkeep` in emptied L3 directories — structural invariant
