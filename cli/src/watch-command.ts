@@ -29,6 +29,9 @@ import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-outp
 import { epicMachine } from "./pipeline-machine/index.js";
 import { createActor } from "xstate";
 import type { EpicContext, EpicEvent } from "./pipeline-machine/index.js";
+import { syncGitHubForEpic } from "./github-sync.js";
+import { discoverGitHub } from "./github-discovery.js";
+import type { ResolvedGitHub } from "./github-discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -46,14 +49,16 @@ function findProjectRoot(from: string = process.cwd()): string {
  * reading from the correct location (.beastmode/artifacts/<phase>/).
  */
 /** @internal Exported for testing. */
-export function reconcileState(opts: {
+export async function reconcileState(opts: {
   worktreePath: string;
   projectRoot: string;
   epicSlug: string;
   phase: string;
   featureSlug?: string;
   success: boolean;
-}): { completed: number; total: number } | undefined {
+  resolved?: ResolvedGitHub;
+  logger?: Logger;
+}): Promise<{ completed: number; total: number } | undefined> {
   if (!opts.success) return readProgress(opts.projectRoot, opts.epicSlug);
 
   // 1. Load manifest — if it's gone (e.g. release teardown removed it), bail
@@ -91,6 +96,14 @@ export function reconcileState(opts: {
   } as PipelineManifest);
 
   actor.stop();
+
+  // 6. Sync to GitHub — warn-and-continue, never blocks reconciliation
+  await syncGitHubForEpic({
+    projectRoot: opts.projectRoot,
+    epicSlug: opts.epicSlug,
+    resolved: opts.resolved,
+    logger: opts.logger,
+  });
 
   return readProgress(opts.projectRoot, opts.epicSlug);
 }
@@ -181,6 +194,8 @@ class ReconcilingFactory implements SessionFactory {
   private inner: SessionFactory;
   private projectRoot: string;
   private logger: Logger;
+  /** Pre-discovered GitHub metadata — set once per scan cycle. */
+  resolved?: ResolvedGitHub;
 
   constructor(inner: SessionFactory, projectRoot: string, logger: Logger) {
     this.inner = inner;
@@ -225,14 +240,17 @@ class ReconcilingFactory implements SessionFactory {
         }
       }
 
-      // State reconciliation
-      const progress = reconcileState({
+      // State reconciliation — per-epic prefixed logger for attribution
+      const epicLogger = createLogger(0, `watch:${opts.epicSlug}`);
+      const progress = await reconcileState({
         worktreePath,
         projectRoot,
         epicSlug: opts.epicSlug,
         phase: opts.phase,
         featureSlug: opts.featureSlug,
         success: sessionResult.success,
+        resolved: this.resolved,
+        logger: epicLogger,
       });
 
       return { ...sessionResult, progress };
@@ -455,6 +473,20 @@ export async function watchCommand(_args: string[], verbosity: number = 0): Prom
   }
 
   const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot, logger);
+
+  // Pre-discover GitHub metadata once so all epics share the same resolved
+  // data. Failure is non-blocking — sync will gracefully skip if undefined.
+  if (config.github.enabled) {
+    try {
+      const resolved = await discoverGitHub(projectRoot, config.github["project-name"], logger);
+      sessionFactory.resolved = resolved;
+      if (resolved) {
+        logger.log(`GitHub discovery: ${resolved.repo} (project #${resolved.projectNumber ?? "none"})`);
+      }
+    } catch (err) {
+      logger.warn(`GitHub discovery failed (non-blocking): ${err}`);
+    }
+  }
 
   const deps: WatchDeps = {
     scanEpics,

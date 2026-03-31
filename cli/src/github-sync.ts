@@ -58,7 +58,6 @@ const PHASE_TO_BOARD_STATUS: Record<string, string> = {
   validate: "Validate",
   release: "Release",
   done: "Done",
-  cancelled: "Done",
 };
 
 /** Map manifest feature status to GitHub label. */
@@ -80,7 +79,6 @@ const ALL_PHASE_LABELS = [
   "phase/validate",
   "phase/release",
   "phase/done",
-  "phase/cancelled",
 ];
 
 /**
@@ -174,8 +172,8 @@ export async function syncGitHub(
     await syncFeature(repo, owner, epicNumber, feature, resolved, result);
   }
 
-  // --- Epic Close (if done or cancelled) ---
-  if (manifest.phase === "done" || manifest.phase === "cancelled") {
+  // --- Epic Close (if done) ---
+  if (manifest.phase === "done") {
     const closed = await ghIssueClose(repo, epicNumber);
     if (closed) {
       result.epicClosed = true;
@@ -212,7 +210,7 @@ export async function syncGitHubForEpic(opts: {
       opts.resolved ??
       (await discoverGitHub(opts.projectRoot, config.github["project-name"], log));
     if (!resolved) {
-      log.warn("GitHub discovery failed — skipping sync");
+      log.debug("GitHub discovery failed — skipping sync");
       return;
     }
 
