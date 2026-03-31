@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "persona-consolidation",
+        "plan": "2026-03-31-skill-cleanup-persona-consolidation.md"
+      },
+      {
+        "slug": "dead-file-removal",
+        "plan": "2026-03-31-skill-cleanup-dead-file-removal.md"
+      },
+      {
+        "slug": "directory-flatten",
+        "plan": "2026-03-31-skill-cleanup-directory-flatten.md"
+      }
+    ]
+  }
+}

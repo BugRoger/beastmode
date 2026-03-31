@@ -68,8 +68,6 @@ Do NOT include specific file paths or code snippets — they may become outdated
 
 > **SKIP SECTION** — "Quick-Exit Check": Design PRDs always contain decisions worth capturing. Always run the full retro.
 
-@../_shared/retro.md
-
 ## 3. Commit and Handoff
 
 Commit all work to the feature branch:
