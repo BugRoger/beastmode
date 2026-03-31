@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "concurrent-dispatch-test",
+        "plan": "2026-03-29-polling-behaviour-concurrent-dispatch-test.md"
+      },
+      {
+        "slug": "dispatch-mutex",
+        "plan": "2026-03-29-polling-behaviour-dispatch-mutex.md"
+      }
+    ]
+  }
+}

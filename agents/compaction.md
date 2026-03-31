@@ -1,82 +1,91 @@
 # Context Tree Compaction Agent
 
-Audit the full context tree and remove stale records, pure restatements, and surface L0 promotion candidates.
+Audit the context tree and compact redundant, stale, or promotable content.
 
 ## Role
 
-Utility-weight agent that scans `.beastmode/context/` and `.beastmode/meta/` trees, removes dead-weight L3 records, and identifies rules ready for L0 promotion. Runs outside the phase lifecycle — no retro, no gate, just cleanup.
+Utility agent that runs on-demand or during release. No gates, no phase lifecycle, no retro. Scans `.beastmode/context/` and `.beastmode/meta/` trees, removes dead L3 records, eliminates pure-restatement L3s, and flags cross-phase rules for L0 promotion.
 
 ## Input
 
-The orchestrator provides:
+The caller provides:
 
-- **Worktree root**: current working directory
-- **Date**: current date (YYYY-MM-DD)
-- **Slug**: feature slug (for release-context artifact naming)
+- **Mode**: `standalone` (from `beastmode compact` CLI) or `release` (from release checkpoint)
+- **Slug** (release mode only): the release slug for artifact naming
+- **Working directory**: must be repo root or worktree root (`.beastmode/` must exist)
 
 ## Algorithm
 
-Three steps, always in this fixed order: staleness, restatement, promotion.
+Steps run in fixed order. Earlier steps reduce the file set for later steps, cutting false positives.
 
 ### 1. Staleness Check
 
-Scan all L3 records across all phases in both trees.
+Scan all L3 record files in `.beastmode/context/{phase}/{domain}/` and `.beastmode/meta/{phase}/{domain}/` directories.
 
-L3 records live in subdirectories of L2 files: `context/{phase}/{domain}/` and `meta/{phase}/{domain}/`.
+For each L3 file:
 
-For each L3 file found:
+1. Read its content. Identify what it references — code paths, decisions, artifacts, or constraints.
+2. Check whether the referenced code, decision, or artifact still exists in the repo.
+3. Classify:
+   - **Remove** — the L3 only contains source provenance for deleted code or a removed artifact. Nothing survives without the referent.
+   - **Flag for review** — the L3 has rationale or constraints that may apply beyond the specific deleted code. These are NOT auto-removed.
+   - **Keep** — the referent still exists, or the L3 is self-standing rationale.
 
-1. Read the L3 content
-2. Locate the `## Source` section — extract referenced file paths and artifact paths
-3. Verify each referenced source still exists on disk
-4. If all sources still exist — skip, the L3 is current
-5. If any source no longer exists:
-   - Read the full L3 content beyond the Source section
-   - If the L3 **only** contains source provenance for deleted code (no rationale, no constraints, no broader applicability) — mark for **REMOVAL**
-   - If the L3 contains rationale or constraints that apply beyond the specific deleted code — mark for **REVIEW** (flagged in report, not auto-removed)
+Track counts: `stale_removed`, `stale_flagged`.
 
 ### 2. L3 Restatement Value Scan
 
-For each remaining L3 (not marked for removal in step 1):
+For each remaining L3 (not removed in step 1), compare against its parent L2 summary.
 
-1. Read the L3 content
-2. Identify the parent L2 file — the L2 that the L3's directory corresponds to (e.g., `context/plan/conventions/foo.md` maps to `context/plan/conventions.md`)
-3. Read the parent L2 file
-4. Apply the four-criteria value-add check — the L3 must provide at least one of:
-   - **(a) Rationale** not already captured in the L2 summary
-   - **(b) Constraints or edge cases** that narrow the L2 rule
-   - **(c) Source provenance** that would be lost without the record
-   - **(d) Dissenting context** where the rule was debated or overridden
-5. If none of the four criteria apply — mark for **REMOVAL** (pure restatement)
-6. If any criterion applies — keep
+The parent L2 is the `.md` file in the parent directory. For example:
+- L3 at `.beastmode/context/implement/testing/foo.md` has parent L2 `.beastmode/context/implement/testing.md`
+- L3 at `.beastmode/meta/design/process/bar.md` has parent L2 `.beastmode/meta/design/process.md`
+
+An L3 must provide at least one of:
+
+1. **Rationale** not already captured in the L2 summary
+2. **Constraints or edge cases** that narrow a rule in the L2
+3. **Source provenance** that would be lost without the record
+4. **Dissenting context** where a rule was debated or overridden
+
+If none apply — the L3 is a pure restatement of its parent L2 — mark for removal.
+
+Track count: `restatement_removed`.
 
 ### 3. L0 Promotion Detection
 
 Scan L2 files across all phases in both `context/` and `meta/` trees.
 
-1. Extract ALWAYS/NEVER rules — bulleted lines starting with these keywords (case-insensitive match on line start after bullet marker)
-2. For each extracted rule, track which phases contain it (verbatim or near-verbatim wording)
-3. Rules appearing in **3+ phase L2s** — mark as **L0 PROMOTION CANDIDATE**
-4. Rules appearing in only 2 phases — leave alone (per-phase loading model handles these)
-5. Collect each candidate's exact rule text and the L2 source files where it appears
+For each ALWAYS/NEVER rule found in an L2:
 
-### 4. Execute Removals
+1. Search for the same rule (verbatim or near-verbatim) across L2 files in other phases.
+2. If the rule appears in 3 or more phase L2s — add to promotion candidates list with:
+   - Exact rule text
+   - Which phases contain it
+3. Rules in only 1-2 phases are left alone. The per-phase loading model means duplication across 2 phases is acceptable.
 
-For each L3 marked for REMOVAL (from steps 1 and 2):
+Promotion candidates are NOT auto-applied. They go in the report for human review via `[GATE|retro.beastmode]`.
 
-1. Delete the L3 file
-2. Check if the parent directory is now empty
-3. If empty — create `.gitkeep` in the directory to preserve tree structure
+Track count: `promotion_candidates`.
 
-### 5. Write Report
+## Structural Invariants
 
-Produce both outputs (see Output Format below).
+- When removing L3 files, if the parent directory becomes empty, create `.gitkeep` in that directory.
+- NEVER remove L2 files (phase domain summaries).
+- NEVER remove L1 files (phase index files like `IMPLEMENT.md`).
+- NEVER modify L0 (`BEASTMODE.md`) — only report promotion candidates.
 
-## Output Format
+## Apply Changes
 
-### 1. Stdout Summary
+1. Remove all L3 files marked for removal (staleness + restatement).
+2. Create `.gitkeep` in any directories emptied by removals.
+3. Do NOT apply L0 promotions — report only.
 
-Print to stdout:
+## Report
+
+### Stdout Summary
+
+Print to stdout for immediate visibility:
 
 ```
 ## Compaction Summary
@@ -85,14 +94,12 @@ Print to stdout:
 - Stale L3s flagged for review: N
 - Restatement L3s removed: N
 - L0 promotion candidates: N
-- Total actions: N
+- Total files removed: N
 ```
 
-### 2. Full Artifact
+### Full Artifact
 
-Write to `artifacts/compact/YYYY-MM-DD-compaction.md`.
-
-When running in release context, also write to `artifacts/release/YYYY-MM-DD-{slug}-compaction.md`.
+Write to `artifacts/compact/YYYY-MM-DD-compaction.md`:
 
 ```markdown
 ---
@@ -102,51 +109,43 @@ date: YYYY-MM-DD
 
 # Context Tree Compaction Report
 
-**Date:** YYYY-MM-DD
-**Scope:** .beastmode/context/, .beastmode/meta/
+## Staleness Check
+### Removed
+- `path/to/l3.md` — source provenance for deleted code in `path/to/deleted.ts`
+
+### Flagged for Review
+- `path/to/l3.md` — contains rationale that may still apply
+
+## Restatement Scan
+### Removed
+- `path/to/l3.md` — pure restatement of parent L2 `path/to/l2.md`
+
+## L0 Promotion Candidates
+- "ALWAYS verify X before Y" — found in: IMPLEMENT, PLAN, DESIGN
+- "NEVER do Z without checking W" — found in: IMPLEMENT, VALIDATE, RELEASE
 
 ## Summary
-
-- Stale L3s removed: N
-- Stale L3s flagged for review: N
-- Restatement L3s removed: N
-- L0 promotion candidates: N
-
-## Step 1: Staleness Check
-
-### Removed (dead source only)
-- `context/{phase}/{domain}/{file}.md` — source `{path}` no longer exists
-
-### Flagged for Review (rationale-bearing)
-- `context/{phase}/{domain}/{file}.md` — source deleted but rationale may apply broadly
-
-## Step 2: Restatement Value Scan
-
-### Removed (pure restatement)
-- `context/{phase}/{domain}/{file}.md` — restates parent L2 with no additional value
-
-## Step 3: L0 Promotion Candidates
-
-### Candidate 1: [rule text]
-- Found in: DESIGN, PLAN, IMPLEMENT (3 phases)
-- Rule: "ALWAYS/NEVER ..."
-- Source L2s: `context/design/foo.md`, `context/plan/bar.md`, `context/implement/baz.md`
+- Stale removed: N
+- Stale flagged: N
+- Restatements removed: N
+- Promotion candidates: N
 ```
 
 If zero actions were taken, write the artifact anyway with all counts at 0 and empty sections.
 
+### Release Mode
+
+When mode is `release`:
+- Also copy the report to `artifacts/release/YYYY-MM-DD-<slug>-compaction.md`
+
 ## Rules
 
-- **Scope** — only scan `.beastmode/context/` and `.beastmode/meta/` trees
-- **No artifacts/state** — never read, modify, or traverse `artifacts/` or `state/` directories
-- **No gate** — runs directly, produces report, no user approval needed
-- **Utility weight** — no phase lifecycle, no retro-on-the-compactor
-- **Fixed order** — staleness then restatement then promotion, always in this sequence
-- **Conditional staleness** — dead-source-only L3s removed, rationale-bearing L3s flagged
-- **3-phase threshold** — L0 promotion only for rules appearing in 3+ phase L2s, not 2
-- **Structural preservation** — `.gitkeep` in any emptied L3 directory to maintain tree shape
+- **Utility weight** — no phase lifecycle, no retro, no gates
+- **Fixed order** — staleness, then restatement, then promotion. Do not reorder.
+- **Conservative removal** — when in doubt, flag for review instead of removing
+- **L3 only** — only L3 files are candidates for removal. L2, L1, L0 are never touched.
+- **Structural preservation** — empty directories keep `.gitkeep`
+- **No auto-promotion** — L0 candidates are reported, never applied
+- **Scope boundary** — only scan `context/` and `meta/` trees. Never scan `artifacts/`, `state/`, or `config.yaml`.
 - **Report always** — write the artifact even when zero actions taken
-- **Release artifact** — when slug is provided, also write to `artifacts/release/YYYY-MM-DD-{slug}-compaction.md`
 - **Verify paths** — never guess file paths; confirm existence before reading or deleting
-- **No L2 modification** — this agent reads L2s for comparison but never edits them
-- **No L1 modification** — promotion candidates are reported, not applied

@@ -3,7 +3,7 @@
   "artifacts": {
     "features": [
       {
-        "slug": "reconciliation-notify",
+        "slug": "compact-cli",
         "status": "completed"
       }
     ]

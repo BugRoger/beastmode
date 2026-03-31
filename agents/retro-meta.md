@@ -47,6 +47,19 @@ For each flagged L2 file (`process.md`, `workarounds.md`) in `meta/{phase}/`:
 3. If accurate → skip
 4. If stale → compute proposed edit (exact text to change)
 
+### Value-Add Gate
+
+Before proposing any **new** L3 record, evaluate whether it adds at least one of:
+
+1. **Rationale** not already captured in the parent L2 summary (`process.md` or `workarounds.md`)
+2. **Constraints or edge cases** that narrow the L2 rule
+3. **Source provenance** that would be lost without the record
+4. **Dissenting context** where the rule was debated or overridden
+
+If none apply, silently skip the L3 proposal — the L2 already covers the finding.
+
+**Exempt:** Appending observations to existing L3 records does not require this check — accumulation of observations is inherently value-additive.
+
 ### 4. L3 Record Management
 
 For each new finding from session extraction:
@@ -54,7 +67,7 @@ For each new finding from session extraction:
 1. **Classify**: process (process pattern, friction, effective approach) or workaround (beastmode tool behavior, limitations, workarounds)
 2. **Cluster match**: List existing L3 records in `meta/{phase}/process/` and `meta/{phase}/workarounds/`. Check if any existing record covers the same topic.
    - If match → propose appending `## Observation N` section to existing record
-   - If no match → propose new L3 record file with kebab-case name
+   - If no match → apply the **Value-Add Gate** against the parent L2. If the finding passes, propose new L3 record file with kebab-case name. If it fails, skip silently.
 3. **Tag confidence**:
    - [HIGH] — explicit user instruction or confirmed across 3+ sessions
    - [MEDIUM] — recurring pattern (2+ observations in same cluster)
@@ -134,4 +147,5 @@ When ambiguous, default to process (lower impact, easier to reclassify later).
 - **Preserve structure** — propose edits within existing document structure
 - **No duplicates** — check existing L3 records before proposing new ones
 - **Flag staleness, don't delete** — stale entries are flagged for review, not auto-removed
+- **Value-add gate** — new L3 records must pass the value-add check (rationale, constraints, provenance, or dissenting context beyond parent L2). Observation appends to existing records are exempt.
 - **L1 format** — L1 has summary paragraph + Process section (summary + numbered rules) + Workarounds section (summary + rules or "None recorded.")

@@ -1,5 +1,62 @@
 # 3. Checkpoint
 
+## 0. Conditional Compaction
+
+Check whether context tree compaction is due before retro runs.
+
+### 0.1 Check Compaction Cadence
+
+```bash
+last_compaction_file=".beastmode/state/.last-compaction"
+
+if [ -f "$last_compaction_file" ]; then
+    last_ts=$(cat "$last_compaction_file")
+    release_count=$(git log --oneline --since="$last_ts" --grep="^Release v" | wc -l | tr -d ' ')
+else
+    release_count=999  # Force compaction on first run
+fi
+
+echo "Releases since last compaction: $release_count"
+```
+
+If `release_count` < 5, print "Compaction not due (N/5 releases). Skipping." and proceed to Step 1.
+
+### 0.2 Spawn Compaction Agent
+
+Read the agent prompt from `agents/compaction.md`.
+
+Build the agent prompt with:
+
+```
+## Compaction Context
+- **Mode**: release
+- **Slug**: <feature>
+- **Working directory**: <current working directory>
+```
+
+Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+
+Wait for completion.
+
+### 0.3 Update Timestamp
+
+After successful compaction:
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ > .beastmode/state/.last-compaction
+```
+
+### 0.4 Copy Report to Release Artifacts
+
+The compaction agent writes to `artifacts/compact/YYYY-MM-DD-compaction.md`. Copy it to release artifacts:
+
+```bash
+cp .beastmode/artifacts/compact/YYYY-MM-DD-compaction.md \
+   .beastmode/artifacts/release/YYYY-MM-DD-<slug>-compaction.md
+```
+
+Print the compaction summary from the agent's output, then proceed to Step 1.
+
 ## 1. Phase Retro
 
 @../_shared/retro.md
