@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-xstate-pipeline-machine-machine-tests.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create persistence round-trip tests", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Create integration end-to-end tests", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T12:01:00Z"
+}
