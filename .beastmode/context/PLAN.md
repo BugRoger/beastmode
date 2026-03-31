@@ -7,7 +7,7 @@ Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill ma
 
 1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
 2. ALWAYS number phase files 0-3 (0-prime read-only, 1-execute, 2-validate, 3-checkpoint)
-3. ALWAYS compose shared functionality via @imports from `skills/_shared/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
+3. ALWAYS compose shared functionality via @imports from `skills/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
 4. ALWAYS use gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections
 5. ALWAYS use `feature/<feature>` branch naming convention
 
@@ -16,7 +16,7 @@ context/plan/conventions.md
 ## Structure
 - ALWAYS colocate skill interface (SKILL.md) with implementation in `/skills/{verb}/`
 - NEVER store context outside `.beastmode/` — it's the single source of truth
-- Agent prompts live in `/agents/`, shared utilities in `skills/_shared/`
+- Agent prompts live in `/agents/`, shared utilities in `skills/`
 - Worktrees live at `.beastmode/worktrees/<feature>`, gitignored
 - ALWAYS use `.beastmode/artifacts/` for committed skill outputs (PRDs, plans, reports) and `.beastmode/state/` for gitignored pipeline manifests -- directory names match contents
 

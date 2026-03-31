@@ -4,7 +4,7 @@
 Beastmode's file system layout needs clear separation of concerns across multiple top-level directories.
 
 ## Decision
-`.beastmode/` stores L0-L3 knowledge hierarchy plus config.yaml and worktrees/ (gitignored). `skills/` contains workflow verb implementations with phases in `skills/{verb}/phases/`. `agents/` has standalone agent prompts. `skills/_shared/` has cross-skill utilities (task-runner, retro). `hooks/` contains plugin lifecycle scripts. `docs/` for external-facing essays. `scripts/` for maintenance scripts.
+`.beastmode/` stores L0-L3 knowledge hierarchy plus config.yaml and worktrees/ (gitignored). `skills/` contains workflow verb implementations with phases in `skills/{verb}/phases/`. `agents/` has standalone agent prompts. Cross-skill utilities (task-runner) live at `skills/` root — no `_shared/` subdirectory. `hooks/` contains plugin lifecycle scripts. `docs/` for external-facing essays. `scripts/` for maintenance scripts.
 
 ## Rationale
 Each directory has a single responsibility. Skills are verb-organized for discovery. Agents are standalone for parallel spawning. Shared utilities prevent duplication. docs/ not imported by agents to avoid polluting context. hooks/ isolates plugin lifecycle from workflow logic.

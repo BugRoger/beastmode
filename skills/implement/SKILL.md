@@ -8,7 +8,7 @@ description: Execute implementation plans — implementing, coding, building. Us
 Load plan, dispatch subagents per task in wave order, verify completion.
 
 <HARD-GATE>
-Execute @_shared/task-runner.md now.
+Execute @../task-runner.md now.
 
 Your FIRST tool call MUST be TodoWrite with parsed phases from below.
 Do not output anything else first.

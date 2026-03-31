@@ -4,7 +4,7 @@
 Claude Code loads CLAUDE.md at session start. The autoload budget is limited, so the wiring from CLAUDE.md to the knowledge hierarchy must be minimal.
 
 ## Decision
-`CLAUDE.md` imports `@.beastmode/BEASTMODE.md` as sole autoload (~120 lines). No additional @imports in CLAUDE.md. Skills load their own L1 context during 0-prime sub-phase. Each skill's interface defined in `/skills/{verb}/SKILL.md` which imports `@_shared/task-runner.md`.
+`CLAUDE.md` imports `@.beastmode/BEASTMODE.md` as sole autoload (~120 lines). No additional @imports in CLAUDE.md. Skills load their own L1 context during 0-prime sub-phase. Each skill's interface defined in `/skills/{verb}/SKILL.md` which imports `@../task-runner.md`.
 
 ## Rationale
 - Single autoload keeps token budget predictable and small

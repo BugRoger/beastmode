@@ -4,8 +4,6 @@
 
 Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
 
-@../_shared/persona.md
-
 ## 2. Problem-First Question
 
 Before loading any project context or exploring the codebase, ask the user:

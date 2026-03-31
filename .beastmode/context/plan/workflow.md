@@ -30,9 +30,9 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 - Releases use `git merge --squash` to collapse feature branches into one commit per version on main — clean history
 
 ## Persona System
-- ALWAYS import persona.md in 0-prime.md announce steps — centralized character
+- Persona is loaded once via BEASTMODE.md L0 autoload — no per-skill imports needed
 - NEVER hardcode announce strings — use persona-voiced instructions
-- Context-aware greetings factor in time of day and project state — situational awareness
+- Context-aware greetings and skill announce rules live in BEASTMODE.md Persona section — centralized in L0
 
 ## Autonomous Chaining
 Config.yaml transitions section controls phase-to-phase chaining. Transition gates use standardized output format: human mode prints `Next:` with inline-code command; auto mode chains via Skill() calls. All gates end with STOP. All retro gates must be configurable for fully autonomous cycles. GitHub state model extends transitions with label-based phase advancement on Epic issues, enabling external visibility and daemon-driven pipeline progression.

@@ -19,7 +19,7 @@ Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gate
 1. ALWAYS use exact gate syntax: `## N. [GATE|namespace.gate-id]`
 2. ALWAYS provide both `[GATE-OPTION|human]` and `[GATE-OPTION|auto]` subsections
 3. ALWAYS read mode from `.beastmode/config.yaml` under `gates.` or `transitions.` key
-4. ALWAYS compose shared functionality via @imports from `skills/_shared/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
+4. ALWAYS compose shared functionality via @imports from `skills/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
 5. ALWAYS use standardized transition output: human mode = `Next:` + inline-code command; auto/low-context = `Start a new session and run:` + inline-code command
 6. ALWAYS end transition gates with STOP — no prose, explanation, or alternatives after the command
 
@@ -30,7 +30,7 @@ Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gate
 - Design creates both branch and worktree, all phases inherit, /release merges and cleans up — full lifecycle
 
 ## Anti-Patterns
-- NEVER put shared logic in individual skills — extract to `skills/_shared/`
+- NEVER put shared logic in individual skills — extract to `skills/` root as shared utilities
 - NEVER create circular @imports between files — dependency loops
 - NEVER hardcode paths that should be convention-based — brittleness
 - NEVER add "just in case" sections to context docs — document what exists

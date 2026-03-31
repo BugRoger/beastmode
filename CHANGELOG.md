@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.54.2 — Skill Cleanup (Mar 2026)
+
+- **Dead file removal** — Deleted `persona.md`, `0-prime-template.md`, `3-checkpoint-template.md` from `skills/_shared/`
+- **Persona consolidation** — Merged context-awareness and skill-announce sections into BEASTMODE.md; removed `@persona.md` imports from all 5 skill prime phases
+- **Directory flatten** — Moved `task-runner.md` to `skills/` root, updated all 5 SKILL.md import paths, deleted empty `_shared/` directory
+- **Dangling import cleanup** — Removed stale `@retro.md` import from design checkpoint
+
 ### v0.54.1 — Remove Dead Gates (Mar 2026)
 
 - **Plan gate removal** — Deleted `feature-set-approval` and `feature-approval` gates from plan execute and validate skills; steps renumbered

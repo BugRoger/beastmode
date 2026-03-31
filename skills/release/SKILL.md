@@ -8,7 +8,7 @@ description: Create changelogs and release notes — releasing, documenting, shi
 Detect version, categorize commits, generate changelog, commit, merge or PR, tag.
 
 <HARD-GATE>
-Execute @_shared/task-runner.md now.
+Execute @../task-runner.md now.
 
 Your FIRST tool call MUST be TodoWrite with parsed phases from below.
 Do not output anything else first.

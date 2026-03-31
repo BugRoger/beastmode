@@ -8,8 +8,6 @@ The argument is `<design>-<feature-slug>`. Parse the design name and feature slu
 
 Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
 
-@../_shared/persona.md
-
 ## 3. Load Project Context
 
 Read (if they exist):

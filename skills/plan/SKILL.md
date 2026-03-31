@@ -8,7 +8,7 @@ description: Decompose PRDs into independent features — scoping, slicing, arch
 Decompose a PRD into independent feature plans. Each feature is a vertical slice that can be implemented separately via /implement.
 
 <HARD-GATE>
-Execute @_shared/task-runner.md now.
+Execute @../task-runner.md now.
 
 Your FIRST tool call MUST be TodoWrite with parsed phases from below.
 Do not output anything else first.

@@ -8,7 +8,7 @@ description: Create PRDs through structured decision-tree interviews — designi
 Create PRDs through structured decision-tree interviews and collaborative dialogue.
 
 <HARD-GATE>
-Execute @_shared/task-runner.md now.
+Execute @../task-runner.md now.
 
 Your FIRST tool call MUST be TodoWrite with parsed phases from below.
 Do not output anything else first.

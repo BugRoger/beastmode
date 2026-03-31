@@ -2,7 +2,7 @@
 
 ## Core Directories
 - ALWAYS put phase-specific logic in `skills/{verb}/phases/` — colocated with skill
-- ALWAYS put cross-skill utilities in `skills/_shared/` — reuse
+- ALWAYS put cross-skill utilities in `skills/` root — colocated with skill directories, no nested `_shared/`
 - ALWAYS put agent prompts in `agents/` as standalone documents — separation from skills
 - ALWAYS put plugin lifecycle hooks in `hooks/` as executable scripts — lifecycle management
 - ALWAYS put external-facing essays in `docs/` — not imported by agents
