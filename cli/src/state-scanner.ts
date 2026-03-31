@@ -11,15 +11,24 @@ import { basename } from "path";
 import { existsSync } from "fs";
 import type { PipelineManifest } from "./manifest-store";
 import * as store from "./manifest-store";
-import { deriveNextAction, checkBlocked, enrich, advancePhase, shouldAdvance, type NextAction } from "./manifest";
+import { checkBlocked } from "./manifest";
 import { loadConfig } from "./config";
 import type { Phase } from "./types";
-import { findWorktreeOutputFile, loadOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output";
-import type { ManifestFeature } from "./manifest-store";
+import { findWorktreeOutputFile, loadOutput } from "./phase-output";
+import { epicMachine } from "./pipeline-machine";
+import { createActor } from "xstate";
+import type { DispatchType, EpicContext, EpicEvent } from "./pipeline-machine";
 
 // Re-export types from their canonical locations
 export type { PipelineManifest } from "./manifest-store";
-export type { NextAction } from "./manifest";
+
+/** A dispatchable action derived from manifest state. */
+export interface NextAction {
+  phase: string;
+  args: string[];
+  type: "single" | "fan-out";
+  features?: string[];
+}
 
 /** Enriched manifest with derived fields for the watch loop. */
 export interface EnrichedManifest extends PipelineManifest {
@@ -68,43 +77,141 @@ function preReconcile(manifest: PipelineManifest, projectRoot: string): Pipeline
   const output = loadOutput(file);
   if (!output || output.status !== "completed") return manifest;
 
-  // Enrich with features and artifact paths (mirrors watch-command reconcileState)
-  const featureStatuses = extractFeatureStatuses(output);
-  const artifactPaths = extractArtifactPaths(output);
-
-  const features: ManifestFeature[] | undefined =
-    featureStatuses.length > 0
-      ? featureStatuses.map((f) => {
-          const raw = (output.artifacts as unknown as Record<string, unknown>).features;
-          const planFile = Array.isArray(raw)
-            ? (raw.find(
-                (r: unknown) =>
-                  typeof r === "object" &&
-                  r !== null &&
-                  (r as Record<string, unknown>).slug === f.slug,
-              ) as Record<string, unknown> | undefined)?.plan
-            : undefined;
-          return {
-            slug: f.slug,
-            plan: typeof planFile === "string" ? planFile : "",
-            status: (f.status === "unknown" ? "pending" : f.status) as ManifestFeature["status"],
-          };
-        })
-      : undefined;
-
-  let updated = enrich(manifest, {
-    phase: manifest.phase as Phase,
-    features,
-    artifacts: artifactPaths.length > 0 ? artifactPaths : undefined,
+  // Hydrate ephemeral actor at the manifest's current phase
+  const epicContext = manifest as unknown as EpicContext;
+  const resolvedSnapshot = epicMachine.resolveState({
+    value: manifest.phase,
+    context: epicContext,
   });
+  const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: epicContext });
+  actor.start();
 
-  const nextPhase = shouldAdvance(updated, output);
-  if (nextPhase) {
-    updated = advancePhase(updated, nextPhase);
+  // Map output to machine events based on current phase
+  const events = mapOutputToEvents(manifest.phase as Phase, output, manifest.slug);
+  for (const event of events) {
+    actor.send(event);
   }
+
+  // Extract resulting state
+  const finalSnapshot = actor.getSnapshot();
+  const finalPhase = (typeof finalSnapshot.value === "string"
+    ? finalSnapshot.value
+    : manifest.phase) as Phase;
+  const updated: PipelineManifest = {
+    ...(finalSnapshot.context as unknown as PipelineManifest),
+    phase: finalPhase,
+  };
+
+  actor.stop();
 
   store.save(projectRoot, manifest.slug, updated);
   return updated;
+}
+
+/**
+ * Map phase output to machine events for preReconcile.
+ * Mirrors the event-mapping logic from post-dispatch.ts.
+ */
+function mapOutputToEvents(
+  phase: Phase,
+  output: ReturnType<typeof loadOutput>,
+  _epicSlug: string,
+): EpicEvent[] {
+  if (!output) return [];
+  const events: EpicEvent[] = [];
+
+  switch (phase) {
+    case "design": {
+      const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
+      const realSlug = artifacts?.slug as string | undefined;
+      events.push({ type: "DESIGN_COMPLETED", realSlug });
+      break;
+    }
+    case "plan": {
+      const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
+      const rawFeatures = artifacts?.features;
+      const features: Array<{ slug: string; plan: string }> = [];
+      if (Array.isArray(rawFeatures)) {
+        for (const entry of rawFeatures) {
+          if (typeof entry === "object" && entry !== null && typeof (entry as Record<string, unknown>).slug === "string") {
+            const rec = entry as Record<string, unknown>;
+            features.push({
+              slug: rec.slug as string,
+              plan: typeof rec.plan === "string" ? rec.plan : "",
+            });
+          }
+        }
+      }
+      events.push({ type: "PLAN_COMPLETED", features });
+      break;
+    }
+    case "implement": {
+      // preReconcile is epic-level — if all features show completed, send IMPLEMENT_COMPLETED
+      // Individual feature completion is handled by per-feature reconciliation
+      events.push({ type: "IMPLEMENT_COMPLETED" });
+      break;
+    }
+    case "validate": {
+      if (output.status === "completed") {
+        events.push({ type: "VALIDATE_COMPLETED" });
+      } else {
+        events.push({ type: "VALIDATE_FAILED" });
+      }
+      break;
+    }
+    case "release": {
+      if (output.status === "completed") {
+        events.push({ type: "RELEASE_COMPLETED" });
+      }
+      break;
+    }
+  }
+
+  return events;
+}
+
+/**
+ * Derive the next dispatchable action from a manifest using the machine's
+ * state metadata. Replaces the old deriveNextAction() pure function.
+ */
+function deriveNextActionFromMachine(manifest: PipelineManifest): NextAction | null {
+  // Hydrate a temporary actor at the manifest's current phase
+  const snapshot = epicMachine.resolveState({
+    value: manifest.phase,
+    context: manifest as unknown as EpicContext,
+  });
+  const actor = createActor(epicMachine, { snapshot, input: manifest as unknown as EpicContext });
+  actor.start();
+
+  const currentSnapshot = actor.getSnapshot();
+  const stateValue = currentSnapshot.value as string;
+  const meta = currentSnapshot.getMeta();
+  const stateMeta = (meta as Record<string, { dispatchType?: DispatchType } | undefined>)[`epic.${stateValue}`];
+  const dispatchType = stateMeta?.dispatchType;
+
+  actor.stop();
+
+  if (!dispatchType || dispatchType === "skip") return null;
+
+  if (dispatchType === "fan-out") {
+    const pendingFeatures = manifest.features
+      .filter((f) => f.status === "pending" || f.status === "in-progress")
+      .map((f) => f.slug);
+    if (pendingFeatures.length === 0) return null;
+    return {
+      phase: stateValue,
+      args: [manifest.slug],
+      type: "fan-out",
+      features: pendingFeatures,
+    };
+  }
+
+  // single dispatch
+  return {
+    phase: stateValue,
+    args: [manifest.slug],
+    type: "single",
+  };
 }
 
 /**
@@ -118,7 +225,7 @@ export async function scanEpics(projectRoot: string): Promise<ScanResult> {
 
   const epics: EnrichedManifest[] = manifests.map((m) => {
     const reconciled = preReconcile(m, projectRoot);
-    const nextAction = deriveNextAction(reconciled);
+    const nextAction = deriveNextActionFromMachine(reconciled);
     const blocked = checkBlocked(reconciled, config.gates);
     const path = store.manifestPath(projectRoot, reconciled.slug);
 

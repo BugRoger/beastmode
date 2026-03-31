@@ -17,7 +17,10 @@ import {
   remove as removeWorktree,
 } from "../worktree";
 import * as store from "../manifest-store";
-import { cancel } from "../manifest";
+import type { PipelineManifest } from "../manifest-store";
+import { createEpicActor } from "../pipeline-machine";
+import type { EpicContext } from "../pipeline-machine";
+import type { Phase } from "../types";
 import type { Logger } from "../logger";
 import { createLogger } from "../logger";
 
@@ -66,7 +69,8 @@ export async function cancelCommand(
 }
 
 /**
- * Read the manifest for the given slug and set phase to "cancelled".
+ * Read the manifest for the given slug and set phase to "cancelled"
+ * by sending a CANCEL event through the pipeline machine.
  */
 function updateManifestCancelled(
   projectRoot: string,
@@ -74,8 +78,20 @@ function updateManifestCancelled(
 ): void {
   const manifest = store.load(projectRoot, slug);
   if (!manifest) throw new Error(`No manifest found for: ${slug}`);
-  const cancelled = cancel(manifest);
-  store.save(projectRoot, slug, cancelled);
+
+  let actor: ReturnType<typeof createEpicActor>;
+  const persistAction = ({ context }: { context: EpicContext }) => {
+    const snapshot = actor.getSnapshot();
+    const phase = (typeof snapshot.value === 'string' ? snapshot.value : 'cancelled') as Phase;
+    store.save(projectRoot, slug, {
+      ...context,
+      phase,
+    } as unknown as PipelineManifest);
+  };
+
+  actor = createEpicActor(manifest as unknown as EpicContext, { persist: persistAction });
+  actor.send({ type: 'CANCEL' });
+  actor.stop();
 }
 
 /**

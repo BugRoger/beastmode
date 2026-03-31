@@ -114,6 +114,18 @@ Gutted or deleted. Scanning is composed from manifest-store.ts (store.list()) pl
 
 context/design/state-scanner.md
 
+## Pipeline Machine
+XState v5 state machine module at `cli/src/pipeline-machine/` replacing implicit manifest.ts pure functions with explicit declarative state definitions. Two machines: epic pipeline (design → done/cancelled) and feature status (pending → completed/blocked). `setup()` API for type-safe separation of definition from implementation. Sync actions (persist, enrich, rename) on transitions, async services (GitHub sync) as invoked actors. State metadata for watch loop dispatch. Same `.manifest.json` format — no migration. Test-first migration: prove machines with full test suite before swapping consumers.
+
+1. ALWAYS define state transitions declaratively in the XState machine — no implicit conditionals in orchestration code
+2. ALWAYS use named guards in `setup()` for transition conditions — testable independently from machine
+3. ALWAYS use XState actions for sync side effects and invoked services for async operations — ordering guaranteed
+4. ALWAYS use state metadata for watch loop dispatch type — machine is the sole dispatch authority
+5. NEVER model human gates in the machine — gates are external policy checked by the watch loop
+6. ALWAYS persist using same PipelineManifest JSON shape — machine context IS the manifest
+
+context/design/pipeline-machine.md
+
 ## cmux Integration
 Optional terminal multiplexer integration that provides live visibility into the pipeline. When cmux is available and enabled, the watch loop creates cmux workspaces per epic and terminal surfaces per dispatched agent. Communication uses JSON-RPC over Unix socket. Agents run as real terminal processes with interactive capability. Desktop notifications fire on errors and blocked gates only. Surfaces clean up on release, mirroring the worktree lifecycle. cmux is never a hard dependency — the SDK dispatch path is fully preserved as the fallback.
 

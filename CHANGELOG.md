@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.51.0 — XState Pipeline Machine (Mar 2026)
+
+- **XState v5 epic machine** — Explicit state machine with 7 states (design → plan → implement → validate → release → done/cancelled), named guards (`hasFeatures`, `allFeaturesCompleted`, `outputCompleted`), and declarative actions (`persist`, `enrichManifest`, `renameSlug`, `syncGitHub`) via `setup()` API
+- **Feature status machine** — Separate 4-state machine (pending → in-progress → completed → blocked) for feature lifecycle
+- **State metadata dispatch** — Watch loop reads `meta.dispatchType` from actor snapshot instead of `deriveNextAction()` — single source of truth for what each state means
+- **Snapshot persistence** — `getSnapshot()` → JSON → `createActor(machine, { snapshot })` round-trip, same `.manifest.json` format, zero migration
+- **Consumer swap** — `post-dispatch.ts` reduced to thin event router, `watch-command.ts` reads dispatch from actor meta, `state-scanner.ts` uses actor for state resolution
+- **Validate regression** — `VALIDATE_FAILED` as explicit implement ← validate transition with feature reset
+- **Cancel from any state** — `CANCEL` event valid from any non-terminal state with `markCancelled` + `persist` actions
+- **835 tests** — Comprehensive coverage across transitions, guards, actions, persistence round-trips, and integration flows
+
 ### v0.50.0 — Context Tree Compaction (Mar 2026)
 
 - **Retro value-add gate** — Both retro walkers (context, meta) now check four criteria before creating L3 records: rationale, constraints, provenance, dissenting context. Redundant L3s that merely restate their parent L2 are silently skipped

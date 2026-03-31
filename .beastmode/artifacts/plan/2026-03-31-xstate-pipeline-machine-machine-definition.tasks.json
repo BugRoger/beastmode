@@ -1,0 +1,16 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-xstate-pipeline-machine-machine-definition.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Types module", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Guards module", "status": "pending", "wave": 1},
+    {"id": 2, "subject": "Task 2: Actions module", "status": "pending", "wave": 1},
+    {"id": 3, "subject": "Task 3: Services module", "status": "pending", "wave": 1},
+    {"id": 4, "subject": "Task 4: Feature machine", "status": "pending", "wave": 2},
+    {"id": 5, "subject": "Task 5: Epic machine", "status": "pending", "wave": 2},
+    {"id": 6, "subject": "Task 6: Public API", "status": "pending", "wave": 3},
+    {"id": 7, "subject": "Task 7: Feature machine tests", "status": "pending", "wave": 3},
+    {"id": 8, "subject": "Task 8: Epic machine tests", "status": "pending", "wave": 3},
+    {"id": 9, "subject": "Task 9: Run full test suite", "status": "pending", "wave": 4}
+  ],
+  "lastUpdated": "2026-03-31T00:00:00Z"
+}

@@ -191,3 +191,15 @@ Confirms the prerequisite-absorption pattern from Obs 12. When a prerequisite (d
 .beastmode/artifacts/design/2026-03-29-manifest-file-management.md
 ### Confidence
 [LOW] -- second observation of prerequisite-absorption (see Obs 12), but in a closely related problem space (same codebase subsystem)
+
+## Observation 17
+### Context
+During xstate-pipeline-machine design, 2026-03-31
+### Observation
+The PRD scoped a large refactor (extracting implicit state machine into XState) as a test-first migration with explicit phases: (1) build the new module with comprehensive tests, (2) verify all tests green, (3) swap consumers, (4) delete replaced code. The design committed to "no consumer changes until the new module is proven" — making the migration risk-free by construction rather than by testing after the swap. The PRD also explicitly named the prior art tests (manifest-pure.test.ts, manifest.test.ts, post-dispatch.test.ts) that serve as the specification the new machine must replicate.
+### Rationale
+When a design replaces an implicit subsystem with an explicit one, scoping the migration as "prove the replacement in isolation before touching consumers" eliminates the risk window. The design phase should define the migration phases, not leave them to the plan or implement phases. This is distinct from prerequisite-absorption (Obs 12, 16) — it is about migration ordering, not scope inclusion.
+### Source
+.beastmode/artifacts/design/2026-03-31-xstate-pipeline-machine.md
+### Confidence
+[LOW] — first-time observation; extends the scope-management cluster with a migration-ordering pattern

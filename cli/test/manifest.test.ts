@@ -15,7 +15,6 @@ import {
 } from "../src/manifest-store";
 import {
   enrich,
-  advancePhase,
   getPendingFeatures,
 } from "../src/manifest";
 
@@ -176,37 +175,6 @@ describe("enrich", () => {
     });
     save(TEST_ROOT, "test-epic", manifest);
     expect(manifest.artifacts.design).toEqual(["file1.md", "file2.md"]);
-  });
-});
-
-describe("advancePhase", () => {
-  beforeEach(() => {
-    setupTestRoot();
-    create(TEST_ROOT, "test-epic");
-  });
-  afterEach(() => rmSync(TEST_ROOT, { recursive: true, force: true }));
-
-  test("advances phase and persists", () => {
-    let manifest = get(TEST_ROOT, "test-epic");
-    manifest = advancePhase(manifest, "plan");
-    save(TEST_ROOT, "test-epic", manifest);
-    expect(manifest.phase).toBe("plan");
-
-    const reread = get(TEST_ROOT, "test-epic");
-    expect(reread.phase).toBe("plan");
-  });
-
-  test("can advance through all phases", () => {
-    let manifest = get(TEST_ROOT, "test-epic");
-    manifest = advancePhase(manifest, "plan");
-    save(TEST_ROOT, "test-epic", manifest);
-    manifest = advancePhase(manifest, "implement");
-    save(TEST_ROOT, "test-epic", manifest);
-    manifest = advancePhase(manifest, "validate");
-    save(TEST_ROOT, "test-epic", manifest);
-    manifest = advancePhase(manifest, "release");
-    save(TEST_ROOT, "test-epic", manifest);
-    expect(manifest.phase).toBe("release");
   });
 });
 

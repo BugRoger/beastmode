@@ -71,3 +71,15 @@ Parallel dispatch reliability is material-agnostic. File isolation and pattern u
 .beastmode/artifacts/plan/2026-03-28-github-phase-integration.manifest.json
 ### Confidence
 [HIGH] — confirmed across 5+ features (6 total observations)
+
+## Observation 7
+### Context
+During xstate-pipeline-machine implementation, 2026-03-31. Wave 1 dispatched 4 tasks in parallel: types.ts, guards.ts, actions.ts, services.ts — all TypeScript source files with compile-time type contracts.
+### Observation
+Fourth material category confirmed for parallel dispatch: typed source code with compile-time interdependencies. All 4 tasks produced disjoint .ts files with zero file conflicts and zero deviations.
+### Rationale
+File isolation works for typed code as long as each task produces a complete module. Shared type imports do not violate isolation because types are consumed read-only.
+### Source
+.beastmode/artifacts/implement/2026-03-31-xstate-pipeline-machine-machine-definition.md
+### Confidence
+[HIGH] — confirmed across 5+ features (7 total observations)
