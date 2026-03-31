@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-retro-consolidation-update-knowledge-rules.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Update DESIGN.md — remove stale retro/meta rules", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Update RELEASE.md — align with consolidated retro", "status": "pending", "wave": 1},
+    {"id": 2, "subject": "Task 2: Verify acceptance criteria", "status": "pending", "wave": 2}
+  ],
+  "lastUpdated": "2026-03-31T00:00:00Z"
+}

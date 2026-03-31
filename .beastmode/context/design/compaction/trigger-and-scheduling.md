@@ -1,14 +1,13 @@
 # Trigger and Scheduling
 
 ## Context
-Compaction should run periodically without manual intervention, but also be available on demand.
+Compaction is decoupled from the release pipeline and runs on-demand only.
 
 ## Decision
-In release, compaction runs before retro so retro works against a clean baseline. Trigger: every 5 releases, tracked via `.beastmode/state/.last-compaction` timestamp file — count `Release v*` commits since that date; if >= 5 or file missing, run compaction. `beastmode compact` CLI command dispatches the compaction agent via existing session dispatch pattern — no worktree needed, operates on the shared tree, always runs regardless of the 5-release counter.
+`beastmode compact` CLI command dispatches the compaction agent via existing session dispatch pattern — no worktree needed, operates on the shared tree. Compaction is manual-only and decoupled from the release pipeline — no automatic 5-release trigger, no `.last-compaction` tracking file needed.
 
 ## Rationale
-- Before-retro ordering prevents creating-then-immediately-deleting files
-- 5-release cadence avoids overhead on every release while keeping the tree manageable
+- Manual-only trigger avoids overhead on every release while keeping the tree manageable
 - Standalone CLI command enables on-demand cleanup outside the release cycle
 - No worktree needed because compaction operates on the shared context tree, not feature-scoped state
 

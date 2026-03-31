@@ -47,9 +47,8 @@ The sole autoloaded file (~40 lines). Contains hierarchy spec, persona definitio
 writing rules, and conventions. Enough for any agent to orient after compression.
 Always loaded via CLAUDE.md.
 
-**L1 — Domain Summaries** (e.g., `context/DESIGN.md`, `meta/DESIGN.md`)
-One file per phase per domain — both context and meta. Ten L1 files total (five
-phases times two domains). Each contains a summary paragraph plus 2-3 sentence
+**L1 — Domain Summaries** (e.g., `context/DESIGN.md`)
+One file per phase. Five L1 files total. Each contains a summary paragraph plus 2-3 sentence
 descriptions of each topic below it. Loaded during the prime sub-phase of each
 workflow phase (not autoloaded). An agent reading L1 files knows where everything
 is without loading everything.
@@ -64,19 +63,18 @@ Raw design documents, implementation plans, validation records. Referenced from 
 "Related Decisions" sections. Rarely loaded in full — agents find them through L2
 links when they need provenance.
 
-### Three Domains
+### Two Domains
 
-Beastmode separates knowledge by purpose into three domains, each with its own
+Beastmode separates knowledge by purpose into two domains, each with its own
 directory tree under `.beastmode/`:
 
 | Domain | Path | Purpose | Example |
 |--------|------|---------|---------|
-| **Context** | `context/` | Published knowledge. What the project knows. | `context/design/architecture.md` |
-| **Meta** | `meta/` | Process knowledge. How the project works. | `meta/DESIGN.md` |
+| **Context** | `context/` | Published knowledge. What the project knows and how it works. | `context/design/architecture.md` |
 | **State** | `state/` | Checkpoint artifacts. What happened when. | `state/design/2026-03-06-feature.md` |
 
-Context and Meta both span L1 and L2. State lives at L3 only. Every phase has its
-own subdirectory in each domain.
+Context spans L1 and L2. State lives at L3 only. Universal process rules live in
+BEASTMODE.md (L0). Every phase has its own subdirectory in the context domain.
 
 ### The Fractal Pattern
 
@@ -98,8 +96,8 @@ hierarchy stays accurate because maintenance is built into the workflow, not bol
 ### Write Protection
 
 Knowledge flows upward through a strict promotion path. Phases write artifacts to
-`state/` only — never directly to `context/` or `meta/`. The retro sub-phase, which
-runs at the end of every phase, is the sole gatekeeper for upward promotion:
+`state/` only — never directly to `context/`. The retro sub-phase, which
+runs at release, is the sole gatekeeper for upward promotion:
 
 | Writer | Allowed Targets | Mechanism |
 |--------|----------------|-----------|
@@ -129,7 +127,7 @@ through the hierarchy. This is how the hierarchy compounds — every phase cycle
 opportunity to refine what the project knows about itself.
 
 Retro is also gated: a configurable HITL (human-in-the-loop) gate system controls
-whether context changes and meta findings require human approval or auto-apply.
+whether context changes require human approval or auto-apply.
 Gates are defined in `.beastmode/config.yaml`.
 
 ## Why This Matters

@@ -1,3 +1,0 @@
-# Validate Process
-
-- None recorded.

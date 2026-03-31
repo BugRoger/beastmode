@@ -2,24 +2,22 @@
 
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
-- NEVER skip the retro sub-phase — it's how the system learns and improves
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking and issue body enrichment (summary text, feature checklists, hash-compare sync), CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and periodic compaction agent (staleness removal, restatement folding, L0 promotion detection) triggered every 5 releases or via `beastmode compact`
+- NEVER skip retro at release — it's the sole mechanism for updating the knowledge hierarchy
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and on-demand compaction agent (staleness removal, restatement folding, L0 promotion detection) via `beastmode compact`
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
 - NEVER use @imports between hierarchy levels — convention-based paths only
-- Four data domains: Artifacts (committed skill outputs in `artifacts/`), State (gitignored pipeline manifests in `state/`), Context (published knowledge), Meta (process knowledge with process + workarounds domains). Manifest JSON is the operational authority for feature lifecycle via manifest-store.ts (filesystem boundary) and manifest.ts (pure state machine); GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled
+- Three data domains: Artifacts (committed skill outputs in `artifacts/`), State (gitignored pipeline manifests in `state/`), Context (published knowledge). Manifest JSON is the operational authority for feature lifecycle via manifest-store.ts (filesystem boundary) and manifest.ts (pure state machine); GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when enabled
 - ALWAYS create a matching L3 directory for every L2 file — structural invariant for retro expansion
 - State has no L1 index files — only empty phase subdirs with .gitkeep as workflow containers
 - research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
 - Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
 - Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number
-- NEVER write to context/ or meta/ directly from phases — retro and the compaction agent are the sole gatekeepers
-- Retro reconciliation is artifact-scoped — quick-check L1 first, deep-check L2 only when stale
-- Meta walker mirrors context walker algorithm — L1 quick-check, L2 deep-check, L3 record management with confidence-gated promotion
-- NEVER skip retro — walkers handle empty phases gracefully, no quick-exit gating
-- Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
+- NEVER write to context/ directly from phases — retro and the compaction agent are the sole gatekeepers
+- Retro runs once at release with all phase artifacts — context walker processes the full cycle in a single pass
+- Context walker ALWAYS applies value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 
 ## Task Runner
 - ALWAYS track tasks via TodoWrite — one in_progress at a time
@@ -27,8 +25,8 @@
 - Gate steps (`## N. [GATE|...]`) are structural — cannot be bypassed
 
 ## Release Workflow
-- ALWAYS run retro from checkpoint before merge — consistent across all five phases
-- ALWAYS run compaction before retro in release — every 5 releases, tracked via `.beastmode/state/.last-compaction`
+- ALWAYS run retro from release checkpoint before merge — retro runs only at release, not per-phase
+- Compaction is manual-only via `beastmode compact` — decoupled from the release pipeline
 - ALWAYS commit per phase on the feature branch — each phase persists work at checkpoint for cross-session durability
 - ALWAYS squash-merge feature branch at release — per-phase commits collapse to one clean commit on main
 - ALWAYS archive branch tip before squash merge
@@ -60,18 +58,16 @@ TypeScript CLI (`beastmode`) drives phase transitions via `beastmode <phase> <sl
 context/design/init-system.md
 
 ## GitHub State Model
-Manifest JSON is the operational authority for feature lifecycle, located at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` (local-only, gitignored). GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines using blast-replace for mutually exclusive label families. Only Epics appear on the Projects V2 board. Skills are fully GitHub-unaware and manifest-unaware — they write artifacts to `artifacts/<phase>/`, a Stop hook generates output.json from frontmatter, and the CLI reads output.json to enrich the manifest and sync GitHub. github-sync.ts returns mutations instead of mutating in-place. GitHub API failures warn and continue without blocking. Sync formats issue bodies from manifest summary fields — epic bodies include phase badge, problem/solution text, and feature checklist with completion status; feature bodies include description and epic back-reference. Body updates use hash-compare to avoid redundant API calls.
+Manifest JSON is the operational authority for feature lifecycle, located at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` (local-only, gitignored). GitHub is a one-way synced mirror updated by the CLI after every phase dispatch when github.enabled is true. Two-level issue hierarchy (Epic > Feature) with label-based state machines using blast-replace for mutually exclusive label families. Only Epics appear on the Projects V2 board. Skills are fully GitHub-unaware and manifest-unaware — they write artifacts to `artifacts/<phase>/`, a Stop hook generates output.json from frontmatter, and the CLI reads output.json to enrich the manifest and sync GitHub. github-sync.ts returns mutations instead of mutating in-place. GitHub API failures warn and continue without blocking.
 
 1. ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) with label-based type/phase/status encoding
 2. ALWAYS use manifest JSON as operational authority — GitHub is a one-way mirror, CLI never reads GitHub state to update the manifest
-3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHubForEpic()` is the shared helper (encapsulates loadConfig, discoverGitHub, syncGitHub, apply mutations, warn-and-continue), same code path for manual and watch-loop execution
+3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` runs post-dispatch, same code path for manual and watch-loop execution
 4. NEVER let GitHub API failures block workflow — warn and continue, next dispatch retries
 5. NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
-6. ALWAYS use 13-label taxonomy: 2 type, 8 phase (backlog, design, plan, implement, validate, release, done, cancelled), 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — cancelled is a terminal phase alongside done
+6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — status/review is dropped
 7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
 8. ALWAYS use blast-replace for mutually exclusive label families (phase/*, status/*) — remove all labels in family, add correct one, idempotent
-9. ALWAYS format issue bodies from manifest summary fields during sync — hash-compare skips API calls when content unchanged
-10. ALWAYS produce fallback body format when summary fields are missing — phase badge and feature checklist render regardless
 
 context/design/github-state-model.md
 
@@ -85,7 +81,6 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 5. ALWAYS use CLI-owned worktrees — CLI creates before, merges after, removes when done
 6. ALWAYS use `DispatchedSession` interface for dispatch — `SessionFactory` returns `SdkSession` or `CmuxSession` based on runtime state and config
 7. ALWAYS reconcile cmux state on startup — adopt live surfaces, close dead ones, remove empty workspaces
-8. ALWAYS sync GitHub inside reconcileState() in the watch loop — single load-save cycle per epic eliminates TOCTOU window between reconciliation and sync
 
 context/design/orchestration.md
 
@@ -96,7 +91,7 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
 4. ALWAYS own manifest lifecycle via manifest-store.ts (filesystem) and manifest.ts (pure functions) — store is the sole filesystem accessor, pure functions return new manifests without mutation
-5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/`, enriches manifest via pure functions, runs `syncGitHubForEpic()` which encapsulates sync + mutation write-back
+5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/`, enriches manifest via pure functions, runs `syncGitHub(manifest, config)`
 6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup
 7. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 8. ALWAYS use flat-file manifest path convention — state/YYYY-MM-DD-<slug>.manifest.json, no directory-per-slug
@@ -109,7 +104,7 @@ context/design/cli.md
 Gutted or deleted. Scanning is composed from manifest-store.ts (store.list()) plus manifest.ts pure functions (deriveNextAction(), checkBlocked()). No standalone scanner module. PipelineManifest is the sole manifest type — EpicState, FeatureProgress, ScanResult are deleted. Manifest path: state/YYYY-MM-DD-<slug>.manifest.json (gitignored). Blocked is structured ({ gate, reason } | null), not boolean.
 
 1. ALWAYS compose scanning from store.list() + manifest.deriveNextAction() + manifest.checkBlocked() — no standalone scanner module
-2. ALWAYS use PipelineManifest as the sole manifest type with optional summary ({ problem, solution }) and per-feature description fields — EpicState, FeatureProgress, ScanResult, Manifest are all deleted
+2. ALWAYS use PipelineManifest as the sole manifest type — EpicState, FeatureProgress, ScanResult, Manifest are all deleted
 3. ALWAYS use manifest path convention state/YYYY-MM-DD-<slug>.manifest.json — gitignored, CLI-owned
 4. ALWAYS use structured blocked field ({ gate, reason } | null) — not boolean, enables status display of block reason
 5. ALWAYS auto-resolve git merge conflict markers before parsing manifests — take ours-side, strip markers, attempt parse
@@ -141,10 +136,10 @@ Optional terminal multiplexer integration that provides live visibility into the
 context/design/cmux-integration.md
 
 ## Context Tree Compaction
-Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks proposed L3 records against their parent L2 before creation (must add rationale, constraints, provenance, or dissenting context — otherwise silently skipped), and a compaction agent that audits the existing tree in fixed order (staleness removal, restatement folding, L0 promotion detection). Compaction is a utility agent with no phase lifecycle. Runs in release every 5 releases (before retro) or standalone via `beastmode compact`.
+Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks proposed L3 records against their parent L2 before creation (must add rationale, constraints, provenance, or dissenting context — otherwise silently skipped), and a compaction agent that audits the existing tree in fixed order (staleness removal, restatement folding, L0 promotion detection). Compaction is a utility agent with no phase lifecycle. Runs on-demand via `beastmode compact`.
 
-1. ALWAYS apply value-add gate in retro walkers before creating L3 — skip pure restatements of L2
-2. ALWAYS run compaction before retro in release — clean baseline for retro
+1. ALWAYS apply value-add gate in context walker before creating L3 — skip pure restatements of L2
+2. Compaction is manual-only via `beastmode compact` — decoupled from release pipeline
 3. ALWAYS use fixed compaction order: staleness, restatement, L0 promotion — earlier steps reduce false positives
 4. NEVER auto-resolve ambiguous staleness — flag for human review
 5. ALWAYS preserve `.gitkeep` in emptied L3 directories — structural invariant

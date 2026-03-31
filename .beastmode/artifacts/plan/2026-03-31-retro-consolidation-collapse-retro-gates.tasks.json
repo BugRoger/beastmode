@@ -1,0 +1,7 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-retro-consolidation-collapse-retro-gates.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Remove records, context, phase gates from config.yaml", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T12:00:00Z"
+}

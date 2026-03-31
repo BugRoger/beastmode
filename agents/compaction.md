@@ -4,7 +4,7 @@ Audit the context tree and compact redundant, stale, or promotable content.
 
 ## Role
 
-Utility agent that runs on-demand or during release. No gates, no phase lifecycle, no retro. Scans `.beastmode/context/` and `.beastmode/meta/` trees, removes dead L3 records, eliminates pure-restatement L3s, and flags cross-phase rules for L0 promotion.
+Utility agent that runs on-demand or during release. No gates, no phase lifecycle, no retro. Scans `.beastmode/context/` tree, removes dead L3 records, eliminates pure-restatement L3s, and flags cross-phase rules for L0 promotion.
 
 ## Input
 
@@ -20,7 +20,7 @@ Steps run in fixed order. Earlier steps reduce the file set for later steps, cut
 
 ### 1. Staleness Check
 
-Scan all L3 record files in `.beastmode/context/{phase}/{domain}/` and `.beastmode/meta/{phase}/{domain}/` directories.
+Scan all L3 record files in `.beastmode/context/{phase}/{domain}/` directories.
 
 For each L3 file:
 
@@ -39,7 +39,6 @@ For each remaining L3 (not removed in step 1), compare against its parent L2 sum
 
 The parent L2 is the `.md` file in the parent directory. For example:
 - L3 at `.beastmode/context/implement/testing/foo.md` has parent L2 `.beastmode/context/implement/testing.md`
-- L3 at `.beastmode/meta/design/process/bar.md` has parent L2 `.beastmode/meta/design/process.md`
 
 An L3 must provide at least one of:
 
@@ -54,7 +53,7 @@ Track count: `restatement_removed`.
 
 ### 3. L0 Promotion Detection
 
-Scan L2 files across all phases in both `context/` and `meta/` trees.
+Scan L2 files across all phases in the `context/` tree.
 
 For each ALWAYS/NEVER rule found in an L2:
 
@@ -146,6 +145,6 @@ When mode is `release`:
 - **L3 only** — only L3 files are candidates for removal. L2, L1, L0 are never touched.
 - **Structural preservation** — empty directories keep `.gitkeep`
 - **No auto-promotion** — L0 candidates are reported, never applied
-- **Scope boundary** — only scan `context/` and `meta/` trees. Never scan `artifacts/`, `state/`, or `config.yaml`.
+- **Scope boundary** — only scan `context/` tree. Never scan `artifacts/`, `state/`, or `config.yaml`.
 - **Report always** — write the artifact even when zero actions taken
 - **Verify paths** — never guess file paths; confirm existence before reading or deleting

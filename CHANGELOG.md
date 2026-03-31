@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.54.0 — Retro Consolidation (Mar 2026)
+
+- **Release-only retro** — Retro runs once at release with all phase artifacts instead of after every phase checkpoint, producing a coherent cross-phase knowledge update
+- **Context walker sole agent** — Meta walker deleted, context walker is the only retro agent
+- **Inlined retro orchestration** — Release skill inlines retro directly, no shared `_shared/retro.md` import
+- **Single retro gate** — Four retro gates (`records`, `context`, `phase`, `beastmode`) collapsed to single `retro.beastmode: human`; L3/L2/L1 changes apply automatically
+- **Meta tree removal** — Universal meta rules migrated to BEASTMODE.md process sections, entire `meta/` directory deleted
+- **Compaction decoupled** — Automatic compaction removed from release; manual-only via `beastmode compact`
+- **Knowledge docs updated** — DESIGN.md and RELEASE.md context docs updated to reflect new retro behavior
+
 ### v0.53.0 — GitHub Issue Enrichment (Mar 2026)
 
 - **Epic body formatting** — Epic issues now display a phase badge, problem statement, solution summary, and a feature checklist with `[x]`/`[ ]` completion status and `#N` issue links

@@ -16,11 +16,7 @@ status: passed
 
 Set `status` to `passed` or `failed` matching the validation result.
 
-## 2. Phase Retro
-
-@../_shared/retro.md
-
-## 3. Commit and Handoff
+## 2. Commit and Handoff
 
 If FAIL:
 ```

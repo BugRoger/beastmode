@@ -94,13 +94,7 @@ Do NOT include specific file paths or code snippets — they may become outdated
 [Ideas that came up during the interview but were deferred as separate features, or "None"]
 ```
 
-## 3. Phase Retro
-
-> **SKIP SECTION** — "Quick-Exit Check": Design PRDs always contain decisions worth capturing. Always run the full retro.
-
-@../_shared/retro.md
-
-## 4. Commit and Handoff
+## 3. Commit and Handoff
 
 Commit all work to the feature branch:
 

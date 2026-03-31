@@ -1,65 +1,72 @@
 # 3. Checkpoint
 
-## 0. Conditional Compaction
+## 1. Release Retro
 
-Check whether context tree compaction is due before retro runs.
+Run a context reconciliation pass across all phase artifacts before releasing.
 
-### 0.1 Check Compaction Cadence
+### 1.1 Gather Phase Artifacts
 
-```bash
-last_compaction_file=".beastmode/state/.last-compaction"
-
-if [ -f "$last_compaction_file" ]; then
-    last_ts=$(cat "$last_compaction_file")
-    release_count=$(git log --oneline --since="$last_ts" --grep="^Release v" | wc -l | tr -d ' ')
-else
-    release_count=999  # Force compaction on first run
-fi
-
-echo "Releases since last compaction: $release_count"
-```
-
-If `release_count` < 5, print "Compaction not due (N/5 releases). Skipping." and proceed to Step 1.
-
-### 0.2 Spawn Compaction Agent
-
-Read the agent prompt from `agents/compaction.md`.
-
-Build the agent prompt with:
+Enumerate all artifact directories for the current feature slug:
 
 ```
-## Compaction Context
-- **Mode**: release
-- **Slug**: <feature>
+.beastmode/artifacts/design/
+.beastmode/artifacts/plan/
+.beastmode/artifacts/implement/
+.beastmode/artifacts/validate/  (if exists)
+.beastmode/artifacts/release/
+```
+
+For each directory, collect all files matching the current feature slug. Build a flat list of all artifact paths.
+
+If no artifacts found, print "Retro: no artifacts found. Skipping." and proceed to Step 2.
+
+### 1.2 Spawn Context Walker
+
+Read the agent prompt from `agents/retro-context.md`.
+
+Build the session context block providing ALL phase artifacts:
+
+```
+## Session Context
+- **Phase**: release
+- **Feature**: <feature name>
+- **Artifacts**: <list of ALL phase artifact paths for this feature>
+- **L1 context path**: `.beastmode/context/` (all phase directories)
 - **Working directory**: <current working directory>
 ```
 
-Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+Spawn: `Agent(subagent_type="general-purpose", prompt=<agent prompt + session context>)`
 
 Wait for completion.
 
-### 0.3 Update Timestamp
+If context walker returned "No changes needed", print "Retro: no changes needed." and proceed to Step 2.
 
-After successful compaction:
+### 1.3 Apply Changes (Bottom-Up)
 
-```bash
-date -u +%Y-%m-%dT%H:%M:%SZ > .beastmode/state/.last-compaction
-```
+Apply all proposed changes from the context walker automatically in hierarchy order:
 
-### 0.4 Copy Report to Release Artifacts
+1. **L3 — Records**: Create/append approved records automatically
+2. **L2 — Context docs**: Apply L2 edits/creates automatically
+3. **L1 — Phase summaries**: Recompute L1 summaries automatically
+4. **L0 — BEASTMODE.md**: Gate via step 1.4 below
 
-The compaction agent writes to `artifacts/compact/YYYY-MM-DD-compaction.md`. Copy it to release artifacts:
+### 1.4 [GATE|retro.beastmode]
 
-```bash
-cp .beastmode/artifacts/compact/YYYY-MM-DD-compaction.md \
-   .beastmode/artifacts/release/YYYY-MM-DD-<slug>-compaction.md
-```
+Read `.beastmode/config.yaml` → resolve mode for `retro.beastmode`.
+Default: `human`.
 
-Print the compaction summary from the agent's output, then proceed to Step 1.
+If no L0 changes proposed, skip this gate entirely.
 
-## 1. Phase Retro
+#### 1.4.1 [GATE-OPTION|human] Review BEASTMODE.md Updates
 
-@../_shared/retro.md
+Present the before/after diff for `.beastmode/BEASTMODE.md`. Ask for approval:
+
+- **Approve**: apply the L0 changes
+- **Reject**: discard L0 changes, keep L1-L3 changes already applied
+
+#### 1.4.2 [GATE-OPTION|auto] Auto-Apply
+
+Apply L0 changes silently. Log: "Gate `retro.beastmode` → auto: applied L0 changes"
 
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 
@@ -174,7 +181,7 @@ Suggest: `git push origin main && git push origin vX.Y.Z`
 Suggest running:
 ```bash
 claude plugin marketplace update
-claude plugin update beastmode@beastmode-marketplace --scope user 
+claude plugin update beastmode@beastmode-marketplace --scope user
 ```
 
 ## 11. Complete

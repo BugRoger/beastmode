@@ -46,36 +46,6 @@ For each L1 file:
 - ALWAYS/NEVER rules should be the most impactful patterns
 - L2 file paths as plain text (last line of each section), not markdown links
 
-## Phase 1.5: Generate Meta L1 Summaries
-
-Read all meta L2 files (process.md + workarounds.md per phase). For each meta L1 file:
-
-### Meta L1 Files to Generate
-
-| L1 File | L2 Sources |
-|---------|------------|
-| `meta/DESIGN.md` | `design/process.md`, `design/workarounds.md` |
-| `meta/PLAN.md` | `plan/process.md`, `plan/workarounds.md` |
-| `meta/IMPLEMENT.md` | `implement/process.md`, `implement/workarounds.md` |
-| `meta/VALIDATE.md` | `validate/process.md`, `validate/workarounds.md` |
-| `meta/RELEASE.md` | `release/process.md`, `release/workarounds.md` |
-
-Meta L1 format:
-
-```markdown
-# [Phase] Meta
-
-## Process
-[Summary of process observations]
-
-meta/<phase>/process.md
-
-## Workarounds
-[Summary of known workarounds]
-
-meta/<phase>/workarounds.md
-```
-
 ## Phase 2: Rewrite CLAUDE.md
 
 ### Read Current CLAUDE.md
@@ -121,13 +91,6 @@ L1 summaries generated:
 - .beastmode/context/VALIDATE.md (N sections)
 - .beastmode/context/RELEASE.md (N sections)
 
-Meta L1 summaries generated:
-- .beastmode/meta/DESIGN.md
-- .beastmode/meta/PLAN.md
-- .beastmode/meta/IMPLEMENT.md
-- .beastmode/meta/VALIDATE.md
-- .beastmode/meta/RELEASE.md
-
 CLAUDE.md:
 - [Created | Rewritten] with @imports + N residual lines
 
@@ -139,7 +102,6 @@ Verify outputs:
 ```bash
 for f in DESIGN PLAN IMPLEMENT VALIDATE RELEASE; do
   test -s .beastmode/context/$f.md && echo "OK: context/$f.md" || echo "WARN: context/$f.md empty"
-  test -s .beastmode/meta/$f.md && echo "OK: meta/$f.md" || echo "WARN: meta/$f.md empty"
 done
 ```
 

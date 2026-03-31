@@ -22,4 +22,4 @@ Capture output and exit code.
 
 ## 4. Run Custom Gates
 
-Execute any custom gates defined in `.beastmode/meta/VALIDATE.md`.
+Execute any custom gates defined in `.beastmode/context/VALIDATE.md`.

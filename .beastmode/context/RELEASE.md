@@ -4,7 +4,6 @@
 - ALWAYS use squash merge for releases — one commit per version on main
 - ALWAYS archive feature branch tips as `archive/feature/<name>` before deletion
 - ALWAYS follow commit format: `Release vX.Y.Z — Title` with categorized sections
-- NEVER skip retro before the release commit
 
 ## Release Process
 - ALWAYS use merge-only — no rebase before merge
@@ -13,6 +12,10 @@
 - ALWAYS resolve version file and CHANGELOG conflicts with --ours (main) during squash merge
 - ALWAYS resolve code file conflicts with --theirs (feature branch) during squash merge
 - NEVER modify version files (plugin.json, marketplace.json, session-start.sh) or CHANGELOG.md in the worktree
+- NEVER skip retro before the release commit — retro output must be included in the squash merge
+- ALWAYS run retro inlined in the release skill — no shared orchestrator import
+- ALWAYS use context walker as the sole retro agent — meta walker removed
+- ALWAYS run retro with all phase artifacts (design, plan, implement, validate, release) in a single pass
 
 ## Changelog
 - ALWAYS include Highlights and Full Changelog sections in release artifacts

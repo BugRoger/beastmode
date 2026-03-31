@@ -1,3 +1,0 @@
-# Validate Workarounds
-
-- None recorded.

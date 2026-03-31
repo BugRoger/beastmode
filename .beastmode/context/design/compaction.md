@@ -3,7 +3,7 @@
 ## Value-Add Gate
 - Retro walkers ALWAYS check proposed L3 against its parent L2 before creation — must add rationale, constraints, provenance, or dissenting context
 - NEVER create L3 records that purely restate L2 — walker silently skips the proposal
-- Gate lives inside each retro walker (retro-context.md, retro-meta.md), not in the orchestrator — walkers already have L2 in memory during deep-check
+- Gate lives inside the context walker (retro-context.md), not in the orchestrator — walkers already have L2 in memory during deep-check
 - When an L3 fails the value-add check, the walker does nothing — no L2 enrichment, no record
 
 ## Compaction Agent
@@ -14,9 +14,8 @@
 - ALWAYS preserve `.gitkeep` in emptied L3 directories — structural invariant maintained
 
 ## Trigger and Scheduling
-- In release, compaction runs before retro — retro works against a clean baseline
-- Release trigger: every 5 releases, tracked via `.beastmode/state/.last-compaction` timestamp file — count `Release v*` commits since that date
-- `beastmode compact` CLI command dispatches compaction agent standalone — no worktree, always runs regardless of 5-release counter
+- `beastmode compact` CLI command dispatches compaction agent standalone — no worktree, runs on-demand only
+- Compaction is decoupled from the release pipeline — no automatic trigger
 
 ## Reporting
 - Compaction produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`

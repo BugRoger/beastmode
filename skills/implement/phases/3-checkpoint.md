@@ -42,11 +42,7 @@ status: completed
 
 Set `status` to `completed` if all tasks passed, `error` if any task is blocked.
 
-## 2. Phase Retro
-
-@../_shared/retro.md
-
-## 3. Commit and Handoff
+## 2. Commit and Handoff
 
 Commit all work to the feature branch:
 

@@ -8,7 +8,6 @@
 
 Read (if they exist):
 - `.beastmode/context/{PHASE}.md` (L1)
-- `.beastmode/meta/{PHASE}.md` (L1)
 
 ## 3. Check Research Trigger (Optional)
 

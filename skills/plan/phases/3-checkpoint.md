@@ -16,11 +16,7 @@ feature: <feature-slug>
 ---
 ```
 
-## 2. Phase Retro
-
-@../_shared/retro.md
-
-## 3. Commit and Handoff
+## 2. Commit and Handoff
 
 Commit all work to the feature branch:
 

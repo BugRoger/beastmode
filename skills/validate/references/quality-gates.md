@@ -12,7 +12,7 @@ Quality gates prevent broken code from reaching release. Each gate is a checkpoi
 
 ## Custom Gates
 
-Add custom gates in `.beastmode/meta/VALIDATE.md`:
+Add custom gates in `.beastmode/context/VALIDATE.md`:
 
 ```markdown
 ## Custom Gates

@@ -151,7 +151,6 @@ Agent:
     Focus on:
     1. Validating L2 files just written by init writers
     2. Processing any existing state/ artifacts
-    3. Populating meta/{phase}/process.md and meta/{phase}/workarounds.md
 ```
 
 Launch all 5 retro agents in parallel.
@@ -190,7 +189,6 @@ Confirm L1 files were generated:
 ```bash
 for f in DESIGN PLAN IMPLEMENT VALIDATE RELEASE; do
   test -s .beastmode/context/$f.md && echo "OK: context/$f.md" || echo "WARN: context/$f.md empty"
-  test -s .beastmode/meta/$f.md && echo "OK: meta/$f.md" || echo "WARN: meta/$f.md empty"
 done
 ```
 
@@ -207,11 +205,6 @@ Files created/updated:
 - .beastmode/context/IMPLEMENT.md
 - .beastmode/context/VALIDATE.md
 - .beastmode/context/RELEASE.md
-- .beastmode/meta/DESIGN.md
-- .beastmode/meta/PLAN.md
-- .beastmode/meta/IMPLEMENT.md
-- .beastmode/meta/VALIDATE.md
-- .beastmode/meta/RELEASE.md
 - .beastmode/context/design/product.md ({N} L3 records)
 - .beastmode/context/design/architecture.md ({N} L3 records)
 - .beastmode/context/design/tech-stack.md ({N} L3 records)

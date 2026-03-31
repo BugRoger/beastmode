@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-retro-consolidation-delete-dead-files.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Delete skills/_shared/retro.md", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Delete agents/retro-meta.md", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Verify retro-context.md untouched and no stale refs", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T16:01:00Z"
+}

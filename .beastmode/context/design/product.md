@@ -3,9 +3,9 @@
 ## Vision and Goals
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER store context outside `.beastmode/` — single source of truth across sessions
-- ALWAYS run retro at checkpoint — captures learnings that inform future sessions
+- ALWAYS run retro at release — captures full-cycle learnings that inform future sessions
 - Context persists across sessions via `.beastmode/` artifact storage — session continuity
-- Self-improvement through meta layer — knowledge compounds over time
+- Self-improvement through context hierarchy — knowledge compounds over time
 
 ## Core Capabilities
 - ALWAYS follow five-phase order: design -> plan -> implement -> validate -> release — invariant sequence
@@ -24,7 +24,7 @@
 - GitHub state externalization with Epic > Feature issue hierarchy, label-based state machines, and project board visibility — enables autonomous daemon operation and human observability
 - Pipeline orchestration via `beastmode watch` — TypeScript CLI watch loop drives epics through plan -> release with parallel SDK session dispatching, per-feature implement fan-out, pre-merge conflict simulation, and cost tracking
 - Optional cmux terminal multiplexer integration — live pipeline visibility with workspace-per-epic surface model, desktop notifications on errors/blocks, automatic cleanup on release, zero-regression fallback to SDK dispatch
-- Context tree compaction — retro value-add gate prevents redundant L3 creation at source, periodic compaction agent removes stale L3s, folds restatements, and detects cross-phase duplicates for L0 promotion; runs every 5 releases or on-demand via `beastmode compact`
+- Context tree compaction — retro value-add gate prevents redundant L3 creation at source, on-demand compaction agent removes stale L3s, folds restatements, and detects cross-phase duplicates for L0 promotion; runs via `beastmode compact`
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval
