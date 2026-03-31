@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "dispatch-wave-gating",
+        "status": "completed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-fullscreen-dashboard-dashboard-ui.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add ink and react dependencies", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Create dashboard command entry + CLI registration", "wave": 2, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Create Ink fullscreen app with header zone", "wave": 2, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Create EpicTable component", "wave": 3, "status": "completed"},
+    {"id": 4, "subject": "Task 4: Create ActivityLog component", "wave": 3, "status": "completed"},
+    {"id": 5, "subject": "Task 5: Wire WatchLoop into dashboard with event subscriptions", "wave": 4, "status": "completed"},
+    {"id": 6, "subject": "Task 6: Verify full integration — typecheck, test, manual review", "wave": 5, "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T20:15:00Z"
+}

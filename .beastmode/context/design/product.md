@@ -22,7 +22,8 @@
 - Deferred ideas capture — walks design docs at read time, LLM reconciliation against skill files, strikethrough marking for resolved ideas
 - Expanded init system with 5-phase flow (skeleton, inventory, write, retro, synthesize) and 17-domain detection — bootstraps full L2/L3/meta hierarchy in retro-compatible format
 - GitHub state externalization with Epic > Feature issue hierarchy, label-based state machines, and project board visibility — enables autonomous daemon operation and human observability
-- Pipeline orchestration via `beastmode watch` — TypeScript CLI watch loop drives epics through plan -> release with parallel SDK session dispatching, per-feature implement fan-out, pre-merge conflict simulation, and cost tracking
+- Pipeline orchestration via `beastmode watch` — TypeScript CLI watch loop drives epics through plan -> release with parallel SDK session dispatching, per-feature implement fan-out, pre-merge conflict simulation, and cost tracking; WatchLoop extends EventEmitter with typed events for subscriber-based consumption
+- Fullscreen TUI dashboard via `beastmode dashboard` — Ink v6 + React three-zone layout (header, epic table, activity log) with embedded watch loop, keyboard navigation (arrows, q, x, a), inline epic cancellation with session abort, alternate screen buffer, shared data module with `beastmode status`
 - Optional cmux terminal multiplexer integration — live pipeline visibility with workspace-per-epic surface model, desktop notifications on errors/blocks, automatic cleanup on release, zero-regression fallback to SDK dispatch
 - Context tree compaction — retro value-add gate prevents redundant L3 creation at source, on-demand compaction agent removes stale L3s, folds restatements, and detects cross-phase duplicates for L0 promotion; runs via `beastmode compact`
 

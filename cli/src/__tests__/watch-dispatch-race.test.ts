@@ -158,6 +158,7 @@ describe("watch dispatch race prevention", () => {
       { intervalSeconds: 9999, projectRoot: "/tmp/test" },
       deps,
     );
+    loop.on("error", () => {}); // Prevent ERR_UNHANDLED_ERROR from emitTyped
     loop.setRunning(true);
 
     // First tick: create fails, reservation should be cleared

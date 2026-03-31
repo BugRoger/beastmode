@@ -46,10 +46,64 @@ export interface WatchConfig {
   intervalSeconds: number;
   /** Project root path */
   projectRoot: string;
+  /** Install SIGINT/SIGTERM handlers (default: true for headless, false for embedded) */
+  installSignalHandlers?: boolean;
 }
 
 /** Lockfile state. */
 export interface LockfileInfo {
   pid: number;
   startedAt: string;
+}
+
+// --- WatchLoop event types ---
+
+/** Payload for 'session-started' event. */
+export interface SessionStartedEvent {
+  epicSlug: string;
+  featureSlug?: string;
+  phase: string;
+  sessionId: string;
+}
+
+/** Payload for 'session-completed' event. */
+export interface SessionCompletedEvent {
+  epicSlug: string;
+  featureSlug?: string;
+  phase: string;
+  success: boolean;
+  durationMs: number;
+  costUsd: number;
+}
+
+/** Payload for 'scan-complete' event. */
+export interface ScanCompleteEvent {
+  epicsScanned: number;
+  dispatched: number;
+}
+
+/** Payload for 'error' event. */
+export interface WatchErrorEvent {
+  epicSlug?: string;
+  message: string;
+}
+
+/** Payload for 'epic-cancelled' event. */
+export interface EpicCancelledEvent {
+  epicSlug: string;
+}
+
+/** Typed event map for WatchLoop. */
+export interface WatchLoopEventMap {
+  'session-started': [SessionStartedEvent];
+  'session-completed': [SessionCompletedEvent];
+  'scan-complete': [ScanCompleteEvent];
+  'error': [WatchErrorEvent];
+  'epic-cancelled': [EpicCancelledEvent];
+  /** Emitted when the loop starts. */
+  'started': [{ version: string; pid: number; intervalSeconds: number }];
+  /** Emitted when the loop stops. */
+  'stopped': [];
+  /** Emitted when an epic is blocked on a human gate. */
+  'epic-blocked': [{ epicSlug: string; gate: string; reason: string }];
 }

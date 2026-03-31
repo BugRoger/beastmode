@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.55.0 — Fullscreen Dashboard (Mar 2026)
+
+- **`beastmode dashboard` command** — Fullscreen terminal UI built with Ink v6.8.0 + React for monitoring and controlling the pipeline
+- **Three-zone layout** — Header bar with clock, scrollable epic table with progress bars and spinners, activity log with auto-scroll
+- **Embedded watch loop** — Dashboard IS the orchestrator; WatchLoop refactored to extend EventEmitter with typed events (`epic:start`, `epic:complete`, `epic:error`, `phase:start`, `phase:complete`, `scan`)
+- **Keyboard navigation** — q/Ctrl+C (quit), up/down arrows (row selection), x (cancel epic with inline y/n confirmation), a (toggle auto-scroll)
+- **Cancel epic action** — Triggers XState state machine CANCEL event AND aborts running sessions via DispatchTracker
+- **Shared data module** — Extracted `status-data.ts` with pure functions for sorting, filtering, snapshot building, and change detection; shared between `beastmode status` and `beastmode dashboard`
+- **Externalized signal handling** — Signal handlers moved out of WatchLoop; callers (watch command, dashboard) own SIGINT/SIGTERM and call `loop.stop()`
+
 ### v0.54.2 — Skill Cleanup (Mar 2026)
 
 - **Dead file removal** — Deleted `persona.md`, `0-prime-template.md`, `3-checkpoint-template.md` from `skills/_shared/`

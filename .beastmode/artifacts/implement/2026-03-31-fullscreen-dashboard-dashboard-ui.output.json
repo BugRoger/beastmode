@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "dashboard-ui",
+        "status": "completed"
+      }
+    ]
+  }
+}

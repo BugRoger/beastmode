@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "dashboard-ui",
+        "plan": "2026-03-31-fullscreen-dashboard-dashboard-ui.md"
+      },
+      {
+        "slug": "shared-data-extract",
+        "plan": "2026-03-31-fullscreen-dashboard-shared-data-extract.md"
+      },
+      {
+        "slug": "watchloop-events",
+        "plan": "2026-03-31-fullscreen-dashboard-watchloop-events.md"
+      },
+      {
+        "slug": "keyboard-nav",
+        "plan": "2026-03-31-fullscreen-dashboard-keyboard-nav.md"
+      }
+    ]
+  }
+}
