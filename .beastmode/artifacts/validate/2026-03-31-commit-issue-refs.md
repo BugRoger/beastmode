@@ -38,3 +38,4 @@ Skipped — not configured
 ### Notes
 - Worktree was missing `xstate` dependency (added to main after branch forked) — added to `package.json` to unblock tests
 - The `parseVerbosity` test rot is tracked separately from this feature
+- Re-validated 2026-03-31: all gates still green, 6/6 feature tests pass, 15/15 acceptance criteria confirmed
