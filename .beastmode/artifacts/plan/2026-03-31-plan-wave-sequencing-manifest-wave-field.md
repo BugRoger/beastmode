@@ -2,7 +2,7 @@
 phase: plan
 epic: plan-wave-sequencing
 feature: manifest-wave-field
-wave: 2
+wave: 1
 ---
 
 # Manifest Wave Field
@@ -16,18 +16,21 @@ wave: 2
 
 ## What to Build
 
-Extend the `ManifestFeature` type with a `wave: number` field that defaults to `1` for backwards compatibility. Existing manifests without wave fields behave exactly as today — all features in wave 1, all dispatched in parallel.
+Add `wave` as a first-class field on the manifest's feature schema and wire it through the existing frontmatter-to-manifest pipeline.
 
-The plan phase output.json already carries per-feature metadata. The `wave` field flows through the existing pipeline: plan skill stamps it in frontmatter, stop hook extracts it into output.json, and manifest enrichment reads it from the plan output and stores it on each `ManifestFeature`.
+**ManifestFeature type:** Add `wave: number` to the `ManifestFeature` interface in the manifest store. The field is optional at the type level but defaults to `1` at runtime — any feature without an explicit wave is treated as wave 1.
 
-The wave-filtering logic lives in `dispatchFanOut()` — the state machine stays unchanged. `dispatchFanOut()` finds the lowest wave number with any pending or in-progress features and only dispatches features from that wave. If any feature in wave N is blocked or incomplete, wave N+1 does not start. This is strict wave blocking — a stuck feature requires human intervention before later waves proceed.
+**Stop hook (generate-output):** The existing `scanPlanFeatures()` function reads feature plan frontmatter and builds the output.json feature array. Extend it to extract the `wave` field from each feature plan's YAML frontmatter and include it in the output entry. If `wave` is missing from frontmatter, default to `1`.
+
+**Manifest enrichment:** The `computeSetFeatures()` action in the pipeline machine converts output.json features into ManifestFeature objects. Extend it to carry the `wave` field through. The manifest-store serialization must include `wave` in the persisted JSON.
+
+**Backwards compatibility:** Existing manifests without `wave` fields on features must work unchanged. Any code that reads `feature.wave` should fall back to `1` if the field is undefined. No migration step — the default handles it.
 
 ## Acceptance Criteria
 
 - [ ] `ManifestFeature` type includes `wave: number` field
-- [ ] Manifests without `wave` field default to wave 1 (backwards compatible)
-- [ ] Plan output.json includes `wave` per feature in the features array
-- [ ] Manifest enrichment reads and stores wave from plan output
-- [ ] `dispatchFanOut()` only dispatches features from the current lowest incomplete wave
-- [ ] Blocked feature in wave N prevents wave N+1 features from dispatching
-- [ ] Existing single-wave plans work unchanged without migration
+- [ ] Stop hook extracts `wave` from feature plan frontmatter into output.json
+- [ ] Missing `wave` in frontmatter defaults to `1` in output.json
+- [ ] `computeSetFeatures()` carries `wave` from output.json to ManifestFeature
+- [ ] Persisted manifest JSON includes `wave` on each feature
+- [ ] Existing manifests without `wave` field load successfully with features defaulting to wave 1

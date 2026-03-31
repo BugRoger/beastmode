@@ -2,7 +2,7 @@
 phase: plan
 epic: plan-wave-sequencing
 feature: status-wave-display
-wave: 3
+wave: 2
 ---
 
 # Status Wave Display
@@ -15,17 +15,18 @@ wave: 3
 
 ## What to Build
 
-Extend the `beastmode status` command to surface wave progress. The default view adds a compact wave indicator to the existing table — something like `W1/3` meaning "currently on wave 1 of 3 total waves." The indicator reflects the current active wave (lowest wave with any incomplete features).
+Extend the `beastmode status` command to surface wave progress information from the manifest.
 
-Verbose mode (`--verbose`) expands to per-wave rows showing feature counts and statuses within each wave, giving a complete picture of the execution sequence.
+**Compact wave indicator (default view):** Add a wave progress column to the status table. For epics in the implement phase with multi-wave features, display a compact indicator like `W1/3` (meaning "currently on wave 1 of 3 total waves"). The current wave is the lowest wave number with any pending or in-progress features. Total waves is the highest wave number across all features. For single-wave epics (all features wave 1, or pre-wave manifests), omit the indicator or show nothing — no noise for backwards-compatible cases.
 
-For backwards compatibility, epics whose features have no wave data (or all wave 1) show no wave indicator — the display is unchanged for single-wave plans.
+**Verbose wave breakdown (`--verbose`):** When `--verbose` flag is passed, expand the features column into per-wave rows. Show each wave as a sub-row with feature count and per-wave status summary (e.g., "W1: 2/2 completed, W2: 0/2 pending"). Use the existing ANSI color system for status highlighting.
 
-The status command reads wave data from the manifest's `ManifestFeature.wave` field. No additional state files or caches are needed.
+**Wave-agnostic phases:** Only show wave information for epics in the implement phase (the only phase with fan-out dispatch). For design, plan, validate, and release phases, wave information is not actionable and should not be displayed.
 
 ## Acceptance Criteria
 
-- [ ] Default status view shows compact wave indicator (e.g., `W1/3`) for multi-wave epics
-- [ ] Verbose mode shows per-wave breakdown with feature counts and statuses
-- [ ] Epics without wave data or single-wave epics show no wave indicator
-- [ ] Wave indicator reflects the current active wave (lowest incomplete)
+- [ ] Default status table shows compact wave indicator (e.g., `W1/3`) for multi-wave implement-phase epics
+- [ ] Single-wave or pre-wave epics show no wave indicator (clean backwards compat)
+- [ ] `--verbose` mode shows per-wave feature counts and statuses
+- [ ] Wave indicator correctly identifies current wave as lowest incomplete wave
+- [ ] Only implement-phase epics display wave information
