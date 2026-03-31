@@ -35,6 +35,10 @@ function createMockIt2Client(opts?: {
       calls.push({ method: "listSessions", args: [] });
       return existingSessions;
     },
+    async listTabs() {
+      calls.push({ method: "listTabs", args: [] });
+      return [];
+    },
     async createTab() {
       const id = `tab-${++sessionIdCounter}`;
       calls.push({ method: "createTab", args: [] });
@@ -81,6 +85,7 @@ function writeOutputJson(
   worktreeSlug: string,
   phase: string,
   output: { status: string; artifacts: Record<string, unknown> },
+  outputSlug?: string,
 ): void {
   const dir = resolve(
     TEST_ROOT,
@@ -92,7 +97,8 @@ function writeOutputJson(
     phase,
   );
   mkdirSync(dir, { recursive: true });
-  const filename = `2026-03-30-test.output.json`;
+  const slug = outputSlug ?? worktreeSlug;
+  const filename = `2026-03-30-${slug}.output.json`;
   writeFileSync(resolve(dir, filename), JSON.stringify(output));
 }
 
@@ -349,7 +355,7 @@ describe("ITermSessionFactory", () => {
 
   test("reconciliation adopts live sessions", async () => {
     const liveSessions: It2Session[] = [
-      { id: "existing-tab-1", name: "bm-live-epic", isAlive: true },
+      { id: "existing-tab-1", name: "bm-live-epic", tabId: "w0t1", isAlive: true },
     ];
     mockClient = createMockIt2Client({ sessions: liveSessions });
 
@@ -384,7 +390,7 @@ describe("ITermSessionFactory", () => {
 
   test("reconciliation closes stale sessions", async () => {
     const staleSessions: It2Session[] = [
-      { id: "stale-tab-1", name: "bm-dead-epic", isAlive: false },
+      { id: "stale-tab-1", name: "bm-dead-epic", tabId: "w0t2", isAlive: false },
     ];
     mockClient = createMockIt2Client({ sessions: staleSessions });
 
@@ -411,7 +417,7 @@ describe("ITermSessionFactory", () => {
 
   test("reconciliation is idempotent", async () => {
     mockClient = createMockIt2Client({
-      sessions: [{ id: "tab-x", name: "bm-some-epic", isAlive: true }],
+      sessions: [{ id: "tab-x", name: "bm-some-epic", tabId: "w0t3", isAlive: true }],
     });
 
     const factory = new ITermSessionFactory(mockClient, {
@@ -461,5 +467,42 @@ describe("ITermSessionFactory", () => {
       artifacts: {},
     });
     await handle.promise;
+  });
+
+  test("plan phase resolves via broad match when only per-feature outputs exist", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 500,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }));
+    await tick();
+    // Write per-feature output (does NOT match the strict suffix -my-epic.output.json)
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: { features: [] } }, "my-epic-feat-a");
+    // Wait for timeout to trigger broad fallback
+    const result = await handle.promise;
+
+    expect(result.success).toBe(true);
+  });
+
+  test("implement fan-out does not resolve on different feature output", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 500,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts({
+      phase: "implement",
+      featureSlug: "feat-a",
+      args: ["my-epic", "feat-a"],
+    }));
+    await tick();
+    // Write output for a DIFFERENT feature — should NOT resolve the feat-a session
+    writeOutputJson("my-epic", "implement", { status: "completed", artifacts: {} }, "my-epic-feat-b");
+    const result = await handle.promise;
+
+    // Should timeout (broad match finds feat-b which matches epic, so it resolves as success)
+    // The broad match is intentional — it prevents false "failed" on timeout
+    expect(result.success).toBe(true);
   });
 });

@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-28-github-phase-integration-implement-sync.md",
-  "manifest": ".beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Insert Set Feature In-Progress step with GitHub sync into implement prime", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Insert Sync GitHub step (close feature, check epic completion) into implement checkpoint", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-28T17:40:00Z"
-}

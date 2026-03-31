@@ -137,10 +137,28 @@ export async function renameEpicSlug(
     completedSteps.push("worktree-dir");
 
     // Step 3: Fix worktree git metadata
+    //   a) Rename .git/worktrees/<hexSlug> -> .git/worktrees/<finalSlug>
+    //   b) Update the worktree's .git file to point to the new metadata dir
+    //   c) Update gitdir inside the metadata to point to the new worktree path
+    //   d) Run git worktree repair to fix any remaining cross-references
     console.log(`[rename] Step 3: Repairing worktree references`);
+    const gitDir = resolve(projectRoot, ".git", "worktrees", hexSlug);
+    const newGitDir = resolve(projectRoot, ".git", "worktrees", finalSlug);
+    if (existsSync(gitDir)) {
+      // 3a: Rename the metadata directory
+      renameSync(gitDir, newGitDir);
+      // 3b: Update .git file in the worktree to point to renamed metadata dir
+      const dotGitFile = resolve(realWorktree, ".git");
+      writeFileSync(dotGitFile, `gitdir: ${newGitDir}\n`);
+      // 3c: Update gitdir in metadata to point to the new worktree path
+      const gitdirPath = resolve(newGitDir, "gitdir");
+      if (existsSync(gitdirPath)) {
+        writeFileSync(gitdirPath, `${realWorktree}/.git\n`);
+      }
+    }
     await git(["worktree", "repair"], {
       cwd: projectRoot,
-      allowFailure: false,
+      allowFailure: true,
     });
     completedSteps.push("worktree-repair");
 

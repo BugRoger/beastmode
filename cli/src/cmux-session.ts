@@ -16,6 +16,7 @@ import type {
   SessionHandle,
 } from "./session.js";
 import type { SessionResult } from "./watch-types.js";
+import { filenameMatchesEpic } from "./phase-output.js";
 import * as worktree from "./worktree.js";
 
 /** Function that creates a worktree and returns its info. */
@@ -88,7 +89,7 @@ export class CmuxSessionFactory implements SessionFactory {
     this.cleanStaleOutputFiles(artifactDir);
 
     // Set up promise that resolves when output.json appears
-    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal, outputSuffix);
+    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal, outputSuffix, epicSlug);
 
     // Handle abort — close surface
     const onAbort = async () => {
@@ -149,6 +150,7 @@ export class CmuxSessionFactory implements SessionFactory {
     startTime: number,
     signal: AbortSignal,
     outputSuffix: string,
+    epicSlug: string,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
       // Check if an output.json already exists that is newer than dispatch time.
@@ -211,6 +213,12 @@ export class CmuxSessionFactory implements SessionFactory {
 
         const timeout = setTimeout(() => {
           clearInterval(pollInterval);
+          // Broad fallback: check for any epic-matching output (e.g. per-feature plan outputs)
+          const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
+          if (broadMatch) {
+            const result = this.readOutputJson(broadMatch, startTime);
+            if (result) { resolvePromise(result); return; }
+          }
           resolvePromise({
             success: false,
             exitCode: 1,
@@ -235,6 +243,12 @@ export class CmuxSessionFactory implements SessionFactory {
       // Safety timeout
       const timeout = setTimeout(() => {
         cleanup();
+        // Broad fallback: check for any epic-matching output (e.g. per-feature plan outputs)
+        const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
+        if (broadMatch) {
+          const result = this.readOutputJson(broadMatch, startTime);
+          if (result) { resolvePromise(result); return; }
+        }
         resolvePromise({
           success: false,
           exitCode: 1,
@@ -253,6 +267,28 @@ export class CmuxSessionFactory implements SessionFactory {
         { once: true },
       );
     });
+  }
+
+  /** Find an output.json matching the epic slug (broad match for timeout fallback). */
+  private findOutputJsonBroad(dir: string, epicSlug: string, newerThanMs?: number): string | null {
+    try {
+      const files = readdirSync(dir) as string[];
+      const candidates = files
+        .filter((f: string) => f.endsWith(".output.json") && filenameMatchesEpic(f, epicSlug))
+        .map((f: string) => resolve(dir, f))
+        .filter((fullPath: string) => {
+          if (newerThanMs === undefined) return true;
+          try {
+            return statSync(fullPath).mtimeMs >= newerThanMs;
+          } catch {
+            return false;
+          }
+        })
+        .sort();
+      return candidates.length > 0 ? candidates[candidates.length - 1] : null;
+    } catch {
+      return null;
+    }
   }
 
   /** Find an output.json file in the artifact directory matching the suffix. */

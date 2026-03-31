@@ -1,6 +1,7 @@
 {
   "status": "completed",
   "artifacts": {
-    "design": "/Users/D038720/Code/github.com/bugroger/beastmode/.claude/worktrees/design-assumptions-less-of-them-v2/.beastmode/artifacts/design/2026-03-30-design-assumptions-less-of-them-v2.md"
+    "design": "/Users/D038720/Code/github.com/bugroger/beastmode/.beastmode/artifacts/design/2026-03-30-design-assumptions-less-of-them-v2.md",
+    "slug": "design-assumptions-less-of-them-v2"
   }
 }

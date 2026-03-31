@@ -25,6 +25,7 @@ import type {
   SessionHandle,
 } from "./session.js";
 import type { SessionResult } from "./watch-types.js";
+import { filenameMatchesEpic } from "./phase-output.js";
 import * as worktree from "./worktree.js";
 
 /** Function that creates a worktree and returns its info. */
@@ -151,8 +152,13 @@ export class ITermSessionFactory implements SessionFactory {
     // Clean stale output.json files
     this.cleanStaleOutputFiles(artifactDir);
 
+    // Build the expected output.json suffix for this specific session.
+    const outputSuffix = featureSlug
+      ? `-${epicSlug}-${featureSlug}.output.json`
+      : `-${epicSlug}.output.json`;
+
     // Set up promise that resolves when output.json appears
-    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal);
+    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal, outputSuffix, epicSlug);
 
     // Handle abort — close pane
     const onAbort = async () => {
@@ -235,16 +241,18 @@ export class ITermSessionFactory implements SessionFactory {
   // Private methods — shared artifact-watching logic (from CmuxSessionFactory)
   // -------------------------------------------------------------------------
 
-  /** Watch for *.output.json files in the artifact directory. */
+  /** Watch for a specific output.json file in the artifact directory. */
   private watchForMarker(
     sessionId: string,
     artifactDir: string,
     startTime: number,
     signal: AbortSignal,
+    outputSuffix: string,
+    epicSlug: string,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
       // Check if an output.json already exists that is newer than dispatch time.
-      const existing = this.findOutputJson(artifactDir, startTime);
+      const existing = this.findOutputJson(artifactDir, startTime, outputSuffix);
       if (existing) {
         const result = this.readOutputJson(existing, startTime);
         if (result) {
@@ -265,7 +273,7 @@ export class ITermSessionFactory implements SessionFactory {
         mkdirSync(artifactDir, { recursive: true });
 
         watcher = watch(artifactDir, (_eventType, filename) => {
-          if (filename && filename.endsWith(".output.json")) {
+          if (filename && filename.endsWith(outputSuffix)) {
             const filePath = resolve(artifactDir, filename);
             try {
               if (statSync(filePath).mtimeMs < startTime) return;
@@ -283,7 +291,7 @@ export class ITermSessionFactory implements SessionFactory {
       } catch {
         // Fall back to polling
         const pollInterval = setInterval(() => {
-          const found = this.findOutputJson(artifactDir, startTime);
+          const found = this.findOutputJson(artifactDir, startTime, outputSuffix);
           if (found) {
             clearInterval(pollInterval);
             clearTimeout(timeout);
@@ -301,6 +309,12 @@ export class ITermSessionFactory implements SessionFactory {
 
         const timeout = setTimeout(() => {
           clearInterval(pollInterval);
+          // Broad fallback: check for any epic-matching output (e.g. per-feature plan outputs)
+          const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
+          if (broadMatch) {
+            const result = this.readOutputJson(broadMatch, startTime);
+            if (result) { resolvePromise(result); return; }
+          }
           resolvePromise({
             success: false,
             exitCode: 1,
@@ -325,6 +339,12 @@ export class ITermSessionFactory implements SessionFactory {
       // Safety timeout
       const timeout = setTimeout(() => {
         cleanup();
+        // Broad fallback: check for any epic-matching output (e.g. per-feature plan outputs)
+        const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
+        if (broadMatch) {
+          const result = this.readOutputJson(broadMatch, startTime);
+          if (result) { resolvePromise(result); return; }
+        }
         resolvePromise({
           success: false,
           exitCode: 1,
@@ -345,12 +365,35 @@ export class ITermSessionFactory implements SessionFactory {
     });
   }
 
-  /** Find an output.json file in the artifact directory, optionally filtering by mtime. */
-  private findOutputJson(dir: string, newerThanMs?: number): string | null {
+  /** Find an output.json matching the epic slug (broad match for timeout fallback). */
+  private findOutputJsonBroad(dir: string, epicSlug: string, newerThanMs?: number): string | null {
     try {
       const files = readdirSync(dir) as string[];
       const candidates = files
-        .filter((f: string) => f.endsWith(".output.json"))
+        .filter((f: string) => f.endsWith(".output.json") && filenameMatchesEpic(f, epicSlug))
+        .map((f: string) => resolve(dir, f))
+        .filter((fullPath: string) => {
+          if (newerThanMs === undefined) return true;
+          try {
+            return statSync(fullPath).mtimeMs >= newerThanMs;
+          } catch {
+            return false;
+          }
+        })
+        .sort();
+      return candidates.length > 0 ? candidates[candidates.length - 1] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Find an output.json file in the artifact directory matching the suffix. */
+  private findOutputJson(dir: string, newerThanMs?: number, suffix?: string): string | null {
+    try {
+      const files = readdirSync(dir) as string[];
+      const matchSuffix = suffix ?? ".output.json";
+      const candidates = files
+        .filter((f: string) => f.endsWith(matchSuffix))
         .map((f: string) => resolve(dir, f))
         .filter((fullPath: string) => {
           if (newerThanMs === undefined) return true;

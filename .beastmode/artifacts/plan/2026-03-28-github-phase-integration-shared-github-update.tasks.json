@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-28-github-phase-integration-shared-github-update.md",
-  "manifest": ".beastmode/state/plan/2026-03-28-github-phase-integration.manifest.json",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Drop status/review references from github.md", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Add error handling convention section and set-status-label operation", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-28T17:00:00Z"
-}

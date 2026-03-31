@@ -295,4 +295,17 @@ describe("CmuxSessionFactory", () => {
     writeOutputJson("my-epic", "implement", { status: "completed", artifacts: {} }, "my-epic-feat-a");
     await handle.promise;
   });
+
+  test("plan phase resolves via broad match when only per-feature outputs exist", async () => {
+    const factory = new CmuxSessionFactory(mockClient, { watchTimeoutMs: 500, createWorktree: mockCreateWorktree });
+
+    const handle = await factory.create(makeOpts({ phase: "plan", args: ["my-epic"] }));
+    await tick();
+    // Write per-feature output (does NOT match the strict suffix -my-epic.output.json)
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: { features: [] } }, "my-epic-feat-a");
+    // Wait for timeout to trigger broad fallback
+    const result = await handle.promise;
+
+    expect(result.success).toBe(true);
+  });
 });

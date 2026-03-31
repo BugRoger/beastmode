@@ -116,32 +116,20 @@ describe("It2Client", () => {
   describe("listSessions", () => {
     test("parses JSON output into It2Session array", async () => {
       const json = JSON.stringify([
-        { id: "sess-1", name: "Tab 1", isAlive: true },
-        { id: "sess-2", name: "Tab 2", isAlive: false },
+        { id: "sess-1", name: "Tab 1", tab_id: "w0t0" },
+        { id: "sess-2", name: "Tab 2", tab_id: "w0t1" },
       ]);
       const { client, calls } = clientOk(json);
 
       const result = await client.listSessions();
       expect(result).toEqual([
-        { id: "sess-1", name: "Tab 1", isAlive: true },
-        { id: "sess-2", name: "Tab 2", isAlive: false },
+        { id: "sess-1", name: "Tab 1", tabId: "w0t0", isAlive: true },
+        { id: "sess-2", name: "Tab 2", tabId: "w0t1", isAlive: true },
       ]);
       expect(calls[0].cmd.slice(1)).toEqual([
         "session",
         "list",
         "--json",
-      ]);
-    });
-
-    test("handles is_alive field (snake_case)", async () => {
-      const json = JSON.stringify([
-        { id: "sess-1", name: "Tab 1", is_alive: true },
-      ]);
-      const { client } = clientOk(json);
-
-      const result = await client.listSessions();
-      expect(result).toEqual([
-        { id: "sess-1", name: "Tab 1", isAlive: true },
       ]);
     });
 
@@ -172,12 +160,32 @@ describe("It2Client", () => {
   // -----------------------------------------------------------------------
 
   describe("createTab", () => {
-    test("returns session ID from stdout", async () => {
-      const { client, calls } = clientOk("new-session-123\n");
+    test("creates tab and returns session ID via before/after diff", async () => {
+      const beforeJson = JSON.stringify([
+        { id: "existing-1", name: "", tab_id: "w0t0" },
+      ]);
+      const afterJson = JSON.stringify([
+        { id: "existing-1", name: "", tab_id: "w0t0" },
+        { id: "new-session-123", name: "", tab_id: "w0t1" },
+      ]);
+
+      let callIndex = 0;
+      const calls: Array<{ cmd: string[]; opts: Record<string, string> }> = [];
+      const fn: SpawnFn = (cmd, opts) => {
+        calls.push({ cmd, opts });
+        const idx = callIndex++;
+        if (idx === 0) return mockProc(beforeJson, "", 0); // listSessions before
+        if (idx === 1) return mockProc("Created new tab: w0t1\n", "", 0); // tab new
+        return mockProc(afterJson, "", 0); // listSessions after
+      };
+      const client = new It2Client({ timeoutMs: 1000, spawn: fn });
 
       const result = await client.createTab();
       expect(result).toBe("new-session-123");
-      expect(calls[0].cmd.slice(1)).toEqual(["session", "new-tab"]);
+      expect(calls).toHaveLength(3);
+      expect(calls[0].cmd.slice(1)).toEqual(["session", "list", "--json"]);
+      expect(calls[1].cmd.slice(1)).toEqual(["tab", "new"]);
+      expect(calls[2].cmd.slice(1)).toEqual(["session", "list", "--json"]);
     });
   });
 
@@ -187,7 +195,7 @@ describe("It2Client", () => {
 
   describe("splitPane", () => {
     test("passes correct args with -v -s flags and returns session ID", async () => {
-      const { client, calls } = clientOk("new-pane-456\n");
+      const { client, calls } = clientOk("Created new pane: new-pane-456\n");
 
       const result = await client.splitPane("sess-1");
       expect(result).toBe("new-pane-456");
@@ -251,7 +259,7 @@ describe("It2Client", () => {
       await client.sendText("sess-1", "echo hello");
       expect(calls[0].cmd.slice(1)).toEqual([
         "session",
-        "send-text",
+        "run",
         "-s",
         "sess-1",
         "echo hello",
@@ -270,10 +278,10 @@ describe("It2Client", () => {
       await client.setBadge("sess-1", "Running");
       expect(calls[0].cmd.slice(1)).toEqual([
         "session",
-        "set-property",
+        "set-var",
         "-s",
         "sess-1",
-        "badge",
+        "user.badge",
         "Running",
       ]);
     });
@@ -290,10 +298,9 @@ describe("It2Client", () => {
       await client.setTabTitle("sess-1", "My Tab");
       expect(calls[0].cmd.slice(1)).toEqual([
         "session",
-        "set-property",
+        "set-name",
         "-s",
         "sess-1",
-        "name",
         "My Tab",
       ]);
     });
@@ -311,7 +318,7 @@ describe("It2Client", () => {
       expect(result).toBe("some-value");
       expect(calls[0].cmd.slice(1)).toEqual([
         "session",
-        "show-property",
+        "get-var",
         "-s",
         "sess-1",
         "badge",
@@ -327,38 +334,38 @@ describe("It2Client", () => {
     test("throws It2NotInstalledError on ENOENT", async () => {
       const { client } = clientThrows("ENOENT");
 
-      await expect(client.createTab()).rejects.toThrow(It2NotInstalledError);
+      await expect(client.splitPane("sess")).rejects.toThrow(It2NotInstalledError);
     });
 
     test("throws It2NotInstalledError when binary not found (no ENOENT code)", async () => {
       const { client } = clientThrows();
 
-      await expect(client.createTab()).rejects.toThrow(It2NotInstalledError);
+      await expect(client.splitPane("sess")).rejects.toThrow(It2NotInstalledError);
     });
 
     test("throws It2ConnectionError on connection refused", async () => {
       const { client } = clientFail("connection refused");
 
-      await expect(client.createTab()).rejects.toThrow(It2ConnectionError);
+      await expect(client.splitPane("sess")).rejects.toThrow(It2ConnectionError);
     });
 
     test("throws It2ConnectionError on not running", async () => {
       const { client } = clientFail("not running");
 
-      await expect(client.createTab()).rejects.toThrow(It2ConnectionError);
+      await expect(client.splitPane("sess")).rejects.toThrow(It2ConnectionError);
     });
 
     test("throws It2NotInstalledError on 'not installed' stderr", async () => {
       const { client } = clientFail("it2 not installed");
 
-      await expect(client.createTab()).rejects.toThrow(It2NotInstalledError);
+      await expect(client.splitPane("sess")).rejects.toThrow(It2NotInstalledError);
     });
 
     test("throws It2Error on non-zero exit with stderr details", async () => {
       const { client } = clientFail("unknown command");
 
       try {
-        await client.createTab();
+        await client.splitPane("sess");
         expect(true).toBe(false); // should not reach
       } catch (e) {
         expect(e).toBeInstanceOf(It2Error);
@@ -371,7 +378,7 @@ describe("It2Client", () => {
       const client = new It2Client({ timeoutMs: 1000, spawn: fn });
 
       try {
-        await client.createTab();
+        await client.splitPane("sess");
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(It2Error);
@@ -384,7 +391,7 @@ describe("It2Client", () => {
       const client = new It2Client({ timeoutMs: 1000, spawn: fn });
 
       try {
-        await client.createTab();
+        await client.splitPane("sess");
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(It2Error);

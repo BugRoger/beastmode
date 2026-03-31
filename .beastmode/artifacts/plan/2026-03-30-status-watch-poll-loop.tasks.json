@@ -1,8 +1,0 @@
-{
-  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-status-watch-poll-loop.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Add tests for watch-specific pure functions (formatWatchHeader, renderStatusScreen with meta)", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Verify --watch flag integration and SIGINT cleanup by code review", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-30T14:00:00Z"
-}

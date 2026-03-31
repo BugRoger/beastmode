@@ -1,9 +1,0 @@
-{
-  "featurePlan": ".beastmode/state/plan/2026-03-28-github-project-setup-setup-backfill.md",
-  "manifest": ".beastmode/state/plan/2026-03-28-github-project-setup.manifest.json",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Add backfill step to setup-github.md", "status": "completed", "wave": 1},
-    {"id": 1, "subject": "Task 1: Update cache read in backfill to use correct field key", "status": "completed", "wave": 1}
-  ],
-  "lastUpdated": "2026-03-28T19:05:00Z"
-}

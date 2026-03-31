@@ -1,9 +1,0 @@
-{
-  "planPath": ".beastmode/state/plan/2026-03-08-retro-quick-exit.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Remove Quick-Exit from retro.md", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Truncate release/1-execute.md at Step 8", "status": "completed"},
-    {"id": 2, "subject": "Task 2: Expand release/3-checkpoint.md with Retro + Merge + Ship", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-08T10:50:00Z"
-}

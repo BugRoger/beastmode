@@ -105,10 +105,15 @@ export function reconcileState(opts: {
     manifest = regressPhase(manifest, "implement" as Phase);
   }
 
-  // 6. Determine phase advancement
-  const nextPhase = shouldAdvance(manifest, output);
-  if (nextPhase) {
-    manifest = advancePhase(manifest, nextPhase);
+  // 6. Determine phase advancement — but only if the manifest is still on the
+  //    phase we were dispatched for. preReconcile (periodic tick) may have
+  //    already advanced it, and re-advancing with the stale output would
+  //    skip a phase (e.g. validate→release→done in one cycle).
+  if (manifest.phase === opts.phase) {
+    const nextPhase = shouldAdvance(manifest, output);
+    if (nextPhase) {
+      manifest = advancePhase(manifest, nextPhase);
+    }
   }
 
   // 7. Persist

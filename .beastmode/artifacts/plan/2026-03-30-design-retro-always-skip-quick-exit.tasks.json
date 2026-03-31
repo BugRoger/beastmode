@@ -1,8 +1,0 @@
-{
-  "featurePlan": ".beastmode/artifacts/plan/2026-03-30-design-retro-always-skip-quick-exit.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Add blockquote directive to design checkpoint", "status": "pending"},
-    {"id": 1, "subject": "Task 1: Verify other checkpoints are unmodified", "status": "pending"}
-  ],
-  "lastUpdated": "2026-03-30T00:00:00Z"
-}

@@ -1,8 +1,0 @@
-{
-  "planPath": ".beastmode/state/plan/2026-03-06-remove-context-state-md.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Delete CONTEXT.md", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Delete STATE.md", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-06T00:00:00Z"
-}

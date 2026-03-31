@@ -39,12 +39,16 @@ export class It2NotInstalledError extends It2Error {
 export interface It2Session {
   id: string;
   name: string;
+  tabId: string;
   isAlive: boolean;
 }
 
 export interface It2Tab {
   id: string;
-  sessions: It2Session[];
+  windowId: string;
+  index: number;
+  sessions: number;
+  isActive: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +58,7 @@ export interface It2Tab {
 export interface IIt2Client {
   ping(): Promise<boolean>;
   listSessions(): Promise<It2Session[]>;
+  listTabs(): Promise<It2Tab[]>;
   createTab(): Promise<string>;
   splitPane(sessionId: string): Promise<string>;
   closeSession(sessionId: string): Promise<void>;
@@ -136,7 +141,25 @@ export class It2Client implements IIt2Client {
       return parsed.map((s: Record<string, unknown>) => ({
         id: String(s.id ?? ""),
         name: String(s.name ?? ""),
-        isAlive: Boolean(s.isAlive ?? s.is_alive ?? true),
+        tabId: String(s.tab_id ?? ""),
+        isAlive: true, // sessions returned by list are alive
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  async listTabs(): Promise<It2Tab[]> {
+    try {
+      const stdout = await this.exec(["tab", "list", "--json"]);
+      const parsed = JSON.parse(stdout);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((t: Record<string, unknown>) => ({
+        id: String(t.id ?? ""),
+        windowId: String(t.window_id ?? ""),
+        index: Number(t.index ?? 0),
+        sessions: Number(t.sessions ?? 0),
+        isActive: Boolean(t.is_active ?? false),
       }));
     } catch {
       return [];
@@ -144,8 +167,32 @@ export class It2Client implements IIt2Client {
   }
 
   async createTab(): Promise<string> {
-    const stdout = await this.exec(["session", "new-tab"]);
-    return stdout.trim();
+    // Snapshot sessions before creating tab
+    const before = await this.listSessions();
+    const beforeIds = new Set(before.map((s) => s.id));
+
+    // Create the tab
+    const stdout = await this.exec(["tab", "new"]);
+
+    // Parse the tab ID from "Created new tab: {tabId}"
+    const match = stdout.match(/Created new tab:\s*(\S+)/);
+    const tabId = match?.[1];
+    if (!tabId) {
+      throw new It2Error(`Failed to parse tab ID from: ${stdout.trim()}`);
+    }
+
+    // Find the new session in this tab
+    const after = await this.listSessions();
+    const newSession = after.find(
+      (s) => s.tabId === tabId && !beforeIds.has(s.id),
+    );
+    if (!newSession) {
+      throw new It2Error(
+        `Created tab ${tabId} but could not find its session`,
+      );
+    }
+
+    return newSession.id;
   }
 
   async splitPane(sessionId: string): Promise<string> {
@@ -156,6 +203,9 @@ export class It2Client implements IIt2Client {
       "-s",
       sessionId,
     ]);
+    // Parse "Created new pane: {sessionId}"
+    const match = stdout.match(/Created new pane:\s*(\S+)/);
+    if (match) return match[1];
     return stdout.trim();
   }
 
@@ -170,29 +220,22 @@ export class It2Client implements IIt2Client {
   }
 
   async sendText(sessionId: string, text: string): Promise<void> {
-    await this.exec(["session", "send-text", "-s", sessionId, text]);
+    await this.exec(["session", "run", "-s", sessionId, text]);
   }
 
   async setBadge(sessionId: string, text: string): Promise<void> {
     await this.exec([
       "session",
-      "set-property",
+      "set-var",
       "-s",
       sessionId,
-      "badge",
+      "user.badge",
       text,
     ]);
   }
 
   async setTabTitle(sessionId: string, title: string): Promise<void> {
-    await this.exec([
-      "session",
-      "set-property",
-      "-s",
-      sessionId,
-      "name",
-      title,
-    ]);
+    await this.exec(["session", "set-name", "-s", sessionId, title]);
   }
 
   async getSessionProperty(
@@ -201,7 +244,7 @@ export class It2Client implements IIt2Client {
   ): Promise<string> {
     const stdout = await this.exec([
       "session",
-      "show-property",
+      "get-var",
       "-s",
       sessionId,
       property,

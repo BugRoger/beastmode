@@ -1,8 +1,0 @@
-{
-  "planPath": ".beastmode/state/plan/2026-03-06-banner-skill-preemption.md",
-  "tasks": [
-    {"id": 0, "subject": "Task 0: Add Session Banner Check to task-runner.md", "status": "completed"},
-    {"id": 1, "subject": "Task 1: Remove Prime Directive from BEASTMODE.md", "status": "completed"}
-  ],
-  "lastUpdated": "2026-03-06T20:50:00Z"
-}

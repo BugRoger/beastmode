@@ -96,20 +96,54 @@ describe("It2Client", () => {
   });
 
   describe("createTab", () => {
-    it("calls it2 session new-tab", async () => {
-      const spawn = mockSpawn({
-        exitCode: 0,
-        stdout: "session-id-abc123\n",
-      });
+    it("calls it2 tab new and resolves session ID from before/after diff", async () => {
+      const beforeJson = JSON.stringify([
+        { id: "existing-1", name: "", tab_id: "w0t0" },
+      ]);
+      const afterJson = JSON.stringify([
+        { id: "existing-1", name: "", tab_id: "w0t0" },
+        { id: "session-id-abc123", name: "", tab_id: "w0t1" },
+      ]);
+
+      let callIndex = 0;
+      const calls: string[][] = [];
+      const spawn = ((cmd: string[]) => {
+        calls.push(cmd);
+        const idx = callIndex++;
+        const result =
+          idx === 0
+            ? { stdout: beforeJson, exitCode: 0 }
+            : idx === 1
+              ? { stdout: "Created new tab: w0t1\n", exitCode: 0 }
+              : { stdout: afterJson, exitCode: 0 };
+
+        return {
+          stdout: new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode(result.stdout));
+              controller.close();
+            },
+          }),
+          stderr: new ReadableStream({
+            start(controller) {
+              controller.close();
+            },
+          }),
+          exited: Promise.resolve(result.exitCode),
+        };
+      }) as SpawnFn & { calls: string[][] };
+      spawn.calls = calls;
+
       const client = new It2Client({ spawn });
 
       const sessionId = await client.createTab();
 
       expect(sessionId).toBe("session-id-abc123");
-      expect(spawn.calls).toHaveLength(1);
-      const args = spawn.calls[0].slice(1);
-      expect(args).toContain("session");
-      expect(args).toContain("new-tab");
+      expect(calls).toHaveLength(3);
+      expect(calls[0].slice(1)).toContain("session");
+      expect(calls[1].slice(1)).toContain("tab");
+      expect(calls[1].slice(1)).toContain("new");
+      expect(calls[2].slice(1)).toContain("session");
     });
 
     it("throws It2NotInstalledError when binary is missing", async () => {
@@ -124,7 +158,7 @@ describe("It2Client", () => {
     it("calls it2 session split with -v and -s flags", async () => {
       const spawn = mockSpawn({
         exitCode: 0,
-        stdout: "new-session-id-xyz\n",
+        stdout: "Created new pane: new-session-id-xyz\n",
       });
       const client = new It2Client({ spawn });
 
@@ -210,7 +244,7 @@ describe("It2Client", () => {
   });
 
   describe("sendText", () => {
-    it("calls it2 session send-text with -s flag and text", async () => {
+    it("calls it2 session run with -s flag and text", async () => {
       const spawn = mockSpawn({ exitCode: 0, stdout: "" });
       const client = new It2Client({ spawn });
 
@@ -219,7 +253,7 @@ describe("It2Client", () => {
       expect(spawn.calls).toHaveLength(1);
       const args = spawn.calls[0].slice(1);
       expect(args).toContain("session");
-      expect(args).toContain("send-text");
+      expect(args).toContain("run");
       expect(args).toContain("-s");
       expect(args).toContain("session-abc");
       expect(args).toContain("echo hello");
@@ -227,7 +261,7 @@ describe("It2Client", () => {
   });
 
   describe("setBadge", () => {
-    it("calls it2 session set-property with badge", async () => {
+    it("calls it2 session set-var with user.badge", async () => {
       const spawn = mockSpawn({ exitCode: 0, stdout: "" });
       const client = new It2Client({ spawn });
 
@@ -236,16 +270,16 @@ describe("It2Client", () => {
       expect(spawn.calls).toHaveLength(1);
       const args = spawn.calls[0].slice(1);
       expect(args).toContain("session");
-      expect(args).toContain("set-property");
+      expect(args).toContain("set-var");
       expect(args).toContain("-s");
       expect(args).toContain("session-abc");
-      expect(args).toContain("badge");
+      expect(args).toContain("user.badge");
       expect(args).toContain("FAIL");
     });
   });
 
   describe("setTabTitle", () => {
-    it("calls it2 session set-property with name", async () => {
+    it("calls it2 session set-name", async () => {
       const spawn = mockSpawn({ exitCode: 0, stdout: "" });
       const client = new It2Client({ spawn });
 
@@ -254,10 +288,9 @@ describe("It2Client", () => {
       expect(spawn.calls).toHaveLength(1);
       const args = spawn.calls[0].slice(1);
       expect(args).toContain("session");
-      expect(args).toContain("set-property");
+      expect(args).toContain("set-name");
       expect(args).toContain("-s");
       expect(args).toContain("session-abc");
-      expect(args).toContain("name");
       expect(args).toContain("my-title");
     });
   });

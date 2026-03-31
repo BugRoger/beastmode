@@ -28,7 +28,7 @@ gates:
     version-confirmation: auto       # APPROVAL — version bump override
 
 cli:
-  dispatch-strategy: cmux            # sdk | cmux | auto
+  dispatch-strategy: iterm2            # sdk | cmux | auto
 
 github:
   enabled: true                     # Set to true by /beastmode setup-github
