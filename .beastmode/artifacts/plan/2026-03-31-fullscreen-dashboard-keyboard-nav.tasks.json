@@ -1,14 +1,14 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-03-31-fullscreen-dashboard-keyboard-nav.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: useKeyboardNav hook", "wave": 1, "status": "pending"},
-    {"id": 1, "subject": "Task 1: useCancelFlow hook", "wave": 1, "status": "pending"},
-    {"id": 2, "subject": "Task 2: useGracefulShutdown hook", "wave": 1, "status": "pending"},
-    {"id": 3, "subject": "Task 3: useToggleAll hook", "wave": 1, "status": "pending"},
-    {"id": 4, "subject": "Task 4: cancelEpicAction", "wave": 1, "status": "pending"},
-    {"id": 5, "subject": "Task 5: KeyboardController component", "wave": 2, "status": "pending"},
-    {"id": 6, "subject": "Task 6: Unit tests", "wave": 2, "status": "pending"},
-    {"id": 7, "subject": "Task 7: Verification", "wave": 3, "status": "pending"}
+    {"id": 0, "subject": "Task 0: useKeyboardNav hook", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: useCancelFlow hook", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: useGracefulShutdown hook", "wave": 1, "status": "completed"},
+    {"id": 3, "subject": "Task 3: useToggleAll hook", "wave": 1, "status": "completed"},
+    {"id": 4, "subject": "Task 4: cancelEpicAction", "wave": 1, "status": "completed"},
+    {"id": 5, "subject": "Task 5: KeyboardController component", "wave": 2, "status": "completed"},
+    {"id": 6, "subject": "Task 6: Unit tests", "wave": 2, "status": "completed"},
+    {"id": 7, "subject": "Task 7: Verification", "wave": 3, "status": "completed"}
   ],
-  "lastUpdated": "2026-03-31T00:00:00Z"
+  "lastUpdated": "2026-03-31T12:00:00Z"
 }

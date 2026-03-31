@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { createLogger } from "./logger.js";
 import type { Logger } from "./logger.js";
-import { WatchLoop } from "./watch.js";
+import { WatchLoop, attachLoggerSubscriber } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
 import type { SessionResult } from "./watch-types.js";
 import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
@@ -502,6 +502,8 @@ export async function watchCommand(_args: string[], verbosity: number = 0): Prom
     },
     deps,
   );
+
+  attachLoggerSubscriber(loop, logger);
 
   await loop.start();
 }

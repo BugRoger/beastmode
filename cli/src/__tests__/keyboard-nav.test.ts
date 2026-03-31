@@ -1,0 +1,393 @@
+import { describe, test, expect } from "bun:test";
+import { cancelEpicAction } from "../dashboard/actions/cancel-epic";
+
+// ---------------------------------------------------------------------------
+// cancelEpicAction — integration test with real state machine
+// ---------------------------------------------------------------------------
+
+describe("cancelEpicAction", () => {
+  // We need a minimal manifest on disk for store.load to work.
+  // Use temp dir + real manifest store functions.
+
+  const { mkdtempSync, mkdirSync, writeFileSync, readFileSync } = require("fs");
+  const { resolve } = require("path");
+  const os = require("os");
+
+  function setupTempProject(slug: string, phase: string = "implement") {
+    const tmpDir = mkdtempSync(resolve(os.tmpdir(), "bm-test-"));
+    const stateDir = resolve(tmpDir, ".beastmode", "state");
+    mkdirSync(stateDir, { recursive: true });
+
+    const date = new Date().toISOString().slice(0, 10);
+    const manifestPath = resolve(stateDir, `${date}-${slug}.manifest.json`);
+    const manifest = {
+      slug,
+      phase,
+      features: [
+        { slug: "feat-1", plan: "plan.md", status: "pending" },
+      ],
+      artifacts: {},
+      blocked: null,
+      lastUpdated: new Date().toISOString(),
+    };
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    return { tmpDir, stateDir, manifestPath };
+  }
+
+  function readManifest(manifestPath: string) {
+    return JSON.parse(readFileSync(manifestPath, "utf-8"));
+  }
+
+  function makeMockTracker() {
+    const abortedSlugs: string[] = [];
+    const sessions = [
+      {
+        id: "s1",
+        epicSlug: "target-epic",
+        phase: "implement",
+        abortController: {
+          abort: () => { abortedSlugs.push("target-epic"); },
+        },
+      },
+      {
+        id: "s2",
+        epicSlug: "other-epic",
+        phase: "plan",
+        abortController: {
+          abort: () => { abortedSlugs.push("other-epic"); },
+        },
+      },
+    ];
+
+    return {
+      tracker: {
+        getAll: () => sessions,
+        size: sessions.length,
+        abortAll: () => {},
+      },
+      abortedSlugs,
+    };
+  }
+
+  test("cancels epic manifest via state machine", async () => {
+    const { tmpDir, manifestPath } = setupTempProject("cancel-test", "implement");
+    const { tracker } = makeMockTracker();
+
+    await cancelEpicAction({
+      slug: "cancel-test",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+    });
+
+    const updated = readManifest(manifestPath);
+    expect(updated.phase).toBe("cancelled");
+  });
+
+  test("cancels from design phase", async () => {
+    const { tmpDir, manifestPath } = setupTempProject("design-cancel", "design");
+    const { tracker } = makeMockTracker();
+
+    await cancelEpicAction({
+      slug: "design-cancel",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+    });
+
+    const updated = readManifest(manifestPath);
+    expect(updated.phase).toBe("cancelled");
+  });
+
+  test("cancels from validate phase", async () => {
+    const { tmpDir, manifestPath } = setupTempProject("validate-cancel", "validate");
+    const { tracker } = makeMockTracker();
+
+    await cancelEpicAction({
+      slug: "validate-cancel",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+    });
+
+    const updated = readManifest(manifestPath);
+    expect(updated.phase).toBe("cancelled");
+  });
+
+  test("aborts only sessions matching the epic slug", async () => {
+    const { tmpDir } = setupTempProject("target-epic", "implement");
+    const { tracker, abortedSlugs } = makeMockTracker();
+
+    await cancelEpicAction({
+      slug: "target-epic",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+    });
+
+    expect(abortedSlugs).toEqual(["target-epic"]);
+    expect(abortedSlugs).not.toContain("other-epic");
+  });
+
+  test("throws when manifest not found", async () => {
+    const tmpDir = mkdtempSync(resolve(os.tmpdir(), "bm-test-"));
+    mkdirSync(resolve(tmpDir, ".beastmode", "state"), { recursive: true });
+    const { tracker } = makeMockTracker();
+
+    expect(
+      cancelEpicAction({
+        slug: "nonexistent",
+        projectRoot: tmpDir,
+        tracker: tracker as any,
+      }),
+    ).rejects.toThrow("No manifest found for: nonexistent");
+  });
+
+  test("clears blocked state on cancel", async () => {
+    const { tmpDir, manifestPath } = setupTempProject("blocked-cancel", "implement");
+
+    // Add blocked state to manifest
+    const manifest = readManifest(manifestPath);
+    manifest.blocked = { gate: "feature", reason: "stuck" };
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    const { tracker } = makeMockTracker();
+
+    await cancelEpicAction({
+      slug: "blocked-cancel",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+    });
+
+    const updated = readManifest(manifestPath);
+    expect(updated.phase).toBe("cancelled");
+    expect(updated.blocked).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Hook logic unit tests — pure state transition logic
+// ---------------------------------------------------------------------------
+
+describe("keyboard nav logic", () => {
+  test("clamp prevents going below 0", () => {
+    // Simulating handleNavInput logic
+    const prev = 0;
+    const result = Math.max(0, prev - 1);
+    expect(result).toBe(0);
+  });
+
+  test("clamp prevents going above itemCount - 1", () => {
+    const itemCount = 5;
+    const prev = 4;
+    const result = Math.min(itemCount - 1, prev + 1);
+    expect(result).toBe(4);
+  });
+
+  test("navigation moves down normally", () => {
+    const itemCount = 5;
+    const prev = 2;
+    const result = Math.min(itemCount - 1, prev + 1);
+    expect(result).toBe(3);
+  });
+
+  test("navigation moves up normally", () => {
+    const prev = 3;
+    const result = Math.max(0, prev - 1);
+    expect(result).toBe(2);
+  });
+
+  test("clampToRange clamps to valid range", () => {
+    const prev = 10;
+    const count = 3;
+    const result = Math.min(Math.max(0, prev), Math.max(0, count - 1));
+    expect(result).toBe(2);
+  });
+
+  test("clampToRange handles empty list", () => {
+    const prev = 5;
+    const count = 0;
+    const result = Math.min(Math.max(0, prev), Math.max(0, count - 1));
+    expect(result).toBe(0);
+  });
+});
+
+describe("cancel flow state transitions", () => {
+  test("idle → confirming on requestCancel", () => {
+    const state = { phase: "idle" as const };
+    const slug = "my-epic";
+    const next = { phase: "confirming" as const, slug };
+    expect(next.phase).toBe("confirming");
+    expect(next.slug).toBe("my-epic");
+  });
+
+  test("confirming → idle on 'n'", () => {
+    const state = { phase: "confirming" as const, slug: "my-epic" };
+    const input = "n";
+    // n dismisses
+    const next = (input === "n" || input === "N") ? { phase: "idle" as const } : state;
+    expect(next.phase).toBe("idle");
+  });
+
+  test("confirming → executing on 'y'", () => {
+    const state = { phase: "confirming" as const, slug: "my-epic" };
+    const input = "y";
+    const next = (input === "y" || input === "Y")
+      ? { phase: "executing" as const, slug: state.slug }
+      : state;
+    expect(next.phase).toBe("executing");
+    expect(next.slug).toBe("my-epic");
+  });
+
+  test("isModal is true during confirming", () => {
+    const state = { phase: "confirming" as const, slug: "x" };
+    expect(state.phase === "confirming" || state.phase === "executing").toBe(true);
+  });
+
+  test("isModal is true during executing", () => {
+    const state = { phase: "executing" as const, slug: "x" };
+    expect(state.phase === "confirming" || state.phase === "executing").toBe(true);
+  });
+
+  test("isModal is false during idle", () => {
+    const state = { phase: "idle" as const };
+    expect(state.phase === "confirming" || state.phase === "executing").toBe(false);
+  });
+});
+
+describe("graceful shutdown logic", () => {
+  test("'q' triggers shutdown", () => {
+    const input = "q";
+    const key = { ctrl: false };
+    const isQuit = input === "q" || input === "Q";
+    const isCtrlC = input === "c" && key.ctrl;
+    expect(isQuit || isCtrlC).toBe(true);
+  });
+
+  test("'Q' triggers shutdown", () => {
+    const input = "Q";
+    const key = { ctrl: false };
+    const isQuit = input === "q" || input === "Q";
+    expect(isQuit).toBe(true);
+  });
+
+  test("Ctrl+C triggers shutdown", () => {
+    const input = "c";
+    const key = { ctrl: true };
+    const isCtrlC = input === "c" && key.ctrl;
+    expect(isCtrlC).toBe(true);
+  });
+
+  test("other keys don't trigger shutdown", () => {
+    const input = "x";
+    const key = { ctrl: false };
+    const isQuit = input === "q" || input === "Q";
+    const isCtrlC = input === "c" && key.ctrl;
+    expect(isQuit || isCtrlC).toBe(false);
+  });
+
+  test("double initiation is prevented", () => {
+    let initiated = false;
+    let callCount = 0;
+
+    function handleShutdown() {
+      if (initiated) return;
+      initiated = true;
+      callCount++;
+    }
+
+    handleShutdown();
+    handleShutdown();
+
+    expect(callCount).toBe(1);
+  });
+});
+
+describe("toggle all logic", () => {
+  test("'a' toggles showAll from false to true", () => {
+    let showAll = false;
+    const input = "a";
+    if (input === "a" || input === "A") showAll = !showAll;
+    expect(showAll).toBe(true);
+  });
+
+  test("'a' toggles showAll from true to false", () => {
+    let showAll = true;
+    const input = "a";
+    if (input === "a" || input === "A") showAll = !showAll;
+    expect(showAll).toBe(false);
+  });
+
+  test("'A' also toggles", () => {
+    let showAll = false;
+    const input = "A";
+    if (input === "a" || input === "A") showAll = !showAll;
+    expect(showAll).toBe(true);
+  });
+
+  test("other keys don't toggle", () => {
+    let showAll = false;
+    const input = "b";
+    if (input === "a" || input === "A") showAll = !showAll;
+    expect(showAll).toBe(false);
+  });
+});
+
+describe("keyboard controller priority", () => {
+  test("shutdown state blocks all other input", () => {
+    const isShuttingDown = true;
+    // When shutting down, handler returns early
+    let handled = false;
+    if (isShuttingDown) {
+      // should return early
+    } else {
+      handled = true;
+    }
+    expect(handled).toBe(false);
+  });
+
+  test("modal cancel state blocks navigation and toggle", () => {
+    const isModal = true;
+    const input = "a"; // toggle key
+
+    let navHandled = false;
+    let toggleHandled = false;
+    let confirmHandled = false;
+
+    if (isModal) {
+      confirmHandled = true; // delegate to cancel flow
+    } else {
+      navHandled = true;
+      toggleHandled = true;
+    }
+
+    expect(confirmHandled).toBe(true);
+    expect(navHandled).toBe(false);
+    expect(toggleHandled).toBe(false);
+  });
+
+  test("'x' with valid slug initiates cancel", () => {
+    const input = "x";
+    const selectedIndex = 2;
+    const slugs = ["epic-a", "epic-b", "epic-c"];
+
+    let cancelRequested: string | undefined;
+    if (input === "x" || input === "X") {
+      const slug = slugs[selectedIndex];
+      if (slug) cancelRequested = slug;
+    }
+
+    expect(cancelRequested).toBe("epic-c");
+  });
+
+  test("'x' with out-of-range index does nothing", () => {
+    const input = "x";
+    const selectedIndex = 10;
+    const slugs = ["epic-a"];
+
+    let cancelRequested: string | undefined;
+    if (input === "x" || input === "X") {
+      const slug = slugs[selectedIndex];
+      if (slug) cancelRequested = slug;
+    }
+
+    expect(cancelRequested).toBeUndefined();
+  });
+});

@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
-import { Box, Text, useApp, useInput } from "ink";
+import { useState, useEffect, useCallback } from "react";
+import { Box, Text, useApp } from "ink";
 import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedManifest } from "../state-scanner.js";
+import EpicTable from "./EpicTable.js";
+import ActivityLog from "./ActivityLog.js";
+import { useKeyboardController } from "./hooks/index.js";
 
 /** Activity log event for the dashboard. */
 export interface DashboardEvent {
@@ -25,8 +28,8 @@ function formatClock(): string {
 export default function App(_props: AppProps) {
   const { exit } = useApp();
   const [clock, setClock] = useState(formatClock());
-  const [_epics, _setEpics] = useState<EnrichedManifest[]>([]);
-  const [_events, _setEvents] = useState<DashboardEvent[]>([]);
+  const [epics, _setEpics] = useState<EnrichedManifest[]>([]);
+  const [events, _setEvents] = useState<DashboardEvent[]>([]);
   const [watchRunning, _setWatchRunning] = useState(false);
 
   // Clock tick every 1s
@@ -35,12 +38,47 @@ export default function App(_props: AppProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Quit on 'q'
-  useInput((input, key) => {
-    if (input === "q" || (key.ctrl && input === "c")) {
-      exit();
-    }
+  // Compute visible epic list (filtering done/cancelled based on toggle)
+  const visibleEpics = epics;
+
+  // Resolve slug at a given row index in the visible (sorted/filtered) list
+  const slugAtIndex = useCallback(
+    (index: number): string | undefined => {
+      return visibleEpics[index]?.slug;
+    },
+    [visibleEpics],
+  );
+
+  const handleCancelEpic = useCallback(async (_slug: string) => {
+    // Will be wired to cancelEpicAction when WatchLoop integration lands
+  }, []);
+
+  const handleShutdown = useCallback(async () => {
+    // Graceful shutdown — will call loop.stop() when WatchLoop integration lands
+    exit();
+  }, [exit]);
+
+  const keyboard = useKeyboardController({
+    itemCount: visibleEpics.length,
+    onCancelEpic: handleCancelEpic,
+    onShutdown: handleShutdown,
+    slugAtIndex,
   });
+
+  // Filter based on toggle state
+  const filteredEpics = keyboard.toggleAll.showAll
+    ? visibleEpics
+    : visibleEpics.filter((e) => e.phase !== "done" && e.phase !== "cancelled");
+
+  // Clamp selection when filtered list changes
+  useEffect(() => {
+    keyboard.nav.clampToRange(filteredEpics.length);
+  }, [filteredEpics.length]);
+
+  const cancelConfirmingSlug =
+    keyboard.cancelFlow.state.phase === "confirming"
+      ? keyboard.cancelFlow.state.slug
+      : undefined;
 
   return (
     <Box flexDirection="column" width="100%">
@@ -59,9 +97,14 @@ export default function App(_props: AppProps) {
         <Text dimColor>{"─".repeat(78)}</Text>
       </Box>
 
-      {/* Epic table zone — placeholder until Task 3 */}
+      {/* Epic table zone */}
       <Box flexDirection="column" flexGrow={1} paddingX={1}>
-        <Text dimColor>Loading epics...</Text>
+        <EpicTable
+          epics={filteredEpics}
+          activeSessions={new Set()}
+          selectedIndex={keyboard.nav.selectedIndex}
+          cancelConfirmingSlug={cancelConfirmingSlug}
+        />
       </Box>
 
       {/* Separator */}
@@ -69,14 +112,20 @@ export default function App(_props: AppProps) {
         <Text dimColor>{"─".repeat(78)}</Text>
       </Box>
 
-      {/* Activity log zone — placeholder until Task 4 */}
+      {/* Activity log zone */}
       <Box flexDirection="column" paddingX={1}>
-        <Text dimColor>No activity yet.</Text>
+        <ActivityLog events={events} />
       </Box>
 
       {/* Footer */}
       <Box paddingX={1}>
-        <Text dimColor>q quit</Text>
+        {keyboard.shutdown.isShuttingDown ? (
+          <Text color="yellow">shutting down...</Text>
+        ) : (
+          <Text dimColor>
+            q quit  ↑↓ navigate  x cancel  a {keyboard.toggleAll.showAll ? "hide" : "show"} all
+          </Text>
+        )}
       </Box>
     </Box>
   );

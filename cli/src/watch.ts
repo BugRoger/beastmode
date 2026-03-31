@@ -88,7 +88,6 @@ export class WatchLoop extends EventEmitter {
 
     this.running = true;
     const version = resolveVersion(this.config.projectRoot);
-    this.logger.log(`Started ${version} (PID ${process.pid}, poll every ${this.config.intervalSeconds}s)`);
     this.emitTyped('started', { version, pid: process.pid, intervalSeconds: this.config.intervalSeconds });
 
     if (this.config.installSignalHandlers !== false) {
@@ -123,7 +122,6 @@ export class WatchLoop extends EventEmitter {
     }
 
     releaseLock(this.config.projectRoot);
-    this.logger.log("Stopped.");
     this.emitTyped('stopped');
   }
 
@@ -164,12 +162,6 @@ export class WatchLoop extends EventEmitter {
   private async processEpic(epic: EnrichedManifest): Promise<number> {
     // Skip epics blocked on human gates
     if (epic.blocked) {
-      this.logger.log(
-        `${epic.slug}: paused — human gate requires manual intervention`,
-      );
-      this.logger.detail(
-        `  Run: beastmode ${epic.phase} ${epic.slug}`,
-      );
       this.emitTyped('epic-blocked', { epicSlug: epic.slug, gate: epic.blocked.gate, reason: epic.blocked.reason });
       return 0;
     }
@@ -201,10 +193,6 @@ export class WatchLoop extends EventEmitter {
 
     const abortController = new AbortController();
 
-    this.logger.log(
-      `${epic.slug}: dispatching ${action.phase} ${action.args.join(" ")}`,
-    );
-
     try {
       const handle = await this.deps.sessionFactory.create({
         epicSlug: epic.slug,
@@ -230,9 +218,6 @@ export class WatchLoop extends EventEmitter {
       return 1;
     } catch (err) {
       this.tracker.unreserve(epic.slug, action.phase);
-      this.logger.error(
-        `${epic.slug}: failed to dispatch ${action.phase}: ${err}`,
-      );
       this.emitTyped('error', { epicSlug: epic.slug, message: `Failed to dispatch ${action.phase}: ${err}` });
       return 0;
     }
@@ -284,7 +269,6 @@ export class WatchLoop extends EventEmitter {
       });
 
       if (validFeatures.length === 0 && features.length > 0) {
-        this.logger.error(`${epic.slug}: BLOCKED — all ${features.length} features failed provenance check`);
         this.emitTyped('error', { epicSlug: epic.slug, message: `BLOCKED — all ${features.length} features failed provenance check` });
         return 0;
       }
@@ -303,10 +287,6 @@ export class WatchLoop extends EventEmitter {
       this.tracker.reserve(epic.slug, "implement", featureSlug);
 
       const abortController = new AbortController();
-
-      this.logger.log(
-        `${epic.slug}: dispatching implement ${epic.slug} ${featureSlug}`,
-      );
 
       try {
         const handle = await this.deps.sessionFactory.create({
@@ -335,9 +315,6 @@ export class WatchLoop extends EventEmitter {
         count++;
       } catch (err) {
         this.tracker.unreserve(epic.slug, "implement", featureSlug);
-        this.logger.error(
-          `${epic.slug}: failed to dispatch implement for ${featureSlug}: ${err}`,
-        );
         this.emitTyped('error', { epicSlug: epic.slug, message: `Failed to dispatch implement for ${featureSlug}: ${err}` });
       }
     }
@@ -354,16 +331,6 @@ export class WatchLoop extends EventEmitter {
       .then(async (result) => {
         this.tracker.remove(session.id);
 
-        const featureLabel = session.featureSlug
-          ? ` (${session.featureSlug})`
-          : "";
-        const status = result.success ? "completed" : "failed";
-        const progressLabel = result.progress
-          ? ` [${result.progress.completed}/${result.progress.total}]`
-          : "";
-        this.logger.log(
-          `${session.epicSlug}: ${session.phase}${featureLabel} ${status}${progressLabel} ($${result.costUsd.toFixed(2)}, ${(result.durationMs / 1000).toFixed(0)}s)`,
-        );
         this.emitTyped('session-completed', {
           epicSlug: session.epicSlug,
           featureSlug: session.featureSlug,
@@ -394,9 +361,6 @@ export class WatchLoop extends EventEmitter {
       .catch((err) => {
         this.tracker.remove(session.id);
         if (err?.name !== "AbortError") {
-          this.logger.error(
-            `${session.epicSlug}: session error: ${err}`,
-          );
           this.emitTyped('error', { epicSlug: session.epicSlug, message: `Session error: ${err}` });
         }
       });
@@ -435,4 +399,44 @@ export class WatchLoop extends EventEmitter {
     process.on("SIGINT", handler);
     process.on("SIGTERM", handler);
   }
+}
+
+/**
+ * Attach a logger subscriber that reproduces the original log output
+ * from WatchLoop events. Used by `beastmode watch` for headless logging.
+ */
+export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
+  loop.on('started', ({ version, pid, intervalSeconds }) => {
+    logger.log(`Started ${version} (PID ${pid}, poll every ${intervalSeconds}s)`);
+  });
+
+  loop.on('stopped', () => {
+    logger.log('Stopped.');
+  });
+
+  loop.on('session-started', ({ epicSlug, featureSlug, phase }) => {
+    if (featureSlug) {
+      logger.log(`${epicSlug}: dispatching implement ${epicSlug} ${featureSlug}`);
+    } else {
+      logger.log(`${epicSlug}: dispatching ${phase}`);
+    }
+  });
+
+  loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs, costUsd }) => {
+    const featureLabel = featureSlug ? ` (${featureSlug})` : '';
+    const status = success ? 'completed' : 'failed';
+    logger.log(
+      `${epicSlug}: ${phase}${featureLabel} ${status} ($${costUsd.toFixed(2)}, ${(durationMs / 1000).toFixed(0)}s)`,
+    );
+  });
+
+  loop.on('error', ({ epicSlug, message }) => {
+    const prefix = epicSlug ? `${epicSlug}: ` : '';
+    logger.error(`${prefix}${message}`);
+  });
+
+  loop.on('epic-blocked', ({ epicSlug, gate }) => {
+    logger.log(`${epicSlug}: paused — human gate requires manual intervention`);
+    logger.detail(`  Run: beastmode ${gate} ${epicSlug}`);
+  });
 }

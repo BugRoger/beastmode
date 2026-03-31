@@ -42,13 +42,11 @@ export async function cancelEpicAction(opts: CancelEpicOpts): Promise<void> {
   // Step 2: Cancel via state machine
   let actor: ReturnType<typeof createEpicActor>;
   const persistAction = ({ context }: { context: EpicContext }) => {
-    const snapshot = actor.getSnapshot();
-    const phase = (
-      typeof snapshot.value === "string" ? snapshot.value : "cancelled"
-    ) as Phase;
+    // During transition actions, the snapshot still shows the source state.
+    // Since we only send CANCEL, the target is always "cancelled".
     store.save(projectRoot, slug, {
       ...context,
-      phase,
+      phase: "cancelled" as Phase,
     } as unknown as PipelineManifest);
   };
 
