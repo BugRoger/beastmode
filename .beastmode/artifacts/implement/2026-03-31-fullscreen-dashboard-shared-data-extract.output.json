@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "shared-data-extract",
+        "status": "completed"
+      }
+    ]
+  }
+}

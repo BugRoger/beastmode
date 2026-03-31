@@ -76,6 +76,15 @@ describe("WatchLoop event emission", () => {
 
     const deps = makeDeps({
       scanEpics: async () => [epicWithAction, epicWithoutAction],
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-${Date.now()}`,
+            worktreeSlug: opts.epicSlug,
+            promise: new Promise(() => {}), // Never resolves — avoids rescan loop
+          };
+        },
+      },
     });
 
     const loop = new WatchLoop(makeConfig(), deps);
@@ -96,6 +105,15 @@ describe("WatchLoop event emission", () => {
 
     const deps = makeDeps({
       scanEpics: async () => [epic],
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-started-test`,
+            worktreeSlug: opts.epicSlug,
+            promise: new Promise(() => {}), // Never resolves — avoids rescan loop
+          };
+        },
+      },
     });
 
     const loop = new WatchLoop(makeConfig(), deps);
@@ -116,8 +134,14 @@ describe("WatchLoop event emission", () => {
   test("session completion emits session-completed", async () => {
     const epic = makeEpic();
 
+    let scanCount = 0;
     const deps = makeDeps({
-      scanEpics: async () => [epic],
+      scanEpics: async () => {
+        scanCount++;
+        // Return epic only on first scan; rescan after completion returns empty
+        // to prevent infinite dispatch loop.
+        return scanCount === 1 ? [epic] : [];
+      },
       sessionFactory: {
         async create(opts: SessionCreateOpts): Promise<SessionHandle> {
           return {
@@ -151,7 +175,7 @@ describe("WatchLoop event emission", () => {
     // Wait for the watchSession promise chain to resolve
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(events.length).toBeGreaterThanOrEqual(1);
+    expect(events.length).toBe(1);
     expect(events[0].epicSlug).toBe("test-epic");
     expect(events[0].phase).toBe("design");
     expect(events[0].success).toBe(true);

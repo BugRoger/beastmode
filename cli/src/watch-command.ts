@@ -190,7 +190,7 @@ function readProgress(
  * and release teardown. Both SDK and cmux paths get identical post-dispatch
  * behavior without duplicating the logic.
  */
-class ReconcilingFactory implements SessionFactory {
+export class ReconcilingFactory implements SessionFactory {
   private inner: SessionFactory;
   private projectRoot: string;
   private logger: Logger;
@@ -265,7 +265,7 @@ class ReconcilingFactory implements SessionFactory {
 }
 
 /** Dispatch a phase using the Claude Agent SDK. */
-async function dispatchPhase(opts: {
+export async function dispatchPhase(opts: {
   epicSlug: string;
   phase: string;
   args: string[];

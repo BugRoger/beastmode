@@ -211,50 +211,48 @@ describe("keyboard nav logic", () => {
 
 describe("cancel flow state transitions", () => {
   test("idle → confirming on requestCancel", () => {
-    const state = { phase: "idle" as const };
     const slug = "my-epic";
-    const next = { phase: "confirming" as const, slug };
+    const next = { phase: "confirming", slug };
     expect(next.phase).toBe("confirming");
     expect(next.slug).toBe("my-epic");
   });
 
   test("confirming → idle on 'n'", () => {
-    const state = { phase: "confirming" as const, slug: "my-epic" };
-    const input = "n";
-    // n dismisses
-    const next = (input === "n" || input === "N") ? { phase: "idle" as const } : state;
+    const state: { phase: string; slug?: string } = { phase: "confirming", slug: "my-epic" };
+    const input: string = "n";
+    const next = (input === "n" || input === "N") ? { phase: "idle" } : state;
     expect(next.phase).toBe("idle");
   });
 
   test("confirming → executing on 'y'", () => {
-    const state = { phase: "confirming" as const, slug: "my-epic" };
-    const input = "y";
+    const state: { phase: string; slug: string } = { phase: "confirming", slug: "my-epic" };
+    const input: string = "y";
     const next = (input === "y" || input === "Y")
-      ? { phase: "executing" as const, slug: state.slug }
+      ? { phase: "executing", slug: state.slug }
       : state;
     expect(next.phase).toBe("executing");
     expect(next.slug).toBe("my-epic");
   });
 
   test("isModal is true during confirming", () => {
-    const state = { phase: "confirming" as const, slug: "x" };
-    expect(state.phase === "confirming" || state.phase === "executing").toBe(true);
+    const phase: string = "confirming";
+    expect(phase === "confirming" || phase === "executing").toBe(true);
   });
 
   test("isModal is true during executing", () => {
-    const state = { phase: "executing" as const, slug: "x" };
-    expect(state.phase === "confirming" || state.phase === "executing").toBe(true);
+    const phase: string = "executing";
+    expect(phase === "confirming" || phase === "executing").toBe(true);
   });
 
   test("isModal is false during idle", () => {
-    const state = { phase: "idle" as const };
-    expect(state.phase === "confirming" || state.phase === "executing").toBe(false);
+    const phase: string = "idle";
+    expect(phase === "confirming" || phase === "executing").toBe(false);
   });
 });
 
 describe("graceful shutdown logic", () => {
   test("'q' triggers shutdown", () => {
-    const input = "q";
+    const input: string = "q";
     const key = { ctrl: false };
     const isQuit = input === "q" || input === "Q";
     const isCtrlC = input === "c" && key.ctrl;
@@ -262,21 +260,20 @@ describe("graceful shutdown logic", () => {
   });
 
   test("'Q' triggers shutdown", () => {
-    const input = "Q";
-    const key = { ctrl: false };
+    const input: string = "Q";
     const isQuit = input === "q" || input === "Q";
     expect(isQuit).toBe(true);
   });
 
   test("Ctrl+C triggers shutdown", () => {
-    const input = "c";
+    const input: string = "c";
     const key = { ctrl: true };
     const isCtrlC = input === "c" && key.ctrl;
     expect(isCtrlC).toBe(true);
   });
 
   test("other keys don't trigger shutdown", () => {
-    const input = "x";
+    const input: string = "x";
     const key = { ctrl: false };
     const isQuit = input === "q" || input === "Q";
     const isCtrlC = input === "c" && key.ctrl;
@@ -303,28 +300,28 @@ describe("graceful shutdown logic", () => {
 describe("toggle all logic", () => {
   test("'a' toggles showAll from false to true", () => {
     let showAll = false;
-    const input = "a";
+    const input: string = "a";
     if (input === "a" || input === "A") showAll = !showAll;
     expect(showAll).toBe(true);
   });
 
   test("'a' toggles showAll from true to false", () => {
     let showAll = true;
-    const input = "a";
+    const input: string = "a";
     if (input === "a" || input === "A") showAll = !showAll;
     expect(showAll).toBe(false);
   });
 
   test("'A' also toggles", () => {
     let showAll = false;
-    const input = "A";
+    const input: string = "A";
     if (input === "a" || input === "A") showAll = !showAll;
     expect(showAll).toBe(true);
   });
 
   test("other keys don't toggle", () => {
     let showAll = false;
-    const input = "b";
+    const input: string = "b";
     if (input === "a" || input === "A") showAll = !showAll;
     expect(showAll).toBe(false);
   });
@@ -333,7 +330,6 @@ describe("toggle all logic", () => {
 describe("keyboard controller priority", () => {
   test("shutdown state blocks all other input", () => {
     const isShuttingDown = true;
-    // When shutting down, handler returns early
     let handled = false;
     if (isShuttingDown) {
       // should return early
@@ -345,14 +341,13 @@ describe("keyboard controller priority", () => {
 
   test("modal cancel state blocks navigation and toggle", () => {
     const isModal = true;
-    const input = "a"; // toggle key
 
     let navHandled = false;
     let toggleHandled = false;
     let confirmHandled = false;
 
     if (isModal) {
-      confirmHandled = true; // delegate to cancel flow
+      confirmHandled = true;
     } else {
       navHandled = true;
       toggleHandled = true;
@@ -364,7 +359,7 @@ describe("keyboard controller priority", () => {
   });
 
   test("'x' with valid slug initiates cancel", () => {
-    const input = "x";
+    const input: string = "x";
     const selectedIndex = 2;
     const slugs = ["epic-a", "epic-b", "epic-c"];
 
@@ -378,7 +373,7 @@ describe("keyboard controller priority", () => {
   });
 
   test("'x' with out-of-range index does nothing", () => {
-    const input = "x";
+    const input: string = "x";
     const selectedIndex = 10;
     const slugs = ["epic-a"];
 
