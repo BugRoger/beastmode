@@ -167,3 +167,15 @@ Output domains that serve different purposes should not cross-reference each oth
 state/design/2026-03-08-phase-end-guidance.md
 ### Confidence
 [LOW] — underlying principle preserved, original referent (context report) removed
+
+## Observation 15
+### Context
+During github-sync-watch-loop design, 2026-03-31
+### Observation
+DESIGN.md line 67 already contained the locked decision "ALWAYS sync GitHub after every phase dispatch in the CLI — same code path for manual and watch-loop execution." When the watch loop was built (xstate-pipeline-machine, v0.51.0), it used a separate ReconcilingFactory that never called syncGitHub(), diverging from the locked intent. The divergence was only discovered when the project board showed stale data. The fix required extracting a shared syncGitHubForEpic() helper and wiring it into both paths. This is a second instance of locked-decision-drift (see Obs 3: "parallel within wave" locked but implemented sequential).
+### Rationale
+Locked design decisions that constrain integration patterns (not just algorithms) are especially prone to drift when a new subsystem is built by a different session that has the constraint in context but doesn't implement it. Detection mechanism: periodic reconciliation audits, or integration tests that verify code-path unification.
+### Source
+.beastmode/artifacts/design/2026-03-31-github-sync-watch-loop.md
+### Confidence
+[LOW] — second observation of locked-decision-drift (see Obs 3); same pattern, different subsystem (GitHub sync vs. wave parallelism)

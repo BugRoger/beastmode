@@ -7,6 +7,7 @@
 - Orchestrator picks up epics with a design artifact but no release artifact — scope is plan through release only
 - Event-driven re-scan on session completion — 60-second poll interval (configurable via `cli.interval`) is the safety net
 - No concurrency cap — parallel epics, parallel features within epics, API rate limits are the natural governor
+- ALWAYS sync GitHub inside reconcileState() via syncGitHubForEpic() — single load-save cycle per epic, no TOCTOU window between reconciliation and sync; sync failures warn and continue without blocking the pipeline
 - ALWAYS use per-epic scoped logger instances via `createLogger(verbosity, epicSlug)` — system-level messages (startup, shutdown, strategy selection) use `beastmode` as slug prefix
 
 ## Agent Dispatching

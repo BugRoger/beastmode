@@ -47,7 +47,7 @@
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
 ## Post-Dispatch Pipeline
-- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions, runs `syncGitHub(manifest, config)`
+- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions, runs `syncGitHubForEpic()` which encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back via setGitHubEpic()/setFeatureGitHubIssue(), and warn-and-continue error handling
 - github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save()
 - Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
 - ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
