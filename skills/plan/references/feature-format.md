@@ -5,6 +5,13 @@
 Each feature plan file follows this structure:
 
 ```markdown
+---
+phase: plan
+epic: <design-slug>
+feature: <feature-slug>
+wave: <integer>
+---
+
 # [Feature Name]
 
 **Design:** [path to parent PRD]
@@ -31,3 +38,4 @@ Each feature plan file follows this structure:
 - **Architectural, not procedural** — describe WHAT, not step-by-step HOW
 - **Self-contained** — each feature should be implementable without reading other feature plans
 - **Linked** — always reference the parent PRD and shared architectural decisions
+- **Wave ordered** — `wave` field in frontmatter controls execution order. Wave 1 runs first, wave 2 after all wave 1 features complete. Features in the same wave run in parallel. Defaults to 1 for single-feature plans.

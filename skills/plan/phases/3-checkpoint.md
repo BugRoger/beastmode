@@ -13,6 +13,7 @@ Each feature plan file must begin with YAML frontmatter:
 phase: plan
 epic: <design>
 feature: <feature-slug>
+wave: <N>
 ---
 ```
 
@@ -34,8 +35,12 @@ Print features and their implement commands:
 ```
 Features ready for implementation:
 
-1. <feature-1> → beastmode implement <design> <feature-1>
-2. <feature-2> → beastmode implement <design> <feature-2>
+Wave 1:
+  1. <feature-1> → beastmode implement <design> <feature-1>
+  2. <feature-2> → beastmode implement <design> <feature-2>
+
+Wave 2:
+  3. <feature-3> → beastmode implement <design> <feature-3>
 ```
 
 STOP. No additional output.

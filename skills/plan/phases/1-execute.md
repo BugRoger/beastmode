@@ -41,7 +41,25 @@ For each feature, capture:
 - **What to Build:** architectural description of what needs to happen (no file paths or code)
 - **Acceptance Criteria:** how to verify this feature is done
 
-## 4. [GATE|plan.feature-set-approval]
+## 4. Propose Wave Assignments
+
+After decomposing features, identify ordering dependencies and group features into numbered waves.
+
+Rules:
+1. Wave 1 features have no dependencies on other features in this plan
+2. Wave N+1 features depend on one or more Wave N features completing first
+3. Features within the same wave are independently implementable in parallel
+4. Single-feature plans default all features to wave 1
+5. Prefer fewer waves — only separate when a genuine implementation dependency exists
+
+For each feature, assign:
+- **Wave:** integer starting from 1
+
+Present the wave rationale:
+- Which features must land before others, and why
+- Which features are independent and can run in parallel
+
+## 5. [GATE|plan.feature-set-approval]
 
 Read `.beastmode/config.yaml` → resolve mode for `plan.feature-set-approval`.
 Default: `human`.
@@ -50,20 +68,21 @@ Default: `human`.
 
 Present all features as a summary table:
 
-| # | Feature | User Stories | Description |
-|---|---------|-------------|-------------|
-| 1 | feature-slug | US 1, 3 | One-line summary |
-| 2 | feature-slug | US 2, 4 | One-line summary |
+| # | Feature | Wave | User Stories | Description |
+|---|---------|------|-------------|-------------|
+| 1 | feature-slug | 1 | US 1, 3 | One-line summary |
+| 2 | feature-slug | 2 | US 2, 4 | One-line summary |
 
 Then ask:
 - "Does the granularity feel right? Should any features merge or split?"
+- "Does the wave ordering make sense? Should any features move to a different wave?"
 - Iterate until user approves the feature set
 
 ### [GATE-OPTION|auto] Self-Approve
 
 Log: "Gate `plan.feature-set-approval` → auto: approved N features"
 
-## 5. [GATE|plan.feature-approval]
+## 6. [GATE|plan.feature-approval]
 
 Read `.beastmode/config.yaml` → resolve mode for `plan.feature-approval`.
 Default: `auto`.
@@ -78,7 +97,7 @@ For each feature, present its full description (user stories, what to build, acc
 
 Log: "Gate `plan.feature-approval` → auto: approved all features"
 
-## 6. Iterate Until Ready
+## 7. Iterate Until Ready
 
 - Refine features based on feedback
 - Keep YAGNI in mind — remove unnecessary scope

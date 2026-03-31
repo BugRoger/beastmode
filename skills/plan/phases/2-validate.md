@@ -24,6 +24,7 @@ Verify every feature has:
 - [ ] What to Build section (non-empty)
 - [ ] At least one acceptance criterion
 - [ ] Link to parent PRD
+- [ ] Wave assignment (integer ≥ 1)
 
 If incomplete, go back to Execute phase.
 
@@ -57,12 +58,14 @@ Present a consolidated view before approval:
 |----------|--------|
 | [decision 1] | [choice] |
 
-**Features:** [count] features covering [count] user stories
+**Features:** [count] features across [count] waves covering [count] user stories
 
-| # | Feature | Stories | Scope |
-|---|---------|---------|-------|
-| 1 | [slug]  | US 1, 3 | [one-line] |
-| 2 | [slug]  | US 2    | [one-line] |
+**Execution Sequence:**
+| Wave | Feature | Stories | Rationale | Scope |
+|------|---------|---------|-----------|-------|
+| 1    | [slug]  | US 1, 3 | No dependencies | [one-line] |
+| 1    | [slug]  | US 5    | No dependencies | [one-line] |
+| 2    | [slug]  | US 2    | Needs [slug] from wave 1 | [one-line] |
 ```
 
 This is read-only — do NOT ask new questions here.
