@@ -6,6 +6,8 @@
 - NEVER orchestrate the design phase — design is interactive and requires human collaboration
 - Orchestrator picks up epics with a design artifact but no release artifact — scope is plan through release only
 - Event-driven re-scan on session completion — 60-second poll interval (configurable via `cli.interval`) is the safety net
+- ALWAYS use WatchLoop EventEmitter with typed events (`epic:start`, `epic:complete`, `epic:error`, `phase:start`, `phase:complete`, `scan`) for state communication — logger subscriber for headless mode, React hooks for dashboard, extensible for future consumers
+- ALWAYS externalize signal handling from WatchLoop — callers own SIGINT/SIGTERM and call `loop.stop()` for graceful shutdown
 - No concurrency cap — parallel epics, parallel features within epics, API rate limits are the natural governor
 - ALWAYS sync GitHub inside reconcileState() via syncGitHubForEpic() — single load-save cycle per epic, no TOCTOU window between reconciliation and sync; sync failures warn and continue without blocking the pipeline
 - ALWAYS use per-epic scoped logger instances via `createLogger(verbosity, epicSlug)` — system-level messages (startup, shutdown, strategy selection) use `beastmode` as slug prefix

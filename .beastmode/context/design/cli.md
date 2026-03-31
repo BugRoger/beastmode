@@ -1,10 +1,11 @@
 # CLI Architecture
 
 ## Command Structure
-- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `status`, and `compact`
+- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `dashboard`, `status`, and `compact`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
 - `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, blocked gate details, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
+- `beastmode dashboard` runs fullscreen Ink v6 + React TUI with embedded watch loop — three-zone layout (header with clock, scrollable epic table, activity log), keyboard navigation (up/down arrows for row selection, x for cancel epic with inline y/n confirmation, a for toggle auto-scroll, q/Ctrl+C for graceful exit), alternate screen buffer mode, 1-second UI refresh tick, same lockfile as `beastmode watch` for mutual exclusion; uses shared `status-data.ts` for data logic, WatchLoop EventEmitter typed events for state updates; adds `ink` v6.8.0 and `react` to cli/package.json
 - `beastmode compact` dispatches the compaction agent via existing session dispatch pattern — operates on the shared context tree without a worktree, always runs regardless of 5-release counter, produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
