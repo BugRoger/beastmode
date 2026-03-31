@@ -9,8 +9,14 @@
  */
 
 import type { PipelineManifest, ManifestFeature } from "./manifest";
+import { setGitHubEpic, setFeatureGitHubIssue } from "./manifest";
 import type { BeastmodeConfig } from "./config";
+import { loadConfig } from "./config";
 import type { ResolvedGitHub } from "./github-discovery";
+import { discoverGitHub } from "./github-discovery";
+import * as store from "./manifest-store";
+import { createLogger } from "./logger";
+import type { Logger } from "./logger";
 import {
   ghIssueCreate,
   ghIssueEdit,
@@ -52,6 +58,7 @@ const PHASE_TO_BOARD_STATUS: Record<string, string> = {
   validate: "Validate",
   release: "Release",
   done: "Done",
+  cancelled: "Done",
 };
 
 /** Map manifest feature status to GitHub label. */
@@ -73,6 +80,7 @@ const ALL_PHASE_LABELS = [
   "phase/validate",
   "phase/release",
   "phase/done",
+  "phase/cancelled",
 ];
 
 /**
@@ -167,7 +175,7 @@ export async function syncGitHub(
   }
 
   // --- Epic Close (if done) ---
-  if (manifest.phase === "done") {
+  if (manifest.phase === "done" || manifest.phase === "cancelled") {
     const closed = await ghIssueClose(repo, epicNumber);
     if (closed) {
       result.epicClosed = true;
@@ -180,6 +188,61 @@ export async function syncGitHub(
   }
 
   return result;
+}
+
+/**
+ * High-level helper: load config, discover GitHub metadata, sync, apply
+ * mutations, persist. Wraps everything in try/catch — never throws.
+ *
+ * Callers that pre-discover metadata (e.g. watch loop caching per scan cycle)
+ * pass `resolved` to skip the discoverGitHub() call.
+ */
+export async function syncGitHubForEpic(opts: {
+  projectRoot: string;
+  epicSlug: string;
+  resolved?: ResolvedGitHub;
+  logger?: Logger;
+}): Promise<void> {
+  const log = opts.logger ?? createLogger(0, "github-sync");
+  try {
+    const config = loadConfig(opts.projectRoot);
+    if (!config.github.enabled) return;
+
+    const resolved =
+      opts.resolved ??
+      (await discoverGitHub(opts.projectRoot, config.github["project-name"], log));
+    if (!resolved) {
+      log.debug("GitHub discovery failed — skipping sync");
+      return;
+    }
+
+    const manifest = store.load(opts.projectRoot, opts.epicSlug);
+    if (!manifest) return;
+
+    const syncResult = await syncGitHub(manifest, config, resolved);
+
+    // Apply mutations to manifest
+    let updated = manifest;
+    for (const mutation of syncResult.mutations) {
+      if (mutation.type === "setEpic") {
+        updated = setGitHubEpic(updated, mutation.epicNumber, mutation.repo);
+      } else if (mutation.type === "setFeatureIssue") {
+        updated = setFeatureGitHubIssue(updated, mutation.featureSlug, mutation.issueNumber);
+      }
+    }
+
+    // Persist if mutations were applied
+    if (syncResult.mutations.length > 0) {
+      store.save(opts.projectRoot, opts.epicSlug, updated);
+    }
+
+    for (const warning of syncResult.warnings) {
+      log.warn(warning);
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.warn(`GitHub sync failed (non-blocking): ${message}`);
+  }
 }
 
 /**

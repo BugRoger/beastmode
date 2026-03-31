@@ -64,10 +64,10 @@ Manifest JSON is the operational authority for feature lifecycle, located at `.b
 
 1. ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) with label-based type/phase/status encoding
 2. ALWAYS use manifest JSON as operational authority — GitHub is a one-way mirror, CLI never reads GitHub state to update the manifest
-3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` runs post-dispatch, same code path for manual and watch-loop execution
+3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHubForEpic()` is the shared helper (encapsulates loadConfig, discoverGitHub, syncGitHub, apply mutations, warn-and-continue), same code path for manual and watch-loop execution
 4. NEVER let GitHub API failures block workflow — warn and continue, next dispatch retries
 5. NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
-6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — status/review is dropped
+6. ALWAYS use 13-label taxonomy: 2 type, 8 phase (backlog, design, plan, implement, validate, release, done, cancelled), 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — cancelled is a terminal phase alongside done
 7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
 8. ALWAYS use blast-replace for mutually exclusive label families (phase/*, status/*) — remove all labels in family, add correct one, idempotent
 
@@ -83,6 +83,7 @@ TypeScript CLI watch mode (`beastmode watch`) scans local state files and dispat
 5. ALWAYS use CLI-owned worktrees — CLI creates before, merges after, removes when done
 6. ALWAYS use `DispatchedSession` interface for dispatch — `SessionFactory` returns `SdkSession` or `CmuxSession` based on runtime state and config
 7. ALWAYS reconcile cmux state on startup — adopt live surfaces, close dead ones, remove empty workspaces
+8. ALWAYS sync GitHub inside reconcileState() in the watch loop — single load-save cycle per epic eliminates TOCTOU window between reconciliation and sync
 
 context/design/orchestration.md
 
@@ -93,7 +94,7 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
 4. ALWAYS own manifest lifecycle via manifest-store.ts (filesystem) and manifest.ts (pure functions) — store is the sole filesystem accessor, pure functions return new manifests without mutation
-5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/`, enriches manifest via pure functions, runs `syncGitHub(manifest, config)`
+5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/`, enriches manifest via pure functions, runs `syncGitHubForEpic()` which encapsulates sync + mutation write-back
 6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup
 7. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 8. ALWAYS use flat-file manifest path convention — state/YYYY-MM-DD-<slug>.manifest.json, no directory-per-slug

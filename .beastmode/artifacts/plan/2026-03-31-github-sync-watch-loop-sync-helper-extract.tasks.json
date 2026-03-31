@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-github-sync-watch-loop-sync-helper-extract.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create syncGitHubForEpic() helper in github-sync.ts", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Replace inline sync block in post-dispatch.ts", "wave": 2, "status": "completed", "dependsOn": [0]},
+    {"id": 2, "subject": "Task 2: Write tests for syncGitHubForEpic helper", "wave": 2, "status": "completed", "dependsOn": [0]},
+    {"id": 3, "subject": "Task 3: Verify existing tests still pass", "wave": 3, "status": "completed", "dependsOn": [1, 2]}
+  ],
+  "lastUpdated": "2026-03-31T14:04:00Z"
+}

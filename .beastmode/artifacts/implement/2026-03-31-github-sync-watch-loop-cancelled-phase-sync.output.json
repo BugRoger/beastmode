@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "cancelled-phase-sync",
+        "status": "completed"
+      }
+    ]
+  }
+}

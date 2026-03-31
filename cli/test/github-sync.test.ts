@@ -644,6 +644,71 @@ describe("syncGitHub", () => {
   });
 
   // -------------------------------------------------------
+  // 11.5 Cancelled phase — board, close, and label handling
+  // -------------------------------------------------------
+  describe("cancelled phase handling", () => {
+    test("maps cancelled phase to Done on project board", async () => {
+      const manifest = makeManifest({ phase: "cancelled" });
+      const config = makeConfig();
+      const resolved = makeResolvedWithProject();
+
+      await syncGitHub(manifest, config, resolved);
+
+      const fieldCalls = callsTo("ghProjectSetField");
+      const doneCalls = fieldCalls.filter(
+        (c) => c.args[3] === "opt-done",
+      );
+      expect(doneCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test("closes epic when phase is cancelled", async () => {
+      const manifest = makeManifest({ phase: "cancelled" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved);
+
+      expect(result.epicClosed).toBe(true);
+      const closeCalls = callsTo("ghIssueClose");
+      const epicClose = closeCalls.find((c) => c.args[1] === 10);
+      expect(epicClose).toBeDefined();
+    });
+
+    test("blast-replace removes phase/cancelled from current labels", async () => {
+      const manifest = makeManifest({ phase: "design" });
+      // Current labels include stale phase/cancelled
+      mockReturns.ghIssueLabels = ["type/epic", "phase/cancelled"];
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      await syncGitHub(manifest, config, resolved);
+
+      const editCalls = callsTo("ghIssueEdit");
+      const epicEdit = editCalls.find(
+        (c) => c.args[0] === "org/repo" && c.args[1] === 10,
+      );
+      expect(epicEdit).toBeDefined();
+      const edits = epicEdit!.args[2] as {
+        removeLabels: string[];
+        addLabels: string[];
+      };
+      expect(edits.removeLabels).toContain("phase/cancelled");
+      expect(edits.addLabels).toEqual(["phase/design"]);
+    });
+
+    test("does not close epic for non-terminal phases", async () => {
+      const manifest = makeManifest({ phase: "implement" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      await syncGitHub(manifest, config, resolved);
+
+      const closeCalls = callsTo("ghIssueClose");
+      expect(closeCalls.filter((c) => c.args[1] === 10)).toHaveLength(0);
+    });
+  });
+
+  // -------------------------------------------------------
   // 12. Warn-and-continue — individual failures don't stop sync
   // -------------------------------------------------------
   describe("warn-and-continue", () => {

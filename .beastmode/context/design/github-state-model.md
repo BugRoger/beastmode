@@ -6,7 +6,7 @@
 - NEVER store design docs or plans in issue bodies -- GitHub tracks status/lifecycle, repo stores content
 
 ## Epic State Machine
-- ALWAYS track Epic phase via mutually exclusive `phase/*` labels: backlog, design, plan, implement, validate, release, done -- lifecycle state is visible and queryable
+- ALWAYS track Epic phase via mutually exclusive `phase/*` labels: backlog, design, plan, implement, validate, release, done, cancelled -- lifecycle state is visible and queryable; cancelled is a terminal state that closes the Epic and moves it to the Done board column
 - NEVER allow multiple `phase/*` labels on one Epic -- mutual exclusivity is a state machine invariant
 - Gate transitions use `gate/awaiting-approval` label + issue comments for pre-code phases, PR reviews for code phases -- match gate mechanism to artifact type
 
@@ -20,8 +20,8 @@
 - ALWAYS use manifest JSON as operational authority for feature lifecycle — GitHub is a one-way mirror, CLI never reads GitHub to update the manifest
 - ALWAYS use repo files for content — design docs, plans, validation reports remain in artifacts/
 - NEVER duplicate content between issue bodies and state files — issue bodies link to repo artifacts
-- ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` is a post-dispatch step, not a skill checkpoint step
-- Bootstrap write-back is the sole exception to one-way sync — when sync creates an Epic or Feature issue, it writes the issue number back to the manifest github block
+- ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHubForEpic()` is the shared post-dispatch helper (encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back, warn-and-continue), not a skill checkpoint step
+- Mutation write-back after every sync pass — when sync creates an Epic or Feature issue, `syncGitHubForEpic()` applies returned mutations (issue numbers) to the manifest via setGitHubEpic()/setFeatureGitHubIssue() and store.save()
 
 ## Migration Strategy
 - Clean cut, no backward compatibility — delete old manifests in `state/plan/*.manifest.json`, rewrite CLI manifest module, no old schema support
@@ -44,7 +44,7 @@
 
 ## Subagent Boundary
 - NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
-- ALWAYS centralize GitHub sync and manifest mutation in the CLI — the `syncGitHub(manifest, config)` function in the TypeScript CLI is the sole sync entry point
+- ALWAYS centralize GitHub sync and manifest mutation in the CLI — `syncGitHubForEpic()` in github-sync.ts is the sole public sync entry point, used by both post-dispatch and watch loop reconciliation
 
 ## Manifest Schema
 - PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start

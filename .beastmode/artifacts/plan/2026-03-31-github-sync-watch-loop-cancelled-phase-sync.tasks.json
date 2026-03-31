@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-github-sync-watch-loop-cancelled-phase-sync.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add cancelled to PHASE_TO_BOARD_STATUS, ALL_PHASE_LABELS, and close condition", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add cancelled phase tests", "status": "completed"}
+  ],
+  "lastUpdated": "2026-03-31T14:00:00Z"
+}

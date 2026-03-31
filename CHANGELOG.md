@@ -4,6 +4,12 @@ All notable changes to beastmode.
 
 ---
 
+### v0.52.0 — GitHub Sync Watch Loop (Mar 2026)
+
+- **Watch loop sync** — `reconcileState()` now calls `syncGitHubForEpic()` after persistence, with discovery cached once per scan cycle and per-epic logger support
+- **Sync helper extraction** — New `syncGitHubForEpic()` in `github-sync.ts` encapsulates the full sync lifecycle (config → discover → sync → apply mutations → warn-and-continue), replacing the inline block in `post-dispatch.ts`
+- **Cancelled phase sync** — Cancelled epics map to Done board column, get `phase/cancelled` label, and close on GitHub just like done epics
+
 ### v0.51.0 — XState Pipeline Machine (Mar 2026)
 
 - **XState v5 epic machine** — Explicit state machine with 7 states (design → plan → implement → validate → release → done/cancelled), named guards (`hasFeatures`, `allFeaturesCompleted`, `outputCompleted`), and declarative actions (`persist`, `enrichManifest`, `renameSlug`, `syncGitHub`) via `setup()` API

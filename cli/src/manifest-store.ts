@@ -16,6 +16,7 @@ import {
   mkdirSync,
   readdirSync,
   unlinkSync,
+  renameSync,
 } from "fs";
 import { resolve } from "path";
 import type { Phase } from "./types";
@@ -160,6 +161,10 @@ export function list(projectRoot: string): PipelineManifest[] {
 
 /**
  * Write a manifest to disk.
+ *
+ * When the manifest's internal slug differs from the lookup slug (e.g. after
+ * DESIGN_COMPLETED renames a temp hash to the real slug), the file is renamed
+ * to match the new slug so filename and content stay in sync.
  */
 export function save(
   projectRoot: string,
@@ -168,9 +173,26 @@ export function save(
 ): void {
   const dir = pipelineDir(projectRoot);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const path =
-    manifestPath(projectRoot, slug) ?? newManifestPath(projectRoot, slug);
-  writeFileSync(path, JSON.stringify(manifest, null, 2));
+
+  const existingPath = manifestPath(projectRoot, slug);
+  let targetPath = existingPath ?? newManifestPath(projectRoot, slug);
+
+  // If the manifest's internal slug changed (e.g. temp hash → real slug),
+  // rename the file so the filename matches the content.
+  if (manifest.slug && manifest.slug !== slug && existingPath) {
+    const newPath = newManifestPath(projectRoot, manifest.slug);
+    // Only rename if there isn't already a file for the new slug
+    if (!manifestPath(projectRoot, manifest.slug)) {
+      renameSync(existingPath, newPath);
+      targetPath = newPath;
+    } else {
+      // A file for the new slug already exists — write there and remove the old one
+      targetPath = manifestPath(projectRoot, manifest.slug)!;
+      unlinkSync(existingPath);
+    }
+  }
+
+  writeFileSync(targetPath, JSON.stringify(manifest, null, 2));
 }
 
 /**

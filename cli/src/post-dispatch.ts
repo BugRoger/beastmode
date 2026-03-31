@@ -20,9 +20,7 @@ import type { Logger } from "./logger";
 import type { EpicContext, EpicEvent } from "./pipeline-machine";
 import * as store from "./manifest-store";
 import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
-import { syncGitHub } from "./github-sync";
-import { discoverGitHub } from "./github-discovery";
-import { loadConfig } from "./config";
+import { syncGitHubForEpic } from "./github-sync";
 import { createLogger } from "./logger";
 import { createEpicActor, epicMachine } from "./pipeline-machine";
 import { createActor } from "xstate";
@@ -122,24 +120,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     actor.stop();
 
     // Sync to GitHub — warn-and-continue
-    try {
-      const config = loadConfig(opts.projectRoot);
-      if (config.github.enabled) {
-        const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
-        if (resolved) {
-          const updatedManifest = store.load(opts.projectRoot, opts.epicSlug);
-          if (updatedManifest) {
-            await syncGitHub(updatedManifest, config, resolved);
-            logger.debug("GitHub sync complete");
-          }
-        } else {
-          logger.debug("GitHub discovery failed — skipping sync");
-        }
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      logger.warn(`GitHub sync failed (non-blocking): ${message}`);
-    }
+    await syncGitHubForEpic({ projectRoot: opts.projectRoot, epicSlug: opts.epicSlug, logger });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.warn(`Unexpected error (non-blocking): ${message}`);
