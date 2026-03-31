@@ -5,6 +5,8 @@
 - ALWAYS archive feature branch tips as `archive/feature/<name>` before deletion
 - ALWAYS follow commit format: `Release vX.Y.Z — Title` with categorized sections
 - NEVER skip retro before the release commit
+- ALWAYS run retro inlined in the release skill — no shared orchestrator or `@_shared/retro.md` import
+- ALWAYS use context walker as the sole retro agent — meta walker is removed
 
 ## Release Process
 - ALWAYS use merge-only — no rebase before merge

@@ -1,3 +1,0 @@
-# Design Workarounds
-
-- None recorded.

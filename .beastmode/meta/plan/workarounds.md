@@ -1,3 +1,0 @@
-# Plan Workarounds
-
-- None recorded.

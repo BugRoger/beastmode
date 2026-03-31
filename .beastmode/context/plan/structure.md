@@ -8,16 +8,15 @@
 - ALWAYS put external-facing essays in `docs/` — not imported by agents
 - Gate config lives at `.beastmode/config.yaml` — centralized configuration
 - NEVER store knowledge outside `.beastmode/` — single source of truth
-- NEVER write to context/ or meta/ from phase execution — only retro promotes to L0/L1/L2
+- NEVER write to context/ from phase execution — only retro promotes to L0/L1/L2
 - `.beastmode/` stores L0-L3 knowledge hierarchy plus config.yaml and worktrees/<feature>/ (gitignored) — central hub
 
 ## Knowledge Directories
 - ALWAYS organize context by phase: `context/{phase}/{domain}.md` — phase-scoped knowledge
-- ALWAYS organize meta by phase: `meta/{phase}/{type}.md` (sops, overrides, learnings) — categorized process knowledge
 - ALWAYS organize artifacts by phase: `artifacts/{phase}/YYYY-MM-DD-{feature}.md` — date-prefixed committed skill outputs
 - ALWAYS use `state/` for gitignored pipeline manifests (`state/<slug>/manifest.json`) — CLI-owned mutable state
 - L3 records live at: `context/{phase}/{domain}/{record}.md` — subdirectory per domain
-- Write protection: phases write only to artifacts/, retro promotes to context/ and meta/ — enforced boundaries
+- Write protection: phases write only to artifacts/, retro promotes to context/ — enforced boundaries
 
 ## Entry Points
 - ALWAYS wire CLAUDE.md -> BEASTMODE.md as sole autoload — minimal L0

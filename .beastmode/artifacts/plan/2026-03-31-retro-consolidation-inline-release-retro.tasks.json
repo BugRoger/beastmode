@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-03-31-retro-consolidation-inline-release-retro.md",
+  "tasks": [
+    {"id": 0, "subject": "Rewrite release 3-checkpoint.md with inlined retro", "status": "pending"},
+    {"id": 1, "subject": "Verify acceptance criteria", "status": "pending"}
+  ],
+  "lastUpdated": "2026-03-31T12:00:00Z"
+}
