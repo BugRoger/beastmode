@@ -6,6 +6,7 @@ import { phaseCommand } from "./commands/phase";
 import { watchCommand } from "./commands/watch";
 import { statusCommand } from "./commands/status";
 import { cancelCommand } from "./commands/cancel";
+import { compactCommand } from "./commands/compact";
 import { isValidPhase } from "./types";
 
 const VERSION = "0.1.0";
@@ -20,6 +21,7 @@ Usage:
   beastmode validate <slug>            Run validation checks
   beastmode release <slug>             Create a release
   beastmode cancel <slug>              Cancel and clean up an epic
+  beastmode compact                    Audit and compact the context tree
   beastmode watch                      Autonomous pipeline orchestration
   beastmode status [--all] [--watch|-w] Show pipeline status
   beastmode help                       Show this help message`);
@@ -44,6 +46,9 @@ async function main(): Promise<void> {
       break;
     case "cancel":
       await cancelCommand(args, config);
+      break;
+    case "compact":
+      await compactCommand();
       break;
     case "help":
       printHelp();

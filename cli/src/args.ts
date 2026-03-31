@@ -1,12 +1,12 @@
 import { VALID_PHASES, type Phase } from "./types";
 
 /** Utility commands (not phases) */
-const UTILITY_COMMANDS = new Set(["watch", "status", "cancel", "help"]);
+const UTILITY_COMMANDS = new Set(["watch", "status", "cancel", "compact", "help"]);
 
 /** All recognized top-level commands: phases + utilities */
 const ALL_COMMANDS = new Set([...VALID_PHASES, ...UTILITY_COMMANDS]);
 
-export type Command = Phase | "watch" | "status" | "cancel" | "help";
+export type Command = Phase | "watch" | "status" | "cancel" | "compact" | "help";
 
 export interface ParsedCommand {
   command: Command;
@@ -28,7 +28,7 @@ export function parseArgs(argv: string[]): ParsedCommand {
     console.error(
       `Phases: ${VALID_PHASES.join(", ")}`,
     );
-    console.error(`Other: watch, status, cancel, help`);
+    console.error(`Other: watch, status, cancel, compact, help`);
     process.exit(1);
   }
 
