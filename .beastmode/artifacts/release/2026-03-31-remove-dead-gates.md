@@ -28,3 +28,4 @@ Remove three dead gates that added friction without value: two plan-phase approv
 - `0a573b4` implement(config-cleanup): checkpoint
 - `5269442` implement(plan-gate-removal): checkpoint
 - `45d65a1` validate(remove-dead-gates): checkpoint
+- `66a1811` release(remove-dead-gates): checkpoint
