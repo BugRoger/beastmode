@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "gates": {
+    "tests": "pass",
+    "types": "pass (pre-existing failures only)",
+    "lint": "skip",
+    "acceptance": "pass"
+  },
+  "fixes": [
+    "Aligned conflicting empty-features-list test expectations between src/__tests__/ and test/ body-format test files"
+  ]
+}

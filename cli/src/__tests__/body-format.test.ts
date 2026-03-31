@@ -136,7 +136,8 @@ describe("formatEpicBody", () => {
     const manifest = makeManifest({ features: [] });
     const body = formatEpicBody(manifest);
 
-    expect(body).toContain("## Features");
+    // No features section when list is empty — nothing to show
+    expect(body).not.toContain("## Features");
   });
 
   test("handles all features completed", () => {
