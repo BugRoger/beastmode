@@ -97,7 +97,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       context: epicContext,
     });
     const machine = epicMachine.provide({ actions: { persist: persistAction } });
-    actor = createActor(machine, { snapshot: resolvedSnapshot });
+    actor = createActor(machine, { snapshot: resolvedSnapshot, input: epicContext });
     actor.start();
 
     // Map phase + output → machine events and send them
@@ -156,7 +156,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
 function mapToEvents(
   opts: PostDispatchOptions,
   output: ReturnType<typeof loadWorktreePhaseOutput>,
-  manifest: PipelineManifest,
+  _manifest: PipelineManifest,
   logger: Logger,
 ): EpicEvent[] {
   const events: EpicEvent[] = [];
@@ -229,7 +229,7 @@ function extractFeaturesFromOutput(
   output: ReturnType<typeof loadWorktreePhaseOutput>,
 ): Array<{ slug: string; plan: string }> {
   if (!output) return [];
-  const artifacts = output.artifacts as Record<string, unknown>;
+  const artifacts = output.artifacts as unknown as Record<string, unknown>;
   if (!artifacts || !Array.isArray(artifacts.features)) return [];
 
   const features: Array<{ slug: string; plan: string }> = [];

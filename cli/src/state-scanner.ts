@@ -83,7 +83,7 @@ function preReconcile(manifest: PipelineManifest, projectRoot: string): Pipeline
     value: manifest.phase,
     context: epicContext,
   });
-  const actor = createActor(epicMachine, { snapshot: resolvedSnapshot });
+  const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: epicContext });
   actor.start();
 
   // Map output to machine events based on current phase
@@ -122,13 +122,13 @@ function mapOutputToEvents(
 
   switch (phase) {
     case "design": {
-      const artifacts = output.artifacts as Record<string, unknown> | undefined;
+      const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
       const realSlug = artifacts?.slug as string | undefined;
       events.push({ type: "DESIGN_COMPLETED", realSlug });
       break;
     }
     case "plan": {
-      const artifacts = output.artifacts as Record<string, unknown> | undefined;
+      const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
       const rawFeatures = artifacts?.features;
       const features: Array<{ slug: string; plan: string }> = [];
       if (Array.isArray(rawFeatures)) {
@@ -186,7 +186,7 @@ function deriveNextActionFromMachine(manifest: PipelineManifest): NextAction | n
   const currentSnapshot = actor.getSnapshot();
   const stateValue = currentSnapshot.value as string;
   const meta = currentSnapshot.getMeta();
-  const stateMeta = meta[`epic.${stateValue}`] as { dispatchType?: DispatchType } | undefined;
+  const stateMeta = (meta as Record<string, { dispatchType?: DispatchType } | undefined>)[`epic.${stateValue}`];
   const dispatchType = stateMeta?.dispatchType;
 
   actor.stop();

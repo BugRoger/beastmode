@@ -62,7 +62,7 @@ describe("basic snapshot round-trip", () => {
     const json = JSON.stringify(persisted);
     const restored = JSON.parse(json);
 
-    const actor2 = createActor(epicMachine, { snapshot: restored });
+    const actor2 = createActor(epicMachine, { snapshot: restored, input: makeEpicContext() });
     actor2.start();
 
     expect(actor2.getSnapshot().value).toBe("implement");
@@ -90,8 +90,8 @@ describe("basic snapshot round-trip", () => {
 
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(json),
-    });
-    actor2.start();
+      input: makeEpicContext(),
+    });    actor2.start();
 
     // Continue from implement
     actor2.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-a" });
@@ -136,6 +136,7 @@ describe("manifest-shaped fixture input", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: fixtureContext,
     });
     actor2.start();
 
@@ -182,7 +183,7 @@ describe("round-trip preserves all context fields", () => {
     // Persist -> JSON round-trip -> restore
     const persisted = actor.getPersistedSnapshot();
     const json = JSON.stringify(persisted);
-    const actor2 = createActor(epicMachine, { snapshot: JSON.parse(json) });
+    const actor2 = createActor(epicMachine, { snapshot: JSON.parse(json), input: makeEpicContext() });
     actor2.start();
 
     const ctx = actor2.getSnapshot().context;
@@ -219,6 +220,7 @@ describe("round-trip preserves all context fields", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeEpicContext(),
     });
     actor2.start();
 
@@ -231,6 +233,7 @@ describe("round-trip preserves all context fields", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeEpicContext(),
     });
     actor2.start();
 
@@ -242,6 +245,7 @@ describe("round-trip preserves all context fields", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeEpicContext(),
     });
     actor2.start();
 
@@ -261,6 +265,7 @@ describe("feature machine round-trip", () => {
     const json = JSON.stringify(persisted);
     const actor2 = createActor(featureMachine, {
       snapshot: JSON.parse(json),
+      input: makeFeatureContext(),
     });
     actor2.start();
 
@@ -276,6 +281,7 @@ describe("feature machine round-trip", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(featureMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeFeatureContext(),
     });
     actor2.start();
 
@@ -293,6 +299,7 @@ describe("feature machine round-trip", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(featureMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeFeatureContext(),
     });
     actor2.start();
 
@@ -310,6 +317,7 @@ describe("feature machine round-trip", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(featureMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeFeatureContext(),
     });
     actor2.start();
 
@@ -339,7 +347,7 @@ describe("round-trip after validate regression", () => {
     // Persist and restore
     const persisted = actor.getPersistedSnapshot();
     const json = JSON.stringify(persisted);
-    const actor2 = createActor(epicMachine, { snapshot: JSON.parse(json) });
+    const actor2 = createActor(epicMachine, { snapshot: JSON.parse(json), input: makeEpicContext() });
     actor2.start();
 
     // Verify state is implement with all pending features
@@ -365,6 +373,7 @@ describe("round-trip after validate regression", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeEpicContext(),
     });
     actor2.start();
 
@@ -392,6 +401,7 @@ describe("round-trip after validate regression", () => {
     const persisted = actor.getPersistedSnapshot();
     const actor2 = createActor(epicMachine, {
       snapshot: JSON.parse(JSON.stringify(persisted)),
+      input: makeEpicContext(),
     });
     actor2.start();
 
