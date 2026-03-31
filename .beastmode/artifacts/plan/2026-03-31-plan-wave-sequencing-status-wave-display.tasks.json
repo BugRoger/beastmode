@@ -1,9 +1,9 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-03-31-plan-wave-sequencing-status-wave-display.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Add wave computation helpers to status.ts", "status": "pending", "wave": 1},
-    {"id": 1, "subject": "Task 1: Thread wave indicator into status table + verbose mode", "status": "pending", "wave": 1, "dependsOn": [0]},
-    {"id": 2, "subject": "Task 2: Update status tests for wave display", "status": "pending", "wave": 1, "dependsOn": [1]}
+    {"id": 0, "subject": "Task 0: Add wave computation helpers to status.ts", "status": "completed", "wave": 1},
+    {"id": 1, "subject": "Task 1: Thread wave indicator into status table + verbose mode", "status": "completed", "wave": 1, "dependsOn": [0]},
+    {"id": 2, "subject": "Task 2: Update status tests for wave display", "status": "completed", "wave": 1, "dependsOn": [1]}
   ],
-  "lastUpdated": "2026-03-31T00:00:00Z"
+  "lastUpdated": "2026-03-31T12:00:00Z"
 }

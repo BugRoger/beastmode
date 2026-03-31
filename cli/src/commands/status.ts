@@ -99,7 +99,9 @@ export function formatFeatures(epic: EnrichedManifest): string {
   const total = epic.features.length;
   if (total === 0) return "-";
   const completed = epic.features.filter(f => f.status === "completed").length;
-  return `${completed}/${total}`;
+  const wave = formatWaveIndicator(epic);
+  const base = `${completed}/${total}`;
+  return wave ? `${base} ${wave}` : base;
 }
 
 export function formatStatus(epic: EnrichedManifest): string {
@@ -381,6 +383,66 @@ export function renderStatusScreen(
 }
 
 // ---------------------------------------------------------------------------
+// Verbose wave rendering
+// ---------------------------------------------------------------------------
+
+/**
+ * Render per-wave breakdown lines for verbose mode.
+ * Returns empty string for single-wave or featureless epics.
+ */
+export function renderWaveVerbose(epic: EnrichedManifest): string {
+  const details = computeWaveDetails(epic);
+  if (details.length === 0) return "";
+
+  return details.map(d => {
+    const prefix = d.active ? color("\u25ba", ANSI.yellow) : " ";
+    const progress = `${d.completed}/${d.total}`;
+    const status = d.completed === d.total
+      ? color("completed", ANSI.green, ANSI.dim)
+      : d.active
+        ? color("in-progress", ANSI.yellow)
+        : color("pending", ANSI.dim);
+    return `  ${prefix} Wave ${d.wave}: ${progress} ${status}`;
+  }).join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Verbose-aware screen rendering
+// ---------------------------------------------------------------------------
+
+/**
+ * Render the full status output with optional verbose wave details.
+ * When verbose > 0, appends per-wave breakdown after the table for multi-wave epics.
+ */
+export function renderStatusOutput(
+  epics: EnrichedManifest[],
+  opts: { all?: boolean; verbose?: number } = {},
+  meta?: WatchMeta,
+  changedSlugs?: Set<string>,
+): string {
+  const screen = renderStatusScreen(epics, opts, meta, changedSlugs);
+
+  if (!opts.verbose || opts.verbose < 1) return screen;
+
+  // Collect verbose wave sections for multi-wave epics
+  const filtered = opts.all
+    ? epics
+    : epics.filter(e => e.phase !== "done" && e.phase !== "cancelled");
+
+  const waveSections = filtered
+    .filter(e => computeWaveInfo(e) !== null)
+    .map(e => {
+      const header = color(`${e.slug}`, ANSI.bold);
+      const waveLines = renderWaveVerbose(e);
+      return `${header}\n${waveLines}`;
+    });
+
+  if (waveSections.length === 0) return screen;
+
+  return screen + "\n\n" + color("Wave Details:", ANSI.bold) + "\n" + waveSections.join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
 // Watch loop
 // ---------------------------------------------------------------------------
 
@@ -451,5 +513,5 @@ export async function statusCommand(_config: BeastmodeConfig, args: string[] = [
   }
 
   const { epics } = await scanEpics(projectRoot);
-  process.stdout.write(renderStatusScreen(epics, { all }) + "\n");
+  process.stdout.write(renderStatusOutput(epics, { all, verbose: _verbosity }) + "\n");
 }

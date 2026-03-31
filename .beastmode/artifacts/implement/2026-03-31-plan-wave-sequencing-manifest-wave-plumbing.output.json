@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "manifest-wave-plumbing",
+        "status": "completed"
+      }
+    ]
+  }
+}

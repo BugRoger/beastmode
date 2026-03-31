@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, renderBlockedDetails, buildSnapshot, detectChanges, highlightRow } from "../commands/status";
-import type { WatchMeta, StatusSnapshot } from "../commands/status";
+import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, renderBlockedDetails, buildSnapshot, detectChanges, highlightRow, computeWaveInfo, formatWaveIndicator, computeWaveDetails, renderWaveVerbose, renderStatusOutput } from "../commands/status";
+import type { WatchMeta, StatusSnapshot, WaveInfo, WaveDetail } from "../commands/status";
 import type { EnrichedManifest } from "../state-scanner";
 
 /**
@@ -823,5 +823,346 @@ describe("renderStatusScreen (watch mode)", () => {
     const result = renderStatusScreen(epics, {}, meta, changedSlugs);
     // Should NOT have bold+inverse
     expect(result).not.toContain("\x1b[7m");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeWaveInfo
+// ---------------------------------------------------------------------------
+
+describe("computeWaveInfo", () => {
+  test("returns null for epic with no features", () => {
+    const epic = makeEpic({ features: [] });
+    expect(computeWaveInfo(epic)).toBeNull();
+  });
+
+  test("returns null for single-wave epic (all wave 1)", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "pending", wave: 1 },
+        { slug: "b", plan: "p.md", status: "completed", wave: 1 },
+      ],
+    });
+    expect(computeWaveInfo(epic)).toBeNull();
+  });
+
+  test("returns null for features with no wave field (defaults to 1)", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "pending" },
+        { slug: "b", plan: "p.md", status: "completed" },
+      ],
+    });
+    expect(computeWaveInfo(epic)).toBeNull();
+  });
+
+  test("returns correct info for multi-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "in-progress", wave: 2 },
+        { slug: "c", plan: "p.md", status: "pending", wave: 3 },
+      ],
+    });
+    const info = computeWaveInfo(epic);
+    expect(info).not.toBeNull();
+    expect(info!.currentWave).toBe(2);
+    expect(info!.totalWaves).toBe(3);
+  });
+
+  test("current wave is lowest non-terminal wave", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "completed", wave: 2 },
+        { slug: "c", plan: "p.md", status: "pending", wave: 3 },
+      ],
+    });
+    const info = computeWaveInfo(epic);
+    expect(info!.currentWave).toBe(3);
+  });
+
+  test("all completed shows highest wave", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "completed", wave: 2 },
+        { slug: "c", plan: "p.md", status: "completed", wave: 3 },
+      ],
+    });
+    const info = computeWaveInfo(epic);
+    expect(info!.currentWave).toBe(3);
+    expect(info!.totalWaves).toBe(3);
+  });
+
+  test("mixed wave fields default missing to wave 1", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed" },          // wave 1 (default)
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    });
+    const info = computeWaveInfo(epic);
+    expect(info).not.toBeNull();
+    expect(info!.totalWaves).toBe(2);
+    expect(info!.currentWave).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatWaveIndicator
+// ---------------------------------------------------------------------------
+
+describe("formatWaveIndicator", () => {
+  test("returns empty string for single-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "pending", wave: 1 },
+      ],
+    });
+    expect(formatWaveIndicator(epic)).toBe("");
+  });
+
+  test("returns empty string for no features", () => {
+    const epic = makeEpic({ features: [] });
+    expect(formatWaveIndicator(epic)).toBe("");
+  });
+
+  test("returns compact indicator for multi-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "in-progress", wave: 2 },
+        { slug: "c", plan: "p.md", status: "pending", wave: 3 },
+      ],
+    });
+    expect(formatWaveIndicator(epic)).toBe("W2/3");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeWaveDetails
+// ---------------------------------------------------------------------------
+
+describe("computeWaveDetails", () => {
+  test("returns empty array for no features", () => {
+    const epic = makeEpic({ features: [] });
+    expect(computeWaveDetails(epic)).toEqual([]);
+  });
+
+  test("returns empty array for single-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "pending", wave: 1 },
+        { slug: "b", plan: "p.md", status: "completed", wave: 1 },
+      ],
+    });
+    expect(computeWaveDetails(epic)).toEqual([]);
+  });
+
+  test("returns per-wave breakdown for multi-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "c", plan: "p.md", status: "in-progress", wave: 2 },
+        { slug: "d", plan: "p.md", status: "pending", wave: 3 },
+      ],
+    });
+    const details = computeWaveDetails(epic);
+    expect(details).toHaveLength(3);
+
+    expect(details[0]).toEqual({ wave: 1, total: 2, completed: 2, active: false });
+    expect(details[1]).toEqual({ wave: 2, total: 1, completed: 0, active: true });
+    expect(details[2]).toEqual({ wave: 3, total: 1, completed: 0, active: false });
+  });
+
+  test("marks correct wave as active", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    });
+    const details = computeWaveDetails(epic);
+    expect(details[0].active).toBe(false);
+    expect(details[1].active).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatFeatures — wave indicator integration
+// ---------------------------------------------------------------------------
+
+describe("formatFeatures — wave indicator", () => {
+  test("appends wave indicator for multi-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    });
+    expect(formatFeatures(epic)).toBe("1/2 W2/2");
+  });
+
+  test("no wave indicator for single-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 1 },
+      ],
+    });
+    expect(formatFeatures(epic)).toBe("1/2");
+  });
+
+  test("no wave indicator for features without wave field", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed" },
+        { slug: "b", plan: "p.md", status: "pending" },
+      ],
+    });
+    expect(formatFeatures(epic)).toBe("1/2");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderWaveVerbose
+// ---------------------------------------------------------------------------
+
+describe("renderWaveVerbose", () => {
+  test("returns empty string for single-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "pending", wave: 1 },
+      ],
+    });
+    expect(renderWaveVerbose(epic)).toBe("");
+  });
+
+  test("returns per-wave lines for multi-wave epic", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "in-progress", wave: 2 },
+      ],
+    });
+    const result = stripAnsi(renderWaveVerbose(epic));
+    expect(result).toContain("Wave 1:");
+    expect(result).toContain("Wave 2:");
+    expect(result).toContain("1/1");
+    expect(result).toContain("0/1");
+  });
+
+  test("active wave has arrow marker", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    });
+    const result = stripAnsi(renderWaveVerbose(epic));
+    // Active wave (2) should have the arrow, wave 1 should not
+    const lines = result.split("\n");
+    const wave1Line = lines.find(l => l.includes("Wave 1:"));
+    const wave2Line = lines.find(l => l.includes("Wave 2:"));
+    expect(wave1Line).not.toContain("\u25ba");
+    expect(wave2Line).toContain("\u25ba");
+  });
+
+  test("shows completed status for finished waves", () => {
+    const epic = makeEpic({
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+        { slug: "c", plan: "p.md", status: "pending", wave: 3 },
+      ],
+    });
+    const result = stripAnsi(renderWaveVerbose(epic));
+    expect(result).toContain("completed");    // wave 1: all done
+    expect(result).toContain("in-progress");  // wave 2: active wave
+    expect(result).toContain("pending");      // wave 3: not yet active
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderStatusOutput
+// ---------------------------------------------------------------------------
+
+describe("renderStatusOutput", () => {
+  test("returns same as renderStatusScreen when verbose is 0", () => {
+    const epics = [makeEpic({ slug: "alpha", phase: "implement" })];
+    const fromOutput = renderStatusOutput(epics, { verbose: 0 });
+    const fromScreen = renderStatusScreen(epics);
+    expect(fromOutput).toBe(fromScreen);
+  });
+
+  test("returns same as renderStatusScreen when verbose is undefined", () => {
+    const epics = [makeEpic({ slug: "alpha", phase: "implement" })];
+    const fromOutput = renderStatusOutput(epics);
+    const fromScreen = renderStatusScreen(epics);
+    expect(fromOutput).toBe(fromScreen);
+  });
+
+  test("appends wave details when verbose >= 1 and multi-wave epics exist", () => {
+    const epics = [makeEpic({
+      slug: "my-epic",
+      phase: "implement",
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    })];
+    const result = stripAnsi(renderStatusOutput(epics, { verbose: 1 }));
+    expect(result).toContain("Wave Details:");
+    expect(result).toContain("my-epic");
+    expect(result).toContain("Wave 1:");
+    expect(result).toContain("Wave 2:");
+  });
+
+  test("does not append wave details for single-wave epics even in verbose mode", () => {
+    const epics = [makeEpic({
+      slug: "simple",
+      phase: "implement",
+      features: [
+        { slug: "a", plan: "p.md", status: "pending", wave: 1 },
+      ],
+    })];
+    const result = stripAnsi(renderStatusOutput(epics, { verbose: 1 }));
+    expect(result).not.toContain("Wave Details:");
+  });
+
+  test("passes through meta and changedSlugs", () => {
+    const epics = [makeEpic({
+      slug: "waved",
+      phase: "implement",
+      features: [
+        { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+        { slug: "b", plan: "p.md", status: "pending", wave: 2 },
+      ],
+    })];
+    const meta: WatchMeta = { timestamp: "10:00:00", watchRunning: true };
+    const changed = new Set(["waved"]);
+    const result = renderStatusOutput(epics, { verbose: 1 }, meta, changed);
+    const plain = stripAnsi(result);
+    expect(plain).toContain("Last updated:");
+    expect(result).toContain("\x1b[7m"); // highlight from changed
+  });
+
+  test("filters done epics in verbose wave details unless all flag", () => {
+    const epics = [
+      makeEpic({
+        slug: "done-epic",
+        phase: "done",
+        features: [
+          { slug: "a", plan: "p.md", status: "completed", wave: 1 },
+          { slug: "b", plan: "p.md", status: "completed", wave: 2 },
+        ],
+      }),
+    ];
+    const withoutAll = stripAnsi(renderStatusOutput(epics, { verbose: 1 }));
+    const withAll = stripAnsi(renderStatusOutput(epics, { verbose: 1, all: true }));
+    expect(withoutAll).not.toContain("Wave Details:");
+    expect(withAll).toContain("Wave Details:");
   });
 });
