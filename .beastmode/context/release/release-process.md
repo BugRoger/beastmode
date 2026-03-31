@@ -6,14 +6,15 @@
 - Merge resolves conflicts once instead of per-commit replay — simpler resolution
 
 ## Retro Timing
-- ALWAYS run retro before the release commit in execute phase — ensures meta changes included
+- ALWAYS run retro before the release commit in execute phase — ensures context updates included in squash merge
 - NEVER run retro in checkpoint for release — already executed in execute phase
-- Retro runs at step 8, commit at step 9 — ordered sequence prevents untracked meta files
+- ALWAYS pass all phase artifacts (design, plan, implement, validate, release) to the context walker in a single session — one coherent pass per release
+- Retro runs at step 8, commit at step 9 — ordered sequence prevents untracked context files
 
 ## Release Rollup
 - ALWAYS prepare L0 update proposal from L1 summaries at release time — controlled L0 evolution
-- Retro bubble propagates L2 -> L1 only; L0 updated at release time via proposal — scoped promotion
-- BEASTMODE.md gains updated Capabilities/How It Works sections via L0 proposal mechanism — targeted updates
+- Retro propagates L3 -> L2 -> L1 automatically; only L0 (BEASTMODE.md) requires human approval via `retro.beastmode` gate — scoped promotion
+- BEASTMODE.md gains updated process sections via L0 proposal mechanism — targeted updates
 
 ## Version File Management
 - ALWAYS treat plugin.json as the version source of truth — single authority
