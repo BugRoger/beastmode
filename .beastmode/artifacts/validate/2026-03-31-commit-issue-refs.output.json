@@ -1,0 +1,13 @@
+{
+  "status": "completed",
+  "result": "passed",
+  "gates": {
+    "tests": "passed",
+    "types": "passed",
+    "lint": "skipped",
+    "acceptance": "passed"
+  },
+  "preExistingFailures": [
+    "parseVerbosity export removed but test/type refs remain (identical on main)"
+  ]
+}
