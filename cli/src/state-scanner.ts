@@ -11,15 +11,25 @@ import { basename } from "path";
 import { existsSync } from "fs";
 import type { PipelineManifest } from "./manifest-store";
 import * as store from "./manifest-store";
-import { deriveNextAction, checkBlocked, enrich, advancePhase, shouldAdvance, type NextAction } from "./manifest";
+import { checkBlocked, enrich, advancePhase, shouldAdvance } from "./manifest";
 import { loadConfig } from "./config";
 import type { Phase } from "./types";
 import { findWorktreeOutputFile, loadOutput, extractFeatureStatuses, extractArtifactPaths } from "./phase-output";
 import type { ManifestFeature } from "./manifest-store";
+import { epicMachine } from "./pipeline-machine";
+import { createActor } from "xstate";
+import type { DispatchType, EpicContext } from "./pipeline-machine";
 
 // Re-export types from their canonical locations
 export type { PipelineManifest } from "./manifest-store";
-export type { NextAction } from "./manifest";
+
+/** A dispatchable action derived from manifest state. */
+export interface NextAction {
+  phase: string;
+  args: string[];
+  type: "single" | "fan-out";
+  features?: string[];
+}
 
 /** Enriched manifest with derived fields for the watch loop. */
 export interface EnrichedManifest extends PipelineManifest {
@@ -108,6 +118,50 @@ function preReconcile(manifest: PipelineManifest, projectRoot: string): Pipeline
 }
 
 /**
+ * Derive the next dispatchable action from a manifest using the machine's
+ * state metadata. Replaces the old deriveNextAction() pure function.
+ */
+function deriveNextActionFromMachine(manifest: PipelineManifest): NextAction | null {
+  // Hydrate a temporary actor at the manifest's current phase
+  const snapshot = epicMachine.resolveState({
+    value: manifest.phase,
+    context: manifest as unknown as EpicContext,
+  });
+  const actor = createActor(epicMachine, { snapshot, input: manifest as unknown as EpicContext });
+  actor.start();
+
+  const currentSnapshot = actor.getSnapshot();
+  const stateValue = currentSnapshot.value as string;
+  const meta = currentSnapshot.getMeta();
+  const stateMeta = meta[`epic.${stateValue}`] as { dispatchType?: DispatchType } | undefined;
+  const dispatchType = stateMeta?.dispatchType;
+
+  actor.stop();
+
+  if (!dispatchType || dispatchType === "skip") return null;
+
+  if (dispatchType === "fan-out") {
+    const pendingFeatures = manifest.features
+      .filter((f) => f.status === "pending" || f.status === "in-progress")
+      .map((f) => f.slug);
+    if (pendingFeatures.length === 0) return null;
+    return {
+      phase: stateValue,
+      args: [manifest.slug],
+      type: "fan-out",
+      features: pendingFeatures,
+    };
+  }
+
+  // single dispatch
+  return {
+    phase: stateValue,
+    args: [manifest.slug],
+    type: "single",
+  };
+}
+
+/**
  * Scan all epics and return enriched manifests.
  * Pre-reconciles each manifest against its worktree output before
  * deriving next actions and checking gates.
@@ -118,7 +172,7 @@ export async function scanEpics(projectRoot: string): Promise<ScanResult> {
 
   const epics: EnrichedManifest[] = manifests.map((m) => {
     const reconciled = preReconcile(m, projectRoot);
-    const nextAction = deriveNextAction(reconciled);
+    const nextAction = deriveNextActionFromMachine(reconciled);
     const blocked = checkBlocked(reconciled, config.gates);
     const path = store.manifestPath(projectRoot, reconciled.slug);
 

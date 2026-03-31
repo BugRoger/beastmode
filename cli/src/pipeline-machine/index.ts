@@ -12,22 +12,37 @@ export { featureMachine } from "./feature";
 export type { EpicContext, EpicEvent, FeatureContext, FeatureEvent, DispatchType } from "./types";
 export type { SyncGitHubResult } from "./services";
 
+// ── Action overrides ──────────────────────────────────────────
+
+/** Overridable action implementations injected at actor creation. */
+export interface EpicActions {
+  persist?: ({ context }: { context: EpicContext }) => void;
+}
+
 // ── Actor factories ────────────────────────────────────────────
 
 /**
  * Create and start an epic actor from initial context.
+ * Pass `actions` to inject real implementations for side-effect stubs.
  */
-export function createEpicActor(context: EpicContext) {
-  const actor = createActor(epicMachine, { input: context });
+export function createEpicActor(context: EpicContext, actions?: EpicActions) {
+  const machine = actions
+    ? epicMachine.provide({ actions })
+    : epicMachine;
+  const actor = createActor(machine, { input: context });
   actor.start();
   return actor;
 }
 
 /**
  * Restore an epic actor from a persisted snapshot.
+ * Pass `actions` to inject real implementations for side-effect stubs.
  */
-export function loadEpic(snapshot: any, context: EpicContext) {
-  const actor = createActor(epicMachine, { snapshot, input: context });
+export function loadEpic(snapshot: any, context: EpicContext, actions?: EpicActions) {
+  const machine = actions
+    ? epicMachine.provide({ actions })
+    : epicMachine;
+  const actor = createActor(machine, { snapshot, input: context });
   actor.start();
   return actor;
 }

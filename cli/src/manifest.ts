@@ -15,14 +15,6 @@ import type { GatesConfig } from "./config";
 // Re-export types so consumers can import from either module
 export type { PipelineManifest, ManifestFeature, ManifestGitHub } from "./manifest-store";
 
-/** A dispatchable action derived from manifest state. */
-export interface NextAction {
-  phase: string;
-  args: string[];
-  type: "single" | "fan-out";
-  features?: string[];
-}
-
 // --- Timestamp helper ---
 
 function now(): string {
@@ -135,17 +127,6 @@ export function markFeature(
 }
 
 /**
- * Cancel the pipeline. Sets phase to "cancelled".
- */
-export function cancel(manifest: PipelineManifest): PipelineManifest {
-  return {
-    ...manifest,
-    phase: "cancelled",
-    lastUpdated: now(),
-  };
-}
-
-/**
  * Set the GitHub epic reference on the manifest.
  */
 export function setGitHubEpic(
@@ -183,48 +164,7 @@ export function setFeatureGitHubIssue(
   };
 }
 
-/**
- * Derive the next dispatchable action from manifest state.
- */
-export function deriveNextAction(
-  manifest: PipelineManifest,
-): NextAction | null {
-  const slug = manifest.slug;
-
-  switch (manifest.phase) {
-    case "design":
-      return { phase: "plan", args: [slug], type: "single" };
-
-    case "plan":
-      return { phase: "plan", args: [slug], type: "single" };
-
-    case "implement": {
-      const pendingFeatures = manifest.features
-        .filter((f) => f.status === "pending" || f.status === "in-progress")
-        .map((f) => f.slug);
-      if (pendingFeatures.length === 0) return null;
-      return {
-        phase: "implement",
-        args: [slug],
-        type: "fan-out",
-        features: pendingFeatures,
-      };
-    }
-
-    case "validate":
-      return { phase: "validate", args: [slug], type: "single" };
-
-    case "release":
-      return { phase: "release", args: [slug], type: "single" };
-
-    case "done":
-    case "cancelled":
-      return null;
-
-    default:
-      return null;
-  }
-}
+// --- Gate checking ---
 
 /**
  * Check if the manifest is blocked by a feature or a human gate.

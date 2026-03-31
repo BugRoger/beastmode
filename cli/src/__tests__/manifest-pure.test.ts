@@ -7,10 +7,8 @@ import {
   advancePhase,
   regressPhase,
   markFeature,
-  cancel,
   setGitHubEpic,
   setFeatureGitHubIssue,
-  deriveNextAction,
   checkBlocked,
   shouldAdvance,
   getPendingFeatures,
@@ -189,17 +187,6 @@ describe("markFeature", () => {
   });
 });
 
-// --- cancel ---
-
-describe("cancel", () => {
-  test("sets phase to cancelled", () => {
-    const manifest = makeManifest({ phase: "implement" });
-    const result = cancel(manifest);
-
-    expect(result.phase).toBe("cancelled");
-  });
-});
-
 // --- setGitHubEpic ---
 
 describe("setGitHubEpic", () => {
@@ -222,97 +209,6 @@ describe("setFeatureGitHubIssue", () => {
     const result = setFeatureGitHubIssue(manifest, "feat-a", 99);
 
     expect(result.features[0].github).toEqual({ issue: 99 });
-  });
-});
-
-// --- deriveNextAction ---
-
-describe("deriveNextAction", () => {
-  test("design -> plan single", () => {
-    const manifest = makeManifest({ phase: "design" });
-    const action = deriveNextAction(manifest);
-
-    expect(action).toEqual({
-      phase: "plan",
-      args: ["test-epic"],
-      type: "single",
-    });
-  });
-
-  test("plan -> plan single", () => {
-    const manifest = makeManifest({ phase: "plan" });
-    const action = deriveNextAction(manifest);
-
-    expect(action).toEqual({
-      phase: "plan",
-      args: ["test-epic"],
-      type: "single",
-    });
-  });
-
-  test("implement with pending features -> fan-out", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [
-        makeFeature({ slug: "a", status: "pending" }),
-        makeFeature({ slug: "b", status: "in-progress" }),
-        makeFeature({ slug: "c", status: "completed" }),
-      ],
-    });
-
-    const action = deriveNextAction(manifest);
-
-    expect(action).toEqual({
-      phase: "implement",
-      args: ["test-epic"],
-      type: "fan-out",
-      features: ["a", "b"],
-    });
-  });
-
-  test("implement with all completed -> null", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [
-        makeFeature({ slug: "a", status: "completed" }),
-        makeFeature({ slug: "b", status: "completed" }),
-      ],
-    });
-
-    const action = deriveNextAction(manifest);
-    expect(action).toBeNull();
-  });
-
-  test("validate -> validate single", () => {
-    const manifest = makeManifest({ phase: "validate" });
-    const action = deriveNextAction(manifest);
-
-    expect(action).toEqual({
-      phase: "validate",
-      args: ["test-epic"],
-      type: "single",
-    });
-  });
-
-  test("release -> release single", () => {
-    const manifest = makeManifest({ phase: "release" });
-    const action = deriveNextAction(manifest);
-
-    expect(action).toEqual({
-      phase: "release",
-      args: ["test-epic"],
-      type: "single",
-    });
-  });
-
-  test("done -> null (terminal phase)", () => {
-    const manifest = makeManifest({ phase: "done" });
-    expect(deriveNextAction(manifest)).toBeNull();
-  });
-
-  test("cancelled -> null (terminal phase)", () => {
-    const manifest = makeManifest({ phase: "cancelled" });
-    expect(deriveNextAction(manifest)).toBeNull();
   });
 });
 

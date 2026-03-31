@@ -1,23 +1,31 @@
 /**
- * Post-dispatch hook — runs after every phase dispatch to update the
- * manifest and sync state to GitHub.
+ * Post-dispatch hook — thin event router that feeds phase outcomes to the
+ * epic state machine and syncs the result to disk + GitHub.
  *
- * Stateless, post-only design: reads the phase output file from the
- * worktree, enriches the manifest, optionally advances the phase,
- * then mirrors state to GitHub via syncGitHub. Never throws — all
- * errors are caught and logged with a [post-dispatch] prefix.
+ * The machine owns all manifest mutations (enrichment, advancement,
+ * regression, feature tracking). This module is responsible only for:
+ *   1. Loading phase output from the worktree
+ *   2. Loading the manifest from disk
+ *   3. Mapping phase + output → machine event
+ *   4. Sending that event to a hydrated epic actor
+ *   5. Persisting the resulting state back to disk
+ *   6. Syncing to GitHub (warn-and-continue)
+ *
+ * Never throws — all errors are caught and logged with a [post-dispatch] prefix.
  */
 
 import type { Phase } from "./types";
 import type { PipelineManifest } from "./manifest-store";
 import type { Logger } from "./logger";
+import type { EpicContext, EpicEvent } from "./pipeline-machine";
 import * as store from "./manifest-store";
-import { enrich, advancePhase, markFeature, shouldAdvance, regressPhase } from "./manifest";
-import { extractFeatureStatuses, extractArtifactPaths, loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
+import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
 import { createLogger } from "./logger";
+import { createEpicActor, epicMachine } from "./pipeline-machine";
+import { createActor } from "xstate";
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {
@@ -38,8 +46,8 @@ export interface PostDispatchOptions {
 }
 
 /**
- * Run post-dispatch processing: read phase output, enrich the manifest,
- * determine if the phase should advance, and sync state to GitHub.
+ * Run post-dispatch processing: read phase output, map to machine event,
+ * send to epic actor, persist, and sync to GitHub.
  *
  * Never throws. All errors are caught and logged as warnings so a sync
  * failure never blocks the pipeline.
@@ -53,7 +61,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       return;
     }
 
-    // Load phase output from the worktree artifacts dir (where the stop hook writes)
+    // Load phase output from the worktree artifacts dir
     const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase);
     if (output) {
       logger.debug(`Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
@@ -62,64 +70,56 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     }
 
     // Load the manifest
-    let manifest = store.load(opts.projectRoot, opts.epicSlug);
+    const manifest = store.load(opts.projectRoot, opts.epicSlug);
     if (!manifest) {
       logger.debug(`No manifest found for ${opts.epicSlug} — cannot update`);
       return;
     }
     logger.debug(`Loaded manifest for ${opts.epicSlug} (phase: ${manifest.phase})`);
 
-    // Enrich manifest from phase output
-    if (output) {
-      const artifactPaths = extractArtifactPaths(output);
-      const featureStatuses = extractFeatureStatuses(output);
+    // Build the epic actor hydrated at the manifest's current phase.
+    // The persist action captures `actor` by reference (assigned before any
+    // event is sent, so the closure is safe for synchronous action execution).
+    let actor: ReturnType<typeof createEpicActor>;
+    const persistAction = ({ context }: { context: EpicContext }) => {
+      const snapshot = actor.getSnapshot();
+      const phase = (typeof snapshot.value === "string" ? snapshot.value : context.phase) as Phase;
+      store.save(opts.projectRoot, opts.epicSlug, {
+        ...context,
+        phase,
+      } as unknown as PipelineManifest);
+    };
 
-      // Build enrichment payload
-      const features = featureStatuses.length > 0
-        ? featureStatuses.map((f) => ({
-            slug: f.slug,
-            plan: "",
-            status: f.status as PipelineManifest["features"][number]["status"],
-          }))
-        : undefined;
+    // Hydrate actor at the correct state by resolving a snapshot
+    const epicContext = manifest as unknown as EpicContext;
+    const resolvedSnapshot = epicMachine.resolveState({
+      value: manifest.phase,
+      context: epicContext,
+    });
+    const machine = epicMachine.provide({ actions: { persist: persistAction } });
+    actor = createActor(machine, { snapshot: resolvedSnapshot });
+    actor.start();
 
-      manifest = enrich(manifest, {
-        phase: opts.phase,
-        features,
-        artifacts: artifactPaths.length > 0 ? artifactPaths : undefined,
-      });
-      store.save(opts.projectRoot, opts.epicSlug, manifest);
-      logger.debug(`Enriched manifest (artifacts: ${artifactPaths.length}, features: ${featureStatuses.length})`);
+    // Map phase + output → machine events and send them
+    const events = mapToEvents(opts, output, manifest, logger);
+    for (const event of events) {
+      logger.debug(`Sending event: ${event.type}`);
+      actor.send(event);
     }
 
-    // Handle implement fan-out: mark individual feature as completed only if output confirms
-    if (opts.phase === "implement" && opts.featureSlug) {
-      const featureOutput = loadWorktreeFeatureOutput(opts.worktreePath, opts.phase, opts.epicSlug, opts.featureSlug);
-      if (featureOutput?.status === "completed") {
-        manifest = markFeature(manifest, opts.featureSlug, "completed");
-        store.save(opts.projectRoot, opts.epicSlug, manifest);
-        logger.debug(`Marked feature ${opts.featureSlug} as completed (output verified)`);
-      } else {
-        logger.debug(`Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
-      }
-    }
+    // Final persist — read the actor's settled state and write to disk.
+    // This covers cases where the machine processed events but no transition
+    // fired persist (e.g., guard rejected the event).
+    const finalSnapshot = actor.getSnapshot();
+    const finalPhase = (typeof finalSnapshot.value === "string"
+      ? finalSnapshot.value
+      : manifest.phase) as Phase;
+    store.save(opts.projectRoot, opts.epicSlug, {
+      ...(finalSnapshot.context as unknown as PipelineManifest),
+      phase: finalPhase,
+    } as PipelineManifest);
 
-    // Handle validate regression: if validate didn't complete, regress to implement
-    if (opts.phase === "validate" && output?.status !== "completed") {
-      manifest = regressPhase(manifest, "implement");
-      store.save(opts.projectRoot, opts.epicSlug, manifest);
-      logger.debug(`Regressed phase: validate -> implement (features reset to pending)`);
-    }
-
-    // Determine whether to advance the phase
-    const nextPhase = shouldAdvance(manifest, output);
-    if (nextPhase) {
-      manifest = advancePhase(manifest, nextPhase);
-      store.save(opts.projectRoot, opts.epicSlug, manifest);
-      logger.log(`Advanced phase: ${opts.phase} -> ${nextPhase}`);
-    } else {
-      logger.debug(`No phase advancement for ${opts.phase}`);
-    }
+    actor.stop();
 
     // Sync to GitHub — warn-and-continue
     try {
@@ -127,8 +127,11 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       if (config.github.enabled) {
         const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
         if (resolved) {
-          await syncGitHub(manifest, config, resolved);
-          logger.debug("GitHub sync complete");
+          const updatedManifest = store.load(opts.projectRoot, opts.epicSlug);
+          if (updatedManifest) {
+            await syncGitHub(updatedManifest, config, resolved);
+            logger.debug("GitHub sync complete");
+          }
         } else {
           logger.debug("GitHub discovery failed — skipping sync");
         }
@@ -141,4 +144,107 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     const message = err instanceof Error ? err.message : String(err);
     logger.warn(`Unexpected error (non-blocking): ${message}`);
   }
+}
+
+// ── Event mapping ────────────────────────────────────────────────
+
+/**
+ * Map post-dispatch options + phase output to a sequence of machine events.
+ * Returns an ordered list — some phases may produce multiple events
+ * (e.g., FEATURE_COMPLETED followed by IMPLEMENT_COMPLETED).
+ */
+function mapToEvents(
+  opts: PostDispatchOptions,
+  output: ReturnType<typeof loadWorktreePhaseOutput>,
+  manifest: PipelineManifest,
+  logger: Logger,
+): EpicEvent[] {
+  const events: EpicEvent[] = [];
+
+  switch (opts.phase) {
+    case "design": {
+      const artifacts = output?.artifacts as Record<string, unknown> | undefined;
+      const realSlug = artifacts?.slug as string | undefined;
+      events.push({ type: "DESIGN_COMPLETED", realSlug });
+      break;
+    }
+
+    case "plan": {
+      const features = extractFeaturesFromOutput(output);
+      if (features.length > 0) {
+        events.push({ type: "PLAN_COMPLETED", features });
+      } else {
+        // No features extracted — send anyway, guard will reject if empty
+        events.push({ type: "PLAN_COMPLETED", features: [] });
+      }
+      break;
+    }
+
+    case "implement": {
+      if (opts.featureSlug) {
+        // Fan-out: check if this specific feature's output confirms completion
+        const featureOutput = loadWorktreeFeatureOutput(
+          opts.worktreePath,
+          opts.phase,
+          opts.epicSlug,
+          opts.featureSlug,
+        );
+        if (featureOutput?.status === "completed") {
+          events.push({ type: "FEATURE_COMPLETED", featureSlug: opts.featureSlug });
+          logger.debug(`Feature ${opts.featureSlug} output verified — sending FEATURE_COMPLETED`);
+        } else {
+          logger.debug(`Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
+        }
+      }
+      // Always attempt IMPLEMENT_COMPLETED — the guard checks allFeaturesCompleted
+      events.push({ type: "IMPLEMENT_COMPLETED" });
+      break;
+    }
+
+    case "validate": {
+      if (output?.status === "completed") {
+        events.push({ type: "VALIDATE_COMPLETED" });
+      } else {
+        events.push({ type: "VALIDATE_FAILED" });
+      }
+      break;
+    }
+
+    case "release": {
+      if (output?.status === "completed") {
+        events.push({ type: "RELEASE_COMPLETED" });
+      }
+      break;
+    }
+  }
+
+  return events;
+}
+
+/**
+ * Extract feature definitions from plan phase output.
+ * Returns array suitable for PLAN_COMPLETED event payload.
+ */
+function extractFeaturesFromOutput(
+  output: ReturnType<typeof loadWorktreePhaseOutput>,
+): Array<{ slug: string; plan: string }> {
+  if (!output) return [];
+  const artifacts = output.artifacts as Record<string, unknown>;
+  if (!artifacts || !Array.isArray(artifacts.features)) return [];
+
+  const features: Array<{ slug: string; plan: string }> = [];
+  for (const entry of artifacts.features) {
+    if (
+      typeof entry === "object" &&
+      entry !== null &&
+      typeof (entry as Record<string, unknown>).slug === "string"
+    ) {
+      const rec = entry as Record<string, unknown>;
+      features.push({
+        slug: rec.slug as string,
+        plan: typeof rec.plan === "string" ? rec.plan : "",
+      });
+    }
+  }
+  return features;
 }
