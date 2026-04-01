@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "sync-helper-extract",
+        "status": "completed"
+      }
+    ]
+  }
+}

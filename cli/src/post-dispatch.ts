@@ -65,6 +65,16 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       return;
     }
 
+    // Design abandon guard: if design produced no output, skip machine advancement.
+    // Primary cleanup happens in phase.ts — this is a defensive backstop.
+    if (opts.phase === "design") {
+      const designOutput = loadWorktreePhaseOutput(opts.worktreePath, "design", opts.epicSlug);
+      if (!designOutput) {
+        logger.log(`Design phase produced no output for ${opts.epicSlug} — skipping post-dispatch`);
+        return;
+      }
+    }
+
     // Load phase output from the worktree artifacts dir, filtered by slug
     const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase, opts.epicSlug);
     if (output) {

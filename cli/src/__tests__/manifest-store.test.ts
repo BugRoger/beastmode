@@ -9,6 +9,7 @@ import {
   list,
   save,
   create,
+  remove,
   validate,
   slugify,
   isValidSlug,
@@ -158,6 +159,31 @@ describe("save", () => {
     const loaded = get(TEST_ROOT, "save-test");
     expect(loaded.slug).toBe("save-test");
     expect(loaded.phase).toBe("plan");
+  });
+});
+
+describe("remove", () => {
+  beforeEach(() => cleanup());
+  afterEach(() => cleanup());
+
+  test("returns true and deletes manifest file", () => {
+    create(TEST_ROOT, "rm-epic");
+    expect(manifestExists(TEST_ROOT, "rm-epic")).toBe(true);
+
+    const result = remove(TEST_ROOT, "rm-epic");
+    expect(result).toBe(true);
+    expect(manifestExists(TEST_ROOT, "rm-epic")).toBe(false);
+  });
+
+  test("returns false for nonexistent slug without throwing", () => {
+    const result = remove(TEST_ROOT, "nonexistent");
+    expect(result).toBe(false);
+  });
+
+  test("is idempotent — second call returns false", () => {
+    create(TEST_ROOT, "idem-epic");
+    expect(remove(TEST_ROOT, "idem-epic")).toBe(true);
+    expect(remove(TEST_ROOT, "idem-epic")).toBe(false);
   });
 });
 

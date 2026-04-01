@@ -1,0 +1,27 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "abandon-tests",
+        "plan": "2026-04-01-design-cleanup-abandon-tests.md",
+        "wave": 2
+      },
+      {
+        "slug": "post-dispatch-guard",
+        "plan": "2026-04-01-design-cleanup-post-dispatch-guard.md",
+        "wave": 1
+      },
+      {
+        "slug": "design-abandon-guard",
+        "plan": "2026-04-01-design-cleanup-design-abandon-guard.md",
+        "wave": 1
+      },
+      {
+        "slug": "design-abandon-gate",
+        "plan": "2026-04-01-design-cleanup-design-abandon-gate.md",
+        "wave": 1
+      }
+    ]
+  }
+}

@@ -21,6 +21,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 import { createLogger } from "./logger.js";
+import { createTag } from "./phase-tags.js";
 
 // --- Version banner ---
 
@@ -351,6 +352,16 @@ export class WatchLoop extends EventEmitter {
           });
         } catch (err) {
           this.logger.warn(`Failed to log run: ${err}`);
+        }
+
+        // Create phase tag for regression support (mirrors post-dispatch in CLI path)
+        if (result.success) {
+          try {
+            const wtPath = resolve(this.config.projectRoot, ".claude", "worktrees", session.worktreeSlug);
+            await createTag(session.epicSlug, session.phase, { cwd: wtPath });
+          } catch (err) {
+            this.logger.warn(`Failed to create phase tag: ${err}`);
+          }
         }
 
         // Event-driven re-scan: immediately process this epic again

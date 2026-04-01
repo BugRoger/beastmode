@@ -103,6 +103,8 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 10. ALWAYS use polling for status --watch (2-second interval) — no filesystem events, no new dependencies, pure ANSI escape codes over stdout
 11. ALWAYS use standardized frontmatter across all phase artifacts — `phase`, `slug` (immutable hex), `epic` (human name) always present; phase-specific additions per phase
 12. ALWAYS use single `store.save()` per dispatch — machine persist accumulates state in memory, no disk writes during transitions
+13. ALWAYS gate design completion on output.json existence — primary gate in phase.ts cleans up (worktree, manifest, GitHub issue) before post-dispatch; secondary guard in post-dispatch skips DESIGN_COMPLETED if no output exists
+14. ALWAYS use warn-and-continue for GitHub issue cleanup during design abandon — closure failure must not block worktree and manifest cleanup
 
 context/design/cli.md
 

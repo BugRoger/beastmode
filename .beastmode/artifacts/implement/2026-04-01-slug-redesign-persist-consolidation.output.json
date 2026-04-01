@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "persist-consolidation",
+        "status": "completed"
+      }
+    ]
+  }
+}

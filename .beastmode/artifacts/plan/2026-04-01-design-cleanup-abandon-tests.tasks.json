@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-01-design-cleanup-abandon-tests.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add store.remove() tests to manifest-store.test.ts", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add design abandon gate tests to phase-abandon.test.ts", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add post-dispatch guard unit tests for DESIGN_COMPLETED event", "wave": 1, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Run full test suite and verify all tests pass", "wave": 2, "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-01T00:00:00Z"
+}

@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "watch-loop-sync",
+        "plan": "2026-03-31-github-sync-watch-loop-watch-loop-sync.md"
+      },
+      {
+        "slug": "cancelled-phase-sync",
+        "plan": "2026-03-31-github-sync-watch-loop-cancelled-phase-sync.md"
+      },
+      {
+        "slug": "sync-helper-extract",
+        "plan": "2026-03-31-github-sync-watch-loop-sync-helper-extract.md"
+      }
+    ]
+  }
+}

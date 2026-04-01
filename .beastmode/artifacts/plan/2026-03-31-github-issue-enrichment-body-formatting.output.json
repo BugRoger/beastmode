@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "sync-body-update",
+        "plan": "2026-03-31-github-issue-enrichment-sync-body-update.md"
+      },
+      {
+        "slug": "manifest-summary",
+        "plan": "2026-03-31-github-issue-enrichment-manifest-summary.md"
+      },
+      {
+        "slug": "body-formatting",
+        "plan": "2026-03-31-github-issue-enrichment-body-formatting.md"
+      }
+    ]
+  }
+}

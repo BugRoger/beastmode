@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.57.1 — Design Abandon Cleanup (Apr 2026)
+
+- **Primary abandon gate** — Detects missing design output after `runInteractive()` returns, triggers cleanup sequence (worktree removal, manifest deletion, GitHub issue close)
+- **Secondary post-dispatch guard** — Prevents `DESIGN_COMPLETED` event when no output artifact exists, blocking state machine advancement
+- **Idempotent `store.remove()`** — Returns false for missing files, safe to retry
+- **Test coverage** — 16 new tests for design abandon gate (both exit paths), post-dispatch guard, and manifest store remove idempotency
+- **Net code reduction** — 349 added, 609 removed across 23 files
+
+---
+
 ### v0.57.0 — Phase Rerun (Apr 2026)
 
 - **Phase regression/rerun** — Overloads `beastmode <phase> <slug>` to detect when the requested phase is at or behind the current phase, resetting the branch to the predecessor phase's tag and rerunning fresh

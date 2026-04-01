@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "compaction-agent",
+        "status": "completed"
+      }
+    ]
+  }
+}

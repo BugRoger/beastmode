@@ -97,11 +97,11 @@ describe("runPostDispatch", () => {
     expect(after).toBe(before);
   });
 
-  test("runs without error when no output file exists", async () => {
+  test("design phase with no output skips post-dispatch (abandon guard)", async () => {
     const manifest = makeManifest({ phase: "design" });
     writeTestManifest(EPIC_SLUG, manifest);
 
-    // No output file in the worktree — should not throw
+    // No output file in the worktree — abandon guard returns early
     await runPostDispatch({
       worktreePath: WORKTREE,
       projectRoot: TEST_ROOT,
@@ -110,9 +110,50 @@ describe("runPostDispatch", () => {
       success: true,
     });
 
-    // Manifest should still exist and phase should advance (design -> plan, always)
+    // Guard returns early — manifest untouched, phase stays design
     const updated = readTestManifest(EPIC_SLUG);
     expect(updated.slug).toBe(EPIC_SLUG);
+    expect(updated.phase).toBe("design");
+  });
+
+  test("design failure with no output does not advance manifest", async () => {
+    const manifest = makeManifest({ phase: "design" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Design failed (non-zero exit) and no output — both guards apply
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "design",
+      success: false,
+    });
+
+    // Failure early-exit + abandon guard — manifest untouched
+    const updated = readTestManifest(EPIC_SLUG);
+    expect(updated.phase).toBe("design");
+  });
+
+  test("design phase with minimal output advances to plan (DESIGN_COMPLETED fires)", async () => {
+    const manifest = makeManifest({ phase: "design" });
+    writeTestManifest(EPIC_SLUG, manifest);
+
+    // Minimal valid output — no slug, no design field, just status + artifacts
+    writePhaseOutput(WORKTREE, "design", EPIC_SLUG, {
+      status: "completed",
+      artifacts: {},
+    });
+
+    await runPostDispatch({
+      worktreePath: WORKTREE,
+      projectRoot: TEST_ROOT,
+      epicSlug: EPIC_SLUG,
+      phase: "design",
+      success: true,
+    });
+
+    // DESIGN_COMPLETED event should fire, advancing phase to plan
+    const updated = readTestManifest(EPIC_SLUG);
     expect(updated.phase).toBe("plan");
   });
 
