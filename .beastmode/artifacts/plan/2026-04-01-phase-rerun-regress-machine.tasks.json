@@ -1,10 +1,10 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-04-01-phase-rerun-regress-machine.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Remove VALIDATE_FAILED from types and index", "wave": 1, "status": "pending"},
-    {"id": 1, "subject": "Task 1: Remove VALIDATE_FAILED transition from epic machine", "wave": 1, "status": "pending"},
-    {"id": 2, "subject": "Task 2: Migrate VALIDATE_FAILED tests to REGRESS equivalents", "wave": 2, "status": "pending"},
-    {"id": 3, "subject": "Task 3: Run tests and verify all pass", "wave": 2, "status": "pending"}
+    {"id": 0, "subject": "Task 0: Remove VALIDATE_FAILED from types and index", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Remove VALIDATE_FAILED transition from epic machine", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Migrate VALIDATE_FAILED tests to REGRESS equivalents", "wave": 2, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Run tests and verify all pass", "wave": 2, "status": "completed"}
   ],
-  "lastUpdated": "2026-04-01T00:00:00Z"
+  "lastUpdated": "2026-04-01T17:54:00Z"
 }
