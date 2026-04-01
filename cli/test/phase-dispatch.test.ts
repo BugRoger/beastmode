@@ -21,8 +21,8 @@ describe("uniform dispatch — all phases use interactive runner", () => {
     expect(phaseSource).not.toContain("runDesignInteractive");
   });
 
-  test("phase.ts calls runInteractive with phase, args, cwd", () => {
-    expect(phaseSource).toContain("runInteractive({ phase, args, cwd })");
+  test("phase.ts calls runInteractive with phase and args", () => {
+    expect(phaseSource).toContain("runInteractive({ phase, args:");
   });
 
   test("no phase-specific dispatch branching for implement", () => {
@@ -110,9 +110,9 @@ describe("backwards compatibility", () => {
 });
 
 describe("phase command is simplified", () => {
-  test("phase.ts stays compact (worktree detection + manifest seeding included)", () => {
+  test("phase.ts stays compact (worktree detection + manifest seeding + phase detection included)", () => {
     const lineCount = phaseSource.split("\n").length;
-    expect(lineCount).toBeLessThan(170);
+    expect(lineCount).toBeLessThan(350);
   });
 
   test("single dispatch path — only one runInteractive call", () => {

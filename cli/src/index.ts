@@ -31,6 +31,7 @@ Usage:
 
 Flags:
   -v, -vv, -vvv                    Increase output verbosity
+  --yes, -y                        Skip confirmation prompts (phase regression)
 `);
 }
 

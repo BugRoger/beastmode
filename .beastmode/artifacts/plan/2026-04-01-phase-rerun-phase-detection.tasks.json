@@ -1,11 +1,11 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-04-01-phase-rerun-phase-detection.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Add REGRESS event and phase ordering to types", "wave": 1, "status": "pending"},
-    {"id": 1, "subject": "Task 1: Add REGRESS guard and actions to epic machine", "wave": 1, "status": "pending"},
-    {"id": 2, "subject": "Task 2: Add REGRESS event tests to epic machine", "wave": 2, "status": "pending"},
-    {"id": 3, "subject": "Task 3: Add phase detection logic to phase command", "wave": 2, "status": "pending"},
-    {"id": 4, "subject": "Task 4: Replace VALIDATE_FAILED with REGRESS in post-dispatch", "wave": 3, "status": "pending"}
+    {"id": 0, "subject": "Task 0: Add REGRESS event and phase ordering to types", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add REGRESS guard and actions to epic machine", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add REGRESS event tests to epic machine", "wave": 2, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Add phase detection logic to phase command", "wave": 2, "status": "completed"},
+    {"id": 4, "subject": "Task 4: Replace VALIDATE_FAILED with REGRESS in post-dispatch", "wave": 3, "status": "completed"}
   ],
-  "lastUpdated": "2026-04-01T12:00:00Z"
+  "lastUpdated": "2026-04-01T15:40:00Z"
 }
