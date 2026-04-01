@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: 08cdad
+slug: phase-rerun
 epic: phase-rerun
 ---
 
