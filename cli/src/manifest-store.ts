@@ -450,10 +450,8 @@ export async function rename(
 
 /**
  * Write a manifest to disk.
- *
- * When the manifest's internal slug differs from the lookup slug (e.g. after
- * DESIGN_COMPLETED renames a temp hash to the real slug), the file is renamed
- * to match the new slug so filename and content stay in sync.
+ * Pure write operation — looks up existing path or creates new, writes JSON.
+ * All rename logic lives in store.rename().
  */
 export function save(
   projectRoot: string,
@@ -464,24 +462,7 @@ export function save(
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   const existingPath = manifestPath(projectRoot, slug);
-  let targetPath = existingPath ?? newManifestPath(projectRoot, slug);
-
-  // If the manifest's internal slug changed (e.g. temp hash → real slug),
-  // rename the file so the filename matches the content.
-  if (manifest.slug && manifest.slug !== slug && existingPath) {
-    const newPath = newManifestPath(projectRoot, manifest.slug);
-    // Only rename if there isn't already a file for the new slug
-    if (!manifestPath(projectRoot, manifest.slug)) {
-      renameSync(existingPath, newPath);
-      targetPath = newPath;
-      process.stdout.write(`Manifest renamed: ${slug} → ${manifest.slug}\n`);
-    } else {
-      // A file for the new slug already exists — write there and remove the old one
-      targetPath = manifestPath(projectRoot, manifest.slug)!;
-      unlinkSync(existingPath);
-      process.stdout.write(`Manifest merged: ${slug} → ${manifest.slug} (existing)\n`);
-    }
-  }
+  const targetPath = existingPath ?? newManifestPath(projectRoot, slug);
 
   writeFileSync(targetPath, JSON.stringify(manifest, null, 2));
 }

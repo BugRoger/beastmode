@@ -26,9 +26,7 @@ import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
 import { createLogger } from "./logger";
 import { createEpicActor, epicMachine } from "./pipeline-machine";
-import { renameEpicSlug } from "./rename-slug";
 import { createActor } from "xstate";
-import { execSync } from "child_process";
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {
@@ -64,19 +62,12 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       return;
     }
 
-    // Resolve the output slug — for design phase the epicSlug is a temp hex,
-    // so we extract the real slug from the checkpoint commit message.
-    // All other phases use the epicSlug directly.
-    const outputSlug = opts.phase === "design"
-      ? resolveDesignSlug(opts.worktreePath, logger) ?? undefined
-      : opts.epicSlug;
-
     // Load phase output from the worktree artifacts dir, filtered by slug
-    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase, outputSlug);
+    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase, opts.epicSlug);
     if (output) {
-      logger.detail(`Loaded phase output for ${opts.phase}/${outputSlug ?? opts.epicSlug} (status: ${output.status})`);
+      logger.detail(`Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
     } else {
-      logger.detail(`No phase output found for ${opts.phase}/${outputSlug ?? opts.epicSlug} — continuing without enrichment`);
+      logger.detail(`No phase output found for ${opts.phase}/${opts.epicSlug} — continuing without enrichment`);
     }
 
     // Load the manifest
@@ -87,18 +78,11 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     }
     logger.detail(`Loaded manifest for ${opts.epicSlug} (phase: ${manifest.phase})`);
 
-    // Build the epic actor hydrated at the manifest's current phase.
-    // The persist action captures `actor` by reference (assigned before any
-    // event is sent, so the closure is safe for synchronous action execution).
+    // Persist is memory-only: XState assign actions update context in place.
+    // Single store.save() at end of dispatch handles disk persistence.
+    const persistAction = () => {};
+
     let actor: ReturnType<typeof createEpicActor>;
-    const persistAction = ({ context }: { context: EpicContext }) => {
-      const snapshot = actor.getSnapshot();
-      const phase = (typeof snapshot.value === "string" ? snapshot.value : context.phase) as Phase;
-      store.save(opts.projectRoot, opts.epicSlug, {
-        ...context,
-        phase,
-      } as unknown as PipelineManifest);
-    };
 
     // Hydrate actor at the correct state by resolving a snapshot
     const epicContext = manifest as unknown as EpicContext;
@@ -118,78 +102,68 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
     }
 
     // Design phase: rename hex slug to real slug with collision detection.
-    // Must happen after the machine processes DESIGN_COMPLETED (so context.slug
-    // is set) but before final persist (renameEpicSlug handles its own manifest).
+    // store.rename() updates manifest fields in memory — no disk write.
     const finalSnapshot = actor.getSnapshot();
     const finalPhase = (typeof finalSnapshot.value === "string"
       ? finalSnapshot.value
       : manifest.phase) as Phase;
 
-    let skipFinalPersist = false;
     if (opts.phase === "design" && finalPhase !== "design") {
-      const realSlug = (finalSnapshot.context as unknown as EpicContext).slug;
-      if (realSlug && realSlug !== opts.epicSlug) {
-        const result = await renameEpicSlug({
-          hexSlug: opts.epicSlug,
-          realSlug,
-          projectRoot: opts.projectRoot,
-          worktreePath: opts.worktreePath,
-        });
+      const epicName = (finalSnapshot.context as unknown as EpicContext).epic
+        ?? (finalSnapshot.context as unknown as EpicContext).slug;
+      if (epicName && epicName !== opts.epicSlug) {
+        const result = await store.rename(
+          opts.projectRoot,
+          opts.epicSlug,
+          epicName,
+          opts.worktreePath,
+        );
         if (result.renamed) {
           opts.epicSlug = result.finalSlug;
-          skipFinalPersist = true; // renameEpicSlug already persisted manifest
-          logger.log(`Renamed ${realSlug} → ${result.finalSlug}`);
+          logger.log(`Renamed ${opts.epicSlug} → ${result.finalSlug}`);
         } else if (result.error) {
           logger.warn(`Slug rename failed: ${result.error}`);
         }
       }
     }
 
-    // Final persist — read the actor's settled state and write to disk.
-    // Skipped when renameEpicSlug already handled manifest persistence.
-    if (!skipFinalPersist) {
-      store.save(opts.projectRoot, opts.epicSlug, {
-        ...(finalSnapshot.context as unknown as PipelineManifest),
-        phase: finalPhase,
-      } as PipelineManifest);
-    }
+    // Build final manifest from actor's settled state
+    let finalManifest = {
+      ...(finalSnapshot.context as unknown as PipelineManifest),
+      phase: finalPhase,
+    } as PipelineManifest;
 
     actor.stop();
 
-    // Sync to GitHub — warn-and-continue
+    // Sync to GitHub — warn-and-continue, accumulate mutations in memory
     try {
       const config = loadConfig(opts.projectRoot);
       if (config.github.enabled) {
         const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
         if (resolved) {
-          const updatedManifest = store.load(opts.projectRoot, opts.epicSlug);
-          if (updatedManifest) {
-            const syncResult = await syncGitHub(updatedManifest, config, resolved);
+          const syncResult = await syncGitHub(finalManifest, config, resolved);
 
-            // Apply sync mutations (issue numbers, body hashes) back to manifest
-            if (syncResult.mutations.length > 0) {
-              let mutated = updatedManifest;
-              for (const m of syncResult.mutations) {
-                switch (m.type) {
-                  case "setEpic":
-                    mutated = setGitHubEpic(mutated, m.epicNumber, m.repo);
-                    break;
-                  case "setFeatureIssue":
-                    mutated = setFeatureGitHubIssue(mutated, m.featureSlug, m.issueNumber);
-                    break;
-                  case "setEpicBodyHash":
-                    mutated = setEpicBodyHash(mutated, m.bodyHash);
-                    break;
-                  case "setFeatureBodyHash":
-                    mutated = setFeatureBodyHash(mutated, m.featureSlug, m.bodyHash);
-                    break;
-                }
+          // Apply sync mutations (issue numbers, body hashes) to in-memory manifest
+          if (syncResult.mutations.length > 0) {
+            for (const m of syncResult.mutations) {
+              switch (m.type) {
+                case "setEpic":
+                  finalManifest = setGitHubEpic(finalManifest, m.epicNumber, m.repo);
+                  break;
+                case "setFeatureIssue":
+                  finalManifest = setFeatureGitHubIssue(finalManifest, m.featureSlug, m.issueNumber);
+                  break;
+                case "setEpicBodyHash":
+                  finalManifest = setEpicBodyHash(finalManifest, m.bodyHash);
+                  break;
+                case "setFeatureBodyHash":
+                  finalManifest = setFeatureBodyHash(finalManifest, m.featureSlug, m.bodyHash);
+                  break;
               }
-              store.save(opts.projectRoot, opts.epicSlug, mutated);
             }
-
-            logger.log("GitHub sync complete");
           }
+
+          logger.log("GitHub sync complete");
         } else {
           logger.detail("GitHub discovery failed — skipping sync");
         }
@@ -198,34 +172,12 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       const message = err instanceof Error ? err.message : String(err);
       logger.warn(`GitHub sync failed (non-blocking): ${message}`);
     }
+
+    // Single persist — all mutations (machine events, rename, sync) accumulated in memory
+    store.save(opts.projectRoot, opts.epicSlug, finalManifest);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.warn(`Unexpected error (non-blocking): ${message}`);
-  }
-}
-
-// ── Design slug resolution ──────────────────────────────────────
-
-/**
- * Extract the real epic slug from the worktree's latest commit message.
- * The design checkpoint always commits as `design(<slug>): checkpoint`.
- * Returns null if the commit message doesn't match.
- */
-function resolveDesignSlug(worktreePath: string, logger: Logger): string | null {
-  try {
-    const msg = execSync("git log -1 --format=%s", {
-      cwd: worktreePath,
-      encoding: "utf-8",
-    }).trim();
-    const match = msg.match(/^design\((.+?)\):/);
-    if (match) {
-      logger.detail(`Resolved design slug from commit: ${match[1]}`);
-      return match[1];
-    }
-    logger.detail(`Could not extract slug from commit message: ${msg}`);
-    return null;
-  } catch {
-    return null;
   }
 }
 

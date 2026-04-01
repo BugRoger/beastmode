@@ -49,6 +49,16 @@ export async function phaseCommand(
     : process.cwd();
   const worktreeSlug = deriveWorktreeSlug(phase, args);
 
+  // Fail-fast: non-design phases require the slug to exist in the store.
+  // Check before creating the worktree to avoid orphaned worktrees.
+  if (phase !== "design") {
+    const existing = store.find(projectRoot, worktreeSlug);
+    if (!existing) {
+      logger.error(`Epic "${worktreeSlug}" not found — run "beastmode design" first`);
+      process.exit(1);
+    }
+  }
+
   let cwd: string;
   if (inWorktree) {
     // Already in a worktree (cmux dispatch) — use cwd as-is

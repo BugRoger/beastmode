@@ -1,0 +1,48 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-01-slug-redesign-dispatch-cleanup.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: Delete rename-slug.ts and its test file",
+      "wave": 1,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/rename-slug.ts",
+        "cli/src/__tests__/rename-slug.test.ts"
+      ]
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Rewrite post-dispatch.ts — remove dead code, wire store.rename(), single persist, hex-based output lookup",
+      "wave": 1,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/post-dispatch.ts"
+      ]
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Add fail-fast slug validation to commands/phase.ts for non-design phases",
+      "wave": 1,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/commands/phase.ts"
+      ]
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Update post-dispatch.test.ts for new behavior",
+      "wave": 2,
+      "parallel_safe": false,
+      "depends_on": [1],
+      "status": "pending",
+      "files": [
+        "cli/src/__tests__/post-dispatch.test.ts"
+      ]
+    }
+  ],
+  "lastUpdated": "2026-04-01T06:00:00Z"
+}
