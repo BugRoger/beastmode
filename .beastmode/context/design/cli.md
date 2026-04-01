@@ -43,12 +43,22 @@
 ## Manifest Lifecycle
 - CLI creates manifest at first phase dispatch (design) via store.create(slug) before dispatching — manifest exists throughout the entire skill session
 - ALWAYS enrich manifest from output.json after each dispatch — Stop hook auto-generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json` from artifact frontmatter
-- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate, rename, find, slugify) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- Terminology: `slug` is an immutable 6-character hex assigned at worktree creation; `epic` is the human-readable name derived by the design skill after rename; `feature` is a sub-unit within an epic
+- `store.rename()` atomically renames all slug-keyed resources (artifacts, branch, worktree, manifest file, manifest content) with prepare-then-execute strategy — collision resolution uses deterministic `<epic>-<hex>` suffix
+- `store.find()` resolves by either hex slug or epic name — dual lookup for user convenience
+- `slugify()` and `isValidSlug()` centralize format validation in the store (`[a-z0-9](?:[a-z0-9-]*[a-z0-9])?`)
+- `originId` field preserves lineage from birth hex to final epic name after rename
 - Manifest location: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
 ## Post-Dispatch Pipeline
-- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/`, enriches manifest via manifest.ts pure functions, runs `syncGitHubForEpic()` which encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back via setGitHubEpic()/setFeatureGitHubIssue(), and warn-and-continue error handling
+- After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/` by hex slug match, enriches manifest via manifest.ts pure functions, optionally calls `store.rename()` for design phase (memory-only), then single `store.save()`, then runs `syncGitHubForEpic()` which encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back via setGitHubEpic()/setFeatureGitHubIssue(), and warn-and-continue error handling
+- Non-design phases fail fast if slug not found in store via `store.find()` — design creates the slug, all other phases are read-only with respect to slug identity
+- Machine persist action accumulates state in memory without disk writes — single `store.save()` at end of dispatch is the sole persist path
+- `resolveDesignSlug()` (commit-message regex) deleted — output.json hex lookup replaces it
+- `skipFinalPersist` flag deleted — single persist path needs no coordination
+- `rename-slug.ts` deleted — logic absorbed into `store.rename()`
 - github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save()
 - Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
 - ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
@@ -57,5 +67,6 @@
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
 - A Stop hook (configured in `.claude/settings.json`) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
 - output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
-- Artifact frontmatter schema per phase: design (phase, slug), plan (phase, epic, feature), implement (phase, epic, feature, status), validate (phase, slug, status), release (phase, slug, bump)
-- CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch
+- Standardized artifact frontmatter across all phases: `phase`, `slug` (immutable hex), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
+- CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
+- `filenameMatchesEpic()` handles both hex-named files (pre-rename) and epic-named files (post-rename) during the design phase transition window

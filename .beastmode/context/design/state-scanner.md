@@ -9,10 +9,11 @@
 
 ## Manifest Validation Schema
 - PipelineManifest is the sole manifest type — EpicState, FeatureProgress, ScanResult, and the old Manifest interface are all deleted
-- Required fields: `slug` (string), `phase` (valid Phase literal), `features` (ManifestFeature[]), `lastUpdated` (ISO-8601 string)
-- Optional fields: `artifacts` (Record<string, string[]>), `summary` ({ problem, solution }), `worktree` ({ branch, path }), `github` ({ epic, repo, bodyHash? }), `blocked` ({ gate, reason } | null)
+- Required fields: `slug` (string, immutable hex), `phase` (valid Phase literal), `features` (ManifestFeature[]), `lastUpdated` (ISO-8601 string)
+- Optional fields: `epic` (string, human-readable name after rename), `originId` (string, birth hex for lineage), `artifacts` (Record<string, string[]>), `summary` ({ problem, solution }), `worktree` ({ branch, path }), `github` ({ epic, repo, bodyHash? }), `blocked` ({ gate, reason } | null)
 - ManifestFeature extended with optional `description` field — plan checkpoint populates it
 - manifest-store.ts owns the validate() function — single source of truth for manifest structure
+- Slug format validated against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?` via `isValidSlug()`
 
 ## Type Architecture
 - ALWAYS use PipelineManifest as the sole type — canonical for store, state machine, status command, and watch command

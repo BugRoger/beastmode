@@ -50,10 +50,10 @@ Dispatch semantics are inherent to the state, not derived by external logic. Sta
 ## Persistence
 
 ### Decision
-Same `.manifest.json` format. Machine context IS the PipelineManifest shape. Persist action writes context to disk via `store.save()`. Load creates actor with context from disk. No migration needed for existing manifests.
+Same `.manifest.json` format. Machine context IS the PipelineManifest shape. Persist action accumulates state changes in memory only — no disk writes during machine transitions. Single `store.save()` at end of post-dispatch writes the final state to disk. Load creates actor with context from disk. No migration needed for existing manifests. `store.save()` is a pure write operation with no rename detection or file manipulation beyond writing the manifest. `store.rename()` updates manifest fields in memory without persisting.
 
 ### Rationale
-Manifests are read by status command, watch loop, scanner, and potentially external tooling. Coupling storage format to XState's internal snapshot structure would break all consumers and require migration. Adapter code between XState context and PipelineManifest is trivial.
+Manifests are read by status command, watch loop, scanner, and potentially external tooling. Coupling storage format to XState's internal snapshot structure would break all consumers and require migration. Memory-only persist during machine transitions eliminates multiple disk writes per dispatch (previously 5+ per dispatch) and prevents mid-transaction state divergence. Single write path means no `skipFinalPersist` coordination flag needed.
 
 ### Source
 .beastmode/artifacts/design/2026-03-31-xstate-pipeline-machine.md

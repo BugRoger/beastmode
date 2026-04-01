@@ -11,7 +11,8 @@
 - ALWAYS place assign() calls inside setup() actions — XState v5.30 requires this for type inference
 - Action logic lives in pure compute functions exported from actions.ts
 - assign() wrappers in setup() call the compute functions and add lastUpdated timestamps
-- Side-effect actions (persist) are stubs — consumers provide real implementations
+- Side-effect actions (persist) accumulate state in memory only — no disk writes during machine transitions
+- Single `store.save()` at end of post-dispatch writes final state — `store.save()` is a pure write with no rename detection
 
 ## Dispatch Metadata
 - Every state node declares meta: { dispatchType } — single, fan-out, or skip

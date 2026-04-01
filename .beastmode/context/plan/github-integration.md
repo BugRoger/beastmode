@@ -34,16 +34,17 @@
 - Transition modes: human (requires approval), auto (self-advancing) -- matches existing gate system
 
 ## State Authority Model
-- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/state/<slug>/manifest.json`, gitignored, local-only
+- ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json`, gitignored, local-only
+- Terminology: `slug` is an immutable hex key, `epic` is the human-readable name derived after design phase rename
 - CLI is the sole manifest mutator: seed at first dispatch, enrich from phase output files, advance phase, reconstruct from branch scanning on cold start
-- Manifest managed through two modules: manifest-store.ts (filesystem boundary, sole disk accessor) and manifest.ts (pure state machine functions, no fs imports, all functions immutable)
+- Manifest managed through two modules: manifest-store.ts (filesystem boundary, sole disk accessor — includes rename, find, slugify) and manifest.ts (pure state machine functions, no fs imports, all functions immutable)
 - Skills are pure artifact producers -- write artifacts with YAML frontmatter to `artifacts/<phase>/`, never touch manifests or output.json
 - Stop hook auto-generates output.json from artifact frontmatter as sole completion signal (replaces .dispatch-done.json)
 - github-sync.ts returns mutation objects -- caller applies via manifest.ts functions and saves through manifest-store.ts
 - GitHub is a synced mirror updated post-dispatch -- provides the global view across designs
 - Artifact files (.beastmode/artifacts/) are the committed content store (PRDs, plans, validation reports)
 - `/beastmode status` bridges both: scans state directories for local manifest state, queries GitHub for the board view when enabled
-- Manifest schema is pure pipeline state: slug, phase, features array, artifacts, worktree info, optional github block, structured blocked field ({ gate, reason } | null) -- no architectural decisions or content concerns
+- Manifest schema is pure pipeline state: slug (hex), epic? (human name), originId? (birth hex), phase, features array, artifacts, worktree info, optional github block, structured blocked field ({ gate, reason } | null) -- no architectural decisions or content concerns
 - Four feature statuses: pending, in-progress, blocked, completed
 - GitHub API failures: warn and continue -- absence of `github` data is the signal
 
