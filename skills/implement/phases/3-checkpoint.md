@@ -34,6 +34,7 @@ The artifact MUST begin with YAML frontmatter:
 ```yaml
 ---
 phase: implement
+slug: <hex>
 epic: <design>
 feature: <feature-slug>
 status: completed

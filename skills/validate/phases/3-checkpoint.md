@@ -9,7 +9,8 @@ The validation report must begin with YAML frontmatter:
 ```
 ---
 phase: validate
-slug: <feature>
+slug: <hex>
+epic: <feature>
 status: passed
 ---
 ```

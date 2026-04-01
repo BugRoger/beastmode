@@ -41,6 +41,7 @@ export interface ManifestGitHub {
 
 export interface PipelineManifest {
   slug: string;
+  epic?: string;
   phase: Phase;
   features: ManifestFeature[];
   artifacts: Record<string, string[]>;
@@ -48,6 +49,7 @@ export interface PipelineManifest {
   worktree?: { branch: string; path: string };
   github?: ManifestGitHub;
   blocked?: { gate: string; reason: string } | null;
+  originId?: string;
   lastUpdated: string;
 }
 
@@ -81,6 +83,35 @@ function newManifestPath(projectRoot: string, slug: string): string {
   const dir = pipelineDir(projectRoot);
   const date = new Date().toISOString().slice(0, 10);
   return resolve(dir, `${date}-${slug}.manifest.json`);
+}
+
+// --- Slug utilities ---
+
+/** Slug format: lowercase alphanumeric with optional hyphens, no leading/trailing hyphens */
+const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+/**
+ * Validate a string against the slug format.
+ */
+export function isValidSlug(input: string): boolean {
+  return SLUG_PATTERN.test(input);
+}
+
+/**
+ * Normalize a string to a valid slug.
+ * Lowercases, replaces non-alphanumeric with hyphens, collapses multiple hyphens,
+ * strips leading/trailing hyphens.
+ */
+export function slugify(input: string): string {
+  const slug = input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (slug.length === 0) {
+    throw new Error(`Cannot slugify empty or all-special-character input: "${input}"`);
+  }
+  return slug;
 }
 
 // --- Public API ---
@@ -161,6 +192,23 @@ export function list(projectRoot: string): PipelineManifest[] {
   }
 
   return manifests;
+}
+
+/**
+ * Find a manifest by either hex slug or epic name.
+ * Scans all manifests checking both the `slug` field (hex) and `epic` field (name).
+ * Returns the matching manifest or undefined.
+ */
+export function find(
+  projectRoot: string,
+  identifier: string,
+): PipelineManifest | undefined {
+  const all = list(projectRoot);
+  return all.find(
+    (m) =>
+      m.slug === identifier ||
+      m.epic === identifier,
+  );
 }
 
 /**

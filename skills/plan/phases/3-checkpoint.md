@@ -11,6 +11,7 @@ Each feature plan file must begin with YAML frontmatter:
 ```
 ---
 phase: plan
+slug: <hex>
 epic: <design>
 feature: <feature-slug>
 wave: <N>

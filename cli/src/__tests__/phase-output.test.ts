@@ -357,6 +357,26 @@ describe("filenameMatchesEpic", () => {
   test("rejects when epics are clearly different", () => {
     expect(filenameMatchesEpic("2026-03-29-done-status-v2-feature.output.json", "remove-persona-voice")).toBe(false);
   });
+
+  test("matches hex-named file via hexSlug during design transition", () => {
+    expect(filenameMatchesEpic("2026-04-01-d7f3a1.output.json", "slug-redesign", "d7f3a1")).toBe(true);
+  });
+
+  test("matches hex-named feature file via hexSlug", () => {
+    expect(filenameMatchesEpic("2026-04-01-d7f3a1-auth.output.json", "slug-redesign", "d7f3a1")).toBe(true);
+  });
+
+  test("matches epic-named file when hexSlug provided but not needed", () => {
+    expect(filenameMatchesEpic("2026-04-01-slug-redesign.output.json", "slug-redesign", "d7f3a1")).toBe(true);
+  });
+
+  test("rejects non-matching file even with hexSlug", () => {
+    expect(filenameMatchesEpic("2026-04-01-other-epic.output.json", "slug-redesign", "d7f3a1")).toBe(false);
+  });
+
+  test("works without hexSlug (backward compat)", () => {
+    expect(filenameMatchesEpic("2026-04-01-d7f3a1.output.json", "slug-redesign")).toBe(false);
+  });
 });
 
 describe("findWorktreeOutputFile with epicSlug filter", () => {

@@ -118,7 +118,8 @@ Read the bump type from the release notes YAML frontmatter (written during execu
 ```yaml
 ---
 phase: release
-slug: <feature>
+slug: <hex>
+epic: <feature>
 bump: minor
 ---
 ```

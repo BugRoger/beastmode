@@ -7,6 +7,7 @@ Each feature plan file follows this structure:
 ```markdown
 ---
 phase: plan
+slug: <hex>
 epic: <design>
 feature: <feature-slug>
 wave: <N>

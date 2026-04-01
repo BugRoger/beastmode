@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-01-slug-redesign-store-rename.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add originId to PipelineManifest + slugify/validate utilities", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add store.find() method", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add store.rename() method", "wave": 2, "status": "pending", "dependsOn": [0]},
+    {"id": 3, "subject": "Task 3: Run tests and verify", "wave": 3, "status": "pending", "dependsOn": [2]}
+  ],
+  "lastUpdated": "2026-04-01T12:00:00Z"
+}

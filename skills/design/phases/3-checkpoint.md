@@ -20,7 +20,8 @@ Use this template:
 ```
 ---
 phase: design
-slug: <feature>
+slug: <hex>
+epic: <feature>
 ---
 
 ## Problem Statement

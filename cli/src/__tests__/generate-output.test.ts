@@ -75,16 +75,24 @@ describe("parseFrontmatter", () => {
 
 describe("buildOutput", () => {
   test("design phase output", () => {
-    const output = buildOutput("path/to/design.md", { phase: "design" }, ARTIFACTS_DIR);
+    const output = buildOutput("path/to/design.md", { phase: "design", slug: "abc123", epic: "my-epic" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "path/to/design.md" },
+      artifacts: { design: "path/to/design.md", slug: "abc123", epic: "my-epic" },
     });
   });
 
   test("design phase with explicit status", () => {
     const output = buildOutput("design.md", { phase: "design", status: "error" }, ARTIFACTS_DIR);
     expect(output?.status).toBe("error");
+  });
+
+  test("design phase output without epic field", () => {
+    const output = buildOutput("path/to/design.md", { phase: "design" }, ARTIFACTS_DIR);
+    expect(output).toEqual({
+      status: "completed",
+      artifacts: { design: "path/to/design.md" },
+    });
   });
 
   test("implement phase output", () => {
@@ -202,6 +210,23 @@ describe("scanPlanFeatures", () => {
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(1);
     expect(features[0].wave).toBeUndefined();
+  });
+
+  test("matches features by slug field (hex lookup)", () => {
+    writeArtifact("plan", "2026-03-30-my-epic-auth.md",
+      "---\nphase: plan\nslug: abc123\nepic: my-epic\nfeature: auth\n---\n# Auth");
+
+    const features = scanPlanFeatures(ARTIFACTS_DIR, "abc123");
+    expect(features).toHaveLength(1);
+    expect(features[0].slug).toBe("auth");
+  });
+
+  test("does not double-count when epic and slug both match", () => {
+    writeArtifact("plan", "2026-03-30-my-epic-auth.md",
+      "---\nphase: plan\nslug: my-epic\nepic: my-epic\nfeature: auth\n---\n# Auth");
+
+    const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
+    expect(features).toHaveLength(1);
   });
 });
 

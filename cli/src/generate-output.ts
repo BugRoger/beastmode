@@ -79,7 +79,7 @@ export function buildOutput(
         : undefined;
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
-        artifacts: { design: artifactPath, slug: fm.slug, summary },
+        artifacts: { design: artifactPath, slug: fm.slug, epic: fm.epic, summary },
       };
     }
 
@@ -153,8 +153,8 @@ export function scanPlanFeatures(
 
     const fm = parseFrontmatter(content);
     if (!fm.feature) continue;
-    // Strict epic match — the fix for the stale-artifact bug
-    if (fm.epic !== epic) continue;
+    // Match on epic field (human name) or slug field (hex) for standardized frontmatter
+    if (fm.epic !== epic && fm.slug !== epic) continue;
 
     const entry: { slug: string; plan: string; description?: string; wave?: number } = {
       slug: fm.feature,

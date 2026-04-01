@@ -207,12 +207,18 @@ export function loadWorktreePhaseOutput(worktreePath: string, phase: Phase, epic
  *   YYYY-MM-DD-<epic>-<feature>.output.json (feature-level)
  * Uses boundary-aware matching to avoid substring false positives
  * (e.g., "foo" should not match "foobar").
+ *
+ * When hexSlug is provided, also matches hex-named files (pre-rename)
+ * during the design phase transition window.
  */
-export function filenameMatchesEpic(filename: string, epicSlug: string): boolean {
+export function filenameMatchesEpic(filename: string, epicSlug: string, hexSlug?: string): boolean {
   // Strip the date prefix (YYYY-MM-DD-) and .output.json suffix
   const stripped = filename.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.output\.json$/, "");
   // The remaining string is either "<epic>" or "<epic>-<feature>"
-  return stripped === epicSlug || stripped.startsWith(epicSlug + "-");
+  if (stripped === epicSlug || stripped.startsWith(epicSlug + "-")) return true;
+  // During design transition, files may still use the hex slug
+  if (hexSlug && (stripped === hexSlug || stripped.startsWith(hexSlug + "-"))) return true;
+  return false;
 }
 
 /**
