@@ -2,7 +2,6 @@ import { describe, test, expect } from "bun:test";
 import { createActor } from "xstate";
 import { epicMachine } from "../epic";
 import type { EpicContext } from "../types";
-import type { Phase } from "../../types";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -463,37 +462,6 @@ describe("REGRESS regression", () => {
   });
 });
 
-// ── 6a. VALIDATE_FAILED regression (legacy, removed in Task 4) ───
-
-describe("VALIDATE_FAILED regression (legacy)", () => {
-  test("validate -> implement on VALIDATE_FAILED", () => {
-    const actor = startActor();
-    actor.send({ type: "DESIGN_COMPLETED" });
-    actor.send({ type: "PLAN_COMPLETED", features: twoFeatures });
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-a" });
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-b" });
-    actor.send({ type: "IMPLEMENT_COMPLETED" });
-    expect(actor.getSnapshot().value).toBe("validate");
-
-    actor.send({ type: "VALIDATE_FAILED" });
-    expect(actor.getSnapshot().value).toBe("implement");
-  });
-
-  test("VALIDATE_FAILED resets all features to pending", () => {
-    const actor = startActor();
-    actor.send({ type: "DESIGN_COMPLETED" });
-    actor.send({ type: "PLAN_COMPLETED", features: twoFeatures });
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-a" });
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-b" });
-    actor.send({ type: "IMPLEMENT_COMPLETED" });
-    expect(actor.getSnapshot().context.features.every((f) => f.status === "completed")).toBe(true);
-
-    actor.send({ type: "VALIDATE_FAILED" });
-    expect(actor.getSnapshot().context.features.every((f) => f.status === "pending")).toBe(true);
-    expect(actor.getSnapshot().context.features).toHaveLength(2);
-  });
-});
-
 // ── 6b. REGRESS guard conditions ──────────────────────────────────
 
 describe("REGRESS guard conditions", () => {
@@ -535,7 +503,6 @@ describe("terminal states reject all events", () => {
     { type: "FEATURE_COMPLETED", featureSlug: "feat-a" },
     { type: "IMPLEMENT_COMPLETED" },
     { type: "VALIDATE_COMPLETED" },
-    { type: "VALIDATE_FAILED" },
     { type: "REGRESS", targetPhase: "plan" },
     { type: "RELEASE_COMPLETED" },
     { type: "CANCEL" },

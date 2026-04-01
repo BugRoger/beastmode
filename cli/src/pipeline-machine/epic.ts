@@ -155,10 +155,6 @@ export const epicMachine = setup({
           target: "release",
           actions: ["persist"],
         },
-        VALIDATE_FAILED: {
-          target: "implement",
-          actions: ["resetFeatures", "persist"],
-        },
         REGRESS: [
           {
             target: "plan",
