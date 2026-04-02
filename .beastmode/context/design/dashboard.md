@@ -20,7 +20,7 @@
 ## Keyboard Navigation
 - `q` / `Ctrl+C` — graceful exit: `loop.stop()` waits up to 30s for active sessions, then restores terminal
 - `up` / `down` arrows — navigate epic rows in the table
-- `x` — cancel selected epic with inline confirmation ("Cancel {slug}? y/n"), marks manifest as cancelled via state machine AND aborts running sessions via DispatchTracker
+- `x` — cancel selected epic with inline confirmation ("Cancel {slug}? y/n"), aborts running sessions via DispatchTracker then calls shared cancel module (`cancelEpic()` from `cancel-logic.ts`) for full ordered cleanup (worktree, branch, tags, artifacts, GitHub issue, manifest)
 - `a` — toggle auto-scroll in the activity log
 
 ## Shared Data Module

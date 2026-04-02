@@ -6,6 +6,7 @@
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
 - `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, blocked gate details, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
 - `beastmode dashboard` runs fullscreen Ink v6 + React TUI with embedded watch loop — three-zone layout (header with clock, scrollable epic table, activity log), keyboard navigation (up/down arrows for row selection, x for cancel epic with inline y/n confirmation, a for toggle auto-scroll, q/Ctrl+C for graceful exit), alternate screen buffer mode, 1-second UI refresh tick, same lockfile as `beastmode watch` for mutual exclusion; uses shared `status-data.ts` for data logic, WatchLoop EventEmitter typed events for state updates; adds `ink` v6.8.0 and `react` to cli/package.json
+- `beastmode cancel <slug>` performs full cleanup via shared cancel module: removes worktree and branch, deletes archive tags, phase tags, artifacts (excluding research), closes GitHub issue as not_planned, deletes manifest — ordered steps with warn-and-continue per step, idempotent; `--force` flag skips confirmation prompt for automated pipelines; confirmation defaults to No (only y/Y accepted)
 - `beastmode compact` dispatches the compaction agent via existing session dispatch pattern — operates on the shared context tree without a worktree, always runs regardless of 5-release counter, produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
@@ -49,6 +50,7 @@
 - `store.find()` resolves by either hex slug or epic name — dual lookup for user convenience
 - `slugify()` and `isValidSlug()` centralize format validation in the store (`[a-z0-9](?:[a-z0-9-]*[a-z0-9])?`)
 - `originId` field preserves lineage from birth hex to final epic name after rename
+- Cancel deletes the manifest file entirely via the shared cancel module (`cancelEpic()`) — cancelled features vanish from status/dashboard, git log serves as the historical record
 - Manifest location: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
 - ALWAYS rebuild manifest from worktree branch scanning on cold start — no persistent dependency on manifest file
 
@@ -56,7 +58,7 @@
 - After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/` by hex slug match, enriches manifest via manifest.ts pure functions, optionally calls `store.rename()` for design phase (memory-only), then single `store.save()`, then runs `syncGitHubForEpic()` which encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back via setGitHubEpic()/setFeatureGitHubIssue(), and warn-and-continue error handling
 - Non-design phases fail fast if slug not found in store via `store.find()` — design creates the slug, all other phases are read-only with respect to slug identity
 - Machine persist action accumulates state in memory without disk writes — single `store.save()` at end of dispatch is the sole persist path
-- Design abandon cleanup: two-layer defense detects when design session ends without producing output.json. Primary gate in phase.ts checks `loadWorktreePhaseOutput()` after `runInteractive()` returns — if missing, runs cleanup (worktree removal with branch deletion, manifest deletion via `store.remove()`, GitHub issue close as `not_planned` with warn-and-continue) before returning, preventing post-dispatch from being called. Secondary guard in post-dispatch.ts skips `DESIGN_COMPLETED` event when no design output exists — defensive backstop for edge cases (ReconcilingFactory path). Both non-zero exit (crash/Ctrl+C) and zero exit without output (graceful quit) trigger the same cleanup path. Cleanup is idempotent — `store.remove()` returns false for missing files, worktree removal handles already-deleted directories
+- Design abandon cleanup: two-layer defense detects when design session ends without producing output.json. Primary gate in phase.ts checks `loadWorktreePhaseOutput()` after `runInteractive()` returns — if missing, runs cleanup via the shared cancel module (`cancelEpic()` from `cancel-logic.ts` — handles worktree, branch, tags, artifacts, GitHub issue, manifest in order with warn-and-continue) before returning, preventing post-dispatch from being called. Secondary guard in post-dispatch.ts skips `DESIGN_COMPLETED` event when no design output exists — defensive backstop for edge cases (ReconcilingFactory path). Both non-zero exit (crash/Ctrl+C) and zero exit without output (graceful quit) trigger the same cleanup path. Cleanup is idempotent — shared cancel module succeeds with nothing left to clean on re-run
 - `resolveDesignSlug()` (commit-message regex) deleted — output.json hex lookup replaces it
 - `skipFinalPersist` flag deleted — single persist path needs no coordination
 - `rename-slug.ts` deleted — logic absorbed into `store.rename()`
@@ -71,3 +73,19 @@
 - Standardized artifact frontmatter across all phases: `phase`, `slug` (immutable hex), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
 - `filenameMatchesEpic()` handles both hex-named files (pre-rename) and epic-named files (post-rename) during the design phase transition window
+
+## Cancel Cleanup Module
+- Shared module (`cancel-logic.ts`) consumed by three callers: CLI cancel command (`cancelCommand()`), dashboard cancel action, and design-abandon cleanup in phase.ts
+- `cancelEpic()` takes an identifier string, resolves via `store.find()` internally, extracts epic name from manifest for artifact matching
+- Ordered cleanup steps with warn-and-continue per step:
+  1. Remove worktree (`git worktree remove --force`) and delete `feature/<slug>` branch
+  2. Delete archive tag `archive/<slug>` if present
+  3. Delete all phase tags matching `beastmode/<slug>/*`
+  4. Delete artifacts matching `-<epic>-` and `-<epic>.` patterns from `artifacts/{design,plan,implement,validate,release}/` — two patterns prevent false-positive prefix matches; research artifacts at `artifacts/research/` explicitly excluded
+  5. Close GitHub issue as not_planned when `github.enabled` and manifest has epic number — gated on both conditions
+  6. Delete manifest file (last step, after GitHub sync reads from it)
+- Idempotent: when manifest is already gone (re-run), falls back to using the provided identifier directly for each cleanup step
+- Confirmation prompt by default: prints summary of what will be deleted, accepts only y/Y; `--force` flag (extracted by `parseForce()` in args.ts) bypasses prompt
+- Returns structured result: cleaned[] and warned[] arrays for caller inspection
+- Design-abandon reuses `cancelEpic()` — at design phase most cleanup steps are no-ops (no tags, no artifacts beyond design, etc.)
+- Dashboard cancel action aborts agent sessions via DispatchTracker before calling `cancelEpic()`
