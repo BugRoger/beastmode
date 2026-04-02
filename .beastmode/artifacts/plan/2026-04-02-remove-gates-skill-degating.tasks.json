@@ -1,0 +1,17 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-remove-gates-skill-degating.md",
+  "tasks": [
+    {"id": 0, "subject": "Degate design/phases/0-prime.md", "status": "completed"},
+    {"id": 1, "subject": "Degate design/phases/1-execute.md", "status": "completed"},
+    {"id": 2, "subject": "Degate design/phases/2-validate.md", "status": "completed"},
+    {"id": 3, "subject": "Degate implement/phases/1-execute.md", "status": "completed"},
+    {"id": 4, "subject": "Degate implement/phases/2-validate.md", "status": "completed"},
+    {"id": 5, "subject": "Degate release/phases/1-execute.md", "status": "completed"},
+    {"id": 6, "subject": "Degate release/phases/3-checkpoint.md", "status": "completed"},
+    {"id": 7, "subject": "Remove gate detection from task-runner.md", "status": "completed"},
+    {"id": 8, "subject": "Remove gate ref from agents/compaction.md", "status": "completed"},
+    {"id": 9, "subject": "Remove gates from init skeleton config.yaml", "status": "completed"}
+  ],
+  "deviations": [],
+  "lastUpdated": "2026-04-02T12:00:00Z"
+}
