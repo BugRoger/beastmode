@@ -15,6 +15,7 @@ import type { WatchDeps } from "./watch.js";
 import type { SessionResult } from "./watch-types.js";
 import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
 import { SdkSessionFactory } from "./session.js";
+import { SessionEmitter } from "./sdk-streaming.js";
 import { CmuxSessionFactory } from "./cmux-session.js";
 import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
 import { ITermSessionFactory } from "./it2-session.js";
@@ -168,11 +169,7 @@ export async function dispatchPhase(opts: {
   featureSlug?: string;
   projectRoot: string;
   signal: AbortSignal;
-}): Promise<{
-  id: string;
-  worktreeSlug: string;
-  promise: Promise<SessionResult>;
-}> {
+}): Promise<SessionHandle> {
   // Always use the epic-level worktree — no per-feature worktrees
   const worktreeSlug = opts.epicSlug;
 
@@ -181,6 +178,8 @@ export async function dispatchPhase(opts: {
 
   const id = `${worktreeSlug}-${Date.now()}`;
   const startTime = Date.now();
+
+  const events = new SessionEmitter();
 
   const promise = (async (): Promise<SessionResult> => {
     let sessionResult: SessionResult;
@@ -192,7 +191,7 @@ export async function dispatchPhase(opts: {
       if (typeof AgentClass !== "function") throw new Error("SDK not available");
       const prompt = `/beastmode:${opts.phase} ${opts.args.join(" ")}`;
 
-      const agent = new (AgentClass as new (opts: Record<string, unknown>) => { query: () => Promise<{ exitCode: number; costUsd?: number }> })({
+      const agent = new (AgentClass as new (opts: Record<string, unknown>) => { query: (opts?: Record<string, unknown>) => unknown })({
         cwd: wt.path,
         prompt,
         settingSources: ["project"],
@@ -200,16 +199,63 @@ export async function dispatchPhase(opts: {
         abortSignal: opts.signal,
       });
 
-      const result = await agent.query();
+      // Try streaming path: query() with options that return an async generator
+      const queryResult = agent.query({ includePartialMessages: true });
 
-      sessionResult = {
-        success: result.exitCode === 0,
-        exitCode: result.exitCode,
-        costUsd: result.costUsd ?? 0,
-        durationMs: Date.now() - startTime,
-      };
+      // Check if the result is an async iterable (streaming)
+      if (queryResult && typeof queryResult === "object" && Symbol.asyncIterator in (queryResult as object)) {
+        let exitCode = 1;
+        let costUsd = 0;
+
+        for await (const message of queryResult as AsyncIterable<Record<string, unknown>>) {
+          const now = Date.now();
+          const type = message.type as string | undefined;
+
+          if (type === "assistant" && Array.isArray(message.content)) {
+            for (const block of message.content as Array<Record<string, unknown>>) {
+              if (block.type === "text" && typeof block.text === "string") {
+                events.pushEntry({ timestamp: now, type: "text", text: block.text });
+              } else if (block.type === "tool_use" && typeof block.name === "string") {
+                const input = block.input as Record<string, unknown> | undefined;
+                const detail = input?.file_path ?? input?.command ?? input?.pattern ?? "";
+                events.pushEntry({ timestamp: now, type: "tool-start", text: `[${block.name}] ${detail}` });
+              } else if (block.type === "tool_result" && typeof block.content === "string") {
+                const preview = (block.content as string).slice(0, 80);
+                events.pushEntry({ timestamp: now, type: "tool-result", text: `> ${preview}` });
+              }
+            }
+          } else if (type === "result") {
+            exitCode = (message.exitCode as number) ?? 0;
+            costUsd = (message.costUsd as number) ?? 0;
+            events.pushEntry({ timestamp: now, type: "result", text: `Exit ${exitCode}` });
+          } else {
+            // Heartbeat or unknown message type
+            events.pushEntry({ timestamp: now, type: "heartbeat", text: type ?? "..." });
+          }
+        }
+
+        sessionResult = {
+          success: exitCode === 0,
+          exitCode,
+          costUsd,
+          durationMs: Date.now() - startTime,
+        };
+      } else {
+        // Non-streaming fallback: query() returned a promise
+        const result = await (queryResult as Promise<{ exitCode: number; costUsd?: number }>);
+        events.pushEntry({ timestamp: Date.now(), type: "result", text: `Exit ${result.exitCode}` });
+
+        sessionResult = {
+          success: result.exitCode === 0,
+          exitCode: result.exitCode,
+          costUsd: result.costUsd ?? 0,
+          durationMs: Date.now() - startTime,
+        };
+      }
     } catch (err: unknown) {
       // SDK not available — fall back to Bun.spawn of claude CLI
+      events.pushEntry({ timestamp: Date.now(), type: "heartbeat", text: "Falling back to CLI dispatch" });
+
       const args = [
         "claude",
         "--print",
@@ -242,6 +288,8 @@ export async function dispatchPhase(opts: {
         // Non-JSON output — no cost info
       }
 
+      events.pushEntry({ timestamp: Date.now(), type: "result", text: `Exit ${exitCode}` });
+
       sessionResult = {
         success: exitCode === 0,
         exitCode,
@@ -250,10 +298,11 @@ export async function dispatchPhase(opts: {
       };
     }
 
+    events.complete(sessionResult.success);
     return sessionResult;
   })();
 
-  return { id, worktreeSlug, promise };
+  return { id, worktreeSlug, promise, events };
 }
 
 /** Result of strategy selection — which strategy was chosen and why. */

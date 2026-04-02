@@ -11,16 +11,16 @@
       "id": 1,
       "subject": "Task 1: Message mapper implementation",
       "wave": 2,
-      "status": "pending",
+      "status": "completed",
       "dependsOn": [0]
     },
     {
       "id": 2,
       "subject": "Task 2: Unit tests for message mapper",
       "wave": 2,
-      "status": "pending",
+      "status": "completed",
       "dependsOn": [0, 1]
     }
   ],
-  "lastUpdated": "2026-04-02T12:00:00Z"
+  "lastUpdated": "2026-04-02T12:05:00Z"
 }

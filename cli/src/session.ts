@@ -24,6 +24,8 @@ export interface SessionHandle {
   id: string;
   worktreeSlug: string;
   promise: Promise<SessionResult>;
+  /** EventEmitter for live SDK message streaming (SDK dispatch only). */
+  events?: SessionEmitter;
 }
 
 /**
