@@ -1,0 +1,28 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-dashboard-drilldown-view-stack.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: View types and stack data structure",
+      "status": "pending",
+      "wave": 1,
+      "parallel_safe": false,
+      "depends_on": [],
+      "files": [
+        "cli/src/dashboard/view-stack.ts"
+      ]
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Unit tests for view stack",
+      "status": "pending",
+      "wave": 2,
+      "parallel_safe": false,
+      "depends_on": [0],
+      "files": [
+        "cli/src/__tests__/view-stack.test.ts"
+      ]
+    }
+  ],
+  "lastUpdated": "2026-04-02T00:00:00Z"
+}

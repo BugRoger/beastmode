@@ -19,6 +19,7 @@ import type { KeyboardNavState } from "./use-keyboard-nav.js";
 import type { CancelFlowResult } from "./use-cancel-flow.js";
 import type { GracefulShutdownState } from "./use-graceful-shutdown.js";
 import type { ToggleAllState } from "./use-toggle-all.js";
+import type { ViewType } from "../view-stack.js";
 
 export interface KeyboardControllerDeps {
   /** Number of visible epic rows (for navigation bounds) */
@@ -29,6 +30,14 @@ export interface KeyboardControllerDeps {
   onShutdown: () => Promise<void>;
   /** Resolve the epic slug at a given row index */
   slugAtIndex: (index: number) => string | undefined;
+  /** Current active view type from the view stack */
+  activeViewType: ViewType["type"];
+  /** Callback to push a drill-down view (Enter) */
+  onDrillDown: () => void;
+  /** Callback to pop back one level (Escape) */
+  onDrillUp: () => void;
+  /** Callback to toggle follow mode in agent log (f key) */
+  onToggleFollow?: () => void;
 }
 
 export interface KeyboardControllerState {
@@ -45,7 +54,7 @@ export interface KeyboardControllerState {
 export function useKeyboardController(
   deps: KeyboardControllerDeps,
 ): KeyboardControllerState {
-  const { itemCount, onCancelEpic, onShutdown, slugAtIndex } = deps;
+  const { itemCount, onCancelEpic, onShutdown, slugAtIndex, activeViewType, onDrillDown, onDrillUp, onToggleFollow } = deps;
 
   const nav = useKeyboardNav(itemCount);
   const cancelFlow = useCancelFlow();
@@ -73,14 +82,36 @@ export function useKeyboardController(
         return;
       }
 
-      // Priority 5: toggle all
-      if (input === "a" || input === "A") {
+      // Priority 4.5: Enter → drill down (only in epic-list and feature-list)
+      if (key.return) {
+        if (activeViewType === "epic-list" || activeViewType === "feature-list") {
+          onDrillDown();
+        }
+        return;
+      }
+
+      // Priority 4.6: Escape → drill up (only in feature-list and agent-log)
+      if (key.escape) {
+        if (activeViewType === "feature-list" || activeViewType === "agent-log") {
+          onDrillUp();
+        }
+        return;
+      }
+
+      // Priority 4.7: 'f' → toggle follow (only in agent-log)
+      if ((input === "f" || input === "F") && activeViewType === "agent-log") {
+        onToggleFollow?.();
+        return;
+      }
+
+      // Priority 5: toggle all (epic-list only)
+      if ((input === "a" || input === "A") && activeViewType === "epic-list") {
         toggleAll.handleToggleInput(input);
         return;
       }
 
-      // Priority 6: cancel initiation (x on selected row)
-      if (input === "x" || input === "X") {
+      // Priority 6: cancel initiation (epic-list only)
+      if ((input === "x" || input === "X") && activeViewType === "epic-list") {
         const slug = slugAtIndex(nav.selectedIndex);
         if (slug) {
           cancelFlow.requestCancel(slug);
@@ -98,6 +129,10 @@ export function useKeyboardController(
       onCancelEpic,
       onShutdown,
       slugAtIndex,
+      activeViewType,
+      onDrillDown,
+      onDrillUp,
+      onToggleFollow,
     ],
   );
 

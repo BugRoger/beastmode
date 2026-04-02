@@ -7,6 +7,7 @@
  */
 
 import type { SessionResult } from "./watch-types.js";
+import type { SessionEmitter } from "./sdk-streaming.js";
 
 /** Options for creating a new session. */
 export interface SessionCreateOpts {
@@ -23,6 +24,8 @@ export interface SessionHandle {
   id: string;
   worktreeSlug: string;
   promise: Promise<SessionResult>;
+  /** EventEmitter for live SDK message streaming (SDK dispatch only). */
+  events?: SessionEmitter;
 }
 
 /**

@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.60.0 — Dashboard Drill-Down (Apr 2026)
+
+- **View stack navigation** — k9s-style push/pop drill-down across three views: EpicList, FeatureList, AgentLog (Enter to drill, Escape to pop)
+- **Breadcrumb bar** — Shows current position in the view stack (e.g., `epics > cancel-cleanup > cancel-logic`)
+- **Context-sensitive key hints** — Bottom bar updates per view type with available keybindings
+- **SDK streaming refactor** — Dispatch refactored from fire-and-forget to async generator iteration with EventEmitter; `includePartialMessages` enables text delta and tool call streaming
+- **Structured message mapper** — Converts SDKMessage types to terminal-friendly log entries (text deltas inline, tool calls as one-liners)
+- **Ring buffer per session** — ~100 entries collected continuously per dispatched SDK session for instant history on navigation
+- **SDK dispatch override** — Dashboard forces SDK dispatch strategy at runtime regardless of config setting
+
+---
+
 ### v0.59.0 — Remove Gates (Apr 2026)
 
 - **Gate mechanism removed** — `[GATE|...]` / `[GATE-OPTION|...]` syntax stripped from all skill phase files; design inlines interactive behavior directly, non-design phases inline auto behavior as sole code path

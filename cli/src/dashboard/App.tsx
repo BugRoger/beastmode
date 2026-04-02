@@ -6,7 +6,12 @@ import type { WatchLoopEventMap } from "../watch-types.js";
 import type { WatchLoop } from "../watch.js";
 import EpicTable from "./EpicTable.js";
 import ActivityLog from "./ActivityLog.js";
-import { useKeyboardController } from "./hooks/index.js";
+import CrumbBar from "./CrumbBar.js";
+import FeatureList from "./FeatureList.js";
+import AgentLog from "./AgentLog.js";
+import { getKeyHints } from "./key-hints.js";
+import * as VS from "./view-stack.js";
+import { useKeyboardController, useKeyboardNav } from "./hooks/index.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { createLogger } from "../logger.js";
 
@@ -50,6 +55,26 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
+  // --- View stack for drill-down navigation ---
+  const [viewStack, setViewStack] = useState<VS.ViewStack>(VS.createStack);
+  const activeView = VS.peek(viewStack);
+
+  // --- Feature-level navigation ---
+  const featureNav = useKeyboardNav(0);
+
+  // --- Follow mode for agent log ---
+  const [followMode, setFollowMode] = useState(true);
+
+  // --- Refs to break circular dep between drillDown and keyboard ---
+  const epicSelectedRef = useRef(0);
+  const featureSelectedRef = useRef(0);
+  const viewStackRef = useRef(viewStack);
+  viewStackRef.current = viewStack;
+  const epicsRef = useRef(epics);
+  epicsRef.current = epics;
+  const activeSessionsRef = useRef(activeSessions);
+  activeSessionsRef.current = activeSessions;
+
   // --- Helper: push event to front of the log ---
   const pushEvent = useCallback(
     (type: DashboardEvent["type"], detail: string) => {
@@ -92,12 +117,60 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     exit();
   }, [exit]);
 
+  // --- Drill-down callbacks (use refs to break circular dep with keyboard) ---
+  const handleDrillDown = useCallback(() => {
+    setViewStack((prev) => {
+      const top = VS.peek(prev);
+      if (top.type === "epic-list") {
+        const epic = epicsRef.current[epicSelectedRef.current];
+        if (!epic) return prev;
+        return VS.push(prev, { type: "feature-list", epicSlug: epic.slug });
+      }
+      if (top.type === "feature-list") {
+        const epic = epicsRef.current.find((e) => e.slug === top.epicSlug);
+        const feat = epic?.features[featureSelectedRef.current];
+        if (!feat) return prev;
+        const isActive =
+          feat.status === "in-progress" ||
+          activeSessionsRef.current.has(feat.slug);
+        if (!isActive) return prev;
+        return VS.push(prev, {
+          type: "agent-log",
+          epicSlug: top.epicSlug,
+          featureSlug: feat.slug,
+        });
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleDrillUp = useCallback(() => {
+    setViewStack((prev) => VS.pop(prev));
+  }, []);
+
+  const handleToggleFollow = useCallback(() => {
+    setFollowMode((prev) => !prev);
+  }, []);
+
   const keyboard = useKeyboardController({
     itemCount: visibleEpics.length,
     onCancelEpic: handleCancelEpic,
     onShutdown: handleShutdown,
     slugAtIndex,
+    activeViewType: activeView.type,
+    onDrillDown: handleDrillDown,
+    onDrillUp: handleDrillUp,
+    onToggleFollow: handleToggleFollow,
   });
+
+  // --- Keep refs in sync with navigation state ---
+  useEffect(() => {
+    epicSelectedRef.current = keyboard.nav.selectedIndex;
+  }, [keyboard.nav.selectedIndex]);
+
+  useEffect(() => {
+    featureSelectedRef.current = featureNav.selectedIndex;
+  }, [featureNav.selectedIndex]);
 
   // --- Filter + clamp ---
   const filteredEpics = keyboard.toggleAll.showAll
@@ -107,6 +180,30 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   useEffect(() => {
     keyboard.nav.clampToRange(filteredEpics.length);
   }, [filteredEpics.length]);
+
+  // --- Clamp feature nav when drilling into an epic ---
+  useEffect(() => {
+    if (activeView.type === "feature-list") {
+      const epic = epics.find((e) => e.slug === activeView.epicSlug);
+      const featCount = epic?.features.length ?? 0;
+      featureNav.clampToRange(featCount);
+    }
+  }, [activeView, epics]);
+
+  // --- Reset feature selection on new feature list; reset follow on agent log ---
+  useEffect(() => {
+    if (activeView.type === "feature-list") {
+      featureNav.setSelectedIndex(0);
+    }
+    if (activeView.type === "agent-log") {
+      setFollowMode(true);
+    }
+  }, [
+    activeView.type,
+    activeView.type === "feature-list"
+      ? (activeView as VS.FeatureList).epicSlug
+      : null,
+  ]);
 
   // --- Clock tick every 1s ---
   useEffect(() => {
@@ -223,6 +320,46 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       ? keyboard.cancelFlow.state.slug
       : undefined;
 
+  // --- Derive breadcrumbs and key hints for active view ---
+  const crumbs = VS.crumbBar(viewStack);
+  const keyHintText = getKeyHints(activeView.type);
+
+  // --- Render the active view content ---
+  function renderContent() {
+    switch (activeView.type) {
+      case "epic-list":
+        return (
+          <EpicTable
+            epics={filteredEpics}
+            activeSessions={activeSessions}
+            selectedIndex={keyboard.nav.selectedIndex}
+            cancelConfirmingSlug={cancelConfirmingSlug}
+          />
+        );
+      case "feature-list": {
+        const epic = epics.find((e) => e.slug === activeView.epicSlug);
+        return (
+          <FeatureList
+            epicSlug={activeView.epicSlug}
+            features={epic?.features ?? []}
+            selectedIndex={featureNav.selectedIndex}
+            activeSessions={activeSessions}
+          />
+        );
+      }
+      case "agent-log":
+        // TODO: Wire up emitter from DispatchTracker when SDK streaming is connected
+        return (
+          <AgentLog
+            epicSlug={activeView.epicSlug}
+            featureSlug={activeView.featureSlug}
+            emitter={null}
+            follow={followMode}
+          />
+        );
+    }
+  }
+
   return (
     <Box flexDirection="column" width="100%">
       {/* Header zone */}
@@ -238,18 +375,17 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
           <Text dimColor>{clock}</Text>
         </Box>
       </Box>
+
+      {/* Crumb bar — only show when drilled in */}
+      {activeView.type !== "epic-list" && <CrumbBar crumbs={crumbs} />}
+
       <Box paddingX={1}>
         <Text dimColor>{"─".repeat(78)}</Text>
       </Box>
 
-      {/* Epic table zone */}
+      {/* Content area — view switcher */}
       <Box flexDirection="column" flexGrow={1} paddingX={1}>
-        <EpicTable
-          epics={filteredEpics}
-          activeSessions={activeSessions}
-          selectedIndex={keyboard.nav.selectedIndex}
-          cancelConfirmingSlug={cancelConfirmingSlug}
-        />
+        {renderContent()}
       </Box>
 
       {/* Cancel confirmation */}
@@ -269,14 +405,12 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         <ActivityLog events={events} />
       </Box>
 
-      {/* Footer */}
+      {/* Footer — context-sensitive key hints */}
       <Box paddingX={1}>
         {keyboard.shutdown.isShuttingDown ? (
           <Text color="yellow">shutting down...</Text>
         ) : (
-          <Text dimColor>
-            q quit ↑↓ navigate x cancel a {keyboard.toggleAll.showAll ? "hide" : "show"} all
-          </Text>
+          <Text dimColor>{keyHintText}</Text>
         )}
       </Box>
     </Box>

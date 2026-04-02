@@ -1,0 +1,13 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-dashboard-drilldown-drilldown-views.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: CrumbBar component", "wave": 1, "status": "completed", "files": ["cli/src/dashboard/CrumbBar.tsx"]},
+    {"id": 1, "subject": "Task 1: FeatureList view component", "wave": 1, "status": "completed", "files": ["cli/src/dashboard/FeatureList.tsx"]},
+    {"id": 2, "subject": "Task 2: AgentLog view component", "wave": 1, "status": "completed", "files": ["cli/src/dashboard/AgentLog.tsx"]},
+    {"id": 3, "subject": "Task 3: Key hints per view type", "wave": 1, "status": "completed", "files": ["cli/src/dashboard/key-hints.ts"]},
+    {"id": 4, "subject": "Task 4: Keyboard controller drill-down awareness", "wave": 2, "status": "completed", "files": ["cli/src/dashboard/hooks/use-keyboard-controller.ts", "cli/src/dashboard/hooks/index.ts"]},
+    {"id": 5, "subject": "Task 5: App layout refactor with view switcher", "wave": 2, "status": "completed", "files": ["cli/src/dashboard/App.tsx"]},
+    {"id": 6, "subject": "Task 6: Integration verification", "wave": 3, "status": "completed", "files": []}
+  ],
+  "lastUpdated": "2026-04-02T23:52:00Z"
+}

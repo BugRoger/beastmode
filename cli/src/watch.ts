@@ -196,6 +196,7 @@ export class WatchLoop extends EventEmitter {
         abortController,
         promise: handle.promise,
         startedAt: Date.now(),
+        events: handle.events,
       };
 
       this.tracker.add(session);
@@ -293,6 +294,7 @@ export class WatchLoop extends EventEmitter {
           abortController,
           promise: handle.promise,
           startedAt: Date.now(),
+          events: handle.events,
         };
 
         this.tracker.add(session);
