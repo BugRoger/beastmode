@@ -11,7 +11,7 @@
 - ALWAYS follow five-phase order: design -> plan -> implement -> validate -> release — invariant sequence
 - NEVER skip sub-phases — prime -> execute -> validate -> checkpoint is invariant
 - Each capability documented in its own phase's context domain — discoverability
-- Collaborative design with HITL gates — human stays in the loop
+- Collaborative design — human stays in the loop
 - Bite-sized planning with wave-ordered file-isolated tasks — enables parallelism
 - Git worktree isolation — prevents main branch contamination
 - Progressive knowledge hierarchy from L0 through L3 — right context at right time

@@ -11,11 +11,11 @@
 - Watch loop (`beastmode watch`) provides automated advancement: event-driven re-scan on session completion drives epics through plan -> release
 
 ## Phase-to-Skill Mapping
-design -> plan -> implement -> validate -> release. Each transition gate is namespaced: `transitions.design-to-plan`, `transitions.plan-to-implement`, etc.
+design -> plan -> implement -> validate -> release. Each phase maps to a skill of the same name.
 
 1. ALWAYS follow the five-phase order — no skipping phases
 
-## Transition Gate Output
+## Transition Output
 Checkpoint prints the CLI command for the next phase. Format: `beastmode <next-phase> <slug>`. No Skill() calls, no auto-chaining. STOP after printing — no additional output.
 
 1. ALWAYS print `beastmode <next-phase> <slug>` at checkpoint — human copies and runs
@@ -23,9 +23,9 @@ Checkpoint prints the CLI command for the next phase. Format: `beastmode <next-p
 3. NEVER produce Skill() calls from checkpoint — CLI handles invocation
 
 ## Guidance Authority
-Only the transition gate in the checkpoint phase may produce next-step commands. Retro agents and sub-agents are banned from printing transition guidance, session-restart instructions, or next-step commands.
+Only the checkpoint phase may produce next-step commands. Retro agents and sub-agents are banned from printing transition guidance, session-restart instructions, or next-step commands.
 
-1. NEVER print next-step commands from retro agents — transition gate is the sole authority
+1. NEVER print next-step commands from retro agents — checkpoint is the sole authority
 
 ## Phase Detection
 

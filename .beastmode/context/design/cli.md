@@ -30,7 +30,7 @@
 - `cli.interval` controls poll interval (default 60 seconds)
 - `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
 - No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
-- Gates and other config sections are unchanged
+- Other config sections are unchanged
 
 ## Cost Tracking
 - Per-dispatch run log appended to `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp

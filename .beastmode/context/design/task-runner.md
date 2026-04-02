@@ -13,11 +13,6 @@
 - NEVER pre-load all phase files at parse time — expand on demand
 - Children collapse from TodoWrite after parent completes — keeps list manageable
 
-## Gate Integration
-- ALWAYS read config.yaml at each gate — no pre-loading or caching
-- NEVER skip gate steps — they are structural task-runner items
-- `## N. [GATE|namespace.gate-id]` steps resolve mode and prune non-matching GATE-OPTION children — runtime flexibility
-
 ## Validation Reset
 - ALWAYS reset the previous sibling on validation failure — not the validation task itself
 - Tasks with "Validate", "Approval", "Check", or "Verify" in title trigger auto-reset — keyword-based detection

@@ -9,7 +9,7 @@
 ## Testing
 - ALWAYS verify L2 files contain project-specific content, not placeholder patterns
 - NEVER skip brownfield verification after init
-- Critical paths: brownfield execution, parallel agent spawning, content merge, atomic file writes, gate structure, task-runner integration
+- Critical paths: brownfield execution, parallel agent spawning, content merge, atomic file writes, task-runner integration
 
 ## GitHub Integration
 - ALWAYS gate GitHub sync on `github.enabled` in config.yaml — skip entirely when false or missing

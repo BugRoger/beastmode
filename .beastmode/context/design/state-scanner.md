@@ -31,10 +31,6 @@
 - ALWAYS take ours-side content (before `=======`) when conflict markers are detected — deterministic resolution
 - NEVER crash on conflict markers — strip markers, attempt parse, maintain epic tracking
 
-## Gate Detection
-- ALWAYS use reactive gate blocking — manifest.checkBlocked(manifest, config) returns { gate, reason } | null
-- NEVER do preemptive config gate checking — agents run until they hit a gate and report back
-
 ## Error Handling
 - ALWAYS skip the tick and retry on next poll when scanner errors occur — no retry limit, infinite retry with logging
 - ALWAYS handle missing or empty state directories gracefully — return empty array, no crash

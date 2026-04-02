@@ -10,4 +10,4 @@
 - ALWAYS test brownfield on a real codebase before release — integration validation
 - ALWAYS verify parallel agents produce non-conflicting output — concurrency safety
 - ALWAYS verify atomic writes — no partial file states
-- Core scenarios: brownfield execution, parallel agent spawning, content merge, atomic file writes, gate structure, task-runner integration — full coverage
+- Core scenarios: brownfield execution, parallel agent spawning, content merge, atomic file writes, task-runner integration — full coverage

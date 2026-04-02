@@ -27,10 +27,6 @@
 - ALWAYS verify manifest completeness after merging — all features must show completed
 - When merge conflicts arise, spawn a dedicated Claude session to resolve — automated conflict resolution
 
-## Gate Handling
-- ALWAYS respect config.yaml gate settings during orchestration — human gates still pause
-- When a gate is `human`, epic pauses and logs to stdout — user runs `beastmode <phase> <slug>` manually to proceed
-
 ## Recovery
 - State files are the recovery point, not sessions — on startup, scan for existing worktrees with uncommitted changes
 - ALWAYS re-dispatch from last committed state on recovery — no session persistence required
