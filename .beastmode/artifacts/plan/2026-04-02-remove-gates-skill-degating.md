@@ -32,6 +32,10 @@ For each skill phase file that contains `[GATE|...]` / `[GATE-OPTION|...]` synta
 
 The resulting phase files should read linearly — no branching, no mode resolution, no config lookups.
 
+### Agent File Degating
+
+The compaction agent (`agents/compaction.md`) references `[GATE|retro.beastmode]` for promotion candidate review. Update to inline auto-apply behavior directly — promotion candidates are auto-applied and logged, no human review gate.
+
 ### Task-Runner Gate Detection Removal
 
 Remove the gate detection block from the task-runner execution loop. This block currently pattern-matches `[GATE|<gate-id>]`, reads config.yaml, resolves mode, filters child tasks by `[GATE-OPTION|mode]`, and routes execution. After removal, the task-runner executes all tasks linearly without gate awareness.
@@ -43,6 +47,7 @@ Remove the `gates:` section from the init skeleton's config.yaml template. The p
 ## Acceptance Criteria
 
 - [ ] No phase file in skills/ contains `[GATE|` or `[GATE-OPTION|` syntax
+- [ ] No agent file contains `[GATE|` syntax
 - [ ] Design phase files contain interactive behavior directly (AskUserQuestion, decision trees, approval prompts)
 - [ ] Implement phase files contain auto behavior directly (Claude decides, Claude investigates)
 - [ ] Release phase files contain auto behavior directly (auto-detect version, auto-apply L0)

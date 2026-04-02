@@ -37,6 +37,7 @@ Update context files that reference gates alongside other valid content. Remove 
 - **Design orchestration** (L2): Remove Gate Handling section
 - **Design context rollup** (L1): Remove gate structural reference line
 - **Implement context rollup** (L1): Remove "gate structure" from critical paths line
+- **Plan workflow autonomous-chaining** (L3): Remove gate output standardization references
 
 ### Update L0
 
