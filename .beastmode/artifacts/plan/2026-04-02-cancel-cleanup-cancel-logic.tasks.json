@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-cancel-cleanup-cancel-logic.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create cancel-logic.ts shared module", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Write cancel-logic unit tests", "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-02T00:00:00Z"
+}

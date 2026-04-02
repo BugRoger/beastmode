@@ -22,7 +22,7 @@ Usage:
   beastmode implement <slug> [feature] Implement a feature
   beastmode validate <slug>            Run validation checks
   beastmode release <slug>             Create a release
-  beastmode cancel <slug>              Cancel and clean up an epic
+  beastmode cancel <slug> [--force]   Cancel and clean up an epic
   beastmode compact                    Audit and compact the context tree
   beastmode watch                      Autonomous pipeline orchestration
   beastmode status [--all] [--watch|-w] Show pipeline status
@@ -32,11 +32,12 @@ Usage:
 Flags:
   -v, -vv, -vvv                    Increase output verbosity
   --yes, -y                        Skip confirmation prompts (phase regression)
+  --force                          Skip confirmation prompt (cancel)
 `);
 }
 
 async function main(): Promise<void> {
-  const { command, args, verbosity } = parseArgs(process.argv);
+  const { command, args, verbosity, force } = parseArgs(process.argv);
   const projectRoot = process.cwd();
   const config = loadConfig(projectRoot);
 
@@ -56,7 +57,7 @@ async function main(): Promise<void> {
       await dashboardCommand(config, args, verbosity);
       break;
     case "cancel":
-      await cancelCommand(args, config, verbosity);
+      await cancelCommand(args, config, verbosity, force);
       break;
     case "compact":
       await compactCommand();

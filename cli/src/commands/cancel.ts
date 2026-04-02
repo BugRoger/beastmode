@@ -28,6 +28,7 @@ export async function cancelCommand(
   args: string[],
   config: BeastmodeConfig,
   verbosity: number = 0,
+  force: boolean = false,
 ): Promise<void> {
   const logger = createLogger(verbosity, "beastmode");
   const slug = args[0];
@@ -39,6 +40,15 @@ export async function cancelCommand(
   const projectRoot = process.cwd();
 
   logger.log(`Cancel: ${slug}`);
+
+  // Confirmation prompt (skipped with --force)
+  if (!force) {
+    const confirmed = await confirmCancel(slug, config, logger);
+    if (!confirmed) {
+      logger.log("Cancel aborted.");
+      return;
+    }
+  }
 
   // Step 1+2: Remove worktree and delete branch
   try {
@@ -135,4 +145,56 @@ async function closeGitHubEpic(
       `GitHub close failed: ${err instanceof Error ? err.message : err}`,
     );
   }
+}
+
+/**
+ * Print a summary of what cancel will delete and ask for [y/N] confirmation.
+ * Returns true if user confirms, false otherwise.
+ */
+async function confirmCancel(
+  slug: string,
+  config: BeastmodeConfig,
+  logger: Logger,
+): Promise<boolean> {
+  const items = [
+    "worktree and branch",
+    "archive and phase tags",
+    "artifacts (design, plan, implement, validate, release)",
+    "manifest file",
+  ];
+  if (config.github.enabled) {
+    items.push("GitHub epic issue (closed as not_planned)");
+  }
+
+  logger.log(`\nThis will remove for "${slug}":`);
+  for (const item of items) {
+    logger.log(`  - ${item}`);
+  }
+
+  process.stdout.write("\nProceed? [y/N] ");
+
+  const response = await readLine();
+  return response.trim().toLowerCase() === "y";
+}
+
+/**
+ * Read a single line from stdin.
+ */
+function readLine(): Promise<string> {
+  return new Promise((resolve) => {
+    const stdin = process.stdin;
+    const wasRaw = stdin.isRaw;
+
+    stdin.setRawMode?.(false);
+    stdin.resume();
+
+    const onData = (data: Buffer) => {
+      stdin.removeListener("data", onData);
+      stdin.pause();
+      if (wasRaw) stdin.setRawMode?.(true);
+      resolve(data.toString());
+    };
+
+    stdin.on("data", onData);
+  });
 }

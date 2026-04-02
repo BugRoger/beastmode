@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "artifacts": {
+    "features": [
+      {
+        "slug": "consumer-swap",
+        "plan": "2026-04-02-cancel-cleanup-consumer-swap.md",
+        "wave": 2
+      },
+      {
+        "slug": "cancel-logic",
+        "plan": "2026-04-02-cancel-cleanup-cancel-logic.md",
+        "wave": 1
+      },
+      {
+        "slug": "force-flag",
+        "plan": "2026-04-02-cancel-cleanup-force-flag.md",
+        "wave": 1
+      }
+    ]
+  }
+}
