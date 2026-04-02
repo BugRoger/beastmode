@@ -60,8 +60,8 @@ function seedManifest(
   // If we need to patch in extra fields, reload, merge, save
   if (overrides) {
     const m = store.get(TEST_ROOT, slug);
-    if (overrides.epic) (m as Record<string, unknown>).epic = overrides.epic;
-    if (overrides.github) (m as Record<string, unknown>).github = overrides.github;
+    if (overrides.epic) (m as unknown as Record<string, unknown>).epic = overrides.epic;
+    if (overrides.github) (m as unknown as Record<string, unknown>).github = overrides.github;
     store.save(TEST_ROOT, slug, m);
   }
 }
@@ -152,7 +152,7 @@ describe("cancelEpic", () => {
       unref: () => {},
       [Symbol.dispose]: () => {},
     };
-    const spawnSpy = spyOn(Bun, "spawn").mockReturnValue(mockProc as ReturnType<typeof Bun.spawn>);
+    const spawnSpy = spyOn(Bun, "spawn").mockReturnValue(mockProc as unknown as ReturnType<typeof Bun.spawn>);
 
     const result = await cancelEpic(
       baseConfig({ githubEnabled: true }),
