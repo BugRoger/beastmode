@@ -1,7 +1,7 @@
 # State Scanner
 
 ## Scanner Architecture
-- state-scanner.ts is gutted or deleted — scanning is now a composition of store.list() + manifest.deriveNextAction() + manifest.checkBlocked()
+- state-scanner.ts is gutted or deleted — scanning is now a composition of store.list() + manifest.deriveNextAction()
 - NEVER maintain a standalone scanner module — manifest-store.ts and manifest.ts replace all scanner functionality
 - ALWAYS discover epics via store.list() — reads manifest files from `.beastmode/state/` directory
 - ALWAYS read phase from the top-level `manifest.phase` field — no inference from features, markers, or phases map
@@ -10,7 +10,7 @@
 ## Manifest Validation Schema
 - PipelineManifest is the sole manifest type — EpicState, FeatureProgress, ScanResult, and the old Manifest interface are all deleted
 - Required fields: `slug` (string, immutable hex), `phase` (valid Phase literal), `features` (ManifestFeature[]), `lastUpdated` (ISO-8601 string)
-- Optional fields: `epic` (string, human-readable name after rename), `originId` (string, birth hex for lineage), `artifacts` (Record<string, string[]>), `summary` ({ problem, solution }), `worktree` ({ branch, path }), `github` ({ epic, repo, bodyHash? }), `blocked` ({ gate, reason } | null)
+- Optional fields: `epic` (string, human-readable name after rename), `originId` (string, birth hex for lineage), `artifacts` (Record<string, string[]>), `summary` ({ problem, solution }), `worktree` ({ branch, path }), `github` ({ epic, repo, bodyHash? })
 - ManifestFeature extended with optional `description` field — plan checkpoint populates it
 - manifest-store.ts owns the validate() function — single source of truth for manifest structure
 - Slug format validated against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?` via `isValidSlug()`
@@ -18,7 +18,6 @@
 ## Type Architecture
 - ALWAYS use PipelineManifest as the sole type — canonical for store, state machine, status command, and watch command
 - ALWAYS delete watch-types.ts — watch command imports from manifest-store.ts
-- ALWAYS use structured blocked field: `{ gate: string; reason: string } | null` — not boolean, enables status display of block reason
 - ALWAYS remove costUsd from manifest types — cost tracking removed entirely
 
 ## Phase Source of Truth

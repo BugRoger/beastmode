@@ -27,7 +27,7 @@
 - Shared utility provides: label ops, issue CRUD, epic management, project V2 setup
 
 ## Label Taxonomy
-- 12 labels total: `type/epic`, `type/feature`, `phase/backlog`, `phase/design`, `phase/plan`, `phase/implement`, `phase/validate`, `phase/release`, `phase/done`, `status/ready`, `status/in-progress`, `status/blocked`, `gate/awaiting-approval`
+- 12 labels total: `type/epic`, `type/feature`, `phase/backlog`, `phase/design`, `phase/plan`, `phase/implement`, `phase/validate`, `phase/release`, `phase/done`, `status/ready`, `status/in-progress`, `status/blocked`
 - Phase labels are mutually exclusive on an issue — remove siblings before adding
 - Status labels are mutually exclusive on an issue — remove siblings before adding
 - `status/review` was explicitly dropped from the taxonomy

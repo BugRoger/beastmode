@@ -6,7 +6,7 @@
 - ALWAYS put agent prompts in `agents/` as standalone documents — separation from skills
 - ALWAYS put plugin lifecycle hooks in `hooks/` as executable scripts — lifecycle management
 - ALWAYS put external-facing essays in `docs/` — not imported by agents
-- Gate config lives at `.beastmode/config.yaml` — centralized configuration
+- CLI and GitHub config lives at `.beastmode/config.yaml` — centralized configuration
 - NEVER store knowledge outside `.beastmode/` — single source of truth
 - NEVER write to context/ from phase execution — only retro promotes to L0/L1/L2
 - `.beastmode/` stores L0-L3 knowledge hierarchy plus config.yaml and worktrees/<feature>/ (gitignored) — central hub

@@ -1,10 +1,10 @@
 # Pipeline Machine
 
 ## Machine Architecture
-- Two XState v5 machines: epicMachine (7 states with side effects) and featureMachine (4 states, pure status tracking)
+- Two XState v5 machines: epicMachine (7 states with side effects) and featureMachine (3 states, pure status tracking)
 - ALWAYS use the setup() API — declare all guards, actions, and actors in setup() before createMachine()
 - Epic states: design, plan, implement, validate, release, done, cancelled — done and cancelled are terminal (type: "final")
-- Feature states: pending, in-progress, completed, blocked — completed is terminal (type: "final")
+- Feature states: pending, in-progress, completed — completed is terminal (type: "final")
 - CANCEL event is valid from every non-terminal epic state
 - REGRESS event (`{ type: "REGRESS", targetPhase }`) is valid from every non-terminal epic state — guard enforces targetPhase <= currentPhase and targetPhase != "design"
 - REGRESS actions: set phase to targetPhase, reset all features to pending when regressing to or past implement, clear blocked fields, clear downstream artifact entries

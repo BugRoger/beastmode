@@ -1,7 +1,7 @@
 # GitHub Integration
 
 ## Label Taxonomy
-- ALWAYS create labels in four families: `type/`, `phase/`, `status/`, `gate/` -- complete lifecycle coverage
+- ALWAYS create labels in three families: `type/`, `phase/`, `status/` -- complete lifecycle coverage
 - ALWAYS use `gh label create --force` for idempotent label creation -- safe to re-run
 - ALWAYS remove mutually exclusive labels before setting new ones -- enforce single-state invariant
 - Phase labels track Epic lifecycle: backlog -> design -> plan -> implement -> validate -> release -> done
@@ -27,11 +27,11 @@
 - Reconciliation: blast-replace `phase/*` labels on epic, create-if-missing issues, set `status/*` labels on features, close completed
 
 ## Configuration Extension
-- ALWAYS define phase transitions in `config.yaml` under `transitions:` key -- centralized mode control
+- ALWAYS use `github.enabled` config toggle (default false) for GitHub sync -- setup-github sets it to true
 - ALWAYS define project board name in `config.yaml` under `github.project-name` -- configurable
 - ALWAYS store Projects V2 metadata in `config.yaml` (project-id, field-id, option IDs) -- no cache file, no lazy queries
 - Setup-github subcommand writes project metadata fields to config.yaml -- one-time bootstrap populates sync engine config
-- Transition modes: human (requires approval), auto (self-advancing) -- matches existing gate system
+- Design is interactive (human-driven), all other phases auto-advance via watch loop
 
 ## State Authority Model
 - ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json`, gitignored, local-only
@@ -44,7 +44,7 @@
 - GitHub is a synced mirror updated post-dispatch -- provides the global view across designs
 - Artifact files (.beastmode/artifacts/) are the committed content store (PRDs, plans, validation reports)
 - `/beastmode status` bridges both: scans state directories for local manifest state, queries GitHub for the board view when enabled
-- Manifest schema is pure pipeline state: slug (hex), epic? (human name), originId? (birth hex), phase, features array, artifacts, worktree info, optional github block, structured blocked field ({ gate, reason } | null) -- no architectural decisions or content concerns
+- Manifest schema is pure pipeline state: slug (hex), epic? (human name), originId? (birth hex), phase, features array, artifacts, worktree info, optional github block -- no architectural decisions or content concerns
 - Four feature statuses: pending, in-progress, blocked, completed
 - GitHub API failures: warn and continue -- absence of `github` data is the signal
 

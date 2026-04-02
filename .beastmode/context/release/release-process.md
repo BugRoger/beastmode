@@ -13,7 +13,7 @@
 
 ## Release Rollup
 - ALWAYS prepare L0 update proposal from L1 summaries at release time — controlled L0 evolution
-- Retro propagates L3 -> L2 -> L1 automatically; only L0 (BEASTMODE.md) requires human approval via `retro.beastmode` gate — scoped promotion
+- Retro propagates L3 -> L2 -> L1 -> L0 automatically — all changes auto-apply, no approval gate
 - BEASTMODE.md gains updated process sections via L0 proposal mechanism — targeted updates
 
 ## Version File Management

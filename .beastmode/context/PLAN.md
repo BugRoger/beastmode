@@ -50,7 +50,7 @@ CLI-owned GitHub sync system. The CLI invokes a stateless `syncGitHub(manifest, 
 6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
 7. ALWAYS use manifest-store.ts for all manifest filesystem operations (including rename, find, slugify) -- no other module touches manifest files on disk
 8. ALWAYS keep manifest.ts pure -- no fs imports, all functions take and return PipelineManifest objects
-9. ALWAYS use structured blocked field ({ gate, reason } | null) -- never boolean
+9. ALWAYS use four feature statuses: pending, in-progress, completed, blocked -- enum values on ManifestFeature
 10. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
 
 context/plan/github-integration.md

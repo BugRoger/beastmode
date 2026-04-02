@@ -68,7 +68,7 @@ Manifest JSON is the operational authority for feature lifecycle, located at `.b
 3. ALWAYS sync GitHub after every phase dispatch in the CLI — `syncGitHub(manifest, config)` runs post-dispatch, same code path for manual and watch-loop execution
 4. NEVER let GitHub API failures block workflow — warn and continue, next dispatch retries
 5. NEVER make skills GitHub-aware or manifest-aware — skills write artifacts with frontmatter only, Stop hook generates output.json, CLI is the sole manifest mutator
-6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) plus gate/awaiting-approval — status/review is dropped
+6. ALWAYS use 12-label taxonomy: 2 type, 7 phase, 3 status (ready, in-progress, blocked) — status/review is dropped, gate/awaiting-approval removed
 7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
 8. ALWAYS use blast-replace for mutually exclusive label families (phase/*, status/*) — remove all labels in family, add correct one, idempotent
 
@@ -122,20 +122,19 @@ Fullscreen terminal UI (`beastmode dashboard`) built with Ink v6.8.0 + React tha
 context/design/dashboard.md
 
 ## State Scanner
-Gutted or deleted. Scanning is composed from manifest-store.ts (store.list()) plus manifest.ts pure functions (deriveNextAction(), checkBlocked()). No standalone scanner module. PipelineManifest is the sole manifest type — EpicState, FeatureProgress, ScanResult are deleted. Manifest path: state/YYYY-MM-DD-<slug>.manifest.json (gitignored). Blocked is structured ({ gate, reason } | null), not boolean. Manifest schema includes `slug` (immutable hex), optional `epic` (human name), optional `originId` (birth hex). Slug format validated via `isValidSlug()`.
+Gutted or deleted. Scanning is composed from manifest-store.ts (store.list()) plus manifest.ts pure functions (deriveNextAction()). No standalone scanner module. PipelineManifest is the sole manifest type — EpicState, FeatureProgress, ScanResult are deleted. Manifest path: state/YYYY-MM-DD-<slug>.manifest.json (gitignored). Manifest schema includes `slug` (immutable hex), optional `epic` (human name), optional `originId` (birth hex). Slug format validated via `isValidSlug()`.
 
-1. ALWAYS compose scanning from store.list() + manifest.deriveNextAction() + manifest.checkBlocked() — no standalone scanner module
+1. ALWAYS compose scanning from store.list() + manifest.deriveNextAction() — no standalone scanner module
 2. ALWAYS use PipelineManifest as the sole manifest type — EpicState, FeatureProgress, ScanResult, Manifest are all deleted
 3. ALWAYS use manifest path convention state/YYYY-MM-DD-<slug>.manifest.json — gitignored, CLI-owned
-4. ALWAYS use structured blocked field ({ gate, reason } | null) — not boolean, enables status display of block reason
-5. ALWAYS auto-resolve git merge conflict markers before parsing manifests — take ours-side, strip markers, attempt parse
-6. NEVER aggregate costs in the scanner — cost tracking removed from scanner and status entirely
-7. ALWAYS validate slug format against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?` via `isValidSlug()` — centralized in manifest-store.ts
+4. ALWAYS auto-resolve git merge conflict markers before parsing manifests — take ours-side, strip markers, attempt parse
+5. NEVER aggregate costs in the scanner — cost tracking removed from scanner and status entirely
+6. ALWAYS validate slug format against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?` via `isValidSlug()` — centralized in manifest-store.ts
 
 context/design/state-scanner.md
 
 ## Pipeline Machine
-XState v5 state machine module at `cli/src/pipeline-machine/` replacing implicit manifest.ts pure functions with explicit declarative state definitions. Two machines: epic pipeline (design → done/cancelled) and feature status (pending → completed/blocked). `setup()` API for type-safe separation of definition from implementation. Sync actions (persist to memory, enrich, rename, regress) on transitions, async services (GitHub sync) as invoked actors. Generic REGRESS event (`{ type: "REGRESS", targetPhase }`) replaces the hardcoded VALIDATE_FAILED transition — guard enforces targetPhase <= currentPhase and targetPhase != "design", actions reset phase, clear features to pending when regressing to or past implement, and clear downstream artifacts. Persist action accumulates state in memory only — no disk writes during machine transitions; single `store.save()` at end of post-dispatch writes final state. State metadata for watch loop dispatch. Same `.manifest.json` format — no migration.
+XState v5 state machine module at `cli/src/pipeline-machine/` replacing implicit manifest.ts pure functions with explicit declarative state definitions. Two machines: epic pipeline (design → done/cancelled) and feature status (pending → completed). `setup()` API for type-safe separation of definition from implementation. Sync actions (persist to memory, enrich, rename, regress) on transitions, async services (GitHub sync) as invoked actors. Generic REGRESS event (`{ type: "REGRESS", targetPhase }`) replaces the hardcoded VALIDATE_FAILED transition — guard enforces targetPhase <= currentPhase and targetPhase != "design", actions reset phase, clear features to pending when regressing to or past implement, and clear downstream artifacts. Persist action accumulates state in memory only — no disk writes during machine transitions; single `store.save()` at end of post-dispatch writes final state. State metadata for watch loop dispatch. Same `.manifest.json` format — no migration.
 
 1. ALWAYS define state transitions declaratively in the XState machine — no implicit conditionals in orchestration code
 2. ALWAYS use named guards in `setup()` for transition conditions — testable independently from machine
@@ -149,11 +148,11 @@ XState v5 state machine module at `cli/src/pipeline-machine/` replacing implicit
 context/design/pipeline-machine.md
 
 ## cmux Integration
-Optional terminal multiplexer integration that provides live visibility into the pipeline. When cmux is available and enabled, the watch loop creates cmux workspaces per epic and terminal surfaces per dispatched agent. Communication uses JSON-RPC over Unix socket. Agents run as real terminal processes with interactive capability. Desktop notifications fire on errors and blocked gates only. Surfaces clean up on release, mirroring the worktree lifecycle. cmux is never a hard dependency — the SDK dispatch path is fully preserved as the fallback.
+Optional terminal multiplexer integration that provides live visibility into the pipeline. When cmux is available and enabled, the watch loop creates cmux workspaces per epic and terminal surfaces per dispatched agent. Communication uses JSON-RPC over Unix socket. Agents run as real terminal processes with interactive capability. Desktop notifications fire on errors only. Surfaces clean up on release, mirroring the worktree lifecycle. cmux is never a hard dependency — the SDK dispatch path is fully preserved as the fallback.
 
 1. ALWAYS use JSON-RPC over Unix socket for cmux communication — `CmuxClient` wraps the protocol
 2. ALWAYS create one workspace per epic, one surface per dispatched phase/feature — natural mental model mapping
-3. ALWAYS fire notifications only on errors and blocked gates — configurable via `cmux.notifications`
+3. ALWAYS fire notifications only on errors — configurable via `cmux.notifications`
 4. ALWAYS clean up cmux surfaces on release — mirrors worktree lifecycle
 5. NEVER require cmux — `cmuxAvailable()` check plus `cmux.enabled` config means zero regression risk
 

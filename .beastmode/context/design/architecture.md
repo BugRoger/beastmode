@@ -50,4 +50,4 @@
 - Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 - L0 promotion happens only during release phase via L0 proposal files in state/release/ — controlled rollup
 - NEVER write to context/ directly from phases — retro and the compaction agent are the sole gatekeepers
-- Single retro gate: retro.beastmode (L0 human approval) — L3/L2/L1 changes apply automatically, bottom-up order preserved
+- All retro changes (L3/L2/L1/L0) apply automatically — no approval gate, bottom-up order preserved
