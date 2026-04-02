@@ -1,12 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import type { PipelineManifest, ManifestFeature } from "../manifest-store";
-import type { GatesConfig } from "../config";
 import {
   enrich,
   markFeature,
   setGitHubEpic,
   setFeatureGitHubIssue,
-  checkBlocked,
   getPendingFeatures,
 } from "../manifest";
 
@@ -18,7 +16,6 @@ function makeManifest(
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     lastUpdated: "2026-03-29T00:00:00Z",
     ...overrides,
   };
@@ -162,48 +159,6 @@ describe("setFeatureGitHubIssue", () => {
     expect(result.features[0].github).toEqual({ issue: 99 });
   });
 });
-
-// --- checkBlocked ---
-
-describe("checkBlocked", () => {
-  test("returns null when no blocked features and no human gates", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [makeFeature({ status: "pending" })],
-    });
-    const gates: GatesConfig = {};
-
-    expect(checkBlocked(manifest, gates)).toBeNull();
-  });
-
-  test("returns structured blocked when feature is blocked", () => {
-    const manifest = makeManifest({
-      phase: "implement",
-      features: [makeFeature({ slug: "feat-a", status: "blocked" })],
-    });
-    const gates: GatesConfig = {};
-
-    const result = checkBlocked(manifest, gates);
-    expect(result).toEqual({
-      gate: "feature",
-      reason: "Feature feat-a is blocked",
-    });
-  });
-
-  test("returns structured blocked when phase has human gate", () => {
-    const manifest = makeManifest({ phase: "implement" });
-    const gates: GatesConfig = {
-      implement: { review: "human" },
-    };
-
-    const result = checkBlocked(manifest, gates);
-    expect(result).toEqual({
-      gate: "review",
-      reason: "Human gate",
-    });
-  });
-});
-
 
 // --- getPendingFeatures ---
 

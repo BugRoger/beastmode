@@ -13,16 +13,6 @@
 - ALWAYS make worktree entry step 1 of 1-execute — first side effect
 - ALWAYS reference task-runner as first line inside HARD-GATE block — never as trailing @import
 
-## Gate Syntax
-Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gates use `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections. Gate detection in task-runner.md matches the pattern and reads mode from config.yaml.
-
-1. ALWAYS use exact gate syntax: `## N. [GATE|namespace.gate-id]`
-2. ALWAYS provide both `[GATE-OPTION|human]` and `[GATE-OPTION|auto]` subsections
-3. ALWAYS read mode from `.beastmode/config.yaml` under `gates.` or `transitions.` key
-4. ALWAYS compose shared functionality via @imports from `skills/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
-5. ALWAYS use standardized transition output: human mode = `Next:` + inline-code command; auto/low-context = `Start a new session and run:` + inline-code command
-6. ALWAYS end transition gates with STOP — no prose, explanation, or alternatives after the command
-
 ## Branch Naming
 - ALWAYS use `feature/<feature>` branch naming — convention
 - ALWAYS create worktrees at `.beastmode/worktrees/<feature>` — standard location
@@ -47,5 +37,4 @@ Two-tier gate system. HARD-GATE for unconditional constraints. Configurable gate
 - Skill anatomy standardized to 4 sub-phases — see [skill-anatomy-refactor](../../state/plan/2026-03-04-skill-anatomy-refactor.md)
 - Lean prime refactor — 0-prime read-only, see [lean-prime-refactor](../../state/plan/2026-03-04-lean-prime-refactor.md)
 - Git branching with feature/<feature> convention — see [git-branching-strategy](../../state/plan/2026-03-04-git-branching-strategy.md)
-- HITL gate configuration system — see [hitl-gate-config](../../state/plan/2026-03-04-hitl-gate-config.md)
 - Init L2 expansion and context doc format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)

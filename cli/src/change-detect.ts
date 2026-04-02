@@ -13,7 +13,6 @@ export interface EpicSnapshot {
   phase: string;
   completedFeatures: number;
   totalFeatures: number;
-  blocked: boolean;
 }
 
 /** Extract a comparable snapshot from enriched manifests. */
@@ -26,7 +25,6 @@ export function toSnapshots(epics: EnrichedManifest[]): Map<string, EpicSnapshot
       phase: epic.phase,
       completedFeatures: completed,
       totalFeatures: epic.features.length,
-      blocked: epic.blocked != null,
     });
   }
   return map;
@@ -49,8 +47,7 @@ export function detectChanges(
     if (
       old.phase !== snap.phase ||
       old.completedFeatures !== snap.completedFeatures ||
-      old.totalFeatures !== snap.totalFeatures ||
-      old.blocked !== snap.blocked
+      old.totalFeatures !== snap.totalFeatures
     ) {
       changed.add(slug);
     }

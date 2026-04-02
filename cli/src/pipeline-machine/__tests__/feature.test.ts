@@ -55,18 +55,6 @@ describe("featureMachine", () => {
       actor.send({ type: "COMPLETE" });
       expect(actor.getSnapshot().value).toBe("pending");
     });
-
-    test("BLOCK is ignored in pending", () => {
-      const actor = startActor();
-      actor.send({ type: "BLOCK" });
-      expect(actor.getSnapshot().value).toBe("pending");
-    });
-
-    test("UNBLOCK is ignored in pending", () => {
-      const actor = startActor();
-      actor.send({ type: "UNBLOCK" });
-      expect(actor.getSnapshot().value).toBe("pending");
-    });
   });
 
   describe("in-progress state", () => {
@@ -75,13 +63,6 @@ describe("featureMachine", () => {
       actor.send({ type: "START" });
       actor.send({ type: "COMPLETE" });
       expect(actor.getSnapshot().value).toBe("completed");
-    });
-
-    test("BLOCK transitions to blocked", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      expect(actor.getSnapshot().value).toBe("blocked");
     });
 
     test("RESET transitions to pending", () => {
@@ -95,13 +76,6 @@ describe("featureMachine", () => {
       const actor = startActor();
       actor.send({ type: "START" });
       actor.send({ type: "START" });
-      expect(actor.getSnapshot().value).toBe("in-progress");
-    });
-
-    test("UNBLOCK is ignored in in-progress", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "UNBLOCK" });
       expect(actor.getSnapshot().value).toBe("in-progress");
     });
   });
@@ -119,54 +93,8 @@ describe("featureMachine", () => {
       expect(actor.getSnapshot().value).toBe("completed");
       actor.send({ type: "RESET" });
       expect(actor.getSnapshot().value).toBe("completed");
-      actor.send({ type: "BLOCK" });
-      expect(actor.getSnapshot().value).toBe("completed");
-      actor.send({ type: "UNBLOCK" });
-      expect(actor.getSnapshot().value).toBe("completed");
       actor.send({ type: "COMPLETE" });
       expect(actor.getSnapshot().value).toBe("completed");
-    });
-  });
-
-  describe("blocked state", () => {
-    test("UNBLOCK transitions to in-progress", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      actor.send({ type: "UNBLOCK" });
-      expect(actor.getSnapshot().value).toBe("in-progress");
-    });
-
-    test("RESET transitions to pending", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      actor.send({ type: "RESET" });
-      expect(actor.getSnapshot().value).toBe("pending");
-    });
-
-    test("START is ignored in blocked", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      actor.send({ type: "START" });
-      expect(actor.getSnapshot().value).toBe("blocked");
-    });
-
-    test("COMPLETE is ignored in blocked", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      actor.send({ type: "COMPLETE" });
-      expect(actor.getSnapshot().value).toBe("blocked");
-    });
-
-    test("BLOCK is ignored in blocked", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      actor.send({ type: "BLOCK" });
-      expect(actor.getSnapshot().value).toBe("blocked");
     });
   });
 
@@ -192,27 +120,14 @@ describe("featureMachine", () => {
       expect(meta["feature.completed"].dispatchType).toBe("skip");
     });
 
-    test("blocked has dispatchType: skip", () => {
-      const actor = startActor();
-      actor.send({ type: "START" });
-      actor.send({ type: "BLOCK" });
-      const meta = actor.getSnapshot().getMeta() as Record<string, any>;
-      expect(meta["feature.blocked"].dispatchType).toBe("skip");
-    });
   });
 
   describe("full lifecycle", () => {
-    test("pending -> in-progress -> blocked -> in-progress -> completed", () => {
+    test("pending -> in-progress -> completed", () => {
       const actor = startActor();
       expect(actor.getSnapshot().value).toBe("pending");
 
       actor.send({ type: "START" });
-      expect(actor.getSnapshot().value).toBe("in-progress");
-
-      actor.send({ type: "BLOCK" });
-      expect(actor.getSnapshot().value).toBe("blocked");
-
-      actor.send({ type: "UNBLOCK" });
       expect(actor.getSnapshot().value).toBe("in-progress");
 
       actor.send({ type: "COMPLETE" });

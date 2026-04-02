@@ -1,11 +1,6 @@
 # 1. Execute
 
-## 1. [GATE|design.decision-tree]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.decision-tree`.
-Default: `human`.
-
-### [GATE-OPTION|human] Walk the Decision Tree
+## 1. Walk the Decision Tree
 
 Interview the user about every aspect of this feature. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one.
 
@@ -20,19 +15,7 @@ Rules:
 7. Track deferred ideas internally
 8. Continue until all branches of the decision tree are resolved
 
-### [GATE-OPTION|auto] Derive All Silently
-
-- Derive all decisions from arguments + codebase scan + prior decisions
-- Research inline when needed
-- Log decisions inline
-- No questions asked
-
-## 2. [GATE|design.gray-areas]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.gray-areas`.
-Default: `human`.
-
-### [GATE-OPTION|human] Gray Area Sweep
+## 2. Gray Area Sweep
 
 Second pass to catch big-picture blind spots the decision tree may have missed.
 
@@ -48,12 +31,6 @@ Second pass to catch big-picture blind spots the decision tree may have missed.
 5. After batch resolved: "3 more areas, or satisfied with the level of detail?"
    - "3 more" → loop back with next 3 most unclear
    - "Satisfied" → exit loop
-
-### [GATE-OPTION|auto] Self-Check
-
-- Review decisions for internal consistency
-- Flag obvious gaps
-- Log: "Gate `design.gray-areas` → auto: {N} areas checked, {N} gaps found"
 
 ## 3. Iterate Until Ready for Validation
 

@@ -10,7 +10,6 @@ function makeManifest(
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     lastUpdated: "2026-03-29T00:00:00Z",
     ...overrides,
   };

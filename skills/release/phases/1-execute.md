@@ -25,19 +25,9 @@ Detect version bump **type** from commit messages:
 
 **Important:** Do NOT read `plugin.json` for the current version — the worktree's copy is stale. The actual version bump happens post-merge on main in the checkpoint phase.
 
-### 2.1 [GATE|release.version-confirmation]
-
-Read `.beastmode/config.yaml` → resolve mode for `release.version-confirmation`.
-Default: `human`.
-
-#### [GATE-OPTION|human] Ask User
-
-Present detected bump type (major/minor/patch) via AskUserQuestion with override option.
-
-#### [GATE-OPTION|auto] Auto-Detect
+### 2.1 Version Confirmation
 
 Use the auto-detected bump type without asking.
-Log: "Gate `release.version-confirmation` → auto: <bump-type>"
 
 ## 3. Categorize Commits
 

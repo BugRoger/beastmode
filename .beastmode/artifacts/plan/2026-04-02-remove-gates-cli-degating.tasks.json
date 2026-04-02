@@ -1,0 +1,89 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-remove-gates-cli-degating.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: Remove gate types and functions from config.ts",
+      "wave": 1,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/config.ts",
+        "cli/src/__tests__/config.test.ts"
+      ]
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Remove checkBlocked and gate import from manifest.ts",
+      "wave": 1,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/manifest.ts",
+        "cli/src/__tests__/manifest-pure.test.ts"
+      ]
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Remove blocked field from PipelineManifest and gate enrichment from manifest-store.ts",
+      "wave": 2,
+      "depends_on": [0, 1],
+      "status": "pending",
+      "files": [
+        "cli/src/manifest-store.ts"
+      ]
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Remove epic-blocked event from watch-types.ts and watch.ts",
+      "wave": 2,
+      "depends_on": [2],
+      "status": "pending",
+      "files": [
+        "cli/src/watch-types.ts",
+        "cli/src/watch.ts",
+        "cli/src/__tests__/watch.test.ts",
+        "cli/src/__tests__/watch-events.test.ts"
+      ]
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Remove BLOCK/UNBLOCK from feature state machine",
+      "wave": 2,
+      "parallel_safe": true,
+      "status": "pending",
+      "files": [
+        "cli/src/pipeline-machine/feature.ts",
+        "cli/src/pipeline-machine/types.ts",
+        "cli/src/pipeline-machine/index.ts",
+        "cli/src/pipeline-machine/epic.ts",
+        "cli/src/pipeline-machine/actions.ts"
+      ]
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Remove blocked references from consumers (dashboard, status, change-detect)",
+      "wave": 3,
+      "depends_on": [2, 3, 4],
+      "status": "pending",
+      "files": [
+        "cli/src/dashboard/EpicTable.tsx",
+        "cli/src/dashboard/App.tsx",
+        "cli/src/dashboard/ActivityLog.tsx",
+        "cli/src/commands/status.ts",
+        "cli/src/shared/status-data.ts",
+        "cli/src/change-detect.ts"
+      ]
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: Remove gates section from config.yaml",
+      "wave": 3,
+      "status": "pending",
+      "files": [
+        ".beastmode/config.yaml"
+      ]
+    }
+  ],
+  "lastUpdated": "2026-04-02T00:00:00Z"
+}

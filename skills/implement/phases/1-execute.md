@@ -92,22 +92,9 @@ Process the agent's deviation report per [deviation-rules.md](../references/devi
 
 - **Auto-fix / Blocking**: Log to deviation tracker, continue
 
-#### 2.4.1 [GATE|implement.architectural-deviation]
-
-Read `.beastmode/config.yaml` → resolve mode for `implement.architectural-deviation`.
-Default: `auto`.
-
-##### [GATE-OPTION|human] Ask User
-
-Present to user via AskUserQuestion:
-  - "Proceed with proposed change"
-  - "Different approach" (user specifies)
-  - "Skip this task" (mark blocked)
-
-##### [GATE-OPTION|auto] Claude Decides
+#### 2.4.1 Architectural Deviation
 
 Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
-Log: "Gate `implement.architectural-deviation` → auto: <decision>"
 
 ### 2.5 Update Task Persistence
 
@@ -129,22 +116,12 @@ After ALL tasks in the current wave complete:
    - After 2 retries: mark wave as blocked, report to user
 3. If tests pass: proceed to next wave
 
-## 3. [GATE|implement.blocked-task-decision]
+## 3. Blocked Task Resolution
 
 If a task is blocked and has dependents in later waves:
 - Report to user: "Task N is blocked. Tasks [X, Y] in Wave M depend on it."
 
-Read `.beastmode/config.yaml` → resolve mode for `implement.blocked-task-decision`.
-Default: `auto`.
-
-### [GATE-OPTION|human] Ask User
-
-Ask: "Skip dependent tasks or investigate?"
-
-### [GATE-OPTION|auto] Claude Investigates
-
 Investigate the blocked task. If resolvable, fix and continue. If not, skip dependent tasks and log.
-Log: "Gate `implement.blocked-task-decision` → auto: <decision>"
 
 ## 4. Completion
 

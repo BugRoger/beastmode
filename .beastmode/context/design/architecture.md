@@ -43,15 +43,6 @@
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
 - After parallel implement agents complete, CLI merges worktrees sequentially with pre-merge conflict simulation via `git merge-tree` then verifies manifest completeness — convergence before validation
 
-## HITL Gate System
-- NEVER skip gate steps — `## N. [GATE|...]` steps are structural task-runner items that cannot be bypassed
-- Configurable gates resolve from `.beastmode/config.yaml` at runtime — flexibility without hardcoding
-- Gate syntax: `## N. [GATE|namespace.gate-id]` with GATE-OPTION subsections — standardized format
-- NEVER place competing gate mechanisms on the same decision point — avoids ambiguity
-- GitHub gates use comment-based approval for pre-code phases and PR reviews for code phases — gate mechanism matches artifact type
-- Phase transitions are externally orchestrated via TypeScript CLI (`beastmode <phase> <slug>`) — Justfile deleted, CLI is sole entry point, no in-skill auto-chaining
-- Transition gates removed from config.yaml — checkpoint prints `beastmode <next-phase> <slug>` instead
-
 ## Retro Knowledge Promotion
 - Retro runs once at release — context walker receives all phase artifacts in a single pass
 - ALWAYS run retro before release commit — context walker as the sole walker
@@ -59,4 +50,4 @@
 - Retro walkers ALWAYS apply value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 - L0 promotion happens only during release phase via L0 proposal files in state/release/ — controlled rollup
 - NEVER write to context/ directly from phases — retro and the compaction agent are the sole gatekeepers
-- Single retro gate: retro.beastmode (L0 human approval) — L3/L2/L1 changes apply automatically, bottom-up order preserved
+- All retro changes (L3/L2/L1/L0) apply automatically — no approval gate, bottom-up order preserved

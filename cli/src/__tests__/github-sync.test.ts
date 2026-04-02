@@ -97,7 +97,6 @@ import type { ResolvedGitHub } from "../github-discovery";
 
 function makeConfig(overrides: Partial<BeastmodeConfig["github"]> = {}): BeastmodeConfig {
   return {
-    gates: {},
     github: {
       enabled: true,
       ...overrides,

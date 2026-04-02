@@ -11,7 +11,6 @@ function makeContext(overrides: Partial<EpicContext> = {}): EpicContext {
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     lastUpdated: "2026-03-31T00:00:00Z",
     ...overrides,
   };
@@ -43,7 +42,6 @@ describe("initial state and context", () => {
     expect(ctx.phase).toBe("design");
     expect(ctx.features).toEqual([]);
     expect(ctx.artifacts).toEqual({});
-    expect(ctx.blocked).toBeNull();
   });
 });
 
@@ -261,11 +259,6 @@ describe("CANCEL from every non-terminal state", () => {
     expect(actor.getSnapshot().value).toBe("cancelled");
   });
 
-  test("CANCEL clears blocked field", () => {
-    const actor = startActor({ blocked: { gate: "test", reason: "stuck" } });
-    actor.send({ type: "CANCEL" });
-    expect(actor.getSnapshot().context.blocked).toBeNull();
-  });
 });
 
 // ── 6. REGRESS from every non-terminal state ──────────────────────
@@ -420,24 +413,6 @@ describe("REGRESS regression", () => {
 
     actor.send({ type: "REGRESS", targetPhase: "plan" });
     expect(actor.getSnapshot().value).toBe("plan");
-  });
-
-  test("REGRESS clears blocked field", () => {
-    const actor = startActor({
-      phase: "validate",
-      features: [{ slug: "f", plan: "p", status: "completed" }],
-      blocked: { gate: "review", reason: "stuck" },
-    });
-    // Hydrate at validate
-    const resolvedSnapshot = epicMachine.resolveState({
-      value: "validate",
-      context: actor.getSnapshot().context,
-    });
-    const actor2 = createActor(epicMachine, { snapshot: resolvedSnapshot, input: actor.getSnapshot().context });
-    actor2.start();
-
-    actor2.send({ type: "REGRESS", targetPhase: "implement" });
-    expect(actor2.getSnapshot().context.blocked).toBeNull();
   });
 
   test("REGRESS clears downstream artifacts", () => {
@@ -676,13 +651,6 @@ describe("action effects", () => {
     expect(after).not.toBe("2020-01-01T00:00:00Z");
     // Should be a valid ISO timestamp
     expect(new Date(after).toISOString()).toBe(after);
-  });
-
-  test("markCancelled clears blocked", () => {
-    const actor = startActor({ blocked: { gate: "review", reason: "waiting" } });
-    expect(actor.getSnapshot().context.blocked).toEqual({ gate: "review", reason: "waiting" });
-    actor.send({ type: "CANCEL" });
-    expect(actor.getSnapshot().context.blocked).toBeNull();
   });
 
   test("setFeatures preserves wave field from PLAN_COMPLETED", () => {

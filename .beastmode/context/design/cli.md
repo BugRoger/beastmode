@@ -4,7 +4,7 @@
 - CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `dashboard`, `status`, and `compact`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped. Phase detection matrix compares requested phase against manifest.phase: regression (requested < current) and same-phase rerun (requested == current with prior commits) reset the git branch to the predecessor phase's tag and regress the XState machine via REGRESS event; forward-jump (requested > current) is blocked with error. Manual CLI prompts for confirmation before destructive reset; watch loop skips prompt. CLI-managed git tags (`beastmode/<slug>/<phase>`) are created at phase checkpoint, deleted on regression, and renamed during slug rename
 - `beastmode watch` runs the autonomous pipeline loop as a foreground process
-- `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, blocked gate details, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
+- `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
 - `beastmode dashboard` runs fullscreen Ink v6 + React TUI with embedded watch loop — three-zone layout (header with clock, scrollable epic table, activity log), keyboard navigation (up/down arrows for row selection, x for cancel epic with inline y/n confirmation, a for toggle auto-scroll, q/Ctrl+C for graceful exit), alternate screen buffer mode, 1-second UI refresh tick, same lockfile as `beastmode watch` for mutual exclusion; uses shared `status-data.ts` for data logic, WatchLoop EventEmitter typed events for state updates; adds `ink` v6.8.0 and `react` to cli/package.json
 - `beastmode cancel <slug>` performs full cleanup via shared cancel module: removes worktree and branch, deletes archive tags, phase tags, artifacts (excluding research), closes GitHub issue as not_planned, deletes manifest — ordered steps with warn-and-continue per step, idempotent; `--force` flag skips confirmation prompt for automated pipelines; confirmation defaults to No (only y/Y accepted)
 - `beastmode compact` dispatches the compaction agent via existing session dispatch pattern — operates on the shared context tree without a worktree, always runs regardless of 5-release counter, produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`
@@ -30,7 +30,7 @@
 - `cli.interval` controls poll interval (default 60 seconds)
 - `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
 - No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
-- Gates and other config sections are unchanged
+- Other config sections are unchanged
 
 ## Cost Tracking
 - Per-dispatch run log appended to `.beastmode-runs.json` — epic, phase, feature, cost_usd, duration_ms, exit_status, timestamp
@@ -44,7 +44,7 @@
 ## Manifest Lifecycle
 - CLI creates manifest at first phase dispatch (design) via store.create(slug) before dispatching — manifest exists throughout the entire skill session
 - ALWAYS enrich manifest from output.json after each dispatch — Stop hook auto-generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json` from artifact frontmatter
-- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate, rename, find, slugify) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
+- CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate, rename, find, slugify) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
 - Terminology: `slug` is an immutable 6-character hex assigned at worktree creation; `epic` is the human-readable name derived by the design skill after rename; `feature` is a sub-unit within an epic
 - `store.rename()` atomically renames all slug-keyed resources (artifacts, branch, worktree, manifest file, manifest content) with prepare-then-execute strategy — collision resolution uses deterministic `<epic>-<hex>` suffix
 - `store.find()` resolves by either hex slug or epic name — dual lookup for user convenience

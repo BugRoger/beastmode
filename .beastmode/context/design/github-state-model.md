@@ -14,7 +14,6 @@
 ## Epic State Machine
 - ALWAYS track Epic phase via mutually exclusive `phase/*` labels: backlog, design, plan, implement, validate, release, done -- lifecycle state is visible and queryable
 - NEVER allow multiple `phase/*` labels on one Epic -- mutual exclusivity is a state machine invariant
-- Gate transitions use `gate/awaiting-approval` label + issue comments for pre-code phases, PR reviews for code phases -- match gate mechanism to artifact type
 
 ## Feature State Machine
 - ALWAYS track Feature status via mutually exclusive `status/*` labels: ready, in-progress, blocked — status/review is dropped (no per-feature PRs in squash-at-release model)
@@ -37,7 +36,7 @@
 ## Configuration
 - ALWAYS use github.enabled config toggle (default: false) to control GitHub sync — setup-github sets it to true
 - ALWAYS use github.project-name config key for the Projects V2 board name
-- NEVER hardcode transition behavior in skills — config.yaml is the single source for gate and sync behavior
+- NEVER hardcode transition behavior in skills — config.yaml is the single source for sync behavior
 
 ## Setup
 - ALWAYS make setup idempotent -- safe to re-run without side effects
@@ -54,7 +53,7 @@
 
 ## Manifest Schema
 - PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start
-- Schema: slug (immutable hex), epic? (human name, set after rename), originId? (birth hex for lineage), phase (Phase), features (ManifestFeature[]), artifacts (Record<string, string[]>), summary? ({ problem, solution }), worktree? ({ branch, path }), github? ({ epic, repo, bodyHash? }), blocked? ({ gate, reason } | null), lastUpdated (ISO-8601)
+- Schema: slug (immutable hex), epic? (human name, set after rename), originId? (birth hex for lineage), phase (Phase), features (ManifestFeature[]), artifacts (Record<string, string[]>), summary? ({ problem, solution }), worktree? ({ branch, path }), github? ({ epic, repo, bodyHash? }), lastUpdated (ISO-8601)
 - ManifestFeature extended with optional `description` field — populated by plan checkpoint
 - Design checkpoint populates `summary.problem` and `summary.solution` on the manifest root
 - ALWAYS create manifest at first phase dispatch (design) via store.create(slug) — manifest exists before skill session starts

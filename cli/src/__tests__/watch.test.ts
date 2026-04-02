@@ -179,7 +179,7 @@ describe("WatchLoop", () => {
       features: [],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -239,7 +239,7 @@ describe("WatchLoop", () => {
       ],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -302,7 +302,7 @@ describe("WatchLoop", () => {
       ],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -361,7 +361,7 @@ describe("WatchLoop", () => {
       ],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -404,50 +404,6 @@ describe("WatchLoop", () => {
     await loop.stop();
   });
 
-  it("pauses epics blocked on human gates", async () => {
-    const dispatched: string[] = [];
-
-    const gatedEpic: EnrichedManifest = {
-      slug: "gated-epic",
-      manifestPath: "pipeline/gated-epic.manifest.json",
-      phase: "implement",
-      nextAction: null,
-      features: [{ slug: "feat-a", plan: "feat-a.md", status: "pending" }],
-      artifacts: {},
-      lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: { gate: "test-gate", reason: "Test gate" },
-    };
-
-    const deps = mockDeps({
-      scanEpics: async () => [gatedEpic],
-      sessionFactory: new SdkSessionFactory(async (opts) => {
-        dispatched.push(opts.phase);
-        return {
-          id: "nope",
-          worktreeSlug: "nope",
-          promise: Promise.resolve({
-            success: true,
-            exitCode: 0,
-            costUsd: 0,
-            durationMs: 0,
-          }),
-        };
-      }),
-    });
-
-    const loop = new WatchLoop(
-      { intervalSeconds: 999, projectRoot: TEST_ROOT },
-      deps,
-    );
-    loop.setRunning(true);
-
-    await loop.tick();
-
-    // Should NOT dispatch anything for a gated epic
-    expect(dispatched).toHaveLength(0);
-    await loop.stop();
-  });
-
   it("does not double-dispatch the same phase", async () => {
     let dispatchCount = 0;
 
@@ -459,7 +415,7 @@ describe("WatchLoop", () => {
       features: [],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -503,7 +459,7 @@ describe("WatchLoop", () => {
         features: [],
         artifacts: {},
         lastUpdated: "2026-03-29T00:00:00Z",
-        blocked: null,
+  
       },
       {
         slug: "epic-b",
@@ -513,7 +469,7 @@ describe("WatchLoop", () => {
         features: [],
         artifacts: {},
         lastUpdated: "2026-03-29T00:00:00Z",
-        blocked: null,
+  
       },
     ];
 
@@ -564,7 +520,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -607,7 +563,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -666,7 +622,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -724,7 +680,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -785,7 +741,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({
@@ -839,7 +795,7 @@ describe("WatchLoop", () => {
       features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
       artifacts: {},
       lastUpdated: "2026-03-29T00:00:00Z",
-      blocked: null,
+
     };
 
     const deps = mockDeps({

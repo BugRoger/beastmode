@@ -13,7 +13,6 @@ function makeEpicContext(overrides: Partial<EpicContext> = {}): EpicContext {
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     lastUpdated: "2026-03-31T00:00:00Z",
     ...overrides,
   };
@@ -113,7 +112,6 @@ describe("manifest-shaped fixture input", () => {
       artifacts: { design: ["design.md"], plan: ["plan.md"] },
       worktree: { branch: "feature/fixture", path: "/tmp/fixture" },
       github: { epic: 42, repo: "owner/repo" },
-      blocked: null,
       lastUpdated: "2026-03-31T00:00:00Z",
     };
 
@@ -156,14 +154,13 @@ describe("manifest-shaped fixture input", () => {
 // ── 3. Round-trip preserves all fields ───────────────────────────
 
 describe("round-trip preserves all context fields", () => {
-  test("slug, features, artifacts, github, worktree, blocked, lastUpdated all survive", () => {
+  test("slug, features, artifacts, github, worktree, lastUpdated all survive", () => {
     const actor = startEpicActor({
       slug: "full-context-epic",
       features: [],
       artifacts: { design: ["d1.md", "d2.md"] },
       worktree: { branch: "feature/full", path: "/tmp/full" },
       github: { epic: 99, repo: "org/repo" },
-      blocked: { gate: "review", reason: "awaiting approval" },
       lastUpdated: "2026-03-31T12:00:00Z",
     });
 
@@ -206,25 +203,8 @@ describe("round-trip preserves all context fields", () => {
       path: "/tmp/full",
     });
     expect(ctx.github).toEqual({ epic: 99, repo: "org/repo" });
-    // blocked gets cleared during transitions (markCancelled) or preserved
-    // After DESIGN_COMPLETED, blocked is not explicitly cleared, so check it survived
-    expect(ctx.blocked).toEqual({ gate: "review", reason: "awaiting approval" });
     // lastUpdated gets refreshed on each transition, so just verify it is a valid ISO string
     expect(new Date(ctx.lastUpdated).toISOString()).toBe(ctx.lastUpdated);
-  });
-
-  test("null blocked survives round-trip", () => {
-    const actor = startEpicActor({ blocked: null });
-    actor.send({ type: "DESIGN_COMPLETED" });
-
-    const persisted = actor.getPersistedSnapshot();
-    const actor2 = createActor(epicMachine, {
-      snapshot: JSON.parse(JSON.stringify(persisted)),
-      input: makeEpicContext(),
-    });
-    actor2.start();
-
-    expect(actor2.getSnapshot().context.blocked).toBeNull();
   });
 
   test("empty features array survives round-trip", () => {
@@ -288,26 +268,6 @@ describe("feature machine round-trip", () => {
     actor2.send({ type: "COMPLETE" });
     expect(actor2.getSnapshot().value).toBe("completed");
     expect(actor2.getSnapshot().status).toBe("done");
-  });
-
-  test("blocked state survives round-trip", () => {
-    const actor = startFeatureActor();
-    actor.send({ type: "START" });
-    actor.send({ type: "BLOCK" });
-    expect(actor.getSnapshot().value).toBe("blocked");
-
-    const persisted = actor.getPersistedSnapshot();
-    const actor2 = createActor(featureMachine, {
-      snapshot: JSON.parse(JSON.stringify(persisted)),
-      input: makeFeatureContext(),
-    });
-    actor2.start();
-
-    expect(actor2.getSnapshot().value).toBe("blocked");
-
-    // Can unblock from restored state
-    actor2.send({ type: "UNBLOCK" });
-    expect(actor2.getSnapshot().value).toBe("in-progress");
   });
 
   test("feature context with github metadata survives round-trip", () => {

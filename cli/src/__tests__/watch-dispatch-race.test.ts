@@ -29,7 +29,6 @@ function makeEpic(features: Array<{ slug: string; status: string }>): EnrichedMa
     })),
     artifacts: {},
     lastUpdated: new Date().toISOString(),
-    blocked: null,
     nextAction: {
       phase: "implement",
       args: ["test-epic"],

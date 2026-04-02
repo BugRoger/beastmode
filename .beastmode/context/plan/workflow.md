@@ -5,7 +5,7 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 
 1. ALWAYS follow five-phase core: design -> plan -> implement -> validate -> release
 2. ALWAYS suggest next phase at checkpoint completion
-3. ONLY the transition gate in checkpoint sub-phases may print next-step commands — retro and sub-agents are banned from producing transition guidance
+3. ONLY checkpoints may print next-step commands — retro and sub-agents are banned from producing transition guidance
 
 ## Session Tracking
 - ALWAYS update status file on phase completion — `.beastmode/status/YYYY-MM-DD-<feature>.md`
@@ -35,11 +35,10 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 - Context-aware greetings and skill announce rules live in BEASTMODE.md Persona section — centralized in L0
 
 ## Autonomous Chaining
-Config.yaml transitions section controls phase-to-phase chaining. Transition gates use standardized output format: human mode prints `Next:` with inline-code command; auto mode chains via Skill() calls. All gates end with STOP. All retro gates must be configurable for fully autonomous cycles. GitHub state model extends transitions with label-based phase advancement on Epic issues, enabling external visibility and daemon-driven pipeline progression.
+Checkpoint prints the CLI command for the next phase. Design phase is interactive (human runs manually). Non-design phases run autonomously via the watch loop. GitHub state model extends transitions with label-based phase advancement on Epic issues, enabling external visibility and daemon-driven pipeline progression.
 
-1. ALWAYS respect gate mode from config.yaml — never skip gates
-2. ALWAYS use inline code (single backticks) for next-step commands — never code blocks
-3. ALWAYS end transition gate output with STOP — no additional output after the command
+1. ALWAYS use inline code (single backticks) for next-step commands — never code blocks
+2. ALWAYS end checkpoint transition output with STOP — no additional output after the command
 
 ## Related Decisions
 - Init L2 expansion with retro-compatible format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)

@@ -1,13 +1,13 @@
 # Configuration Extension
 
 ## Context
-Phase transitions need configurable modes (human vs auto) and the project board name needs to be configurable. The existing `config.yaml` gate system needs extension for GitHub-backed transitions.
+Phase transitions need configurable modes and the project board name needs to be configurable. The config.yaml needed extension for GitHub-backed settings.
 
 ## Decision
-Extend `config.yaml` with `transitions:` block (backlog-to-design through release-to-done, each set to human or auto) and `github:` section with `enabled` key (boolean, default false), `project-name` key, and Projects V2 metadata fields (project-id, field-id, option IDs). When `github.enabled` is false, all sync is silently skipped. Setup subcommand sets `enabled` to true and writes project metadata fields. Transitions block replaces implicit gate-only configuration for phase advancement. No cache file for Projects V2 metadata -- config.yaml is the single source.
+Extend `config.yaml` with `github:` section with `enabled` key (boolean, default false), `project-name` key, and Projects V2 metadata fields (project-id, field-id, option IDs). When `github.enabled` is false, all sync is silently skipped. Setup subcommand sets `enabled` to true and writes project metadata fields. Design is interactive by nature; all other phases auto-advance via the watch loop. No cache file for Projects V2 metadata -- config.yaml is the single source.
 
 ## Rationale
-Centralizes all transition mode decisions in one config file. Matches the existing gate configuration pattern. `github.project-name` allows customization per-project without code changes. Storing Projects V2 metadata in config eliminates the need for a separate cache file and lazy queries.
+Centralizes all configuration in one config file. `github.project-name` allows customization per-project without code changes. Storing Projects V2 metadata in config eliminates the need for a separate cache file and lazy queries.
 
 ## Source
 state/plan/2026-03-28-github-state-model.md

@@ -78,19 +78,17 @@ describe("create", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  test("creates manifest with design phase and blocked=null", () => {
+  test("creates manifest with design phase", () => {
     const manifest = create(TEST_ROOT, "test-epic");
     expect(manifest.slug).toBe("test-epic");
     expect(manifest.phase).toBe("design");
     expect(manifest.features).toEqual([]);
     expect(manifest.artifacts).toEqual({});
-    expect(manifest.blocked).toBeNull();
     expect(manifest.lastUpdated).toBeTruthy();
 
     // Confirm persistence
     const loaded = get(TEST_ROOT, "test-epic");
     expect(loaded.slug).toBe("test-epic");
-    expect(loaded.blocked).toBeNull();
   });
 
   test("creates state directory if missing", () => {
@@ -312,19 +310,6 @@ describe("validate", () => {
     ).toBe(false);
   });
 
-  test("accepts manifest with blocked field", () => {
-    expect(
-      validate({
-        slug: "test",
-        phase: "plan",
-        features: [],
-        artifacts: {},
-        blocked: { gate: "validate", reason: "tests failing" },
-        lastUpdated: "2026-03-29T00:00:00Z",
-      }),
-    ).toBe(true);
-  });
-
   test("accepts manifest without design field (new schema)", () => {
     // The validate function should NOT require a design field
     expect(
@@ -422,41 +407,6 @@ describe("validate", () => {
 });
 
 describe("PipelineManifest type", () => {
-  test("includes blocked field as { gate, reason } | null", () => {
-    // Type-level check: create manifests with both shapes
-    const withBlocked: PipelineManifest = {
-      slug: "blocked-test",
-      phase: "validate",
-      features: [],
-      artifacts: {},
-      blocked: { gate: "validate", reason: "lint errors" },
-      lastUpdated: new Date().toISOString(),
-    };
-    expect(withBlocked.blocked).toEqual({
-      gate: "validate",
-      reason: "lint errors",
-    });
-
-    const withNull: PipelineManifest = {
-      slug: "unblocked-test",
-      phase: "design",
-      features: [],
-      artifacts: {},
-      blocked: null,
-      lastUpdated: new Date().toISOString(),
-    };
-    expect(withNull.blocked).toBeNull();
-
-    const withoutBlocked: PipelineManifest = {
-      slug: "no-blocked-test",
-      phase: "design",
-      features: [],
-      artifacts: {},
-      lastUpdated: new Date().toISOString(),
-    };
-    expect(withoutBlocked.blocked).toBeUndefined();
-  });
-
   test("includes optional originId and epic fields", () => {
     const withOriginId: PipelineManifest = {
       slug: "abc123",

@@ -78,4 +78,4 @@
 
 ## Configuration
 
-- `.beastmode/config.yaml` controls gate behavior
+- `.beastmode/config.yaml` controls CLI and GitHub settings

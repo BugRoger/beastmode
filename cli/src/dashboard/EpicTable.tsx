@@ -156,9 +156,7 @@ export default function EpicTable({
                 </>
               ) : null}
               {!isConfirming && (
-                epic.blocked ? (
-                  <Text color="red">blocked: {epic.blocked.reason}</Text>
-                ) : isActive ? (
+                isActive ? (
                   <Text color="yellow">running</Text>
                 ) : (
                   <Text dimColor>{epic.phase}</Text>

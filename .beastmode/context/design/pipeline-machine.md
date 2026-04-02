@@ -1,6 +1,6 @@
 # Pipeline Machine
 
-XState v5 state machine module replacing implicit manifest.ts pure functions with explicit declarative state definitions. Two machines: epic pipeline (design → plan → implement → validate → release → done/cancelled) and feature status (pending → in-progress → completed/blocked).
+XState v5 state machine module replacing implicit manifest.ts pure functions with explicit declarative state definitions. Two machines: epic pipeline (design → plan → implement → validate → release → done/cancelled) and feature status (pending → in-progress → completed).
 
 ## Library Choice
 

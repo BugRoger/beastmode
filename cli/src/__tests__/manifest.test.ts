@@ -66,13 +66,12 @@ describe("manifest-store core operations", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  test("create creates manifest with design phase and blocked=null", () => {
+  test("create creates manifest with design phase", () => {
     const manifest = create(TEST_ROOT, "test-epic");
     expect(manifest.slug).toBe("test-epic");
     expect(manifest.phase).toBe("design");
     expect(manifest.features).toEqual([]);
     expect(manifest.artifacts).toEqual({});
-    expect(manifest.blocked).toBeNull();
     expect(manifest.lastUpdated).toBeTruthy();
 
     const loaded = get(TEST_ROOT, "test-epic");

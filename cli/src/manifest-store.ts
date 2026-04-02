@@ -25,9 +25,8 @@ import { isValidPhase } from "./types";
 import { renameTags } from "./phase-tags.js";
 
 import { basename } from "path";
-import { checkBlocked, deriveNextAction } from "./manifest.js";
+import { deriveNextAction } from "./manifest.js";
 import type { NextAction } from "./manifest.js";
-import { loadConfig } from "./config.js";
 
 // Re-export for consumers that previously imported from state-scanner
 export type { NextAction } from "./manifest.js";
@@ -58,7 +57,6 @@ export interface PipelineManifest {
   summary?: { problem: string; solution: string };
   worktree?: { branch: string; path: string };
   github?: ManifestGitHub;
-  blocked?: { gate: string; reason: string } | null;
   originId?: string;
   lastUpdated: string;
 }
@@ -493,7 +491,6 @@ export function remove(projectRoot: string, slug: string): boolean {
 /**
  * Seed a new manifest at design dispatch.
  * Creates the state directory and writes initial manifest.
- * Sets blocked: null on new manifests.
  */
 export function create(
   projectRoot: string,
@@ -511,7 +508,6 @@ export function create(
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     worktree: opts?.worktree,
     github: opts?.github,
     lastUpdated: new Date().toISOString(),
@@ -563,24 +559,21 @@ export interface ScanResult {
 }
 
 /**
- * List all manifests enriched with nextAction and blocked status.
+ * List all manifests enriched with nextAction.
  * Pure read-only — no filesystem writes.
  * Replaces the old scanEpics() from state-scanner.ts.
  */
 export function listEnriched(projectRoot: string): ScanResult {
   const manifests = list(projectRoot);
-  const config = loadConfig(projectRoot);
 
   const epics: EnrichedManifest[] = manifests.map((m) => {
     const nextAction = deriveNextAction(m);
-    const blocked = checkBlocked(m, config.gates);
     const path = manifestPath(projectRoot, m.slug);
 
     return {
       ...m,
-      blocked: blocked,
       manifestPath: path ?? "",
-      nextAction: blocked ? null : nextAction,
+      nextAction,
     };
   });
 

@@ -48,25 +48,13 @@ Apply all proposed changes from the context walker automatically in hierarchy or
 1. **L3 — Records**: Create/append approved records automatically
 2. **L2 — Context docs**: Apply L2 edits/creates automatically
 3. **L1 — Phase summaries**: Recompute L1 summaries automatically
-4. **L0 — BEASTMODE.md**: Gate via step 1.4 below
+4. **L0 — BEASTMODE.md**: Apply via step 1.4 below
 
-### 1.4 [GATE|retro.beastmode]
+### 1.4 Apply BEASTMODE.md Updates
 
-Read `.beastmode/config.yaml` → resolve mode for `retro.beastmode`.
-Default: `human`.
+If no L0 changes proposed, skip this step.
 
-If no L0 changes proposed, skip this gate entirely.
-
-#### 1.4.1 [GATE-OPTION|human] Review BEASTMODE.md Updates
-
-Present the before/after diff for `.beastmode/BEASTMODE.md`. Ask for approval:
-
-- **Approve**: apply the L0 changes
-- **Reject**: discard L0 changes, keep L1-L3 changes already applied
-
-#### 1.4.2 [GATE-OPTION|auto] Auto-Apply
-
-Apply L0 changes silently. Log: "Gate `retro.beastmode` → auto: applied L0 changes"
+Apply L0 changes and log.
 
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 

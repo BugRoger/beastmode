@@ -1,23 +1,4 @@
 # .beastmode/config.yaml
-# Gate modes: human (stop for user) | auto (Claude decides)
-
-gates:
-  design:
-    existing-design-choice: human     # INTERACTIVE — prior PRD found, ask what to do
-    decision-tree: human              # INTERACTIVE — walk every branch of the design tree
-    gray-areas: human                 # INTERACTIVE — second pass for big-picture blind spots
-    prd-approval: human               # APPROVAL — approve before documenting
-
-  implement:
-    architectural-deviation: auto    # CONDITIONAL — tier 3 deviation decision
-    blocked-task-decision: auto      # CONDITIONAL — blocked task with dependents
-    validation-failure: auto         # CONDITIONAL — fix loop exhausted
-
-  retro:
-    beastmode: human                # APPROVAL — L0 BEASTMODE.md updates
-
-  release:
-    version-confirmation: auto       # APPROVAL — version bump override
 
 cli:
   dispatch-strategy: iterm2            # sdk | cmux | auto

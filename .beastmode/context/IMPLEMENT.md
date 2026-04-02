@@ -9,14 +9,14 @@
 ## Testing
 - ALWAYS verify L2 files contain project-specific content, not placeholder patterns
 - NEVER skip brownfield verification after init
-- Critical paths: brownfield execution, parallel agent spawning, content merge, atomic file writes, gate structure, task-runner integration
+- Critical paths: brownfield execution, parallel agent spawning, content merge, atomic file writes, task-runner integration
 
 ## GitHub Integration
 - ALWAYS gate GitHub sync on `github.enabled` in config.yaml — skip entirely when false or missing
 - ALWAYS use warn-and-continue for gh CLI calls — print warning, skip failed op, never block local workflow
 - Manifest JSON is the local authority; GitHub is a synced mirror updated only at checkpoint boundaries
 - ALWAYS use `_shared/github.md` for all GitHub operations — never inline gh CLI logic
-- Label taxonomy: 12 labels across type (2), phase (7), status (3), gate (1) — status/review is dropped
+- Label taxonomy: 12 labels across type (2), phase (7), status (3) — status/review and gate/awaiting-approval removed
 - Epic lifecycle: created at design checkpoint, phase-advanced at each subsequent checkpoint, closed at release
 - Feature lifecycle: created as sub-issues at plan checkpoint, set in-progress at implement prime, closed at implement checkpoint
 
@@ -35,7 +35,7 @@
 - No retry logic or caching in the client — callers handle retry policy
 
 ## Pipeline Machine
-- Two XState v5 machines in cli/src/pipeline-machine/: epicMachine (7 states) and featureMachine (4 states)
+- Two XState v5 machines in cli/src/pipeline-machine/: epicMachine (7 states) and featureMachine (3 states)
 1. ALWAYS use the setup() API — declare guards, actions, and actors in setup() before createMachine()
 2. ALWAYS place assign() calls inside setup() actions with pure compute functions in actions.ts — XState v5.30 requires this for type inference
 3. Every state node declares meta.dispatchType (single/fan-out/skip) — watch loop reads dispatch from state metadata

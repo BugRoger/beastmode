@@ -11,7 +11,6 @@ export interface EpicContext {
   summary?: { problem: string; solution: string };
   worktree?: { branch: string; path: string };
   github?: { epic: number; repo: string };
-  blocked?: { gate: string; reason: string } | null;
   lastUpdated: string;
 }
 
@@ -37,8 +36,6 @@ export interface FeatureContext {
 export type FeatureEvent =
   | { type: "START" }
   | { type: "COMPLETE" }
-  | { type: "BLOCK" }
-  | { type: "UNBLOCK" }
   | { type: "RESET" };
 
 // ── Dispatch strategy ───────────────────────────────────────────

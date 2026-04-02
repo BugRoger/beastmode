@@ -10,7 +10,6 @@ import type {
   ManifestFeature,
 } from "./manifest-store";
 import type { Phase } from "./types";
-import type { GatesConfig } from "./config";
 
 // Phase ordering for regression logic
 const PHASE_ORDER: readonly Phase[] = ["design", "plan", "implement", "validate", "release"];
@@ -179,8 +178,6 @@ export function setFeatureBodyHash(
   };
 }
 
-// --- Gate checking ---
-
 /**
  * Regress a manifest to an earlier (or same) phase.
  * Resets features to "pending" if regressing to or past "implement".
@@ -211,42 +208,8 @@ export function regress(
     phase: targetPhase,
     features,
     artifacts,
-    blocked: null,
     lastUpdated: now(),
   };
-}
-
-// --- Gate checking ---
-
-/**
- * Check if the manifest is blocked by a feature or a human gate.
- */
-export function checkBlocked(
-  manifest: PipelineManifest,
-  gates: GatesConfig,
-): { gate: string; reason: string } | null {
-  // Check for blocked features
-  const blockedFeature = manifest.features.find(
-    (f) => f.status === "blocked",
-  );
-  if (blockedFeature) {
-    return {
-      gate: "feature",
-      reason: `Feature ${blockedFeature.slug} is blocked`,
-    };
-  }
-
-  // Check config gates for human gates on the current phase
-  const phaseGates = gates[manifest.phase as keyof GatesConfig];
-  if (phaseGates) {
-    for (const [gateName, mode] of Object.entries(phaseGates)) {
-      if (mode === "human") {
-        return { gate: gateName, reason: "Human gate" };
-      }
-    }
-  }
-
-  return null;
 }
 
 /**

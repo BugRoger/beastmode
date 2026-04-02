@@ -20,7 +20,7 @@ If the PRD produced fewer than 3 user stories, print:
 
 "This is a lightweight PRD — that's fine. Even simple features benefit from explicit approval to prevent wasted implementation."
 
-Do NOT skip approval. Short PRDs still need the gate.
+Do NOT skip approval. Short PRDs still need approval.
 
 ## 3. Executive Summary
 
@@ -48,12 +48,7 @@ Print:
 
 Render this from the decisions and stories gathered during the execute phase. Do NOT ask new questions — this is a read-only summary of what was already discussed.
 
-## 4. [GATE|design.prd-approval]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.prd-approval`.
-Default: `human`.
-
-### [GATE-OPTION|human] User Approval
+## 4. PRD Approval
 
 Ask: "Does this PRD look complete? Ready to document?"
 
@@ -62,8 +57,3 @@ Options:
 - No, let's revise [specify what]
 
 Wait for user response before continuing.
-
-### [GATE-OPTION|auto] Self-Approve
-
-Log: "Gate `design.prd-approval` → auto: approved"
-Proceed to checkpoint.

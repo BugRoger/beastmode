@@ -11,10 +11,10 @@
 - ALWAYS create one cmux surface per dispatched phase or feature within the workspace — one terminal per agent
 - Agent commands sent via `cmux send-surface` which runs `beastmode <phase> <slug>` — CLI-in-surface execution model
 - `phaseCommand` handles worktree creation, SDK dispatch, run logging, and release teardown inside the surface — the watch loop does not duplicate this logic for the cmux path
-- Agents get full interactive terminal capability — can prompt for input at human gates
+- Agents get full interactive terminal capability
 
 ## Notifications
-- ALWAYS fire desktop notifications only on phase failures and blocked human gates — no news is good news
+- ALWAYS fire desktop notifications only on phase failures — no news is good news
 - Notification policy is fixed — no per-notification verbosity config knobs
 - Notifications use `cmux notify` command
 

@@ -1,19 +1,6 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 
-export interface GateConfig {
-  [key: string]: "human" | "auto";
-}
-
-export interface GatesConfig {
-  design?: GateConfig;
-  plan?: GateConfig;
-  implement?: GateConfig;
-  validate?: GateConfig;
-  retro?: GateConfig;
-  release?: GateConfig;
-}
-
 export interface GitHubConfig {
   enabled: boolean;
   "project-name"?: string;
@@ -27,13 +14,11 @@ export interface CliConfig {
 }
 
 export interface BeastmodeConfig {
-  gates: GatesConfig;
   github: GitHubConfig;
   cli: CliConfig;
 }
 
 const DEFAULT_CONFIG: BeastmodeConfig = {
-  gates: {},
   github: { enabled: false },
   cli: { interval: 60, "dispatch-strategy": "sdk" },
 };
@@ -95,7 +80,6 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
   const content = readFileSync(configPath, "utf-8");
   const raw = parseSimpleYaml(content);
 
-  const gates = (raw.gates ?? {}) as GatesConfig;
   const rawGithub = (raw.github ?? {}) as Record<string, unknown>;
   const github = {
     enabled: rawGithub.enabled === true,
@@ -109,15 +93,5 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
       (((raw.cli as Record<string, unknown>)?.["dispatch-strategy"] as string) ?? "sdk") as DispatchStrategy,
   } satisfies CliConfig;
 
-  return { gates, github, cli };
-}
-
-export function resolveGateMode(
-  config: BeastmodeConfig,
-  gatePath: string,
-): "human" | "auto" {
-  const [phase, gate] = gatePath.split(".");
-  const phaseGates = config.gates[phase as keyof GatesConfig];
-  if (!phaseGates) return "auto";
-  return phaseGates[gate] ?? "auto";
+  return { github, cli };
 }

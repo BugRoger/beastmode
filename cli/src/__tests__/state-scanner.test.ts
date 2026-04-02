@@ -101,13 +101,16 @@ describe("listEnriched", () => {
     expect(result.epics).toEqual([]);
   });
 
-  test("design phase with human gate is blocked", async () => {
+  test("design phase returns single dispatch", async () => {
     writePipelineManifest("my-epic", "design", []);
     const { epics } = listEnriched(TEST_ROOT);
     expect(epics).toHaveLength(1);
     expect(epics[0].slug).toBe("my-epic");
-    expect(epics[0].blocked).toBeTruthy();
-    expect(epics[0].nextAction).toBeNull();
+    expect(epics[0].nextAction).toEqual({
+      phase: "design",
+      args: ["my-epic"],
+      type: "single",
+    });
   });
 
   test("plan phase with empty features returns next-action: plan", async () => {
@@ -183,21 +186,18 @@ describe("listEnriched", () => {
     expect(epics[0].slug).toBe("good-one");
   });
 
-  test("implement phase with only auto gates is not blocked", async () => {
+  test("implement phase with only auto gates is not blocked at epic level", async () => {
     writePipelineManifest("auto-epic", "implement", [{ slug: "f1", status: "pending" }]);
     const { epics } = listEnriched(TEST_ROOT);
     const autoEpic = epics.find((e) => e.slug === "auto-epic");
-    expect(autoEpic!.blocked).toBeFalsy();
     expect(autoEpic!.nextAction).not.toBeNull();
   });
 
-  test("validate phase human gate blocks epic", async () => {
-    writeFileSync(resolve(TEST_ROOT, ".beastmode", "config.yaml"), `gates:\n  validate:\n    qa-review: human\n`);
+  test("validate phase returns next-action: validate", async () => {
     writePipelineManifest("val-epic", "validate", [{ slug: "f1", status: "completed" }]);
     const { epics } = listEnriched(TEST_ROOT);
     const valEpic = epics.find((e) => e.slug === "val-epic");
-    expect(valEpic!.blocked).toBeTruthy();
-    expect(valEpic!.nextAction).toBeNull();
+    expect(valEpic!.nextAction).toEqual({ phase: "validate", args: ["val-epic"], type: "single" });
   });
 
   test("only pipeline manifests appear — design files ignored", async () => {

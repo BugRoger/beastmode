@@ -104,6 +104,4 @@ export interface WatchLoopEventMap {
   'started': [{ version: string; pid: number; intervalSeconds: number }];
   /** Emitted when the loop stops. */
   'stopped': [];
-  /** Emitted when an epic is blocked on a human gate. */
-  'epic-blocked': [{ epicSlug: string; gate: string; reason: string }];
 }

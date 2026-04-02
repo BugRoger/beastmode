@@ -54,17 +54,6 @@ export function renderWatchIndicator(running: boolean): string {
     : color("watch: stopped", ANSI.dim);
 }
 
-/** Render blocked gate details for the dashboard header. */
-export function renderBlockedDetails(epics: EnrichedManifest[]): string {
-  const blocked = epics.filter(e => e.blocked !== null && e.blocked !== undefined);
-  if (blocked.length === 0) return "";
-  const lines = blocked.map(e => {
-    const b = e.blocked!;
-    return color(`  ${e.slug}: ${b.gate} — ${b.reason}`, ANSI.red);
-  });
-  return color("Blocked:", ANSI.red, ANSI.bold) + "\n" + lines.join("\n");
-}
-
 // ---------------------------------------------------------------------------
 // Phase color mapping
 // ---------------------------------------------------------------------------
@@ -148,9 +137,6 @@ export function formatFeatures(epic: EnrichedManifest): string {
 }
 
 export function formatStatus(epic: EnrichedManifest): string {
-  if (epic.blocked) {
-    return color(`blocked: run beastmode ${epic.phase} ${epic.slug}`, ANSI.red);
-  }
   return epic.phase;
 }
 
@@ -280,11 +266,7 @@ export function renderStatusScreen(
 ): string {
   const table = renderStatusTable(epics, opts, changedSlugs);
   if (meta) {
-    const blockedSection = renderBlockedDetails(epics);
-    const parts = [formatWatchHeader(meta)];
-    if (blockedSection) parts.push(blockedSection);
-    parts.push(table);
-    return parts.join("\n\n");
+    return [formatWatchHeader(meta), table].join("\n\n");
   }
   return table;
 }

@@ -12,7 +12,6 @@ function makeEpicContext(overrides: Partial<EpicContext> = {}): EpicContext {
     phase: "design",
     features: [],
     artifacts: {},
-    blocked: null,
     lastUpdated: "2026-03-31T00:00:00Z",
     ...overrides,
   };
@@ -105,7 +104,7 @@ describe("integration: full design -> done happy path", () => {
 
 describe("integration: cancel from mid-pipeline", () => {
   test("cancels from implement after partially completing features", () => {
-    const actor = startEpicActor({ blocked: { gate: "ci", reason: "failing" } });
+    const actor = startEpicActor();
 
     // advance to implement
     actor.send({ type: "DESIGN_COMPLETED" });
@@ -119,7 +118,6 @@ describe("integration: cancel from mid-pipeline", () => {
     // cancel
     actor.send({ type: "CANCEL" });
     expect(actor.getSnapshot().value).toBe("cancelled");
-    expect(actor.getSnapshot().context.blocked).toBeNull();
     expect(actor.getSnapshot().status).toBe("done");
   });
 });
@@ -302,20 +300,12 @@ describe("integration: cancel from each non-terminal state", () => {
 // ── 7. Feature machine integration ──────────────────────────────
 
 describe("integration: feature machine full lifecycle", () => {
-  test("pending -> in-progress -> blocked -> in-progress -> completed", () => {
+  test("pending -> in-progress -> completed", () => {
     const actor = startFeatureActor();
     expect(actor.getSnapshot().value).toBe("pending");
 
     // pending -> in-progress
     actor.send({ type: "START" });
-    expect(actor.getSnapshot().value).toBe("in-progress");
-
-    // in-progress -> blocked
-    actor.send({ type: "BLOCK" });
-    expect(actor.getSnapshot().value).toBe("blocked");
-
-    // blocked -> in-progress
-    actor.send({ type: "UNBLOCK" });
     expect(actor.getSnapshot().value).toBe("in-progress");
 
     // in-progress -> completed
@@ -335,8 +325,6 @@ describe("integration: feature machine full lifecycle", () => {
     const events = [
       { type: "START" as const },
       { type: "COMPLETE" as const },
-      { type: "BLOCK" as const },
-      { type: "UNBLOCK" as const },
       { type: "RESET" as const },
     ];
     for (const evt of events) {

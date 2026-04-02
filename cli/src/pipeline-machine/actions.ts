@@ -83,7 +83,6 @@ export function computeRegress(context: EpicContext, event: EpicEvent): Partial<
     phase: context.phase,
     features: context.features,
     artifacts: context.artifacts,
-    blocked: context.blocked,
     lastUpdated: context.lastUpdated,
   };
   const result = regress(manifest as any, event.targetPhase);
@@ -91,6 +90,5 @@ export function computeRegress(context: EpicContext, event: EpicEvent): Partial<
     phase: result.phase,
     features: result.features,
     artifacts: result.artifacts,
-    blocked: result.blocked,
   };
 }

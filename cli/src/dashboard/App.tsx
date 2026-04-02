@@ -13,7 +13,7 @@ import { createLogger } from "../logger.js";
 /** Activity log event for the dashboard. */
 export interface DashboardEvent {
   timestamp: string;
-  type: "dispatched" | "completed" | "error" | "blocked" | "scan";
+  type: "dispatched" | "completed" | "error" | "scan";
   detail: string;
 }
 
@@ -164,10 +164,6 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       pushEvent("error", `${prefix}${ev.message}`);
     };
 
-    const onEpicBlocked = (ev: WatchLoopEventMap["epic-blocked"][0]) => {
-      pushEvent("blocked", `${ev.epicSlug} — ${ev.reason}`);
-    };
-
     const onEpicCancelled = (ev: WatchLoopEventMap["epic-cancelled"][0]) => {
       pushEvent("error", `${ev.epicSlug} cancelled`);
     };
@@ -178,7 +174,6 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     loop.on("session-completed", onSessionCompleted);
     loop.on("scan-complete", onScanComplete);
     loop.on("error", onError);
-    loop.on("epic-blocked", onEpicBlocked);
     loop.on("epic-cancelled", onEpicCancelled);
 
     return () => {
@@ -188,7 +183,6 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       loop.off("session-completed", onSessionCompleted);
       loop.off("scan-complete", onScanComplete);
       loop.off("error", onError);
-      loop.off("epic-blocked", onEpicBlocked);
       loop.off("epic-cancelled", onEpicCancelled);
     };
   }, [loop, pushEvent]);

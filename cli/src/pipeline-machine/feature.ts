@@ -23,20 +23,12 @@ export const featureMachine = setup({
       meta: { dispatchType: "skip" as DispatchType },
       on: {
         COMPLETE: { target: "completed" },
-        BLOCK: { target: "blocked" },
         RESET: { target: "pending" },
       },
     },
     completed: {
       meta: { dispatchType: "skip" as DispatchType },
       type: "final",
-    },
-    blocked: {
-      meta: { dispatchType: "skip" as DispatchType },
-      on: {
-        UNBLOCK: { target: "in-progress" },
-        RESET: { target: "pending" },
-      },
     },
   },
 });

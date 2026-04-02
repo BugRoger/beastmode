@@ -3,7 +3,7 @@
  *
  * Verifies that the WatchLoop emits correctly typed events at each
  * lifecycle point: scan-complete, session-started, session-completed,
- * error, epic-blocked, stopped, and fan-out dispatch.
+ * error, stopped, and fan-out dispatch.
  * Also tests that attachLoggerSubscriber routes events to the logger.
  */
 
@@ -26,7 +26,6 @@ function makeEpic(overrides?: Partial<EnrichedManifest>): EnrichedManifest {
     features: [],
     artifacts: {},
     lastUpdated: new Date().toISOString(),
-    blocked: null,
     nextAction: { phase: "design", args: ["test-epic"], type: "single" as const },
     ...overrides,
   };
@@ -207,29 +206,6 @@ describe("WatchLoop event emission", () => {
     expect(errors[0].message).toContain("Failed to dispatch");
   });
 
-  test("blocked epic emits epic-blocked", async () => {
-    const epic = makeEpic({
-      blocked: { gate: "validate", reason: "needs manual review" },
-    });
-
-    const deps = makeDeps({
-      scanEpics: async () => [epic],
-    });
-
-    const loop = new WatchLoop(makeConfig(), deps);
-    loop.setRunning(true);
-
-    const events: Array<{ epicSlug: string; gate: string; reason: string }> = [];
-    loop.on("epic-blocked", (payload) => events.push(payload));
-
-    await loop.tick();
-
-    expect(events.length).toBe(1);
-    expect(events[0].epicSlug).toBe("test-epic");
-    expect(events[0].gate).toBe("validate");
-    expect(events[0].reason).toBe("needs manual review");
-  });
-
   test("fan-out dispatch emits session-started per feature", async () => {
     const epic = makeEpic({
       slug: "fanout-epic",
@@ -327,13 +303,6 @@ describe("WatchLoop event emission", () => {
 
     loop.emit("error", { epicSlug: "my-epic", message: "something broke" });
     expect(errors.some((m) => m.includes("something broke"))).toBe(true);
-
-    loop.emit("epic-blocked", {
-      epicSlug: "my-epic",
-      gate: "validate",
-      reason: "needs review",
-    });
-    expect(logged.some((m) => m.includes("my-epic") && m.includes("human gate"))).toBe(true);
   });
 
   test("stop emits stopped event", async () => {

@@ -5,7 +5,6 @@ const EVENT_COLORS: Record<DashboardEvent["type"], string> = {
   dispatched: "blue",
   completed: "green",
   error: "red",
-  blocked: "yellow",
   scan: "gray",
 };
 

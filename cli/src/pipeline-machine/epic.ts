@@ -66,7 +66,6 @@ export const epicMachine = setup({
       };
     }),
     markCancelled: assign({
-      blocked: () => null as EpicContext["blocked"],
       lastUpdated: () => new Date().toISOString(),
     }),
     markFeatureCompleted: assign({

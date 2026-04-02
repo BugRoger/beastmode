@@ -10,7 +10,6 @@ function makeEpic(overrides: Partial<EnrichedManifest> = {}): EnrichedManifest {
     phase: "design",
     nextAction: null,
     features: [],
-    blocked: null,
     artifacts: {},
     lastUpdated: "2026-03-29T00:00:00Z",
     ...overrides,
@@ -36,15 +35,6 @@ describe("toSnapshots", () => {
     expect(snap.phase).toBe("implement");
     expect(snap.completedFeatures).toBe(1);
     expect(snap.totalFeatures).toBe(2);
-    expect(snap.blocked).toBe(false);
-  });
-
-  test("marks blocked when blocked is not null", () => {
-    const epics = [
-      makeEpic({ slug: "stuck", phase: "implement", blocked: { gate: "feature", reason: "blocked" } }),
-    ];
-    const map = toSnapshots(epics);
-    expect(map.get("stuck")!.blocked).toBe(true);
   });
 
   test("handles empty array", () => {
@@ -72,7 +62,6 @@ describe("detectChanges", () => {
       phase: "design",
       completedFeatures: 0,
       totalFeatures: 0,
-      blocked: false,
       ...overrides,
     };
   }
@@ -120,13 +109,6 @@ describe("detectChanges", () => {
   test("detects total features change", () => {
     const prev = toMap(snap("a", { totalFeatures: 2 }));
     const curr = toMap(snap("a", { totalFeatures: 3 }));
-    const changed = detectChanges(prev, curr);
-    expect(changed.has("a")).toBe(true);
-  });
-
-  test("detects blocked state change", () => {
-    const prev = toMap(snap("a", { blocked: false }));
-    const curr = toMap(snap("a", { blocked: true }));
     const changed = detectChanges(prev, curr);
     expect(changed.has("a")).toBe(true);
   });

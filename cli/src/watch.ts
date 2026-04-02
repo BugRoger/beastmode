@@ -2,7 +2,7 @@
  * Watch loop — the autonomous pipeline driver.
  *
  * Polls the state scanner, dispatches SDK sessions for ready epics,
- * handles implement fan-out, human gate pausing, and graceful shutdown.
+ * handles implement fan-out and graceful shutdown.
  */
 
 import type { EnrichedManifest, ScanResult } from "./manifest-store.js";
@@ -152,12 +152,6 @@ export class WatchLoop extends EventEmitter {
   }
 
   private async processEpic(epic: EnrichedManifest): Promise<number> {
-    // Skip epics blocked on human gates
-    if (epic.blocked) {
-      this.emitTyped('epic-blocked', { epicSlug: epic.slug, gate: epic.blocked.gate, reason: epic.blocked.reason });
-      return 0;
-    }
-
     // Skip epics with no actionable next step
     if (!epic.nextAction) return 0;
 
@@ -424,8 +418,4 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     logger.error(`${prefix}${message}`);
   });
 
-  loop.on('epic-blocked', ({ epicSlug, gate }) => {
-    logger.log(`${epicSlug}: paused — human gate requires manual intervention`);
-    logger.detail(`  Run: beastmode ${gate} ${epicSlug}`);
-  });
 }

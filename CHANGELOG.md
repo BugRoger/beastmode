@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.59.0 — Remove Gates (Apr 2026)
+
+- **Gate mechanism removed** — `[GATE|...]` / `[GATE-OPTION|...]` syntax stripped from all skill phase files; design inlines interactive behavior directly, non-design phases inline auto behavior as sole code path
+- **CLI degated** — `GatesConfig` types, `resolveGateMode()`, gate-checking logic in `checkBlocked()` removed from TypeScript codebase
+- **Config simplified** — `gates:` section removed from config.yaml; fewer knobs, less confusion
+- **Task-runner streamlined** — Gate detection block removed; execution loop no longer pauses on gate checks
+- **Context docs updated** — Gate references purged from DESIGN.md, BEASTMODE.md, and 33 L1-L3 context files
+- **Dead code cleanup** — sdk-runner, run-log removed; test dirs consolidated
+- **Net reduction** — 643 added, 1680 removed across 152 files
+
+---
+
 ### v0.58.0 — Cancel Cleanup (Apr 2026)
 
 - **Shared cancel module** — `cancel-logic.ts` provides ordered cleanup (worktree, branch, archive tags, phase tags, artifacts, GitHub issue, manifest) consumed by CLI, dashboard, and design-abandon

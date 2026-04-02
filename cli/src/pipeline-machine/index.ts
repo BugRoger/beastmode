@@ -63,7 +63,5 @@ export const EPIC_EVENTS = {
 export const FEATURE_EVENTS = {
   START: "START",
   COMPLETE: "COMPLETE",
-  BLOCK: "BLOCK",
-  UNBLOCK: "UNBLOCK",
   RESET: "RESET",
 } as const;

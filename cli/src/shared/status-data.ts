@@ -29,7 +29,6 @@ export interface StatusSnapshot {
   phase: string;
   featuresCompleted: number;
   featuresTotal: number;
-  blocked: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,9 +99,6 @@ function defaultFormatFeatures(epic: EnrichedManifest): string {
 
 /** Default status formatter — no ANSI. */
 function defaultFormatStatus(epic: EnrichedManifest): string {
-  if (epic.blocked) {
-    return `blocked: run beastmode ${epic.phase} ${epic.slug}`;
-  }
   return epic.phase;
 }
 
@@ -117,7 +113,6 @@ export function buildSnapshot(epics: EnrichedManifest[]): StatusSnapshot[] {
     phase: epic.phase,
     featuresCompleted: epic.features.filter(f => f.status === "completed").length,
     featuresTotal: epic.features.length,
-    blocked: epic.blocked !== null,
   }));
 }
 
@@ -140,8 +135,7 @@ export function detectChanges(prev: StatusSnapshot[], curr: StatusSnapshot[]): S
     if (
       p.phase !== c.phase ||
       p.featuresCompleted !== c.featuresCompleted ||
-      p.featuresTotal !== c.featuresTotal ||
-      p.blocked !== c.blocked
+      p.featuresTotal !== c.featuresTotal
     ) {
       changed.add(c.slug);
     }
