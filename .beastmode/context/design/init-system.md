@@ -8,7 +8,7 @@
 
 ## Domain Detection
 - ALWAYS detect all 17 L2 domains across 5 phases — Tier 1 + Tier 2 universal coverage
-- NEVER include beastmode-specific domains in the skeleton — phase-transitions, task-runner, task-format are retro-created
+- NEVER include beastmode-specific domains in the skeleton — phase-transitions, task-format are retro-created
 - Inventory agent outputs JSON knowledge map with topics for all detected domains — structured handoff to writers
 
 ## Output Format

@@ -11,7 +11,6 @@
 - ALWAYS write phase instructions in imperative voice with numbered steps — actionable clarity
 - ALWAYS keep 0-prime read-only — no worktree entry, no file writes
 - ALWAYS make worktree entry step 1 of 1-execute — first side effect
-- ALWAYS reference task-runner as first line inside HARD-GATE block — never as trailing @import
 
 ## Branch Naming
 - ALWAYS use `feature/<feature>` branch naming — convention

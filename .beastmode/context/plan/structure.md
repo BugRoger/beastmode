@@ -22,7 +22,7 @@
 - ALWAYS wire CLAUDE.md -> BEASTMODE.md as sole autoload — minimal L0
 - NEVER add additional @imports to CLAUDE.md — one entry point
 - Skills discover their own L1/L2 context during 0-prime sub-phase — self-loading
-- Each SKILL.md imports the shared task-runner at the end — standardized execution
+- Each SKILL.md is self-contained with inline phases — no external imports
 
 ## Related Decisions
 - Migration from .agents/ to .beastmode/ — see [agents-to-beastmode-migration](../../state/plan/2026-03-04-agents-to-beastmode-migration.md)

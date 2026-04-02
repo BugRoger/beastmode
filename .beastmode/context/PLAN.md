@@ -3,7 +3,7 @@
 Conventions, structure, task format, and workflow for implementation. Naming patterns, directory layout, wave-ordered tasks, and phase lifecycle with exclusive transition authority in checkpoints.
 
 ## Conventions
-Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill manifest with YAML frontmatter and task-runner in HARD-GATE, phase file rules (0-prime read-only, 1-execute owns side effects, imperative voice), HARD-GATE for unconditional constraints, @import semantics (standalone = mandatory, inline = markdown link), branch naming (feature/<feature>), context document format (retro-compatible ALWAYS/NEVER bullets, L2+L3 structural invariant), and anti-patterns to avoid.
+Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill manifest with YAML frontmatter, phase file rules (0-prime read-only, 1-execute owns side effects, imperative voice), HARD-GATE for unconditional constraints, @import semantics (standalone = mandatory, inline = markdown link), branch naming (feature/<feature>), context document format (retro-compatible ALWAYS/NEVER bullets, L2+L3 structural invariant), and anti-patterns to avoid.
 
 1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
 2. ALWAYS number phase files 0-3 (0-prime read-only, 1-execute, 2-validate, 3-checkpoint)

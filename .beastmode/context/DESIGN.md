@@ -19,10 +19,6 @@
 - Retro runs once at release with all phase artifacts — context walker processes the full cycle in a single pass
 - Context walker ALWAYS applies value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary
 
-## Task Runner
-- ALWAYS track tasks via TodoWrite — one in_progress at a time
-- NEVER expand linked files eagerly — lazy expansion on first visit only
-
 ## Release Workflow
 - ALWAYS run retro from release checkpoint before merge — retro runs only at release, not per-phase
 - Compaction is manual-only via `beastmode compact` — decoupled from the release pipeline
