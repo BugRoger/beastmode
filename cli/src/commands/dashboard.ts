@@ -6,16 +6,11 @@ import { WatchLoop } from "../watch.js";
 import type { WatchDeps } from "../watch.js";
 import { listEnriched } from "../manifest-store.js";
 import {
-  selectStrategy,
   dispatchPhase,
   ReconcilingFactory,
 } from "../watch-command.js";
 import { SdkSessionFactory } from "../session.js";
 import type { SessionFactory } from "../session.js";
-import { CmuxSessionFactory } from "../cmux-session.js";
-import { CmuxClient } from "../cmux-client.js";
-import { ITermSessionFactory } from "../it2-session.js";
-import { It2Client } from "../it2-client.js";
 import { discoverGitHub } from "../github-discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
@@ -36,21 +31,9 @@ export async function dashboardCommand(
   const projectRoot = findProjectRoot();
   const logger = createLogger(verbosity, "dashboard");
 
-  // --- Build session factory (mirrors watch command) ---
-  const selected = await selectStrategy(
-    config.cli["dispatch-strategy"] ?? "sdk",
-    undefined,
-    logger,
-  );
-
-  let innerFactory: SessionFactory;
-  if (selected.strategy === "cmux") {
-    innerFactory = new CmuxSessionFactory(new CmuxClient());
-  } else if (selected.strategy === "iterm2") {
-    innerFactory = new ITermSessionFactory(new It2Client());
-  } else {
-    innerFactory = new SdkSessionFactory(dispatchPhase);
-  }
+  // --- Dashboard always uses SDK dispatch for streaming support ---
+  logger.log("Dashboard: forcing SDK dispatch strategy for streaming");
+  const innerFactory: SessionFactory = new SdkSessionFactory(dispatchPhase);
 
   const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot, logger);
 
