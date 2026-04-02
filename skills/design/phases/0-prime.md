@@ -36,18 +36,8 @@ If the user's response points to an existing PRD, spec, or requirements document
 2. Skip decision tree walk in execute
 3. Jump directly to "Gray Areas" (Execute step 2) with the doc as input
 
-## 5. [GATE|design.existing-design-choice]
-
-Read `.beastmode/config.yaml` → resolve mode for `design.existing-design-choice`.
-Default: `human`.
-
-### [GATE-OPTION|human] Ask User
+## 5. Existing Design Check
 
 If a prior PRD exists for the same topic (matching feature name):
 - Ask: "Found existing PRD for this topic. What do you want to do?"
 - Options: Update existing / View first / Start fresh
-
-### [GATE-OPTION|auto] Claude Decides
-
-Read the existing PRD and decide whether to update or start fresh based on how different the new requirements are.
-Log: "Gate `design.existing-design-choice` → auto: <decision>"

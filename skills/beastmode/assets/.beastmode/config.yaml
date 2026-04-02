@@ -1,30 +1,4 @@
 # .beastmode/config.yaml
-# Gate modes: human (stop for user) | auto (Claude decides)
-
-gates:
-  design:
-    existing-design-choice: human    # INTERACTIVE — prior design found, ask what to do
-    intent-discussion: human         # INTERACTIVE — conversational intent + gray area loop
-    approach-selection: human        # INTERACTIVE — pick from proposed approaches
-    section-review: human            # INTERACTIVE — section-by-section review
-    design-approval: human           # APPROVAL — approve before documenting
-
-  plan:
-    plan-approval: auto              # APPROVAL — approve before saving
-
-  implement:
-    architectural-deviation: auto    # CONDITIONAL — tier 3 deviation decision
-    blocked-task-decision: auto      # CONDITIONAL — blocked task with dependents
-    validation-failure: auto         # CONDITIONAL — fix loop exhausted
-
-  retro:
-    records: auto                   # APPROVAL — L3 observation creation/appends
-    context: auto                   # APPROVAL — L2 context/meta doc edits + new docs
-    phase:  auto                    # APPROVAL — L1 phase summary rewrites + promotions
-    beastmode: human                # APPROVAL — L0 BEASTMODE.md updates
-
-  release:
-    version-confirmation: human       # APPROVAL — version bump override
 
 github:
   project-name: "Beastmode Pipeline"  # Projects V2 board name

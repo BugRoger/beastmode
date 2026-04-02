@@ -63,7 +63,7 @@ For each ALWAYS/NEVER rule found in an L2:
    - Which phases contain it
 3. Rules in only 1-2 phases are left alone. The per-phase loading model means duplication across 2 phases is acceptable.
 
-Promotion candidates are NOT auto-applied. They go in the report for human review via `[GATE|retro.beastmode]`.
+Promotion candidates are NOT auto-applied. They go in the report for review.
 
 Track count: `promotion_candidates`.
 
