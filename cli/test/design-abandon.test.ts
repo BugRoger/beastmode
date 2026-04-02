@@ -20,26 +20,17 @@ describe("design abandon guard — primary gate in phase.ts", () => {
     expect(guardIndex).toBeLessThan(postDispatchIndex);
   });
 
-  test("calls removeWorktree during cleanup", () => {
-    // After the "Design abandoned" log, there should be a removeWorktree call
+  test("delegates cleanup to shared cancel-logic module", () => {
+    // After the "Design abandoned" log, should call cancelEpic
     const guardIndex = PHASE_TS.indexOf("Design abandoned");
     const remaining = PHASE_TS.slice(guardIndex);
-    expect(remaining).toContain("removeWorktree");
+    expect(remaining).toContain("cancelEpic");
   });
 
-  test("calls store.remove during cleanup", () => {
+  test("passes force=true for non-interactive abandon", () => {
     const guardIndex = PHASE_TS.indexOf("Design abandoned");
     const remaining = PHASE_TS.slice(guardIndex);
-    expect(remaining).toContain("store.remove");
-  });
-
-  test("closes GitHub epic with warn-and-continue", () => {
-    const guardIndex = PHASE_TS.indexOf("Design abandoned");
-    const remaining = PHASE_TS.slice(guardIndex);
-    // Should check github.enabled and close the issue
-    expect(remaining).toContain("github.enabled");
-    expect(remaining).toContain("gh");
-    expect(remaining).toContain("not planned");
+    expect(remaining).toContain("force: true");
   });
 
   test("returns early after cleanup (skips post-dispatch)", () => {

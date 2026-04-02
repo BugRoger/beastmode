@@ -26,6 +26,7 @@ import * as store from "../manifest-store";
 import { createLogger } from "../logger";
 import { loadWorktreePhaseOutput } from "../phase-output";
 import { loadConfig } from "../config";
+import { cancelEpic } from "../shared/cancel-logic.js";
 
 /**
  * Execute a phase command. Called directly from the top-level router.
@@ -90,45 +91,16 @@ export async function phaseCommand(
   if (!inWorktree && phase === "design") {
     const designOutput = loadWorktreePhaseOutput(cwd, "design", epicSlug);
     if (!designOutput) {
-      logger.log("Design abandoned — cleaning up worktree and manifest");
+      logger.log("Design abandoned — cleaning up");
 
-      // Load manifest before deletion to get GitHub issue number
-      const manifest = store.load(projectRoot, epicSlug);
-
-      // Remove worktree + branch
-      try {
-        await removeWorktree(worktreeSlug, { cwd: projectRoot, deleteBranch: true });
-        logger.log("Worktree removed");
-      } catch (err) {
-        logger.warn(
-          `Worktree cleanup failed: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-
-      // Delete manifest (idempotent)
-      store.remove(projectRoot, epicSlug);
-
-      // Close GitHub epic if enabled
       const config = loadConfig(projectRoot);
-      if (config.github.enabled && manifest?.github?.epic) {
-        try {
-          const proc = Bun.spawn(
-            ["gh", "issue", "close", String(manifest.github.epic), "--reason", "not planned"],
-            { cwd: projectRoot, stdout: "pipe", stderr: "pipe" },
-          );
-          const exitCode = await proc.exited;
-          if (exitCode === 0) {
-            logger.log(`GitHub epic #${manifest.github.epic} closed as not_planned`);
-          } else {
-            const stderr = await new Response(proc.stderr).text();
-            logger.warn(`GitHub close failed: ${stderr.trim()}`);
-          }
-        } catch (err) {
-          logger.warn(
-            `GitHub close failed: ${err instanceof Error ? err.message : String(err)}`,
-          );
-        }
-      }
+      await cancelEpic({
+        identifier: epicSlug,
+        projectRoot,
+        githubEnabled: config.github.enabled,
+        force: true,
+        logger,
+      });
 
       return;
     }

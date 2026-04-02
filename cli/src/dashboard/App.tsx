@@ -8,6 +8,7 @@ import EpicTable from "./EpicTable.js";
 import ActivityLog from "./ActivityLog.js";
 import { useKeyboardController } from "./hooks/index.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
+import { createLogger } from "../logger.js";
 
 /** Activity log event for the dashboard. */
 export interface DashboardEvent {
@@ -39,7 +40,7 @@ function ts(): string {
 /** Max events kept in the activity log buffer. */
 const MAX_EVENTS = 100;
 
-export default function App({ config: _config, verbosity: _verbosity, loop, projectRoot }: AppProps) {
+export default function App({ config, verbosity, loop, projectRoot }: AppProps) {
   const { exit } = useApp();
   const [clock, setClock] = useState(formatClock());
   const [epics, setEpics] = useState<EnrichedManifest[]>([]);
@@ -72,7 +73,13 @@ export default function App({ config: _config, verbosity: _verbosity, loop, proj
     async (slug: string) => {
       const l = loopRef.current;
       if (!l || !projectRoot) return;
-      await cancelEpicAction({ slug, projectRoot, tracker: l.getTracker() });
+      await cancelEpicAction({
+        slug,
+        projectRoot,
+        tracker: l.getTracker(),
+        githubEnabled: config.github.enabled,
+        logger: createLogger(verbosity, "dashboard"),
+      });
       pushEvent("error", `cancelled ${slug}`);
     },
     [projectRoot, pushEvent],

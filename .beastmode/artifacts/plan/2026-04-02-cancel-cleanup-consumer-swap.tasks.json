@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-cancel-cleanup-consumer-swap.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Rewire CLI cancel command to use shared cancel-logic", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Rewire dashboard cancel action to use shared cancel-logic", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Rewire design-abandon in phase.ts to use shared cancel-logic", "wave": 1, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Expand cancel.test.ts with shared cancel-logic tests", "wave": 2, "status": "pending", "depends": [0, 1, 2]}
+  ],
+  "lastUpdated": "2026-04-02T12:00:00Z"
+}
