@@ -4,7 +4,7 @@
  * Consumed by both the status command and the dashboard.
  */
 
-import type { EnrichedManifest } from "../state-scanner";
+import type { EnrichedManifest } from "../manifest-store";
 
 // ---------------------------------------------------------------------------
 // Types

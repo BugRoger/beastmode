@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "bun run src/index.ts",
-    "test": "bun test",
+    "test": "bun test cli/src/ cli/tests/ && bun test cli/test/",
     "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {

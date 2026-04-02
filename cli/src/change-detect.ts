@@ -5,7 +5,7 @@
  * Pure functions, no side effects.
  */
 
-import type { EnrichedManifest } from "./state-scanner";
+import type { EnrichedManifest } from "./manifest-store";
 
 /** Snapshot of the fields we compare between ticks. */
 export interface EpicSnapshot {

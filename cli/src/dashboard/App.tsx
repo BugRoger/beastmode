@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Text, useApp } from "ink";
 import type { BeastmodeConfig } from "../config.js";
-import type { EnrichedManifest } from "../state-scanner.js";
+import type { EnrichedManifest } from "../manifest-store.js";
 import type { WatchLoopEventMap } from "../watch-types.js";
 import type { WatchLoop } from "../watch.js";
 import EpicTable from "./EpicTable.js";
@@ -192,8 +192,8 @@ export default function App({ config: _config, verbosity: _verbosity, loop, proj
 
     const refreshEpics = async () => {
       try {
-        const { scanEpics } = await import("../state-scanner.js");
-        const result = await scanEpics(projectRoot);
+        const { listEnriched } = await import("../manifest-store.js");
+        const result = listEnriched(projectRoot);
         const epicList = Array.isArray(result) ? result : result.epics;
         setEpics(epicList);
       } catch {

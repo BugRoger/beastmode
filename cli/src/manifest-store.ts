@@ -24,6 +24,14 @@ import type { Phase } from "./types";
 import { isValidPhase } from "./types";
 import { renameTags } from "./phase-tags.js";
 
+import { basename } from "path";
+import { checkBlocked, deriveNextAction } from "./manifest.js";
+import type { NextAction } from "./manifest.js";
+import { loadConfig } from "./config.js";
+
+// Re-export for consumers that previously imported from state-scanner
+export type { NextAction } from "./manifest.js";
+
 // --- Types ---
 
 export interface ManifestFeature {
@@ -539,6 +547,94 @@ export function validate(data: unknown): data is PipelineManifest {
   }
 
   return true;
+}
+
+// --- Enriched listing (replaces state-scanner.ts scanEpics) ---
+
+/** Enriched manifest with derived fields for the watch loop. */
+export interface EnrichedManifest extends PipelineManifest {
+  manifestPath: string;
+  nextAction: NextAction | null;
+}
+
+/** Result of listing enriched manifests. */
+export interface ScanResult {
+  epics: EnrichedManifest[];
+}
+
+/**
+ * List all manifests enriched with nextAction and blocked status.
+ * Pure read-only — no filesystem writes.
+ * Replaces the old scanEpics() from state-scanner.ts.
+ */
+export function listEnriched(projectRoot: string): ScanResult {
+  const manifests = list(projectRoot);
+  const config = loadConfig(projectRoot);
+
+  const epics: EnrichedManifest[] = manifests.map((m) => {
+    const nextAction = deriveNextAction(m);
+    const blocked = checkBlocked(m, config.gates);
+    const path = manifestPath(projectRoot, m.slug);
+
+    return {
+      ...m,
+      blocked: blocked,
+      manifestPath: path ?? "",
+      nextAction: blocked ? null : nextAction,
+    };
+  });
+
+  return { epics };
+}
+
+// --- Slug utilities (from filename) ---
+
+/**
+ * Extract epic slug from a design artifact filename.
+ * Input: "2026-03-28-typescript-pipeline-orchestrator.md"
+ * Output: "typescript-pipeline-orchestrator"
+ */
+export function slugFromDesign(filename: string): string {
+  return basename(filename, ".md").replace(/^\d{4}-\d{2}-\d{2}-/, "");
+}
+
+/**
+ * Extract epic slug from a pipeline manifest filename.
+ * Input: "2026-03-28-typescript-pipeline-orchestrator.manifest.json"
+ * Output: "typescript-pipeline-orchestrator"
+ */
+export function slugFromManifest(filename: string): string {
+  return basename(filename, ".manifest.json").replace(/^\d{4}-\d{2}-\d{2}-/, "");
+}
+
+// --- Transactional write ---
+
+/** Per-slug async mutex for serializing manifest mutations. */
+const locks = new Map<string, Promise<void>>();
+
+/**
+ * Atomically load → transform → save a manifest under a per-slug mutex.
+ * Prevents concurrent save races between reconciliation paths.
+ * Throws if no manifest exists for the slug.
+ */
+export async function transact(
+  projectRoot: string,
+  slug: string,
+  fn: (manifest: PipelineManifest) => PipelineManifest,
+): Promise<PipelineManifest> {
+  const prev = locks.get(slug) ?? Promise.resolve();
+  let release!: () => void;
+  locks.set(slug, new Promise<void>((r) => { release = r; }));
+  await prev;
+  try {
+    const manifest = load(projectRoot, slug);
+    if (!manifest) throw new Error(`No manifest for ${slug}`);
+    const updated = fn(manifest);
+    save(projectRoot, slug, updated);
+    return updated;
+  } finally {
+    release();
+  }
 }
 
 // --- Legacy Support ---

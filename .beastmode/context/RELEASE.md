@@ -11,7 +11,7 @@
 - ALWAYS read main's plugin.json for the current version — the worktree's copy is stale
 - ALWAYS resolve version file and CHANGELOG conflicts with --ours (main) during squash merge
 - ALWAYS resolve code file conflicts with --theirs (feature branch) during squash merge
-- NEVER modify version files (plugin.json, marketplace.json, session-start.sh) or CHANGELOG.md in the worktree
+- NEVER modify version files (plugin.json, marketplace.json) or CHANGELOG.md in the worktree
 - NEVER skip retro before the release commit — retro output must be included in the squash merge
 - ALWAYS run retro inlined in the release skill — no shared orchestrator import
 - ALWAYS use context walker as the sole retro agent — meta walker removed

@@ -1,12 +1,12 @@
 {
   "hooks": {
-    "SessionStart": [
+    "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/generate-output.ts\""
           }
         ]
       }

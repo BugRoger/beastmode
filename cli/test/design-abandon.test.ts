@@ -73,9 +73,10 @@ describe("design abandon guard — secondary guard in post-dispatch.ts", () => {
     // Find the design abandon guard section
     const guardIndex = POST_DISPATCH_TS.indexOf("skipping post-dispatch");
     expect(guardIndex).toBeGreaterThan(-1);
-    // It should return before any DESIGN_COMPLETED event
-    const designCompletedIndex = POST_DISPATCH_TS.indexOf("DESIGN_COMPLETED");
-    expect(guardIndex).toBeLessThan(designCompletedIndex);
+    // It should return before the reconcile switch/case block
+    const reconcileCallIndex = POST_DISPATCH_TS.indexOf("await reconcileDesign(");
+    expect(reconcileCallIndex).toBeGreaterThan(-1);
+    expect(guardIndex).toBeLessThan(reconcileCallIndex);
   });
 
   test("secondary guard is after failure early exit", () => {

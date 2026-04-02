@@ -1,6 +1,6 @@
 import type { BeastmodeConfig } from "../config";
-import type { EnrichedManifest } from "../state-scanner";
-import { scanEpics } from "../state-scanner";
+import type { EnrichedManifest } from "../manifest-store";
+import { listEnriched } from "../manifest-store";
 import { findProjectRoot } from "../project-root";
 import { readLockfile } from "../lockfile";
 import { toSnapshots, detectChanges as detectMapChanges } from "../change-detect";
@@ -301,7 +301,7 @@ export async function statusWatchLoop(projectRoot: string, all: boolean): Promis
     // Clear screen: cursor home + erase display
     process.stdout.write("\x1b[H\x1b[2J");
 
-    const { epics } = await scanEpics(projectRoot);
+    const { epics } = listEnriched(projectRoot);
 
     // Change detection
     const currSnapshot = toSnapshots(epics);

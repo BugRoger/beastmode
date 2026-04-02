@@ -1,8 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
-import { scanEpics, slugFromDesign, slugFromManifest } from "../state-scanner";
-import { validate } from "../manifest-store";
+import { listEnriched, slugFromDesign, slugFromManifest, validate } from "../manifest-store";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-state-scanner");
 const TEST_DATE = "2026-03-29";
@@ -87,24 +86,24 @@ describe("validate", () => {
   test("rejects non-object", () => { expect(validate("string")).toBe(false); });
 });
 
-describe("scanEpics", () => {
+describe("listEnriched", () => {
   beforeEach(setupTestRoot);
   afterEach(() => { if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true }); });
 
   test("returns empty when no pipeline dir", async () => {
     rmSync(resolve(TEST_ROOT, ".beastmode", "state"), { recursive: true });
-    const result = await scanEpics(TEST_ROOT);
+    const result = listEnriched(TEST_ROOT);
     expect(result.epics).toEqual([]);
   });
 
   test("returns empty when no manifests", async () => {
-    const result = await scanEpics(TEST_ROOT);
+    const result = listEnriched(TEST_ROOT);
     expect(result.epics).toEqual([]);
   });
 
   test("design phase with human gate is blocked", async () => {
     writePipelineManifest("my-epic", "design", []);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics).toHaveLength(1);
     expect(epics[0].slug).toBe("my-epic");
     expect(epics[0].blocked).toBeTruthy();
@@ -113,7 +112,7 @@ describe("scanEpics", () => {
 
   test("plan phase with empty features returns next-action: plan", async () => {
     writePipelineManifest("my-epic", "plan", []);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction?.phase).toBe("plan");
   });
 
@@ -122,7 +121,7 @@ describe("scanEpics", () => {
       { slug: "feature-a", status: "pending" },
       { slug: "feature-b", status: "pending" },
     ]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction).toEqual({
       phase: "implement", args: ["my-epic"], type: "fan-out",
       features: ["feature-a", "feature-b"],
@@ -135,7 +134,7 @@ describe("scanEpics", () => {
       { slug: "feature-b", status: "pending" },
       { slug: "feature-c", status: "in-progress" },
     ]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction?.features).toEqual(["feature-b", "feature-c"]);
   });
 
@@ -144,7 +143,7 @@ describe("scanEpics", () => {
       { slug: "feature-a", status: "completed" },
       { slug: "feature-b", status: "completed" },
     ]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction).toBeNull();
   });
 
@@ -153,13 +152,13 @@ describe("scanEpics", () => {
       { slug: "f-a", status: "completed" },
       { slug: "f-b", status: "completed" },
     ]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction).toEqual({ phase: "validate", args: ["my-epic"], type: "single" });
   });
 
   test("release phase returns next-action: release", async () => {
     writePipelineManifest("my-epic", "release", [{ slug: "f1", status: "completed" }]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].nextAction).toEqual({ phase: "release", args: ["my-epic"], type: "single" });
   });
 
@@ -169,7 +168,7 @@ describe("scanEpics", () => {
       { slug: "feature-b", status: "in-progress" },
       { slug: "feature-c", status: "pending" },
     ]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].features).toHaveLength(3);
     expect(epics[0].features[0].slug).toBe("feature-a");
     expect(epics[0].features[0].status).toBe("completed");
@@ -179,14 +178,14 @@ describe("scanEpics", () => {
     writePipelineManifest("good-one", "implement", [{ slug: "f1", status: "pending" }]);
     writeRawManifest("broken-json", "not json {{{");
     writeRawManifest("bad-phase", { slug: "bad", phase: "nope", features: [], lastUpdated: "2026-03-29T00:00:00Z" });
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics).toHaveLength(1);
     expect(epics[0].slug).toBe("good-one");
   });
 
   test("implement phase with only auto gates is not blocked", async () => {
     writePipelineManifest("auto-epic", "implement", [{ slug: "f1", status: "pending" }]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     const autoEpic = epics.find((e) => e.slug === "auto-epic");
     expect(autoEpic!.blocked).toBeFalsy();
     expect(autoEpic!.nextAction).not.toBeNull();
@@ -195,7 +194,7 @@ describe("scanEpics", () => {
   test("validate phase human gate blocks epic", async () => {
     writeFileSync(resolve(TEST_ROOT, ".beastmode", "config.yaml"), `gates:\n  validate:\n    qa-review: human\n`);
     writePipelineManifest("val-epic", "validate", [{ slug: "f1", status: "completed" }]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     const valEpic = epics.find((e) => e.slug === "val-epic");
     expect(valEpic!.blocked).toBeTruthy();
     expect(valEpic!.nextAction).toBeNull();
@@ -205,14 +204,14 @@ describe("scanEpics", () => {
     const designDir = resolve(TEST_ROOT, ".beastmode", "state", "design");
     mkdirSync(designDir, { recursive: true });
     writeFileSync(resolve(designDir, `${TEST_DATE}-orphan-epic.md`), "# Orphan\n");
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics.filter((e) => e.slug === "orphan-epic")).toHaveLength(0);
   });
 
   test("handles multiple epics simultaneously", async () => {
     writePipelineManifest("epic-one", "validate", [{ slug: "f1", status: "completed" }]);
     writePipelineManifest("epic-two", "plan", []);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics).toHaveLength(2);
     const one = epics.find((e) => e.slug === "epic-one")!;
     const two = epics.find((e) => e.slug === "epic-two")!;
@@ -222,13 +221,13 @@ describe("scanEpics", () => {
 
   test("preserves github info from manifest", async () => {
     writePipelineManifest("my-epic", "implement", [{ slug: "f1", status: "pending" }], { epic: 42, repo: "user/repo" });
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].github?.epic).toBe(42);
   });
 
   test("manifestPath is absolute path of pipeline manifest", async () => {
     writePipelineManifest("my-epic", "implement", [{ slug: "f1", status: "pending" }]);
-    const { epics } = await scanEpics(TEST_ROOT);
+    const { epics } = listEnriched(TEST_ROOT);
     expect(epics[0].manifestPath).toBe(
       resolve(TEST_ROOT, ".beastmode", "state", `${TEST_DATE}-my-epic.manifest.json`),
     );
@@ -238,7 +237,7 @@ describe("scanEpics", () => {
     writePipelineManifest("my-epic", "implement", [{ slug: "f1", status: "pending" }]);
     const path = resolve(TEST_ROOT, ".beastmode", "state", `${TEST_DATE}-my-epic.manifest.json`);
     const before = Bun.file(path).lastModified;
-    await scanEpics(TEST_ROOT);
+    listEnriched(TEST_ROOT);
     const after = Bun.file(path).lastModified;
     expect(after).toBe(before);
   });

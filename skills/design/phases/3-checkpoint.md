@@ -13,7 +13,7 @@ If the skill argument is already a meaningful slug:
 
 ## 1. Write PRD
 
-Save to `.beastmode/artifacts/design/YYYY-MM-DD-<feature>.md` where `<feature>` is the resolved slug from step 0.
+Save to `.beastmode/artifacts/design/YYYY-MM-DD-<hex>.md` where `<hex>` is the original hex slug (the skill argument). Do NOT use the resolved feature slug in the filename — the rename happens later in post-dispatch.
 
 Use this template:
 

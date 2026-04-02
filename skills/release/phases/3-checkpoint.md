@@ -101,7 +101,7 @@ If the squash merge produces conflicts:
 
 - **Code files** (`.ts`, `.tsx`, `.js`, etc.): resolve with `--theirs` (feature branch has the new implementation)
 - **CHANGELOG.md**: resolve with `--ours` (main has the complete history; new entry is added in step 5)
-- **Version files** (plugin.json, marketplace.json, session-start.sh): resolve with `--ours` (main has the correct current version; bump happens in step 6)
+- **Version files** (plugin.json, marketplace.json): resolve with `--ours` (main has the correct current version; bump happens in step 6)
 - **Other .beastmode/ files**: resolve with `--theirs` (feature branch has the latest state)
 
 ## 4. Compute Version
@@ -138,7 +138,6 @@ Prepend the new release section to CHANGELOG.md **on main** using the computed v
 Update version in all files **on main**:
 - `.claude-plugin/plugin.json` → `"version": "X.Y.Z"`
 - `.claude-plugin/marketplace.json` → version in plugins array
-- `hooks/session-start.sh` → banner line `BEASTMODE vX.Y.Z`
 
 ## 7. Update Release Artifacts
 

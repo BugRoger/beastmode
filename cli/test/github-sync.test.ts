@@ -709,7 +709,10 @@ describe("syncGitHub", () => {
 
       const editCalls = callsTo("ghIssueEdit");
       const epicEdit = editCalls.find(
-        (c) => c.args[0] === "org/repo" && c.args[1] === 10,
+        (c) =>
+          c.args[0] === "org/repo" &&
+          c.args[1] === 10 &&
+          (c.args[2] as Record<string, unknown>)?.removeLabels !== undefined,
       );
       expect(epicEdit).toBeDefined();
       const edits = epicEdit!.args[2] as {

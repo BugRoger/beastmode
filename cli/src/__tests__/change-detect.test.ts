@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { toSnapshots, detectChanges } from "../change-detect";
 import type { EpicSnapshot } from "../change-detect";
-import type { EnrichedManifest } from "../state-scanner";
+import type { EnrichedManifest } from "../manifest-store";
 
 function makeEpic(overrides: Partial<EnrichedManifest> = {}): EnrichedManifest {
   return {

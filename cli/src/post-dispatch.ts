@@ -1,15 +1,13 @@
 /**
- * Post-dispatch hook — thin event router that feeds phase outcomes to the
- * epic state machine and syncs the result to disk + GitHub.
+ * Post-dispatch hook — routes phase outcomes through the reconcile module
+ * and handles post-reconciliation tasks (design rename, phase tags, GitHub sync).
  *
- * The machine owns all manifest mutations (enrichment, advancement,
- * regression, feature tracking). This module is responsible only for:
- *   1. Loading phase output from the worktree
- *   2. Loading the manifest from disk
- *   3. Mapping phase + output → machine event
- *   4. Sending that event to a hydrated epic actor
- *   5. Persisting the resulting state back to disk
- *   6. Syncing to GitHub (warn-and-continue)
+ * The reconcile module owns all manifest mutations via store.transact().
+ * This module is responsible only for:
+ *   1. Calling the correct reconcileX function
+ *   2. Creating phase tags for regression support
+ *   3. Renaming design hex-slugs to real slugs
+ *   4. Syncing to GitHub (warn-and-continue)
  *
  * Never throws — all errors are caught and logged with a [post-dispatch] prefix.
  */
@@ -17,17 +15,23 @@
 import type { Phase } from "./types";
 import type { PipelineManifest } from "./manifest-store";
 import type { Logger } from "./logger";
-import type { EpicContext, EpicEvent } from "./pipeline-machine";
 import * as store from "./manifest-store";
-import { loadWorktreePhaseOutput, loadWorktreeFeatureOutput } from "./phase-output";
+import { loadWorktreePhaseOutput } from "./phase-output";
 import { syncGitHub } from "./github-sync";
 import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "./manifest";
 import { discoverGitHub } from "./github-discovery";
 import { loadConfig } from "./config";
 import { createLogger } from "./logger";
-import { createEpicActor, epicMachine } from "./pipeline-machine";
-import { createActor } from "xstate";
 import { createTag } from "./phase-tags.js";
+import {
+  reconcileDesign,
+  reconcilePlan,
+  reconcileFeature,
+  reconcileImplement,
+  reconcileValidate,
+  reconcileRelease,
+} from "./reconcile";
+import type { ReconcileResult } from "./reconcile";
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {
@@ -48,8 +52,8 @@ export interface PostDispatchOptions {
 }
 
 /**
- * Run post-dispatch processing: read phase output, map to machine event,
- * send to epic actor, persist, and sync to GitHub.
+ * Run post-dispatch processing: reconcile phase outcome, create phase tag,
+ * handle design rename, and sync to GitHub.
  *
  * Never throws. All errors are caught and logged as warnings so a sync
  * failure never blocks the pipeline.
@@ -65,8 +69,7 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       return;
     }
 
-    // Design abandon guard: if design produced no output, skip machine advancement.
-    // Primary cleanup happens in phase.ts — this is a defensive backstop.
+    // Design abandon guard: if design produced no output, skip advancement.
     if (opts.phase === "design") {
       const designOutput = loadWorktreePhaseOutput(opts.worktreePath, "design", opts.epicSlug);
       if (!designOutput) {
@@ -75,111 +78,94 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       }
     }
 
-    // Load phase output from the worktree artifacts dir, filtered by slug
-    const output = loadWorktreePhaseOutput(opts.worktreePath, opts.phase, opts.epicSlug);
-    if (output) {
-      logger.detail(`Loaded phase output for ${opts.phase}/${opts.epicSlug} (status: ${output.status})`);
-    } else {
-      logger.detail(`No phase output found for ${opts.phase}/${opts.epicSlug} — continuing without enrichment`);
+    // Reconcile via the single reconcile module
+    let result: ReconcileResult | undefined;
+
+    switch (opts.phase) {
+      case "design":
+        result = await reconcileDesign(opts.projectRoot, opts.epicSlug, opts.worktreePath);
+        break;
+      case "plan":
+        result = await reconcilePlan(opts.projectRoot, opts.epicSlug, opts.worktreePath);
+        break;
+      case "implement":
+        if (opts.featureSlug) {
+          result = await reconcileFeature(opts.projectRoot, opts.epicSlug, opts.featureSlug, opts.worktreePath);
+        } else {
+          result = await reconcileImplement(opts.projectRoot, opts.epicSlug);
+        }
+        break;
+      case "validate":
+        result = await reconcileValidate(opts.projectRoot, opts.epicSlug, opts.worktreePath);
+        break;
+      case "release":
+        result = await reconcileRelease(opts.projectRoot, opts.epicSlug, opts.worktreePath);
+        break;
     }
 
-    // Load the manifest
-    const manifest = store.load(opts.projectRoot, opts.epicSlug);
-    if (!manifest) {
-      logger.debug(`No manifest found for ${opts.epicSlug} — cannot update`);
-      return;
-    }
-    logger.detail(`Loaded manifest for ${opts.epicSlug} (phase: ${manifest.phase})`);
-
-    // Persist is memory-only: XState assign actions update context in place.
-    // Single store.save() at end of dispatch handles disk persistence.
-    const persistAction = () => {};
-
-    let actor: ReturnType<typeof createEpicActor>;
-
-    // Hydrate actor at the correct state by resolving a snapshot
-    const epicContext = manifest as unknown as EpicContext;
-    const resolvedSnapshot = epicMachine.resolveState({
-      value: manifest.phase,
-      context: epicContext,
-    });
-    const machine = epicMachine.provide({ actions: { persist: persistAction } });
-    actor = createActor(machine, { snapshot: resolvedSnapshot, input: epicContext });
-    actor.start();
-
-    // Map phase + output → machine events and send them
-    const events = mapToEvents(opts, output, manifest, logger);
-    for (const event of events) {
-      logger.log(`Event: ${event.type}`);
-      actor.send(event);
+    if (result) {
+      logger.log(`Reconciled ${opts.phase} for ${opts.epicSlug} → ${result.phase}`);
     }
 
     // Create phase tag at current HEAD for regression support
     await createTag(opts.epicSlug, opts.phase, { cwd: opts.worktreePath });
 
-    // Design phase: rename hex slug to real slug with collision detection.
-    // store.rename() updates manifest fields in memory — no disk write.
-    const finalSnapshot = actor.getSnapshot();
-    const finalPhase = (typeof finalSnapshot.value === "string"
-      ? finalSnapshot.value
-      : manifest.phase) as Phase;
-
-    if (opts.phase === "design" && finalPhase !== "design") {
-      const epicName = (finalSnapshot.context as unknown as PipelineManifest).epic
-        ?? (finalSnapshot.context as unknown as EpicContext).slug;
+    // Design phase: rename hex slug to real slug with collision detection
+    if (opts.phase === "design" && result) {
+      const finalManifest = result.manifest;
+      const epicName = finalManifest.epic ?? finalManifest.slug;
       if (epicName && epicName !== opts.epicSlug) {
-        const result = await store.rename(
+        const renameResult = await store.rename(
           opts.projectRoot,
           opts.epicSlug,
           epicName,
           opts.worktreePath,
         );
-        if (result.renamed) {
-          opts.epicSlug = result.finalSlug;
-          logger.log(`Renamed ${opts.epicSlug} → ${result.finalSlug}`);
-        } else if (result.error) {
-          logger.warn(`Slug rename failed: ${result.error}`);
+        if (renameResult.renamed) {
+          opts.epicSlug = renameResult.finalSlug;
+          logger.log(`Renamed ${opts.epicSlug} → ${renameResult.finalSlug}`);
+        } else if (renameResult.error) {
+          logger.warn(`Slug rename failed: ${renameResult.error}`);
         }
       }
     }
 
-    // Build final manifest from actor's settled state
-    let finalManifest = {
-      ...(finalSnapshot.context as unknown as PipelineManifest),
-      phase: finalPhase,
-    } as PipelineManifest;
-
-    actor.stop();
-
-    // Sync to GitHub — warn-and-continue, accumulate mutations in memory
+    // Sync to GitHub — warn-and-continue
     try {
       const config = loadConfig(opts.projectRoot);
       if (config.github.enabled) {
         const resolved = await discoverGitHub(opts.projectRoot, config.github["project-name"]);
         if (resolved) {
-          const syncResult = await syncGitHub(finalManifest, config, resolved);
+          const manifest = store.load(opts.projectRoot, opts.epicSlug);
+          if (manifest) {
+            const syncResult = await syncGitHub(manifest, config, resolved);
 
-          // Apply sync mutations (issue numbers, body hashes) to in-memory manifest
-          if (syncResult.mutations.length > 0) {
-            for (const m of syncResult.mutations) {
-              switch (m.type) {
-                case "setEpic":
-                  finalManifest = setGitHubEpic(finalManifest, m.epicNumber, m.repo);
-                  break;
-                case "setFeatureIssue":
-                  finalManifest = setFeatureGitHubIssue(finalManifest, m.featureSlug, m.issueNumber);
-                  break;
-                case "setEpicBodyHash":
-                  finalManifest = setEpicBodyHash(finalManifest, m.bodyHash);
-                  break;
-                case "setFeatureBodyHash":
-                  finalManifest = setFeatureBodyHash(finalManifest, m.featureSlug, m.bodyHash);
-                  break;
-              }
+            // Apply sync mutations via transact for serialized writes
+            if (syncResult.mutations.length > 0) {
+              await store.transact(opts.projectRoot, opts.epicSlug, (m) => {
+                let updated = m;
+                for (const mutation of syncResult.mutations) {
+                  switch (mutation.type) {
+                    case "setEpic":
+                      updated = setGitHubEpic(updated, mutation.epicNumber, mutation.repo);
+                      break;
+                    case "setFeatureIssue":
+                      updated = setFeatureGitHubIssue(updated, mutation.featureSlug, mutation.issueNumber);
+                      break;
+                    case "setEpicBodyHash":
+                      updated = setEpicBodyHash(updated, mutation.bodyHash);
+                      break;
+                    case "setFeatureBodyHash":
+                      updated = setFeatureBodyHash(updated, mutation.featureSlug, mutation.bodyHash);
+                      break;
+                  }
+                }
+                return updated;
+              });
             }
-          }
 
-          logger.log("GitHub sync complete");
+            logger.log("GitHub sync complete");
+          }
         } else {
           logger.detail("GitHub discovery failed — skipping sync");
         }
@@ -188,117 +174,8 @@ export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> 
       const message = err instanceof Error ? err.message : String(err);
       logger.warn(`GitHub sync failed (non-blocking): ${message}`);
     }
-
-    // Single persist — all mutations (machine events, rename, sync) accumulated in memory
-    store.save(opts.projectRoot, opts.epicSlug, finalManifest);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.warn(`Unexpected error (non-blocking): ${message}`);
   }
-}
-
-// ── Event mapping ────────────────────────────────────────────────
-
-/**
- * Map post-dispatch options + phase output to a sequence of machine events.
- * Returns an ordered list — some phases may produce multiple events
- * (e.g., FEATURE_COMPLETED followed by IMPLEMENT_COMPLETED).
- */
-function mapToEvents(
-  opts: PostDispatchOptions,
-  output: ReturnType<typeof loadWorktreePhaseOutput>,
-  _manifest: PipelineManifest,
-  logger: Logger,
-): EpicEvent[] {
-  const events: EpicEvent[] = [];
-
-  switch (opts.phase) {
-    case "design": {
-      const artifacts = output?.artifacts as Record<string, unknown> | undefined;
-      const realSlug = artifacts?.slug as string | undefined;
-      const summary = artifacts?.summary as { problem: string; solution: string } | undefined;
-      events.push({ type: "DESIGN_COMPLETED", realSlug, summary });
-      break;
-    }
-
-    case "plan": {
-      const features = extractFeaturesFromOutput(output);
-      if (features.length > 0) {
-        events.push({ type: "PLAN_COMPLETED", features });
-      } else {
-        // No features extracted — send anyway, guard will reject if empty
-        events.push({ type: "PLAN_COMPLETED", features: [] });
-      }
-      break;
-    }
-
-    case "implement": {
-      if (opts.featureSlug) {
-        // Fan-out: check if this specific feature's output confirms completion
-        const featureOutput = loadWorktreeFeatureOutput(
-          opts.worktreePath,
-          opts.phase,
-          opts.epicSlug,
-          opts.featureSlug,
-        );
-        if (featureOutput?.status === "completed") {
-          events.push({ type: "FEATURE_COMPLETED", featureSlug: opts.featureSlug });
-          logger.log(`Feature ${opts.featureSlug} completed`);
-        } else {
-          logger.detail(`Feature ${opts.featureSlug} session exited 0 but no output.json — not marking completed`);
-        }
-      }
-      // Always attempt IMPLEMENT_COMPLETED — the guard checks allFeaturesCompleted
-      events.push({ type: "IMPLEMENT_COMPLETED" });
-      break;
-    }
-
-    case "validate": {
-      if (output?.status === "completed") {
-        events.push({ type: "VALIDATE_COMPLETED" });
-      } else {
-        events.push({ type: "REGRESS", targetPhase: "implement" as Phase });
-      }
-      break;
-    }
-
-    case "release": {
-      if (output?.status === "completed") {
-        events.push({ type: "RELEASE_COMPLETED" });
-      }
-      break;
-    }
-  }
-
-  return events;
-}
-
-/**
- * Extract feature definitions from plan phase output.
- * Returns array suitable for PLAN_COMPLETED event payload.
- */
-function extractFeaturesFromOutput(
-  output: ReturnType<typeof loadWorktreePhaseOutput>,
-): Array<{ slug: string; plan: string; description?: string; wave?: number }> {
-  if (!output) return [];
-  const artifacts = output.artifacts as unknown as Record<string, unknown>;
-  if (!artifacts || !Array.isArray(artifacts.features)) return [];
-
-  const features: Array<{ slug: string; plan: string; description?: string; wave?: number }> = [];
-  for (const entry of artifacts.features) {
-    if (
-      typeof entry === "object" &&
-      entry !== null &&
-      typeof (entry as Record<string, unknown>).slug === "string"
-    ) {
-      const rec = entry as Record<string, unknown>;
-      features.push({
-        slug: rec.slug as string,
-        plan: typeof rec.plan === "string" ? rec.plan : "",
-        description: typeof rec.description === "string" ? rec.description : undefined,
-        wave: typeof rec.wave === "number" ? rec.wave : undefined,
-      });
-    }
-  }
-  return features;
 }

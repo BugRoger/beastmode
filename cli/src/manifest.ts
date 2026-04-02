@@ -259,3 +259,66 @@ export function getPendingFeatures(
     (f) => f.status === "pending" || f.status === "in-progress",
   );
 }
+
+// --- Dispatch derivation ---
+
+/** A dispatchable action derived from manifest state. */
+export interface NextAction {
+  phase: string;
+  args: string[];
+  type: "single" | "fan-out";
+  features?: string[];
+}
+
+/** Static dispatch type per phase — no XState needed. */
+const DISPATCH_TYPE: Record<string, "single" | "fan-out" | "skip"> = {
+  design: "single",
+  plan: "single",
+  implement: "fan-out",
+  validate: "single",
+  release: "single",
+  done: "skip",
+  cancelled: "skip",
+};
+
+/**
+ * Derive the next dispatchable action from a manifest.
+ * Pure function — lookup table + wave-aware feature filtering.
+ * No XState, no filesystem, no side effects.
+ */
+export function deriveNextAction(manifest: PipelineManifest): NextAction | null {
+  const dt = DISPATCH_TYPE[manifest.phase];
+  if (!dt || dt === "skip") return null;
+
+  if (dt === "fan-out") {
+    const incompleteFeatures = manifest.features
+      .filter((f) => f.status === "pending" || f.status === "in-progress" || f.status === "blocked");
+    if (incompleteFeatures.length === 0) return null;
+
+    // Wave-aware filtering: find the lowest wave with any incomplete feature.
+    // Features without a wave field default to wave 1.
+    const lowestWave = Math.min(...incompleteFeatures.map((f) => f.wave ?? 1));
+    const lowestWaveFeatures = incompleteFeatures.filter((f) => (f.wave ?? 1) === lowestWave);
+
+    // Only dispatch pending/in-progress features from the lowest wave.
+    // Blocked features are excluded — if ALL are blocked, dispatchable is empty → return null.
+    const dispatchable = lowestWaveFeatures
+      .filter((f) => f.status === "pending" || f.status === "in-progress")
+      .map((f) => f.slug);
+
+    if (dispatchable.length === 0) return null;
+
+    return {
+      phase: manifest.phase,
+      args: [manifest.slug],
+      type: "fan-out",
+      features: dispatchable,
+    };
+  }
+
+  return {
+    phase: manifest.phase,
+    args: [manifest.slug],
+    type: "single",
+  };
+}

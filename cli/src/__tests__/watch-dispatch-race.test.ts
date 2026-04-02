@@ -13,7 +13,7 @@
 import { describe, test, expect } from "bun:test";
 import { WatchLoop } from "../watch";
 import type { WatchDeps } from "../watch";
-import type { EnrichedManifest } from "../state-scanner";
+import type { EnrichedManifest } from "../manifest-store";
 import type { SessionHandle, SessionCreateOpts } from "../session";
 import type { SessionResult } from "../watch-types";
 

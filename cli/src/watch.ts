@@ -5,7 +5,7 @@
  * handles implement fan-out, human gate pausing, and graceful shutdown.
  */
 
-import type { EnrichedManifest, ScanResult } from "./state-scanner.js";
+import type { EnrichedManifest, ScanResult } from "./manifest-store.js";
 import type {
   DispatchedSession,
   SessionResult,

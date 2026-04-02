@@ -76,6 +76,14 @@ mock.module("../src/manifest-store", () => ({
   save: (...args: unknown[]) => {
     trackCall("store.save", ...args);
   },
+  transact: async (projectRoot: unknown, slug: unknown, fn: (m: unknown) => unknown) => {
+    trackCall("store.transact", projectRoot, slug);
+    const manifest = mockState.manifest ? JSON.parse(JSON.stringify(mockState.manifest)) : undefined;
+    if (!manifest) throw new Error(`No manifest for ${slug}`);
+    const updated = fn(manifest);
+    trackCall("store.save", projectRoot, slug, updated);
+    return updated;
+  },
 }));
 
 mock.module("../src/manifest", () => ({

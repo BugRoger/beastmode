@@ -1,19 +1,18 @@
 /**
  * Regression test: first feature completing must NOT poison other features.
  *
- * Exercises reconcileState directly with real filesystem state.
- * The bug: reconcileState loaded the epic-level output (which matched
+ * Exercises reconcileFeature directly with real filesystem state.
+ * The bug: the old reconcileState loaded the epic-level output (which matched
  * any feature output), and enrich() would overwrite all feature statuses.
- * Then it unconditionally marked the featureSlug as completed.
  *
- * After the fix: reconcileState loads feature-specific output only,
+ * After the fix: reconcileFeature loads feature-specific output only,
  * and only marks the feature completed if the output says so.
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { reconcileState } from "../watch-command";
+import { reconcileFeature } from "../reconcile";
 import type { PipelineManifest } from "../manifest";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-reconcile");
@@ -85,7 +84,7 @@ function makeManifest(features: Array<{ slug: string; status: string }>): Pipeli
   };
 }
 
-describe("reconcileState — feature isolation", () => {
+describe("reconcileFeature — feature isolation", () => {
   beforeEach(setup);
   afterEach(() => {
     if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
@@ -111,14 +110,7 @@ describe("reconcileState — feature isolation", () => {
     });
 
     // Reconcile for render-extract only
-    const progress = await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "render-extract",
-      success: true,
-    });
+    const result = await reconcileFeature(TEST_ROOT, EPIC, "render-extract", WORKTREE);
 
     const manifest = readManifest();
 
@@ -134,7 +126,7 @@ describe("reconcileState — feature isolation", () => {
     expect(manifest.phase).toBe("implement");
 
     // Progress: 1/6
-    expect(progress).toEqual({ completed: 1, total: 6 });
+    expect(result?.progress).toEqual({ completed: 1, total: 6 });
   });
 
   test("sequential completions accumulate correctly without poisoning", async () => {
@@ -150,14 +142,7 @@ describe("reconcileState — feature isolation", () => {
       artifacts: { features: [{ slug: "feat-a", status: "completed" }] },
     });
 
-    await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "feat-a",
-      success: true,
-    });
+    await reconcileFeature(TEST_ROOT, EPIC, "feat-a", WORKTREE);
 
     let manifest = readManifest();
     expect(manifest.features.find((f) => f.slug === "feat-a")?.status).toBe("completed");
@@ -171,14 +156,7 @@ describe("reconcileState — feature isolation", () => {
       artifacts: { features: [{ slug: "feat-b", status: "completed" }] },
     });
 
-    await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "feat-b",
-      success: true,
-    });
+    await reconcileFeature(TEST_ROOT, EPIC, "feat-b", WORKTREE);
 
     manifest = readManifest();
     expect(manifest.features.find((f) => f.slug === "feat-a")?.status).toBe("completed");
@@ -192,14 +170,7 @@ describe("reconcileState — feature isolation", () => {
       artifacts: { features: [{ slug: "feat-c", status: "completed" }] },
     });
 
-    await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "feat-c",
-      success: true,
-    });
+    await reconcileFeature(TEST_ROOT, EPIC, "feat-c", WORKTREE);
 
     manifest = readManifest();
     expect(manifest.features.find((f) => f.slug === "feat-a")?.status).toBe("completed");
@@ -210,8 +181,8 @@ describe("reconcileState — feature isolation", () => {
 
   test("epic-level output cannot poison features via enrich", async () => {
     // This is the EXACT bug scenario: an epic-level output.json exists
-    // that lists all features as completed. Before the fix, reconcileState
-    // would pick this up via loadWorktreePhaseOutput and enrich all features.
+    // that lists all features as completed. reconcileFeature should only
+    // read the feature-specific output, never the epic-level one.
     writeManifest(makeManifest([
       { slug: "feat-a", status: "pending" },
       { slug: "feat-b", status: "pending" },
@@ -237,14 +208,7 @@ describe("reconcileState — feature isolation", () => {
     });
 
     // Reconcile for feat-a — should ONLY read feat-a's output, NOT the epic-level one
-    await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "feat-a",
-      success: true,
-    });
+    await reconcileFeature(TEST_ROOT, EPIC, "feat-a", WORKTREE);
 
     const manifest = readManifest();
     expect(manifest.features.find((f) => f.slug === "feat-a")?.status).toBe("completed");
@@ -258,18 +222,12 @@ describe("reconcileState — feature isolation", () => {
       { slug: "lazy-feat", status: "pending" },
     ]));
 
-    // Session exited 0 but no output.json written
-    await reconcileState({
-      worktreePath: WORKTREE,
-      projectRoot: TEST_ROOT,
-      epicSlug: EPIC,
-      phase: "implement",
-      featureSlug: "lazy-feat",
-      success: true,
-    });
+    // Session exited 0 but no output.json written — reconcileFeature returns undefined
+    const result = await reconcileFeature(TEST_ROOT, EPIC, "lazy-feat", WORKTREE);
 
     const manifest = readManifest();
     expect(manifest.features.find((f) => f.slug === "lazy-feat")?.status).toBe("pending");
     expect(manifest.phase).toBe("implement");
+    expect(result).toBeUndefined();
   });
 });

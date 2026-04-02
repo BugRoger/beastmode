@@ -67,6 +67,7 @@ const PHASE_TO_BOARD_STATUS: Record<string, string> = {
   validate: "Validate",
   release: "Release",
   done: "Done",
+  cancelled: "Done",
 };
 
 /** Map manifest feature status to GitHub label. */
@@ -88,6 +89,7 @@ const ALL_PHASE_LABELS = [
   "phase/validate",
   "phase/release",
   "phase/done",
+  "phase/cancelled",
 ];
 
 /**
@@ -215,8 +217,8 @@ export async function syncGitHub(
     await syncFeature(repo, owner, epicNumber, feature, resolved, result);
   }
 
-  // --- Epic Close (if done) ---
-  if (manifest.phase === "done") {
+  // --- Epic Close (if done or cancelled) ---
+  if (manifest.phase === "done" || manifest.phase === "cancelled") {
     const closed = await ghIssueClose(repo, epicNumber);
     if (closed) {
       result.epicClosed = true;
@@ -453,22 +455,24 @@ export async function syncGitHubForEpic(opts: {
     }
 
     if (result.mutations.length > 0) {
-      const updated = { ...manifest };
-      for (const m of result.mutations) {
-        if (m.type === "setEpic") {
-          updated.github = { ...updated.github, epic: m.epicNumber, repo: m.repo };
-        } else if (m.type === "setFeatureIssue") {
-          const feat = updated.features.find((f) => f.slug === m.featureSlug);
-          if (feat) feat.github = { ...feat.github, issue: m.issueNumber };
-        } else if (m.type === "setEpicBodyHash" && updated.github) {
-          updated.github.bodyHash = m.bodyHash;
-        } else if (m.type === "setFeatureBodyHash") {
-          const feat = updated.features.find((f) => f.slug === m.featureSlug);
-          if (feat?.github) feat.github.bodyHash = m.bodyHash;
+      await store.transact(opts.projectRoot, opts.epicSlug, (m) => {
+        const updated = { ...m };
+        for (const mut of result.mutations) {
+          if (mut.type === "setEpic") {
+            updated.github = { ...updated.github, epic: mut.epicNumber, repo: mut.repo };
+          } else if (mut.type === "setFeatureIssue") {
+            const feat = updated.features.find((f) => f.slug === mut.featureSlug);
+            if (feat) feat.github = { ...feat.github, issue: mut.issueNumber };
+          } else if (mut.type === "setEpicBodyHash" && updated.github) {
+            updated.github.bodyHash = mut.bodyHash;
+          } else if (mut.type === "setFeatureBodyHash") {
+            const feat = updated.features.find((f) => f.slug === mut.featureSlug);
+            if (feat?.github) feat.github.bodyHash = mut.bodyHash;
+          }
         }
-      }
-      updated.lastUpdated = new Date().toISOString();
-      store.save(opts.projectRoot, opts.epicSlug, updated);
+        updated.lastUpdated = new Date().toISOString();
+        return updated;
+      });
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

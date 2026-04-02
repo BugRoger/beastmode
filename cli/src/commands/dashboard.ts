@@ -4,7 +4,7 @@ import type { BeastmodeConfig } from "../config.js";
 import { createLogger } from "../logger.js";
 import { WatchLoop } from "../watch.js";
 import type { WatchDeps } from "../watch.js";
-import { scanEpics } from "../state-scanner.js";
+import { listEnriched } from "../manifest-store.js";
 import {
   selectStrategy,
   dispatchPhase,
@@ -105,7 +105,7 @@ export async function dashboardCommand(
 
   // --- Create WatchLoop with signal handlers disabled (Ink handles signals) ---
   const deps: WatchDeps = {
-    scanEpics,
+    scanEpics: async (root: string) => listEnriched(root),
     sessionFactory,
     logRun,
     logger,
