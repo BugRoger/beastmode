@@ -12,6 +12,7 @@ export interface ParsedCommand {
   command: Command;
   args: string[];
   verbosity: number;
+  force: boolean;
 }
 
 /**
@@ -33,12 +34,31 @@ export function parseVerbosity(args: string[]): { verbosity: number; rest: strin
   return { verbosity, rest };
 }
 
+/**
+ * Extract --force flag from an args array.
+ * Returns whether the flag was present and remaining args with --force stripped.
+ */
+export function parseForce(args: string[]): { force: boolean; rest: string[] } {
+  const rest: string[] = [];
+  let force = false;
+
+  for (const arg of args) {
+    if (arg === "--force") {
+      force = true;
+    } else {
+      rest.push(arg);
+    }
+  }
+
+  return { force, rest };
+}
+
 export function parseArgs(argv: string[]): ParsedCommand {
   // Bun: argv[0] = bun, argv[1] = script path, rest = user args
   const userArgs = argv.slice(2);
 
   if (userArgs.length === 0) {
-    return { command: "help", args: [], verbosity: 0 };
+    return { command: "help", args: [], verbosity: 0, force: false };
   }
 
   const command = userArgs[0];
@@ -54,9 +74,21 @@ export function parseArgs(argv: string[]): ParsedCommand {
 
   const { verbosity, rest } = parseVerbosity(userArgs.slice(1));
 
+  // Extract --force for cancel command
+  if (command === "cancel") {
+    const { force, rest: finalArgs } = parseForce(rest);
+    return {
+      command: command as Command,
+      args: finalArgs,
+      verbosity,
+      force,
+    };
+  }
+
   return {
     command: command as Command,
     args: rest,
     verbosity,
+    force: false,
   };
 }

@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.58.0 — Cancel Cleanup (Apr 2026)
+
+- **Shared cancel module** — `cancel-logic.ts` provides ordered cleanup (worktree, branch, archive tags, phase tags, artifacts, GitHub issue, manifest) consumed by CLI, dashboard, and design-abandon
+- **`--force` flag** — Skips confirmation prompt for automated pipelines
+- **Idempotent cancel** — Running cancel twice succeeds with nothing left to clean
+- **Warn-and-continue** — Failure in one cleanup step doesn't block the rest
+- **Artifact matching** — Uses epic name from manifest, falls back to identifier on re-run; research artifacts preserved
+- **GitHub integration** — Issue closed as not_planned when github.enabled and epic number present
+- **Fix** — Derive output.json filename from worktree name, not artifact name
+
+---
+
 ### v0.57.1 — Design Abandon Cleanup (Apr 2026)
 
 - **Primary abandon gate** — Detects missing design output after `runInteractive()` returns, triggers cleanup sequence (worktree removal, manifest deletion, GitHub issue close)

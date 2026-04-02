@@ -1,0 +1,13 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-02-cancel-cleanup-force-flag.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add parseForce utility to args.ts", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Add args.test.ts tests for parseForce", "status": "pending", "wave": 1},
+    {"id": 2, "subject": "Task 2: Add cancel --force tests to cancel.test.ts", "status": "pending", "wave": 1},
+    {"id": 3, "subject": "Task 3: Wire --force into cancelCommand", "status": "pending", "wave": 2},
+    {"id": 4, "subject": "Task 4: Add confirmation prompt to cancelCommand", "status": "pending", "wave": 2},
+    {"id": 5, "subject": "Task 5: Update help text for cancel --force", "status": "pending", "wave": 2},
+    {"id": 6, "subject": "Task 6: Run tests and verify", "status": "pending", "wave": 3}
+  ],
+  "lastUpdated": "2026-04-02T00:00:00Z"
+}

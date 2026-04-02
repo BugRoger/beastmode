@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseVerbosity, parseArgs } from "../args";
+import { parseVerbosity, parseArgs, parseForce } from "../args";
 
 describe("parseVerbosity", () => {
   test("-v produces verbosity 1", () => {
@@ -51,6 +51,38 @@ describe("parseVerbosity", () => {
   });
 });
 
+describe("parseForce", () => {
+  test("--force produces force true", () => {
+    const { force, rest } = parseForce(["--force"]);
+    expect(force).toBe(true);
+    expect(rest).toEqual([]);
+  });
+
+  test("no --force produces force false", () => {
+    const { force, rest } = parseForce(["my-epic"]);
+    expect(force).toBe(false);
+    expect(rest).toEqual(["my-epic"]);
+  });
+
+  test("--force is stripped from remaining args", () => {
+    const { force, rest } = parseForce(["my-epic", "--force"]);
+    expect(force).toBe(true);
+    expect(rest).toEqual(["my-epic"]);
+  });
+
+  test("--force before args is stripped", () => {
+    const { force, rest } = parseForce(["--force", "my-epic"]);
+    expect(force).toBe(true);
+    expect(rest).toEqual(["my-epic"]);
+  });
+
+  test("other flags are not consumed", () => {
+    const { force, rest } = parseForce(["--all", "-w", "--verbose"]);
+    expect(force).toBe(false);
+    expect(rest).toEqual(["--all", "-w", "--verbose"]);
+  });
+});
+
 describe("parseArgs verbosity integration", () => {
   test("parseArgs returns verbosity 0 with no flags", () => {
     const result = parseArgs(["bun", "script.ts", "watch"]);
@@ -75,5 +107,34 @@ describe("parseArgs verbosity integration", () => {
     const result = parseArgs(["bun", "script.ts"]);
     expect(result.command).toBe("help");
     expect(result.verbosity).toBe(0);
+  });
+});
+
+describe("parseArgs force integration", () => {
+  test("parseArgs returns force true for cancel --force", () => {
+    const result = parseArgs(["bun", "script.ts", "cancel", "my-epic", "--force"]);
+    expect(result.command).toBe("cancel");
+    expect(result.force).toBe(true);
+    expect(result.args).toEqual(["my-epic"]);
+  });
+
+  test("parseArgs returns force false for cancel without --force", () => {
+    const result = parseArgs(["bun", "script.ts", "cancel", "my-epic"]);
+    expect(result.command).toBe("cancel");
+    expect(result.force).toBe(false);
+    expect(result.args).toEqual(["my-epic"]);
+  });
+
+  test("parseArgs returns force false for non-cancel commands", () => {
+    const result = parseArgs(["bun", "script.ts", "watch"]);
+    expect(result.force).toBe(false);
+  });
+
+  test("cancel with --force and -v strips both", () => {
+    const result = parseArgs(["bun", "script.ts", "cancel", "-v", "my-epic", "--force"]);
+    expect(result.command).toBe("cancel");
+    expect(result.force).toBe(true);
+    expect(result.verbosity).toBe(1);
+    expect(result.args).toEqual(["my-epic"]);
   });
 });

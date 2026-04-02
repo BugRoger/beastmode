@@ -1,15 +1,25 @@
 import { describe, test, expect } from "bun:test";
 import { cancelEpicAction } from "../dashboard/actions/cancel-epic";
+import type { Logger } from "../logger";
 
 // ---------------------------------------------------------------------------
-// cancelEpicAction — integration test with real state machine
+// cancelEpicAction — integration test with shared cancel-logic module
 // ---------------------------------------------------------------------------
+
+const noopLogger: Logger = {
+  log: () => {},
+  detail: () => {},
+  debug: () => {},
+  trace: () => {},
+  warn: () => {},
+  error: () => {},
+};
 
 describe("cancelEpicAction", () => {
-  // We need a minimal manifest on disk for store.load to work.
+  // We need a minimal manifest on disk for store.find to work.
   // Use temp dir + real manifest store functions.
 
-  const { mkdtempSync, mkdirSync, writeFileSync, readFileSync } = require("fs");
+  const { mkdtempSync, mkdirSync, writeFileSync, existsSync } = require("fs");
   const { resolve } = require("path");
   const os = require("os");
 
@@ -33,10 +43,6 @@ describe("cancelEpicAction", () => {
     writeFileSync(manifestPath, JSON.stringify(manifest));
 
     return { tmpDir, stateDir, manifestPath };
-  }
-
-  function readManifest(manifestPath: string) {
-    return JSON.parse(readFileSync(manifestPath, "utf-8"));
   }
 
   function makeMockTracker() {
@@ -70,7 +76,7 @@ describe("cancelEpicAction", () => {
     };
   }
 
-  test("cancels epic manifest via state machine", async () => {
+  test("deletes manifest via shared cancel-logic", async () => {
     const { tmpDir, manifestPath } = setupTempProject("cancel-test", "implement");
     const { tracker } = makeMockTracker();
 
@@ -78,13 +84,15 @@ describe("cancelEpicAction", () => {
       slug: "cancel-test",
       projectRoot: tmpDir,
       tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
     });
 
-    const updated = readManifest(manifestPath);
-    expect(updated.phase).toBe("cancelled");
+    // Shared module deletes the manifest (not just sets phase to cancelled)
+    expect(existsSync(manifestPath)).toBe(false);
   });
 
-  test("cancels from design phase", async () => {
+  test("deletes manifest from design phase", async () => {
     const { tmpDir, manifestPath } = setupTempProject("design-cancel", "design");
     const { tracker } = makeMockTracker();
 
@@ -92,13 +100,14 @@ describe("cancelEpicAction", () => {
       slug: "design-cancel",
       projectRoot: tmpDir,
       tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
     });
 
-    const updated = readManifest(manifestPath);
-    expect(updated.phase).toBe("cancelled");
+    expect(existsSync(manifestPath)).toBe(false);
   });
 
-  test("cancels from validate phase", async () => {
+  test("deletes manifest from validate phase", async () => {
     const { tmpDir, manifestPath } = setupTempProject("validate-cancel", "validate");
     const { tracker } = makeMockTracker();
 
@@ -106,10 +115,11 @@ describe("cancelEpicAction", () => {
       slug: "validate-cancel",
       projectRoot: tmpDir,
       tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
     });
 
-    const updated = readManifest(manifestPath);
-    expect(updated.phase).toBe("cancelled");
+    expect(existsSync(manifestPath)).toBe(false);
   });
 
   test("aborts only sessions matching the epic slug", async () => {
@@ -120,31 +130,36 @@ describe("cancelEpicAction", () => {
       slug: "target-epic",
       projectRoot: tmpDir,
       tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
     });
 
     expect(abortedSlugs).toEqual(["target-epic"]);
     expect(abortedSlugs).not.toContain("other-epic");
   });
 
-  test("throws when manifest not found", async () => {
+  test("succeeds when manifest not found (idempotent)", async () => {
     const tmpDir = mkdtempSync(resolve(os.tmpdir(), "bm-test-"));
     mkdirSync(resolve(tmpDir, ".beastmode", "state"), { recursive: true });
     const { tracker } = makeMockTracker();
 
-    expect(
-      cancelEpicAction({
-        slug: "nonexistent",
-        projectRoot: tmpDir,
-        tracker: tracker as any,
-      }),
-    ).rejects.toThrow("No manifest found for: nonexistent");
+    // Shared cancel module is idempotent — no manifest = no-op, not an error
+    await cancelEpicAction({
+      slug: "nonexistent",
+      projectRoot: tmpDir,
+      tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
+    });
+    // No throw — idempotent success
   });
 
-  test("clears blocked state on cancel", async () => {
+  test("handles manifest with blocked state", async () => {
     const { tmpDir, manifestPath } = setupTempProject("blocked-cancel", "implement");
 
     // Add blocked state to manifest
-    const manifest = readManifest(manifestPath);
+    const { readFileSync } = require("fs");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
     manifest.blocked = { gate: "feature", reason: "stuck" };
     writeFileSync(manifestPath, JSON.stringify(manifest));
 
@@ -154,11 +169,12 @@ describe("cancelEpicAction", () => {
       slug: "blocked-cancel",
       projectRoot: tmpDir,
       tracker: tracker as any,
+      githubEnabled: false,
+      logger: noopLogger,
     });
 
-    const updated = readManifest(manifestPath);
-    expect(updated.phase).toBe("cancelled");
-    expect(updated.blocked).toBeNull();
+    // Manifest is deleted entirely
+    expect(existsSync(manifestPath)).toBe(false);
   });
 });
 

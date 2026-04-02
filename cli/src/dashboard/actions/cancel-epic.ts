@@ -1,17 +1,13 @@
 /**
- * cancelEpicAction — cancel an epic via the pipeline state machine
- * and abort any running sessions for that epic.
+ * cancelEpicAction — cancel an epic from the dashboard.
  *
- * Used by the dashboard's cancel flow. Unlike the CLI cancel command,
- * this does NOT remove the worktree (the dashboard is still running in it).
+ * 1. Abort all running sessions for this epic (via tracker)
+ * 2. Delegate to the shared cancel-logic module for full 6-step cleanup
  */
 
-import { createEpicActor } from "../../pipeline-machine/index.js";
-import type { EpicContext } from "../../pipeline-machine/index.js";
-import * as store from "../../manifest-store.js";
-import type { PipelineManifest } from "../../manifest-store.js";
+import { cancelEpic } from "../../shared/cancel-logic.js";
 import type { DispatchTracker } from "../../dispatch-tracker.js";
-import type { Phase } from "../../types.js";
+import type { Logger } from "../../logger.js";
 
 export interface CancelEpicOpts {
   /** Epic slug to cancel */
@@ -20,47 +16,32 @@ export interface CancelEpicOpts {
   projectRoot: string;
   /** Dispatch tracker to abort running sessions */
   tracker: DispatchTracker;
+  /** Whether to attempt GitHub operations */
+  githubEnabled: boolean;
+  /** Logger instance for output */
+  logger: Logger;
 }
 
 /**
- * Cancel an epic: update manifest via state machine + abort running sessions.
- *
- * Steps:
- * 1. Load manifest for the slug
- * 2. Create epic actor, send CANCEL event, persist
- * 3. Abort all sessions for this epic via the tracker
+ * Cancel an epic: abort running sessions, then run shared 6-step cleanup.
  */
 export async function cancelEpicAction(opts: CancelEpicOpts): Promise<void> {
-  const { slug, projectRoot, tracker } = opts;
+  const { slug, projectRoot, tracker, githubEnabled, logger } = opts;
 
-  // Step 1: Load manifest
-  const manifest = store.load(projectRoot, slug);
-  if (!manifest) {
-    throw new Error(`No manifest found for: ${slug}`);
-  }
-
-  // Step 2: Cancel via state machine
-  let actor: ReturnType<typeof createEpicActor>;
-  const persistAction = ({ context }: { context: EpicContext }) => {
-    // During transition actions, the snapshot still shows the source state.
-    // Since we only send CANCEL, the target is always "cancelled".
-    store.save(projectRoot, slug, {
-      ...context,
-      phase: "cancelled" as Phase,
-    } as unknown as PipelineManifest);
-  };
-
-  actor = createEpicActor(manifest as unknown as EpicContext, {
-    persist: persistAction,
-  });
-  actor.send({ type: "CANCEL" });
-  actor.stop();
-
-  // Step 3: Abort sessions for this epic only
+  // Step 1: Abort all sessions for this epic (before cleanup tears down resources)
   const sessions = tracker.getAll();
   for (const session of sessions) {
     if (session.epicSlug === slug) {
       session.abortController.abort();
     }
   }
+
+  // Step 2: Full 6-step cleanup via shared cancel-logic
+  await cancelEpic({
+    identifier: slug,
+    projectRoot,
+    githubEnabled,
+    force: true, // dashboard is non-interactive
+    logger,
+  });
 }
