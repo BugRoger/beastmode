@@ -505,4 +505,131 @@ describe("ITermSessionFactory", () => {
     // The broad match is intentional — it prevents false "failed" on timeout
     expect(result.success).toBe(true);
   });
+
+  test("reconciliation closes live session when manifest phase is done", async () => {
+    const liveSessions: It2Session[] = [
+      { id: "orphan-tab-1", name: "bm-done-epic", tabId: "w0t10", isAlive: true },
+    ];
+    mockClient = createMockIt2Client({ sessions: liveSessions });
+
+    // Write a "done" manifest for the epic
+    const stateDir = resolve(TEST_ROOT, ".beastmode", "state");
+    mkdirSync(stateDir, { recursive: true });
+    writeFileSync(
+      resolve(stateDir, "2026-04-03-done-epic.manifest.json"),
+      JSON.stringify({
+        slug: "done-epic",
+        phase: "done",
+        features: [],
+        artifacts: {},
+        lastUpdated: new Date().toISOString(),
+      }),
+    );
+
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    // Trigger reconciliation — create for a different epic to avoid tab reuse logic
+    const handle = await factory.create(makeOpts({ epicSlug: "other-epic" }));
+    await tick();
+    writeOutputJson("other-epic", "plan", {
+      status: "completed",
+      artifacts: {},
+    });
+    await handle.promise;
+
+    // Should have closed the orphan session
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "orphan-tab-1",
+    );
+    expect(closeCalls).toHaveLength(1);
+  });
+
+  test("reconciliation adopts live session when manifest phase is active", async () => {
+    const liveSessions: It2Session[] = [
+      { id: "active-tab-1", name: "bm-active-epic", tabId: "w0t11", isAlive: true },
+    ];
+    mockClient = createMockIt2Client({ sessions: liveSessions });
+
+    // Write an "implement" (active) manifest for the epic
+    const stateDir = resolve(TEST_ROOT, ".beastmode", "state");
+    mkdirSync(stateDir, { recursive: true });
+    writeFileSync(
+      resolve(stateDir, "2026-04-03-active-epic.manifest.json"),
+      JSON.stringify({
+        slug: "active-epic",
+        phase: "implement",
+        features: [],
+        artifacts: {},
+        lastUpdated: new Date().toISOString(),
+      }),
+    );
+
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    // Trigger reconciliation — create for the same epic
+    const handle = await factory.create(
+      makeOpts({ epicSlug: "active-epic" }),
+    );
+    await tick();
+    writeOutputJson("active-epic", "plan", {
+      status: "completed",
+      artifacts: {},
+    });
+    await handle.promise;
+
+    // Should NOT have closed the session — should have adopted it
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "active-tab-1",
+    );
+    expect(closeCalls).toHaveLength(0);
+
+    // Should NOT have created a new tab — reused the adopted one
+    const createTabCalls = mockClient.calls.filter(
+      (c) => c.method === "createTab",
+    );
+    expect(createTabCalls).toHaveLength(0);
+  });
+
+  test("reconciliation adopts live session when manifest is missing", async () => {
+    const liveSessions: It2Session[] = [
+      { id: "nomanifest-tab-1", name: "bm-unknown-epic", tabId: "w0t12", isAlive: true },
+    ];
+    mockClient = createMockIt2Client({ sessions: liveSessions });
+
+    // No manifest written — store.load() will return undefined
+
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    // Trigger reconciliation
+    const handle = await factory.create(
+      makeOpts({ epicSlug: "unknown-epic" }),
+    );
+    await tick();
+    writeOutputJson("unknown-epic", "plan", {
+      status: "completed",
+      artifacts: {},
+    });
+    await handle.promise;
+
+    // Should NOT have closed the session — missing manifest defaults to adoption
+    const closeCalls = mockClient.calls.filter(
+      (c) => c.method === "closeSession" && c.args[0] === "nomanifest-tab-1",
+    );
+    expect(closeCalls).toHaveLength(0);
+
+    // Should NOT have created a new tab — reused the adopted one
+    const createTabCalls = mockClient.calls.filter(
+      (c) => c.method === "createTab",
+    );
+    expect(createTabCalls).toHaveLength(0);
+  });
 });

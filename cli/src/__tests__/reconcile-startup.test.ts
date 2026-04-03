@@ -435,4 +435,135 @@ describe("reconcileStartup", () => {
     // Surface wasn't counted as closed (failure)
     expect(result.closedSurfaces).toBe(0);
   });
+
+  it("closes live surface when manifest phase is done", async () => {
+    const closedSurfaces: string[] = [];
+    const tracker = new DispatchTracker();
+
+    // Write a "done" manifest
+    const stateDir = resolve(TEST_ROOT, ".beastmode", "state");
+    mkdirSync(stateDir, { recursive: true });
+    writeFileSync(
+      resolve(stateDir, "2026-04-03-my-epic.manifest.json"),
+      JSON.stringify({
+        slug: "my-epic",
+        phase: "done",
+        features: [],
+        artifacts: {},
+        lastUpdated: new Date().toISOString(),
+      }),
+    );
+
+    const workspaces: CmuxWorkspace[] = [
+      {
+        id: "ws-1",
+        name: "my-epic",
+        surfaces: [
+          { id: "s-orphan", title: "beastmode plan my-epic", alive: true, pid: 777 },
+        ],
+      },
+    ];
+
+    const client = mockClient({
+      listWorkspaces: async () => workspaces,
+      closeSurface: async (id) => { closedSurfaces.push(id); },
+    });
+
+    const result = await reconcileStartup({
+      client,
+      tracker,
+      knownEpicSlugs: ["my-epic"],
+      projectRoot: TEST_ROOT,
+    });
+
+    // Should close the orphan surface, not adopt it
+    expect(result.closedSurfaces).toBe(1);
+    expect(result.adopted).toBe(0);
+    expect(closedSurfaces).toEqual(["s-orphan"]);
+    expect(tracker.size).toBe(0);
+  });
+
+  it("adopts live surface when manifest phase is active", async () => {
+    const tracker = new DispatchTracker();
+
+    // Write an active manifest
+    const stateDir = resolve(TEST_ROOT, ".beastmode", "state");
+    mkdirSync(stateDir, { recursive: true });
+    writeFileSync(
+      resolve(stateDir, "2026-04-03-my-epic.manifest.json"),
+      JSON.stringify({
+        slug: "my-epic",
+        phase: "implement",
+        features: [],
+        artifacts: {},
+        lastUpdated: new Date().toISOString(),
+      }),
+    );
+
+    mkdirSync(resolve(TEST_ROOT, ".claude/worktrees/my-epic"), { recursive: true });
+
+    const workspaces: CmuxWorkspace[] = [
+      {
+        id: "ws-1",
+        name: "my-epic",
+        surfaces: [
+          { id: "s-active", title: "beastmode plan my-epic", alive: true, pid: 888 },
+        ],
+      },
+    ];
+
+    const client = mockClient({
+      listWorkspaces: async () => workspaces,
+    });
+
+    const result = await reconcileStartup({
+      client,
+      tracker,
+      knownEpicSlugs: ["my-epic"],
+      projectRoot: TEST_ROOT,
+    });
+
+    // Should adopt, not close
+    expect(result.adopted).toBe(1);
+    expect(result.closedSurfaces).toBe(0);
+    expect(tracker.hasActiveSession("my-epic")).toBe(true);
+
+    safeAbortAll(tracker);
+  });
+
+  it("adopts live surface when manifest is missing", async () => {
+    const tracker = new DispatchTracker();
+
+    // No manifest written — store.load returns undefined
+
+    mkdirSync(resolve(TEST_ROOT, ".claude/worktrees/my-epic"), { recursive: true });
+
+    const workspaces: CmuxWorkspace[] = [
+      {
+        id: "ws-1",
+        name: "my-epic",
+        surfaces: [
+          { id: "s-nomanifest", title: "beastmode plan my-epic", alive: true, pid: 999 },
+        ],
+      },
+    ];
+
+    const client = mockClient({
+      listWorkspaces: async () => workspaces,
+    });
+
+    const result = await reconcileStartup({
+      client,
+      tracker,
+      knownEpicSlugs: ["my-epic"],
+      projectRoot: TEST_ROOT,
+    });
+
+    // Should adopt — missing manifest is safe fallback
+    expect(result.adopted).toBe(1);
+    expect(result.closedSurfaces).toBe(0);
+    expect(tracker.hasActiveSession("my-epic")).toBe(true);
+
+    safeAbortAll(tracker);
+  });
 });
