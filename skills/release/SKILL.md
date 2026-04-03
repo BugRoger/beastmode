@@ -7,6 +7,17 @@ description: Create changelogs and release notes — releasing, documenting, shi
 
 Detect version, categorize commits, generate changelog, commit, merge or PR, tag.
 
+<HARD-GATE>
+No release without passing validation.
+</HARD-GATE>
+
+## Guiding Principles
+
+- **Version computed from main, not worktree** — the worktree's plugin.json is stale; read current version post-merge from main
+- **Squash merge preserves archive tag** — always tag the feature branch before squash merge so detailed commit history survives
+- **Bump type auto-detected, not user-prompted** — commit message conventions determine major/minor/patch automatically
+- **Warn-and-continue for non-blocking failures** — report problems, attempt fixes, only hard-stop on critical validation failures
+
 ## Phase 0: Prime
 
 ### 1. Resolve Feature Name
@@ -59,8 +70,6 @@ Detect version bump **type** from commit messages:
 
 **Important:** Do NOT read `plugin.json` for the current version — the worktree's copy is stale. The actual version bump happens post-merge on main in the checkpoint phase.
 
-#### 2.1 Version Confirmation
-
 Use the auto-detected bump type without asking.
 
 ### 3. Categorize Commits
@@ -79,34 +88,7 @@ Group commits by type:
 
 ### 4. Generate Release Notes
 
-Save to `.beastmode/artifacts/release/YYYY-MM-DD-<feature>.md`:
-
-```markdown
-# Release: <feature>
-
-**Bump:** minor
-**Date:** YYYY-MM-DD
-
-## Highlights
-
-[1-2 sentence summary of key changes]
-
-## Breaking Changes
-
-- [Change description]
-
-## Features
-
-- [Feature description]
-
-## Fixes
-
-- [Fix description]
-
-## Full Changelog
-
-[Link to commit comparison or list all commits]
-```
+Save to `.beastmode/artifacts/release/YYYY-MM-DD-<feature>.md` using the Release Notes Template (see Reference section).
 
 Omit empty sections (e.g., no Breaking Changes → skip that heading).
 
@@ -137,57 +119,47 @@ If all clean:
 
 Run a context reconciliation pass across all phase artifacts before releasing.
 
-#### 1.1 Gather Phase Artifacts
+1. **Gather Phase Artifacts** — Enumerate all artifact directories for the current feature slug:
 
-Enumerate all artifact directories for the current feature slug:
+   ```
+   .beastmode/artifacts/design/
+   .beastmode/artifacts/plan/
+   .beastmode/artifacts/implement/
+   .beastmode/artifacts/validate/  (if exists)
+   .beastmode/artifacts/release/
+   ```
 
-```
-.beastmode/artifacts/design/
-.beastmode/artifacts/plan/
-.beastmode/artifacts/implement/
-.beastmode/artifacts/validate/  (if exists)
-.beastmode/artifacts/release/
-```
+   For each directory, collect all files matching the current feature slug. Build a flat list of all artifact paths.
 
-For each directory, collect all files matching the current feature slug. Build a flat list of all artifact paths.
+   If no artifacts found, print "Retro: no artifacts found. Skipping." and proceed to Step 2.
 
-If no artifacts found, print "Retro: no artifacts found. Skipping." and proceed to Step 2.
+2. **Spawn Context Walker** — Spawn a general-purpose agent as the context walker. It receives the phase artifacts and L1 context path, analyzes for promotable learnings, and proposes hierarchy updates.
 
-#### 1.2 Spawn Context Walker
+   Build the session context block providing ALL phase artifacts:
 
-Spawn a general-purpose agent as the context walker. It receives the phase artifacts and L1 context path, analyzes for promotable learnings, and proposes hierarchy updates.
+   ```
+   ## Session Context
+   - **Phase**: release
+   - **Feature**: <feature name>
+   - **Artifacts**: <list of ALL phase artifact paths for this feature>
+   - **L1 context path**: `.beastmode/context/` (all phase directories)
+   - **Working directory**: <current working directory>
+   ```
 
-Build the session context block providing ALL phase artifacts:
+   Spawn: `Agent(subagent_type="general-purpose", prompt=<agent prompt + session context>)`
 
-```
-## Session Context
-- **Phase**: release
-- **Feature**: <feature name>
-- **Artifacts**: <list of ALL phase artifact paths for this feature>
-- **L1 context path**: `.beastmode/context/` (all phase directories)
-- **Working directory**: <current working directory>
-```
+   Wait for completion.
 
-Spawn: `Agent(subagent_type="general-purpose", prompt=<agent prompt + session context>)`
+   If context walker returned "No changes needed", print "Retro: no changes needed." and proceed to Step 2.
 
-Wait for completion.
+3. **Apply Changes (Bottom-Up)** — Apply all proposed changes from the context walker automatically in hierarchy order:
 
-If context walker returned "No changes needed", print "Retro: no changes needed." and proceed to Step 2.
+   1. **L3 — Records**: Create/append approved records automatically
+   2. **L2 — Context docs**: Apply L2 edits/creates automatically
+   3. **L1 — Phase summaries**: Recompute L1 summaries automatically
+   4. **L0 — BEASTMODE.md**: Apply via sub-step 4 below
 
-#### 1.3 Apply Changes (Bottom-Up)
-
-Apply all proposed changes from the context walker automatically in hierarchy order:
-
-1. **L3 — Records**: Create/append approved records automatically
-2. **L2 — Context docs**: Apply L2 edits/creates automatically
-3. **L1 — Phase summaries**: Recompute L1 summaries automatically
-4. **L0 — BEASTMODE.md**: Apply via step 1.4 below
-
-#### 1.4 Apply BEASTMODE.md Updates
-
-If no L0 changes proposed, skip this step.
-
-Apply L0 changes and log.
+4. **Apply BEASTMODE.md Updates** — If no L0 changes proposed, skip this step. Apply L0 changes and log.
 
 > **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 
@@ -216,9 +188,7 @@ git merge --squash "$feature_branch"
 
 **Important:** The squash merge stages changes but does NOT commit. Proceed to step 4.
 
-#### 3.1. Resolve Conflicts
-
-If the squash merge produces conflicts:
+If the squash merge produces conflicts, resolve as follows:
 
 - **Code files** (`.ts`, `.tsx`, `.js`, etc.): resolve with `--theirs` (feature branch has the new implementation)
 - **CHANGELOG.md**: resolve with `--ours` (main has the complete history; new entry is added in step 5)
@@ -267,25 +237,7 @@ Update the release notes **on main** to include the actual computed version:
 
 ### 8. Commit Release
 
-Create the single commit with GitHub release style message:
-
-```bash
-git add -A
-git commit -m "Release vX.Y.Z — <Title from CHANGELOG>
-
-## Features
-- <feature 1>
-- <feature 2>
-
-## Fixes
-- <fix 1>
-
-## Artifacts
-- Design: .beastmode/artifacts/design/YYYY-MM-DD-<feature>.md
-- Plan: .beastmode/artifacts/plan/YYYY-MM-DD-<feature>.md
-- Release: .beastmode/artifacts/release/YYYY-MM-DD-<feature>.md
-"
-```
+Create the single commit with GitHub release style message using the Commit Message Template (see Reference section).
 
 Use the release notes generated in execute step 4 and categorized commits from execute step 3 as the commit body. Omit empty sections (no Fixes if none exist).
 
@@ -308,3 +260,61 @@ claude plugin update beastmode@beastmode-marketplace --scope user
 ### 11. Complete
 
 "Release complete."
+
+## Constraints
+
+- Do NOT read `plugin.json` for version from the worktree — the worktree's copy is stale
+- Do NOT proceed to checkpoint if validation fails
+- The squash merge stages changes but does NOT commit — these are separate steps
+- NEVER skip the archive tag before squash merge — it preserves detailed commit history
+
+## Reference
+
+### Release Notes Template
+
+```markdown
+# Release: <feature>
+
+**Bump:** minor
+**Date:** YYYY-MM-DD
+
+## Highlights
+
+[1-2 sentence summary of key changes]
+
+## Breaking Changes
+
+- [Change description]
+
+## Features
+
+- [Feature description]
+
+## Fixes
+
+- [Fix description]
+
+## Full Changelog
+
+[Link to commit comparison or list all commits]
+```
+
+### Commit Message Template
+
+```bash
+git add -A
+git commit -m "Release vX.Y.Z — <Title from CHANGELOG>
+
+## Features
+- <feature 1>
+- <feature 2>
+
+## Fixes
+- <fix 1>
+
+## Artifacts
+- Design: .beastmode/artifacts/design/YYYY-MM-DD-<feature>.md
+- Plan: .beastmode/artifacts/plan/YYYY-MM-DD-<feature>.md
+- Release: .beastmode/artifacts/release/YYYY-MM-DD-<feature>.md
+"
+```

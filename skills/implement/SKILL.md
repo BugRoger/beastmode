@@ -11,6 +11,13 @@ Load plan, dispatch subagents per task in wave order, verify completion.
 No EnterPlanMode or ExitPlanMode.
 </HARD-GATE>
 
+## Guiding Principles
+
+- **One agent per task** — controller owns the plan, agents own the code
+- **Deviations are normal** — classify and handle systematically
+- **Spec check every result** — files match plan, verification passes, no unplanned changes
+- **Wave ordering drives parallelism** — foundation before consumers
+
 ## Phase 0: Prime
 
 ### 1. Resolve Feature Name
@@ -96,83 +103,69 @@ Extract wave numbers and dependencies from the tasks created in Decompose:
 
 For each wave (ascending order):
 
-#### 2.1 Identify Runnable Tasks
+1. **Identify Runnable Tasks** — From the wave map, select tasks where:
+   - Task belongs to current wave
+   - All dependencies are completed (or no dependencies)
+   - Task is not already completed (from .tasks.json resume)
 
-From the wave map, select tasks where:
-- Task belongs to current wave
-- All dependencies are completed (or no dependencies)
-- Task is not already completed (from .tasks.json resume)
+2. **Dispatch Subagents** — Check the wave's `**Parallel-safe:**` flag (appears after the first task's `**Wave:**` line).
 
-#### 2.2 Dispatch Subagents
+   **If Parallel-safe: true** — verify and dispatch in parallel:
 
-Check the wave's `**Parallel-safe:**` flag (appears after the first task's `**Wave:**` line).
+   1. Verify: collect all file paths from all tasks in this wave and confirm no file appears in 2+ tasks
+   2. If verification passes:
+      - For each task: build the agent prompt (same as sequential — see below)
+      - Spawn all agents with `Agent(subagent_type="general-purpose", prompt=<built prompt>, run_in_background=true)`
+      - Collect all results via `TaskOutput(task_id=<agent_id>, block=true)`
+      - Run spec check (step 3) on each result in order
+   3. If verification fails:
+      - Log: `[Blocking] Wave N: parallel-safe flag incorrect, falling back to sequential`
+      - Fall through to sequential dispatch below
 
-**If Parallel-safe: true** — verify and dispatch in parallel:
+   **If no flag or Parallel-safe: false** — dispatch sequentially (default):
 
-1. Verify: collect all file paths from all tasks in this wave and confirm no file appears in 2+ tasks
-2. If verification passes:
-   - For each task: build the agent prompt (same as sequential — see below)
-   - Spawn all agents with `Agent(subagent_type="general-purpose", prompt=<built prompt>, run_in_background=true)`
-   - Collect all results via `TaskOutput(task_id=<agent_id>, block=true)`
-   - Run spec check (2.3) on each result in order
-3. If verification fails:
-   - Log: `[Blocking] Wave N: parallel-safe flag incorrect, falling back to sequential`
-   - Fall through to sequential dispatch below
+   For each runnable task in the wave:
 
-**If no flag or Parallel-safe: false** — dispatch sequentially (default):
+   1. Read the task's **Files** section — pre-read the listed files
+   2. Build the agent prompt:
+      - Use the implementer agent role: It receives a single task spec with steps, files, and verification commands. It executes each step, classifies deviations, runs verification, and reports results. It does NOT read the plan file, commit changes, switch branches, or modify files outside its task's file list.
+      - Append: full task text (all steps, files, verification)
+      - Append: pre-read file contents
+      - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
+   3. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+   4. Collect the agent's result report
+   5. Run spec check (step 3) before dispatching next task
 
-For each runnable task in the wave:
+3. **Spec Check** — After each agent completes, the controller verifies:
 
-1. Read the task's **Files** section — pre-read the listed files
-2. Build the agent prompt:
-   - Use the implementer agent role: It receives a single task spec with steps, files, and verification commands. It executes each step, classifies deviations, runs verification, and reports results. It does NOT read the plan file, commit changes, switch branches, or modify files outside its task's file list.
-   - Append: full task text (all steps, files, verification)
-   - Append: pre-read file contents
-   - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
-3. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
-4. Collect the agent's result report
-5. Run spec check (2.3) before dispatching next task
+   1. **Files match plan?** — Check that files listed in the task's `**Files:**` section were actually modified
+   2. **Verification passes?** — Run the task's verification command if the agent didn't already
+   3. **No unplanned files?** — Compare `git diff --name-only` against baseline snapshot (from prime step 5) + plan's file list. Only flag files that are NEW since baseline AND not in the current task's file list.
 
-#### 2.3 Spec Check
+   If spec check fails:
+   - Re-dispatch the same task to a new agent with the failure context
+   - After 2 retries: mark task as blocked, report to user
 
-After each agent completes, the controller verifies:
+4. **Handle Deviations** — Process the agent's deviation report per the Deviation Rules (see Reference section):
 
-1. **Files match plan?** — Check that files listed in the task's `**Files:**` section were actually modified
-2. **Verification passes?** — Run the task's verification command if the agent didn't already
-3. **No unplanned files?** — Compare `git diff --name-only` against baseline snapshot (from prime step 5) + plan's file list. Only flag files that are NEW since baseline AND not in the current task's file list.
+   - **Auto-fix / Blocking**: Log to deviation tracker, continue
 
-If spec check fails:
-- Re-dispatch the same task to a new agent with the failure context
-- After 2 retries: mark task as blocked, report to user
+   **Architectural Deviation:** Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
 
-#### 2.4 Handle Deviations
+5. **Update Task Persistence** — After each task completes (or is blocked):
 
-Process the agent's deviation report per the Deviation Rules (see below):
+   1. Update `.beastmode/artifacts/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
+      - Set task status to `completed` or `blocked`
+      - Set `lastUpdated` timestamp
 
-- **Auto-fix / Blocking**: Log to deviation tracker, continue
+6. **Wave Checkpoint** — After ALL tasks in the current wave complete:
 
-##### 2.4.1 Architectural Deviation
-
-Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
-
-#### 2.5 Update Task Persistence
-
-After each task completes (or is blocked):
-
-1. Update `.beastmode/artifacts/plan/YYYY-MM-DD-<design>-<feature-slug>.tasks.json`:
-   - Set task status to `completed` or `blocked`
-   - Set `lastUpdated` timestamp
-
-#### 2.6 Wave Checkpoint
-
-After ALL tasks in the current wave complete:
-
-1. Run the project test suite (command from `.beastmode/context/implement/testing.md`)
-2. If tests fail:
-   - Identify which task likely caused the regression
-   - Re-dispatch that task with failure context
-   - After 2 retries: mark wave as blocked, report to user
-3. If tests pass: proceed to next wave
+   1. Run the project test suite (command from `.beastmode/context/implement/testing.md`)
+   2. If tests fail:
+      - Identify which task likely caused the regression
+      - Re-dispatch that task with failure context
+      - After 2 retries: mark wave as blocked, report to user
+   3. If tests pass: proceed to next wave
 
 ### 3. Blocked Task Resolution
 
@@ -338,9 +331,11 @@ STOP. No additional output.
 - Auto-fix and Blocking deviations: agents handle autonomously
 - Architectural deviations: agents STOP, controller escalates to user
 - All deviations tracked in deviation log for checkpoint
-- See the Deviation Rules below for full taxonomy
+- See the Deviation Rules in Reference section for full taxonomy
 
-## Deviation Rules
+## Reference
+
+### Deviation Rules
 
 Deviations from the plan are normal. Classify and handle them systematically.
 
@@ -420,7 +415,7 @@ Accumulated during execution, saved at checkpoint:
 
 If no deviations: `## Deviations\n\nNone — plan executed exactly as written.`
 
-## Task Format
+### Task Format
 
 > Used by /implement's Decompose step to create detailed task breakdowns from feature plans.
 
@@ -483,9 +478,7 @@ No commit needed — unified commit at /release.
 - `Depends on` creates ordering within a wave
 - Default wave is 1 if omitted
 
-#### Parallel-Safe Flag
-
-After all tasks are written, /implement's Decompose step analyzes file overlap per wave and may add:
+**Parallel-Safe Flag** — After all tasks are written, /implement's Decompose step analyzes file overlap per wave and may add:
 
 ```
 **Parallel-safe:** true
