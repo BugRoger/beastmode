@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: 4f888c
+slug: hitl-config-seed
 epic: hitl-config-seed
 ---
 
