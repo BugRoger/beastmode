@@ -381,7 +381,7 @@ STOP. No additional output.
 
 - Spawn ONE agent per task (never parallel implementer agents on the same wave — file conflicts)
 - Controller stays in the working directory — agents inherit it
-- Agents commit per task on the current branch — never push or switch branches
+- Agents commit per task on the impl branch (`feature/<slug>/<feature-name>`) only — never push, switch branches, or commit to the worktree branch
 - Agents must NOT read the plan file — controller provides task text
 - Agents must NOT modify files outside their task's file list
 - If an agent returns BLOCKED, controller assesses and either re-dispatches or escalates to user
