@@ -1,6 +1,7 @@
-import { describe, test, expect } from "bun:test";
-import { existsSync, readFileSync } from "fs";
+import { describe, test, expect, beforeEach, afterEach, it } from "bun:test";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { resolve } from "path";
+import { list } from "../manifest-store.js";
 
 const PHASE_TS_PATH = resolve(import.meta.dir, "../commands/phase.ts");
 const phaseSource = readFileSync(PHASE_TS_PATH, "utf-8");
@@ -119,5 +120,51 @@ describe("phase command is simplified", () => {
     const matches = phaseSource.match(/runInteractive\(/g);
     expect(matches).not.toBeNull();
     expect(matches!.length).toBe(1);
+  });
+});
+
+describe("manifest list() FIFO ordering", () => {
+  const FIFO_ROOT = resolve(import.meta.dir, "../../.test-fifo-tmp");
+
+  beforeEach(() => {
+    rmSync(FIFO_ROOT, { recursive: true, force: true });
+    mkdirSync(resolve(FIFO_ROOT, ".beastmode", "state"), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(FIFO_ROOT, { recursive: true, force: true });
+  });
+
+  it("returns manifests sorted by filename (oldest first)", () => {
+    const stateDir = resolve(FIFO_ROOT, ".beastmode", "state");
+
+    // Write newer manifest first (filesystem order would keep this first)
+    writeFileSync(
+      resolve(stateDir, "2026-01-15-newer-epic.manifest.json"),
+      JSON.stringify({
+        slug: "newer-epic",
+        phase: "release",
+        features: [],
+        artifacts: {},
+        lastUpdated: "2026-01-15T00:00:00Z",
+      }),
+    );
+
+    // Write older manifest second
+    writeFileSync(
+      resolve(stateDir, "2026-01-01-older-epic.manifest.json"),
+      JSON.stringify({
+        slug: "older-epic",
+        phase: "release",
+        features: [],
+        artifacts: {},
+        lastUpdated: "2026-01-01T00:00:00Z",
+      }),
+    );
+
+    const manifests = list(FIFO_ROOT);
+    expect(manifests).toHaveLength(2);
+    expect(manifests[0].slug).toBe("older-epic");
+    expect(manifests[1].slug).toBe("newer-epic");
   });
 });

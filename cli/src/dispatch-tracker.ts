@@ -89,6 +89,32 @@ export class DispatchTracker {
     return false;
   }
 
+  /**
+   * Check if ANY active session or reservation is for the release phase.
+   * Used by the watch loop to serialize releases — only one at a time.
+   */
+  hasAnyReleaseSession(): boolean {
+    for (const key of this.reserved) {
+      if (key.endsWith(":release")) return true;
+    }
+    for (const s of this.sessions.values()) {
+      if (s.phase === "release") return true;
+    }
+    return false;
+  }
+
+  /**
+   * Check if any active session is running a release phase.
+   * Used for release serialization — only one release at a time.
+   * Returns the epic slug of the blocking release, or null if none.
+   */
+  getActiveReleaseSlug(): string | null {
+    for (const s of this.sessions.values()) {
+      if (s.phase === 'release') return s.epicSlug;
+    }
+    return null;
+  }
+
   /** Number of active sessions. */
   get size(): number {
     return this.sessions.size;

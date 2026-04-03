@@ -141,6 +141,59 @@ describe("DispatchTracker", () => {
     expect(tracker.hasPhaseSession("e1", "plan")).toBe(true);
     expect(tracker.hasPhaseSession("e1", "implement")).toBe(false);
   });
+
+  it("hasAnyReleaseSession returns false when no release sessions", () => {
+    const tracker = new DispatchTracker();
+    tracker.add({
+      id: "s1",
+      epicSlug: "e1",
+      phase: "plan",
+      worktreeSlug: "e1-plan",
+      abortController: new AbortController(),
+      promise: Promise.resolve({ success: true, exitCode: 0, durationMs: 0 }),
+      startedAt: Date.now(),
+    });
+
+    expect(tracker.hasAnyReleaseSession()).toBe(false);
+  });
+
+  it("hasAnyReleaseSession returns true when a release session exists", () => {
+    const tracker = new DispatchTracker();
+    tracker.add({
+      id: "s1",
+      epicSlug: "e1",
+      phase: "release",
+      worktreeSlug: "e1-release",
+      abortController: new AbortController(),
+      promise: Promise.resolve({ success: true, exitCode: 0, durationMs: 0 }),
+      startedAt: Date.now(),
+    });
+
+    expect(tracker.hasAnyReleaseSession()).toBe(true);
+  });
+
+  it("hasAnyReleaseSession returns true when a release reservation exists", () => {
+    const tracker = new DispatchTracker();
+    tracker.reserve("e1", "release");
+
+    expect(tracker.hasAnyReleaseSession()).toBe(true);
+  });
+
+  it("hasAnyReleaseSession returns false after release session removed", () => {
+    const tracker = new DispatchTracker();
+    tracker.add({
+      id: "s1",
+      epicSlug: "e1",
+      phase: "release",
+      worktreeSlug: "e1-release",
+      abortController: new AbortController(),
+      promise: Promise.resolve({ success: true, exitCode: 0, durationMs: 0 }),
+      startedAt: Date.now(),
+    });
+
+    tracker.remove("s1");
+    expect(tracker.hasAnyReleaseSession()).toBe(false);
+  });
 });
 
 // --- WatchLoop tests ---
@@ -820,6 +873,212 @@ describe("WatchLoop", () => {
     expect(dispatchCount).toBe(1);
     expect(loop.getTracker().size).toBe(0);
 
+    await loop.stop();
+  });
+
+  it("serializes release — only one epic releases at a time", async () => {
+    const dispatched: string[] = [];
+    const held: Array<{ waitingSlug: string; blockingSlug: string }> = [];
+    let scanCount = 0;
+
+    const epics: EnrichedManifest[] = [
+      {
+        slug: "epic-a",
+        manifestPath: "pipeline/epic-a.manifest.json",
+        phase: "validate",
+        nextAction: { phase: "release", args: ["epic-a"], type: "single" },
+        features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+      {
+        slug: "epic-b",
+        manifestPath: "pipeline/epic-b.manifest.json",
+        phase: "validate",
+        nextAction: { phase: "release", args: ["epic-b"], type: "single" },
+        features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+    ];
+
+    const deps = mockDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) return epics;
+        return epics.map((e) => ({ ...e, nextAction: null }));
+      },
+      sessionFactory: new SdkSessionFactory(async (opts) => {
+        dispatched.push(opts.epicSlug);
+        return {
+          id: `release-${opts.epicSlug}`,
+          worktreeSlug: `${opts.epicSlug}-release`,
+          // Long-running — simulates in-progress release
+          promise: new Promise(() => {}),
+        };
+      }),
+    });
+
+    const loop = new WatchLoop(
+      { intervalSeconds: 999, projectRoot: TEST_ROOT },
+      deps,
+    );
+    loop.on("release:held", (evt) => held.push(evt));
+    loop.setRunning(true);
+
+    await loop.tick();
+
+    // Only the first epic should dispatch
+    expect(dispatched).toEqual(["epic-a"]);
+    // The second epic should be held
+    expect(held).toHaveLength(1);
+    expect(held[0].waitingSlug).toBe("epic-b");
+    expect(held[0].blockingSlug).toBe("epic-a");
+
+    loop.setRunning(false);
+  });
+
+  it("releases next epic after current release completes", async () => {
+    const dispatched: string[] = [];
+    let scanCount = 0;
+    let resolveFirst: ((value: any) => void) | null = null;
+
+    const epics: EnrichedManifest[] = [
+      {
+        slug: "epic-a",
+        manifestPath: "pipeline/epic-a.manifest.json",
+        phase: "validate",
+        nextAction: { phase: "release", args: ["epic-a"], type: "single" },
+        features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+      {
+        slug: "epic-b",
+        manifestPath: "pipeline/epic-b.manifest.json",
+        phase: "validate",
+        nextAction: { phase: "release", args: ["epic-b"], type: "single" },
+        features: [{ slug: "f1", plan: "f1.md", status: "completed" }],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+    ];
+
+    const deps = mockDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) return epics;
+        // After first release completes, epic-a is done, only epic-b needs release
+        return [
+          { ...epics[0], nextAction: null },
+          epics[1],
+        ];
+      },
+      sessionFactory: new SdkSessionFactory(async (opts) => {
+        dispatched.push(opts.epicSlug);
+        if (opts.epicSlug === "epic-a") {
+          return {
+            id: `release-epic-a`,
+            worktreeSlug: `epic-a-release`,
+            promise: new Promise((resolve) => {
+              resolveFirst = resolve;
+            }),
+          };
+        }
+        return {
+          id: `release-epic-b`,
+          worktreeSlug: `epic-b-release`,
+          promise: Promise.resolve({
+            success: true,
+            exitCode: 0,
+            durationMs: 500,
+          }),
+        };
+      }),
+    });
+
+    const loop = new WatchLoop(
+      { intervalSeconds: 999, projectRoot: TEST_ROOT },
+      deps,
+    );
+    loop.setRunning(true);
+
+    // First tick: dispatches epic-a, holds epic-b
+    await loop.tick();
+    expect(dispatched).toEqual(["epic-a"]);
+
+    // Complete the first release — this triggers rescan of epic-a (no-op, done)
+    resolveFirst!({ success: true, exitCode: 0, durationMs: 1000 });
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Second tick picks up epic-b now that no release is active
+    await loop.tick();
+
+    // epic-b should now be dispatched
+    expect(dispatched).toContain("epic-b");
+
+    loop.setRunning(false);
+  });
+
+  it("non-release phases are not serialized", async () => {
+    const dispatched: string[] = [];
+    let scanCount = 0;
+
+    const epics: EnrichedManifest[] = [
+      {
+        slug: "epic-a",
+        manifestPath: "pipeline/epic-a.manifest.json",
+        phase: "design",
+        nextAction: { phase: "plan", args: ["epic-a"], type: "single" },
+        features: [],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+      {
+        slug: "epic-b",
+        manifestPath: "pipeline/epic-b.manifest.json",
+        phase: "design",
+        nextAction: { phase: "plan", args: ["epic-b"], type: "single" },
+        features: [],
+        artifacts: {},
+        lastUpdated: "2026-03-29T00:00:00Z",
+      },
+    ];
+
+    const deps = mockDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) return epics;
+        return epics.map((e) => ({ ...e, nextAction: null }));
+      },
+      sessionFactory: new SdkSessionFactory(async (opts) => {
+        dispatched.push(opts.epicSlug);
+        return {
+          id: `plan-${opts.epicSlug}`,
+          worktreeSlug: `${opts.epicSlug}-plan`,
+          promise: Promise.resolve({
+            success: true,
+            exitCode: 0,
+            durationMs: 500,
+          }),
+        };
+      }),
+    });
+
+    const loop = new WatchLoop(
+      { intervalSeconds: 999, projectRoot: TEST_ROOT },
+      deps,
+    );
+    loop.setRunning(true);
+
+    await loop.tick();
+
+    // Both plan phases should dispatch in parallel
+    expect(dispatched).toContain("epic-a");
+    expect(dispatched).toContain("epic-b");
+    expect(dispatched).toHaveLength(2);
+
+    await new Promise((r) => setTimeout(r, 50));
     await loop.stop();
   });
 });

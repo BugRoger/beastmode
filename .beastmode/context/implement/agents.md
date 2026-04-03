@@ -17,3 +17,4 @@
 - NEVER let two agents modify the same file simultaneously — race condition
 - Report results per-agent after completion — never merge silently
 - Same-wave tasks can run simultaneously if no shared files — wave-based parallelism
+- ALWAYS verify current file state before implementing a wave task — a parallel task may have already implemented shared prerequisites, reducing the remaining scope

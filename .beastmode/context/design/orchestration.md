@@ -9,7 +9,7 @@
 - ALWAYS auto-regress from validate to implement on failure via generic REGRESS event — replaces hardcoded VALIDATE_FAILED, no confirmation prompt in automated mode
 - ALWAYS use WatchLoop EventEmitter with typed events (`epic:start`, `epic:complete`, `epic:error`, `phase:start`, `phase:complete`, `scan`) for state communication — logger subscriber for headless mode, React hooks for dashboard, extensible for future consumers
 - ALWAYS externalize signal handling from WatchLoop — callers own SIGINT/SIGTERM and call `loop.stop()` for graceful shutdown
-- No concurrency cap — parallel epics, parallel features within epics, API rate limits are the natural governor
+- No concurrency cap except release phase — parallel epics, parallel features within epics, API rate limits are the natural governor; release phase is serialized to one-at-a-time to prevent merge conflicts on main
 - ALWAYS sync GitHub inside reconcileState() via syncGitHubForEpic() — single load-save cycle per epic, no TOCTOU window between reconciliation and sync; sync failures warn and continue without blocking the pipeline
 - ALWAYS use per-epic scoped logger instances via `createLogger(verbosity, epicSlug)` — system-level messages (startup, shutdown, strategy selection) use `beastmode` as slug prefix
 

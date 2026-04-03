@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.68.0 — Release Serialization (Apr 2026)
+
+- **Release gate** — Serializes release phase dispatch so only one epic releases at a time, preventing squash-merge conflicts on main; FIFO ordering by manifest creation date
+- **`release:held` event** — New typed WatchLoop EventEmitter event carrying waiting/blocking epic slugs, logged at info level for pipeline observability
+- **Dashboard queue indicator** — "Queued" badge on held epics with blocking epic tooltip, driven by `release:held` events
+
+---
+
 ### v0.67.0 — HITL Config Seed (Apr 2026)
 
 - **HITL config section** — Seeds `hitl:` into `.beastmode/config.yaml` for projects predating the HITL feature, making per-phase human-in-the-loop behavior visible and tunable

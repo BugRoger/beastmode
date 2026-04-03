@@ -175,6 +175,15 @@ export class WatchLoop extends EventEmitter {
   private async dispatchSingle(epic: EnrichedManifest): Promise<number> {
     const action = epic.nextAction!;
 
+    // Release serialization — only one release at a time across all epics
+    if (action.phase === 'release' && this.tracker.hasAnyReleaseSession()) {
+      const blockingSlug = this.tracker.getActiveReleaseSlug();
+      if (blockingSlug !== epic.slug) {
+        this.emitTyped('release:held', { waitingSlug: epic.slug, blockingSlug: blockingSlug ?? 'unknown' });
+        return 0;
+      }
+    }
+
     // Don't dispatch if the epic worktree is already in use by another phase
     if (this.tracker.hasPhaseSession(epic.slug, action.phase)) return 0;
     if (this.tracker.hasEpicWorktreeSession(epic.slug)) return 0;
@@ -332,7 +341,6 @@ export class WatchLoop extends EventEmitter {
           phase: session.phase,
           success: result.success,
           durationMs: result.durationMs,
-          costUsd: result.costUsd,
         });
 
         // Create phase tag for regression support (mirrors post-dispatch in CLI path)
@@ -421,6 +429,10 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     child.log(
       `${status} (${(durationMs / 1000).toFixed(0)}s)`,
     );
+  });
+
+  loop.on('release:held', ({ waitingSlug, blockingSlug }) => {
+    logger.child({ epic: waitingSlug }).log(`release held: ${waitingSlug} waiting for ${blockingSlug}`);
   });
 
   loop.on('error', ({ epicSlug, message }) => {

@@ -53,3 +53,9 @@
 - NEVER replace `beastmode watch` — kept as headless fallback for CI/automation
 - NEVER replace `beastmode status` or `status --watch` — kept for quick passive viewing
 - Dashboard is an additive capability, not a replacement for existing commands
+
+## Release Queue Indicator
+- Epics held for release serialization show a "Queued" badge with blocking epic context in the EpicList view
+- Data sourced from `release:held` WatchLoop EventEmitter events — no manifest-level state, purely event-driven
+- Indicator clears on `session-started` or next `scan-complete` for the held epic
+- Only displayed for automated watch loop dispatch — manual releases are not tracked

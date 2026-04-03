@@ -93,6 +93,12 @@ export interface EpicCancelledEvent {
   epicSlug: string;
 }
 
+/** Payload for 'release:held' event — emitted when release serialization blocks dispatch. */
+export interface ReleaseHeldEvent {
+  waitingSlug: string;
+  blockingSlug: string;
+}
+
 /** Typed event map for WatchLoop. */
 export interface WatchLoopEventMap {
   'session-started': [SessionStartedEvent];
@@ -101,6 +107,7 @@ export interface WatchLoopEventMap {
   'error': [WatchErrorEvent];
   'epic-blocked': [{ epicSlug: string; gate: string; reason: string }];
   'epic-cancelled': [EpicCancelledEvent];
+  'release:held': [ReleaseHeldEvent];
   /** Emitted when the loop starts. */
   'started': [{ version: string; pid: number; intervalSeconds: number }];
   /** Emitted when the loop stops. */

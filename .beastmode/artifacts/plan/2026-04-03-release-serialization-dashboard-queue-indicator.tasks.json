@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-release-serialization-dashboard-queue-indicator.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add heldEpics state and release:held subscription to App.tsx", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add queued indicator to EpicTable.tsx", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add held event to DashboardEvent type and activity log", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T00:01:00Z"
+}

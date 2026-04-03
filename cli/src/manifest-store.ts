@@ -216,7 +216,7 @@ export function list(projectRoot: string): PipelineManifest[] {
   const dir = pipelineDir(projectRoot);
   if (!existsSync(dir)) return [];
 
-  const files = readdirSync(dir).filter((f) => f.endsWith(".manifest.json"));
+  const files = readdirSync(dir).filter((f) => f.endsWith(".manifest.json")).sort();
   const manifests: PipelineManifest[] = [];
 
   for (const file of files) {

@@ -294,11 +294,18 @@ describe("WatchLoop event emission", () => {
       phase: "design",
       success: true,
       durationMs: 5000,
+      costUsd: 0.42,
     });
     expect(logged.some((m) => m.includes("completed"))).toBe(true);
 
     loop.emit("error", { epicSlug: "my-epic", message: "something broke" });
     expect(errors.some((m) => m.includes("something broke"))).toBe(true);
+
+    loop.emit("release:held", {
+      waitingSlug: "waiting-epic",
+      blockingSlug: "blocking-epic",
+    });
+    expect(logged.some((m) => m.includes("release held") && m.includes("waiting-epic") && m.includes("blocking-epic"))).toBe(true);
   });
 
   test("stop emits stopped event", async () => {
@@ -312,5 +319,43 @@ describe("WatchLoop event emission", () => {
     await loop.stop();
 
     expect(events.length).toBe(1);
+  });
+
+  test("emits release:held when release serialization blocks dispatch", async () => {
+    const epicA = makeEpic({
+      slug: "epic-a",
+      phase: "release",
+      nextAction: { phase: "release", args: ["epic-a"], type: "single" as const },
+    });
+    const epicB = makeEpic({
+      slug: "epic-b",
+      phase: "release",
+      nextAction: { phase: "release", args: ["epic-b"], type: "single" as const },
+    });
+
+    const deps = makeDeps({
+      scanEpics: async () => [epicA, epicB],
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-${opts.epicSlug}`,
+            worktreeSlug: opts.epicSlug,
+            promise: new Promise(() => {}), // Never resolves — keeps session active
+          };
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const held: Array<{ waitingSlug: string; blockingSlug: string }> = [];
+    loop.on("release:held", (payload) => held.push(payload));
+
+    await loop.tick();
+
+    expect(held.length).toBe(1);
+    expect(held[0].waitingSlug).toBe("epic-b");
+    expect(held[0].blockingSlug).toBe("epic-a");
   });
 });
