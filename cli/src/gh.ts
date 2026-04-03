@@ -212,6 +212,22 @@ export async function ghIssueReopen(
 }
 
 /**
+ * Post a comment on a GitHub issue.
+ */
+export async function ghIssueComment(
+  repo: string,
+  issueNumber: number,
+  body: string,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<boolean> {
+  const result = await gh(
+    ["issue", "comment", String(issueNumber), "--repo", repo, "--body", body],
+    { cwd: opts.cwd, logger: opts.logger },
+  );
+  return result !== undefined;
+}
+
+/**
  * Get an issue's open/closed state. Returns undefined on failure.
  */
 export async function ghIssueState(
@@ -259,6 +275,30 @@ export async function ghIssueLabels(
     { cwd: opts.cwd, logger: opts.logger },
   );
   return result?.map((l) => l.name);
+}
+
+/**
+ * List comments on a GitHub issue. Returns array of {body} or undefined.
+ */
+export async function ghIssueComments(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<Array<{ body: string }> | undefined> {
+  return ghJson<Array<{ body: string }>>(
+    [
+      "issue",
+      "view",
+      String(issueNumber),
+      "--repo",
+      repo,
+      "--json",
+      "comments",
+      "--jq",
+      ".comments",
+    ],
+    { cwd: opts.cwd, logger: opts.logger },
+  );
 }
 
 /**

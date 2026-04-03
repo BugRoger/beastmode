@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-epic-body-enrichment.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Extend EpicBodyInput with gitMetadata and render in formatEpicBody", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Add body-format unit tests for gitMetadata rendering", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Wire github-sync to resolve git metadata and pass to formatEpicBody", "wave": 2, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Add github-sync tests for git metadata enrichment", "wave": 2, "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T14:30:00Z"
+}

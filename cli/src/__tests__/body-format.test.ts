@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { PipelineManifest, ManifestFeature } from "../manifest-store";
-import { formatEpicBody, formatFeatureBody } from "../body-format";
+import { formatEpicBody, formatFeatureBody, formatClosingComment } from "../body-format";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},
@@ -257,6 +257,87 @@ describe("formatEpicBody", () => {
     });
     expect(body).not.toContain("## Artifacts");
   });
+
+  // --- gitMetadata ---
+
+  test("renders git metadata section with branch", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: { branch: "feature/my-branch" },
+    });
+    expect(body).toContain("## Git");
+    expect(body).toContain("**Branch:** `feature/my-branch`");
+  });
+
+  test("renders git metadata with phase tags", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        phaseTags: {
+          design: "beastmode/my-epic/design",
+          plan: "beastmode/my-epic/plan",
+        },
+      },
+    });
+    expect(body).toContain("**Tags:** `beastmode/my-epic/design`, `beastmode/my-epic/plan`");
+  });
+
+  test("renders git metadata with version", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: { version: "1.2.3" },
+    });
+    expect(body).toContain("**Version:** 1.2.3");
+  });
+
+  test("renders git metadata with merge commit", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        mergeCommit: { sha: "abc1234def5678", url: "https://github.com/org/repo/commit/abc1234def5678" },
+      },
+    });
+    expect(body).toContain("**Merge Commit:** [abc1234](https://github.com/org/repo/commit/abc1234def5678)");
+  });
+
+  test("renders full git metadata section with all fields", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/epic-branch",
+        phaseTags: { design: "beastmode/epic/design" },
+        version: "2.0.0",
+        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
+      },
+    });
+    expect(body).toContain("## Git");
+    expect(body).toContain("**Branch:** `feature/epic-branch`");
+    expect(body).toContain("**Tags:** `beastmode/epic/design`");
+    expect(body).toContain("**Version:** 2.0.0");
+    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
+  });
+
+  test("omits git metadata section when gitMetadata absent", () => {
+    const body = formatEpicBody(makeManifest());
+    expect(body).not.toContain("## Git");
+  });
+
+  test("omits git metadata section when gitMetadata has no populated fields", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {},
+    });
+    expect(body).not.toContain("## Git");
+  });
+
+  test("omits tags line when phaseTags is empty object", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: { branch: "main", phaseTags: {} },
+    });
+    expect(body).toContain("**Branch:** `main`");
+    expect(body).not.toContain("**Tags:**");
+  });
 });
 
 // --- formatFeatureBody ---
@@ -330,5 +411,51 @@ describe("formatFeatureBody", () => {
     const epicIdx = body.indexOf("**Epic:** #42");
     expect(storyIdx).toBeGreaterThan(-1);
     expect(epicIdx).toBeGreaterThan(storyIdx);
+  });
+});
+
+// --- formatClosingComment ---
+
+describe("formatClosingComment", () => {
+  test("renders release header with version", () => {
+    const comment = formatClosingComment({
+      version: "1.2.0",
+      releaseTag: "v1.2.0",
+      mergeCommit: "abc1234567890",
+      repo: "org/repo",
+    });
+    expect(comment).toContain("## Released: 1.2.0");
+  });
+
+  test("renders tag link", () => {
+    const comment = formatClosingComment({
+      version: "1.2.0",
+      releaseTag: "v1.2.0",
+      mergeCommit: "abc1234567890",
+      repo: "org/repo",
+    });
+    expect(comment).toContain("[`v1.2.0`](https://github.com/org/repo/tree/v1.2.0)");
+  });
+
+  test("renders merge commit link with short SHA", () => {
+    const comment = formatClosingComment({
+      version: "1.2.0",
+      releaseTag: "v1.2.0",
+      mergeCommit: "abc1234567890",
+      repo: "org/repo",
+    });
+    expect(comment).toContain("[`abc1234`](https://github.com/org/repo/commit/abc1234567890)");
+  });
+
+  test("renders all fields together", () => {
+    const comment = formatClosingComment({
+      version: "0.65.0",
+      releaseTag: "v0.65.0",
+      mergeCommit: "deadbeef1234567",
+      repo: "org/repo",
+    });
+    expect(comment).toContain("## Released: 0.65.0");
+    expect(comment).toContain("[`v0.65.0`](https://github.com/org/repo/tree/v0.65.0)");
+    expect(comment).toContain("[`deadbee`](https://github.com/org/repo/commit/deadbeef1234567)");
   });
 });

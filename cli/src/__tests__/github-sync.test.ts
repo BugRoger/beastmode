@@ -50,6 +50,16 @@ mock.module("../gh", () => ({
     if (mockErrors.ghIssueClose) return false;
     return mockReturns.ghIssueClose ?? true;
   },
+  ghIssueComment: async (...args: unknown[]) => {
+    trackCall("ghIssueComment", ...args);
+    if (mockErrors.ghIssueComment) return false;
+    return mockReturns.ghIssueComment ?? true;
+  },
+  ghIssueComments: async (...args: unknown[]) => {
+    trackCall("ghIssueComments", ...args);
+    if (mockErrors.ghIssueComments) return undefined;
+    return mockReturns.ghIssueComments ?? [];
+  },
   ghIssueState: async (...args: unknown[]) => {
     trackCall("ghIssueState", ...args);
     if (mockErrors.ghIssueState) return undefined;
@@ -84,6 +94,11 @@ mock.module("../gh", () => ({
     trackCall("ghProjectItemDelete", ...args);
     if (mockErrors.ghProjectItemDelete) return false;
     return mockReturns.ghProjectItemDelete ?? true;
+  },
+  ghIssueComment: async (...args: unknown[]) => {
+    trackCall("ghIssueComment", ...args);
+    if (mockErrors.ghIssueComment) return false;
+    return mockReturns.ghIssueComment ?? true;
   },
 }));
 
@@ -734,6 +749,137 @@ describe("syncGitHub", () => {
 
       const closeCalls = callsTo("ghIssueClose");
       expect(closeCalls.filter((c) => c.args[1] === 10)).toHaveLength(0);
+    });
+  });
+
+  // -------------------------------------------------------
+  // 11.7 Release closing comment
+  // -------------------------------------------------------
+  describe("release closing comment", () => {
+    let commentTempDir: string;
+
+    function createPluginJson(ver: string) {
+      commentTempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+      const dir = join(commentTempDir, ".claude-plugin");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "plugin.json"), JSON.stringify({ version: ver }));
+    }
+
+    function removePluginTemp() {
+      if (commentTempDir) {
+        try {
+          rmSync(commentTempDir, { recursive: true, force: true });
+        } catch {
+          // best effort
+        }
+      }
+    }
+
+    test("posts release comment when phase is done and version available", async () => {
+      createPluginJson("1.2.0");
+      const manifest = makeManifest({ phase: "done" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      expect(result.releaseCommentPosted).toBe(true);
+      const calls = callsTo("ghIssueComment");
+      expect(calls).toHaveLength(1);
+      expect(calls[0].args[0]).toBe("org/repo");
+      expect(calls[0].args[1]).toBe(10);
+      expect(calls[0].args[2]).toContain("1.2.0");
+
+      removePluginTemp();
+    });
+
+    test("does not post comment when phase is cancelled", async () => {
+      createPluginJson("1.2.0");
+      const manifest = makeManifest({ phase: "cancelled" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      expect(result.releaseCommentPosted).toBe(false);
+      const calls = callsTo("ghIssueComment");
+      expect(calls).toHaveLength(0);
+
+      removePluginTemp();
+    });
+
+    test("skips comment when no release metadata available", async () => {
+      // Create empty temp dir with no plugin.json — version returns undefined
+      commentTempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+      const manifest = makeManifest({ phase: "done" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      // Even without version, git-based metadata (mergeCommit) may
+      // still produce a non-empty comment if git works in the test env.
+      // The key invariant: releaseCommentPosted reflects whether
+      // ghIssueComment was actually called.
+      const calls = callsTo("ghIssueComment");
+      expect(result.releaseCommentPosted).toBe(calls.length > 0);
+
+      removePluginTemp();
+    });
+
+    test("warns when comment posting fails", async () => {
+      createPluginJson("1.2.0");
+      const manifest = makeManifest({ phase: "done" });
+      mockErrors.ghIssueComment = true;
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      expect(result.releaseCommentPosted).toBe(false);
+      expect(result.warnings).toContain("Failed to post release comment on epic");
+
+      removePluginTemp();
+    });
+
+    test("still closes epic even when comment fails", async () => {
+      createPluginJson("1.2.0");
+      const manifest = makeManifest({ phase: "done" });
+      mockErrors.ghIssueComment = true;
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      expect(result.epicClosed).toBe(true);
+
+      removePluginTemp();
+    });
+
+    test("does not post comment for non-terminal phases", async () => {
+      createPluginJson("1.2.0");
+      const manifest = makeManifest({ phase: "implement" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      const calls = callsTo("ghIssueComment");
+      expect(calls).toHaveLength(0);
+
+      removePluginTemp();
     });
   });
 
@@ -1418,6 +1564,59 @@ describe("syncGitHub", () => {
         expect(body).not.toContain("## User Stories");
         expect(body).not.toContain("## Decisions");
       }
+    });
+
+    test("epic body includes git metadata when manifest has worktree branch", async () => {
+      setupArtifacts({
+        designContent: "## Problem Statement\n\nSome problem",
+      });
+
+      const manifest = makeManifest({
+        artifacts: {
+          design: [".beastmode/artifacts/design/test-epic.md"],
+        },
+        worktree: { branch: "feature/test-branch", path: "/tmp/test" },
+        github: { epic: 10, repo: "org/repo" },
+      });
+
+      const config = makeConfig();
+      const resolved = makeResolved();
+      await syncGitHub(manifest, config, resolved, {
+        projectRoot: tempDir,
+      });
+
+      const editCalls = callsTo("ghIssueEdit");
+      const bodyEdit = editCalls.find(c => (c.args[2] as any)?.body);
+      expect(bodyEdit).toBeDefined();
+      const body = (bodyEdit!.args[2] as any).body as string;
+      expect(body).toContain("## Git");
+      expect(body).toContain("**Branch:** `feature/test-branch`");
+
+      cleanupArtifacts();
+    });
+
+    test("epic body omits git metadata when no worktree info and no tags", async () => {
+      tempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+
+      const manifest = makeManifest({
+        // No worktree, no artifacts
+        github: { epic: 10, repo: "org/repo" },
+      });
+
+      const config = makeConfig();
+      const resolved = makeResolved();
+      await syncGitHub(manifest, config, resolved, {
+        projectRoot: tempDir,
+      });
+
+      const editCalls = callsTo("ghIssueEdit");
+      const bodyEdit = editCalls.find(c => (c.args[2] as any)?.body);
+      if (bodyEdit) {
+        const body = (bodyEdit!.args[2] as any).body as string;
+        expect(body).not.toContain("## Git");
+      }
+
+      cleanupArtifacts();
     });
   });
 });

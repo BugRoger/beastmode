@@ -15,7 +15,7 @@ import { discoverGitHub } from "./github-discovery";
 import type { Logger } from "./logger";
 import { loadConfig } from "./config";
 import * as store from "./manifest-store";
-import { formatEpicBody, formatFeatureBody, type EpicBodyInput } from "./body-format";
+import { formatEpicBody, formatFeatureBody, formatClosingComment, type EpicBodyInput } from "./body-format";
 import { extractSection, extractSections } from "./section-extractor.js";
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
@@ -24,6 +24,8 @@ import {
   ghIssueEdit,
   ghIssueClose,
   ghIssueReopen,
+  ghIssueComment,
+  ghIssueComments,
   ghIssueState,
   ghIssueLabels,
   ghProjectItemAdd,
@@ -57,6 +59,8 @@ export interface SyncResult {
   bodiesUpdated: number;
   projectUpdated: boolean;
   epicClosed: boolean;
+  releaseCommentPosted: boolean;
+  commentsPosted: number;
   warnings: string[];
   /** Mutations to apply to the manifest after sync. */
   mutations: SyncMutation[];
@@ -167,6 +171,80 @@ function resolveArtifactLinks(
 }
 
 /**
+ * Resolve git metadata for traceability.
+ * Branch from manifest, phase tags from git, version from manifest/plugin.
+ * Only resolves tags when a worktree branch is present — tags without branch
+ * context are not meaningful traceability metadata.
+ */
+function resolveGitMetadata(
+  manifest: PipelineManifest,
+): EpicBodyInput["gitMetadata"] | undefined {
+  const meta: NonNullable<EpicBodyInput["gitMetadata"]> = {};
+
+  // Branch from worktree — gate all git lookups on worktree presence
+  if (manifest.worktree?.branch) {
+    meta.branch = manifest.worktree.branch;
+
+    // Phase tags from git
+    const tagPrefix = `beastmode/${manifest.slug}/`;
+    try {
+      const tagResult = Bun.spawnSync(["git", "tag", "-l", `${tagPrefix}*`]);
+      if (tagResult.exitCode === 0) {
+        const tags = tagResult.stdout.toString().trim().split("\n").filter(Boolean);
+        if (tags.length > 0) {
+          const phaseTags: Record<string, string> = {};
+          for (const tag of tags) {
+            const phase = tag.replace(tagPrefix, "");
+            if (phase) phaseTags[phase] = tag;
+          }
+          if (Object.keys(phaseTags).length > 0) {
+            meta.phaseTags = phaseTags;
+          }
+        }
+      }
+    } catch {
+      // Git not available — skip tags
+    }
+  }
+
+  return Object.keys(meta).length > 0 ? meta : undefined;
+}
+
+/** Read version from plugin.json — returns undefined if unavailable. */
+function readVersionFromPlugin(projectRoot?: string): string | undefined {
+  if (!projectRoot) return undefined;
+  try {
+    const pluginPath = resolve(projectRoot, ".claude-plugin", "plugin.json");
+    if (!existsSync(pluginPath)) return undefined;
+    const plugin = JSON.parse(readFileSync(pluginPath, "utf-8"));
+    return plugin.version || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Read the release tag for this epic — returns undefined if no tag exists. */
+function readReleaseTag(slug: string): string | undefined {
+  try {
+    const tagName = `beastmode/${slug}/release`;
+    const result = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/${tagName}`]);
+    return result.exitCode === 0 ? tagName : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Read the HEAD merge commit SHA — returns undefined if unavailable. */
+function readMergeCommit(): string | undefined {
+  try {
+    const result = Bun.spawnSync(["git", "rev-parse", "HEAD"]);
+    return result.exitCode === 0 ? result.stdout.toString().trim() || undefined : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Sync GitHub state to match the manifest. Stateless — reads manifest,
  * makes GitHub match. Returns SyncResult with mutations for the caller to apply.
  *
@@ -187,6 +265,7 @@ export async function syncGitHub(
     bodiesUpdated: 0,
     projectUpdated: false,
     epicClosed: false,
+    releaseCommentPosted: false,
     warnings: [],
     mutations: [],
   };
@@ -205,6 +284,7 @@ export async function syncGitHub(
     ? readPrdSections(manifest, opts.projectRoot)
     : undefined;
   const artifactLinks = resolveArtifactLinks(manifest, repo);
+  const gitMetadata = resolveGitMetadata(manifest);
 
   // --- Epic Sync ---
 
@@ -220,6 +300,8 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
+      gitMetadata,
+      repo,
     });
     epicNumber = await ghIssueCreate(
       repo,
@@ -253,6 +335,8 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
+      gitMetadata,
+      repo,
     });
     const epicBodyHash = hashBody(epicBody);
     const storedEpicHash = manifest.github?.bodyHash;
@@ -306,6 +390,28 @@ export async function syncGitHub(
 
   // --- Epic Close (if done or cancelled) ---
   if (manifest.phase === "done" || manifest.phase === "cancelled") {
+    // Post release closing comment on done epics (not cancelled)
+    if (manifest.phase === "done") {
+      const version = readVersionFromPlugin(opts.projectRoot);
+      const releaseTag = readReleaseTag(manifest.slug);
+      const mergeCommitSha = readMergeCommit();
+
+      if (releaseTag && mergeCommitSha) {
+        const commentBody = formatClosingComment({
+          version: version ?? "unreleased",
+          releaseTag,
+          mergeCommit: mergeCommitSha,
+          repo,
+        });
+        const commented = await ghIssueComment(repo, epicNumber, commentBody, { logger: opts.logger });
+        if (commented) {
+          result.releaseCommentPosted = true;
+        } else {
+          result.warnings.push("Failed to post release comment on epic");
+        }
+      }
+    }
+
     const closed = await ghIssueClose(repo, epicNumber, { logger: opts.logger });
     if (closed) {
       result.epicClosed = true;

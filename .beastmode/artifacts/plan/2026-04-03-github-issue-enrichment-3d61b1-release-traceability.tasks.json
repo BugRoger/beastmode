@@ -1,0 +1,11 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-release-traceability.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add ghIssueComment + ghIssueComments to gh.ts", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Extend EpicBodyInput with gitMetadata + render Git section", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Add body-format unit tests for git section + closing comment", "wave": 1, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Wire git metadata and closing comment in github-sync.ts", "wave": 2, "status": "pending"},
+    {"id": 4, "subject": "Task 4: Add github-sync integration tests for release traceability", "wave": 2, "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}
