@@ -93,6 +93,11 @@ The controller maintains per-task escalation state:
 
 When a task begins, reset both to zero. The tier index selects the model passed to the Agent tool's `model` parameter for implementer dispatch. Reviewer agents (spec-reviewer, quality-reviewer) do not receive a model parameter — they use the default model.
 
+The following statuses do NOT trigger model escalation:
+- **NEEDS_CONTEXT** — a context problem, not a model capability limitation. Provide context and re-dispatch at the same tier.
+- **Spec review FAIL** — a requirement misunderstanding, not a model capability limitation. Re-dispatch implementer at the same tier.
+- **Quality review NOT_APPROVED with only Minor issues** — treated as approved. No retry needed.
+
 ### 0. Write Plan
 
 Before dispatching, produce a detailed `.tasks.md` document from the feature plan. This is the inspection point between "plan says what to build" and "agent writes code."
