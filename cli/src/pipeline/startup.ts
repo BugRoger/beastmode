@@ -8,12 +8,12 @@
 import { watch } from "node:fs";
 import { resolve } from "node:path";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import type { CmuxClientLike, CmuxWorkspace } from "./cmux-types.js";
-import type { DispatchedSession, SessionResult } from "./watch-types.js";
-import { DispatchTracker } from "./dispatch-tracker.js";
-import { createLogger } from "./logger.js";
-import type { Logger } from "./logger.js";
-import * as store from "./manifest-store.js";
+import type { CmuxClientLike, CmuxWorkspace } from "../dispatch/cmux.js";
+import type { DispatchedSession, SessionResult } from "../dispatch/types.js";
+import { DispatchTracker } from "../dispatch/tracker.js";
+import { createLogger } from "../logger.js";
+import type { Logger } from "../logger.js";
+import * as store from "../manifest/store.js";
 
 /** Result of a reconciliation pass. */
 export interface ReconcileResult {

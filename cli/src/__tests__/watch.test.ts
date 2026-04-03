@@ -3,10 +3,10 @@ import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node
 import { resolve } from "node:path";
 import { WatchLoop } from "../watch.js";
 import type { WatchDeps } from "../watch.js";
-import type { EnrichedManifest } from "../manifest-store.js";
-import type { SessionResult } from "../watch-types.js";
-import { SdkSessionFactory } from "../session.js";
-import { DispatchTracker } from "../dispatch-tracker.js";
+import type { EnrichedManifest } from "../manifest/store.js";
+import type { SessionResult } from "../dispatch/types.js";
+import { SdkSessionFactory } from "../dispatch/factory.js";
+import { DispatchTracker } from "../dispatch/tracker.js";
 import { acquireLock, releaseLock, readLockfile } from "../lockfile.js";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-watch-tmp");

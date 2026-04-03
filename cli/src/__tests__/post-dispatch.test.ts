@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { runPostDispatch } from "../post-dispatch";
-import type { PipelineManifest } from "../manifest";
+import type { PipelineManifest } from "../manifest/pure";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-post-dispatch");
 const WORKTREE = resolve(TEST_ROOT, "worktree");

@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { buildPreToolUseHook, getPhaseHitlProse } from "../hitl-prompt";
+import { buildPreToolUseHook, getPhaseHitlProse } from "../hooks/pre-tool-use";
 import type { HitlConfig } from "../config";
-import type { PromptHookEntry } from "../hitl-prompt";
+import type { PromptHookEntry } from "../hooks/pre-tool-use";
 
 describe("buildPreToolUseHook", () => {
   test("returns entry targeting AskUserQuestion", () => {

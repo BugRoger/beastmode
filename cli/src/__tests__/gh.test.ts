@@ -16,7 +16,7 @@ import { describe, test, expect, mock, beforeEach } from "bun:test";
 // ---------------------------------------------------------------------------
 describe("gh() base function", () => {
   test("returns GhResult on successful command", async () => {
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     const result = await gh(["--version"]);
     // gh --version should succeed if gh is installed
     if (result) {
@@ -29,14 +29,14 @@ describe("gh() base function", () => {
   });
 
   test("returns undefined on non-zero exit code", async () => {
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     // Pass an invalid subcommand to force a non-zero exit
     const result = await gh(["nonexistent-subcommand-xyz-12345"]);
     expect(result).toBeUndefined();
   });
 
   test("never throws — returns undefined on failure", async () => {
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     // Even a completely broken invocation should not throw
     let threw = false;
     try {
@@ -48,7 +48,7 @@ describe("gh() base function", () => {
   });
 
   test("passes cwd option through to spawn", async () => {
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     // Using /tmp as cwd should still let gh --version work
     const result = await gh(["--version"], { cwd: "/tmp" });
     if (result) {
@@ -57,7 +57,7 @@ describe("gh() base function", () => {
   });
 
   test("trims stdout and stderr in result", async () => {
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     const result = await gh(["--version"]);
     if (result) {
       // Trimmed means no leading/trailing whitespace
@@ -75,7 +75,7 @@ describe("ghJson()", () => {
 
   beforeEach(() => {
     mockGh = mock();
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghJson: async <T = unknown>(
         args: string[],
@@ -102,7 +102,7 @@ describe("ghJson()", () => {
       }),
     );
 
-    const { ghJson } = await import("../gh");
+    const { ghJson } = await import("../github/cli");
     const result = await ghJson<{ key: string; count: number }>(["api", "test"]);
     expect(result).toEqual({ key: "value", count: 42 });
   });
@@ -110,7 +110,7 @@ describe("ghJson()", () => {
   test("returns undefined when gh() returns undefined", async () => {
     mockGh.mockReturnValue(Promise.resolve(undefined));
 
-    const { ghJson } = await import("../gh");
+    const { ghJson } = await import("../github/cli");
     const result = await ghJson(["api", "test"]);
     expect(result).toBeUndefined();
   });
@@ -124,7 +124,7 @@ describe("ghJson()", () => {
       }),
     );
 
-    const { ghJson } = await import("../gh");
+    const { ghJson } = await import("../github/cli");
     const result = await ghJson(["api", "test"]);
     expect(result).toBeUndefined();
   });
@@ -138,7 +138,7 @@ describe("ghJson()", () => {
       }),
     );
 
-    const { ghJson } = await import("../gh");
+    const { ghJson } = await import("../github/cli");
     let threw = false;
     try {
       await ghJson(["api", "test"]);
@@ -157,7 +157,7 @@ describe("ghGraphQL()", () => {
 
   beforeEach(() => {
     mockGh = mock();
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghGraphQL: async <T = unknown>(
         query: string,
@@ -194,7 +194,7 @@ describe("ghGraphQL()", () => {
       }),
     );
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     const result = await ghGraphQL<{ viewer: { login: string } }>(
       "query { viewer { login } }",
     );
@@ -210,7 +210,7 @@ describe("ghGraphQL()", () => {
       }),
     );
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     await ghGraphQL("query { test }", { owner: "org", repo: "name" });
 
     const calledArgs = mockGh.mock.calls[0][0] as string[];
@@ -233,7 +233,7 @@ describe("ghGraphQL()", () => {
       }),
     );
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     await ghGraphQL("query { test }", { number: 42 });
 
     const calledArgs = mockGh.mock.calls[0][0] as string[];
@@ -245,7 +245,7 @@ describe("ghGraphQL()", () => {
   test("returns undefined when gh() fails", async () => {
     mockGh.mockReturnValue(Promise.resolve(undefined));
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     const result = await ghGraphQL("query { viewer { login } }");
     expect(result).toBeUndefined();
   });
@@ -259,7 +259,7 @@ describe("ghGraphQL()", () => {
       }),
     );
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     const result = await ghGraphQL("query { test }");
     expect(result).toBeUndefined();
   });
@@ -305,7 +305,7 @@ describe("ghIssueCreate()", () => {
 
   beforeEach(() => {
     mockGh = mock();
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghIssueCreate: async (
         repo: string,
@@ -338,7 +338,7 @@ describe("ghIssueCreate()", () => {
       }),
     );
 
-    const { ghIssueCreate } = await import("../gh");
+    const { ghIssueCreate } = await import("../github/cli");
     const num = await ghIssueCreate("org/repo", "Test title", "Test body");
     expect(num).toBe(42);
   });
@@ -352,7 +352,7 @@ describe("ghIssueCreate()", () => {
       }),
     );
 
-    const { ghIssueCreate } = await import("../gh");
+    const { ghIssueCreate } = await import("../github/cli");
     await ghIssueCreate("org/repo", "Test", "Body", ["bug", "urgent"]);
 
     const calledArgs = mockGh.mock.calls[0][0] as string[];
@@ -368,7 +368,7 @@ describe("ghIssueCreate()", () => {
   test("returns undefined when gh() fails", async () => {
     mockGh.mockReturnValue(Promise.resolve(undefined));
 
-    const { ghIssueCreate } = await import("../gh");
+    const { ghIssueCreate } = await import("../github/cli");
     const num = await ghIssueCreate("org/repo", "Test", "Body");
     expect(num).toBeUndefined();
   });
@@ -475,7 +475,7 @@ describe("ghIssueClose()", () => {
 
   beforeEach(() => {
     mockGh = mock();
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghIssueClose: async (
         repo: string,
@@ -496,7 +496,7 @@ describe("ghIssueClose()", () => {
       Promise.resolve({ stdout: "", stderr: "", exitCode: 0 }),
     );
 
-    const { ghIssueClose } = await import("../gh");
+    const { ghIssueClose } = await import("../github/cli");
     const result = await ghIssueClose("org/repo", 42);
     expect(result).toBe(true);
   });
@@ -504,7 +504,7 @@ describe("ghIssueClose()", () => {
   test("returns false when gh() fails", async () => {
     mockGh.mockReturnValue(Promise.resolve(undefined));
 
-    const { ghIssueClose } = await import("../gh");
+    const { ghIssueClose } = await import("../github/cli");
     const result = await ghIssueClose("org/repo", 42);
     expect(result).toBe(false);
   });
@@ -514,7 +514,7 @@ describe("ghIssueClose()", () => {
       Promise.resolve({ stdout: "", stderr: "", exitCode: 0 }),
     );
 
-    const { ghIssueClose } = await import("../gh");
+    const { ghIssueClose } = await import("../github/cli");
     await ghIssueClose("org/repo", 99);
 
     const calledArgs = mockGh.mock.calls[0][0] as string[];
@@ -590,7 +590,7 @@ describe("ghRepoDiscover()", () => {
   test("parses nameWithOwner from gh repo view", async () => {
     // Use the actual ghRepoDiscover function from the real module
     // (not the mocked version from other test suites)
-    const { gh } = await import("../gh");
+    const { gh } = await import("../github/cli");
     // Run from the project root to ensure git context is available
     const result = await gh([
       "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner",
@@ -713,7 +713,7 @@ describe("warn-and-continue: no function throws", () => {
 
   test("ghJson does not throw on rejection", async () => {
     mockGh.mockReturnValue(Promise.reject(new Error("spawn failed")));
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghJson: async <T = unknown>(
         args: string[],
@@ -729,7 +729,7 @@ describe("warn-and-continue: no function throws", () => {
       },
     }));
 
-    const { ghJson } = await import("../gh");
+    const { ghJson } = await import("../github/cli");
     let threw = false;
     try {
       await ghJson(["api", "test"]);
@@ -741,7 +741,7 @@ describe("warn-and-continue: no function throws", () => {
 
   test("ghGraphQL does not throw on rejection", async () => {
     mockGh.mockReturnValue(Promise.reject(new Error("network error")));
-    mock.module("../gh", () => ({
+    mock.module("../github/cli", () => ({
       gh: mockGh,
       ghGraphQL: async <T = unknown>(
         query: string,
@@ -760,7 +760,7 @@ describe("warn-and-continue: no function throws", () => {
       },
     }));
 
-    const { ghGraphQL } = await import("../gh");
+    const { ghGraphQL } = await import("../github/cli");
     let threw = false;
     try {
       await ghGraphQL("query { test }");

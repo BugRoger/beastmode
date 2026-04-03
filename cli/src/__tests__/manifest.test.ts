@@ -8,12 +8,12 @@ import {
   load,
   manifestExists,
   save,
-} from "../manifest-store";
-import type { PipelineManifest, ManifestFeature } from "../manifest-store";
+} from "../manifest/store";
+import type { PipelineManifest, ManifestFeature } from "../manifest/store";
 import {
   enrich,
   getPendingFeatures,
-} from "../manifest";
+} from "../manifest/pure";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest");
 

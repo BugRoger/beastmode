@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
-import { ITermSessionFactory } from "../it2-session";
-import type { IIt2Client, It2Session } from "../it2-client";
-import type { SessionCreateOpts } from "../session";
+import { ITermSessionFactory } from "../dispatch/it2";
+import type { IIt2Client, It2Session } from "../dispatch/it2";
+import type { SessionCreateOpts } from "../dispatch/factory";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-it2-session");
 

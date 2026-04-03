@@ -1,5 +1,5 @@
 import type { EpicContext, EpicEvent } from "./types";
-import { regress } from "../manifest";
+import { regress } from "../manifest/pure";
 
 /**
  * Action logic implementations for the epic machine.

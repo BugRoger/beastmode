@@ -6,9 +6,9 @@ const PHASE_TS = readFileSync(resolve(import.meta.dir, "../commands/phase.ts"), 
 const POST_DISPATCH_TS = readFileSync(resolve(import.meta.dir, "../post-dispatch.ts"), "utf-8");
 
 describe("design abandon guard — primary gate in phase.ts", () => {
-  test("imports loadWorktreePhaseOutput from phase-output", () => {
+  test("imports loadWorktreePhaseOutput from artifacts/reader", () => {
     expect(PHASE_TS).toContain("loadWorktreePhaseOutput");
-    expect(PHASE_TS).toContain("phase-output");
+    expect(PHASE_TS).toContain("artifacts/reader");
   });
 
   test("checks for design output before post-dispatch", () => {
@@ -82,7 +82,7 @@ describe("design abandon guard — secondary guard in post-dispatch.ts", () => {
 
 describe("manifest store.remove() idempotency", () => {
   test("store module exports remove function", async () => {
-    const store = await import("../manifest-store");
+    const store = await import("../manifest/store");
     expect(typeof store.remove).toBe("function");
   });
 });

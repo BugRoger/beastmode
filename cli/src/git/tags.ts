@@ -5,7 +5,7 @@
  * All operations use allowFailure — missing tags warn but never crash.
  */
 
-import { git } from "./git.js";
+import { git } from "./worktree.js";
 
 /** Workflow phases in order (excludes terminal states) */
 const WORKFLOW_PHASES = [

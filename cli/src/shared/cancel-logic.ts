@@ -11,11 +11,11 @@
 
 import { readdirSync, unlinkSync } from "fs";
 import { resolve } from "path";
-import { remove as removeWorktree } from "../worktree.js";
-import { git } from "../git.js";
-import { gh } from "../gh.js";
-import { deleteAllTags } from "../phase-tags.js";
-import * as store from "../manifest-store.js";
+import { remove as removeWorktree } from "../git/worktree.js";
+import { git } from "../git/worktree.js";
+import { gh } from "../github/cli.js";
+import { deleteAllTags } from "../git/tags.js";
+import * as store from "../manifest/store.js";
 import type { Logger } from "../logger.js";
 
 // ---------------------------------------------------------------------------

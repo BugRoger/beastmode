@@ -12,18 +12,16 @@ import { createLogger } from "./logger.js";
 import type { Logger } from "./logger.js";
 import { WatchLoop, attachLoggerSubscriber } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
-import type { SessionResult } from "./watch-types.js";
-import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
-import { SdkSessionFactory } from "./session.js";
-import { SessionEmitter } from "./sdk-streaming.js";
-import { CmuxSessionFactory } from "./cmux-session.js";
-import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
-import { ITermSessionFactory } from "./it2-session.js";
-import { It2Client } from "./it2-client.js";
+import type { SessionResult } from "./dispatch/types.js";
+import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./dispatch/factory.js";
+import { SdkSessionFactory, SessionEmitter } from "./dispatch/factory.js";
+import { CmuxSessionFactory, CmuxClient, cmuxAvailable } from "./dispatch/cmux.js";
+import { ITermSessionFactory } from "./dispatch/it2.js";
+import { It2Client } from "./dispatch/it2.js";
 import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "./iterm2-detect.js";
-import * as worktree from "./worktree.js";
-import { listEnriched } from "./manifest-store.js";
-import * as store from "./manifest-store.js";
+import * as worktree from "./git/worktree.js";
+import { listEnriched } from "./manifest/store.js";
+import * as store from "./manifest/store.js";
 import type { Phase } from "./types.js";
 import {
   reconcileDesign,
@@ -31,10 +29,10 @@ import {
   reconcileFeature,
   reconcileValidate,
   reconcileRelease,
-} from "./reconcile.js";
-import { syncGitHubForEpic } from "./github-sync.js";
-import { discoverGitHub } from "./github-discovery.js";
-import type { ResolvedGitHub } from "./github-discovery.js";
+} from "./manifest/reconcile.js";
+import { syncGitHubForEpic } from "./github/sync.js";
+import { discoverGitHub } from "./github/discovery.js";
+import type { ResolvedGitHub } from "./github/discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {

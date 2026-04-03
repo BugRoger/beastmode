@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
-import type { EnrichedManifest } from "../manifest-store.js";
+import type { EnrichedManifest } from "../manifest/store.js";
 
 // --- Shared constants ---
 

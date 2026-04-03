@@ -2,8 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { git, gitCheck } from "../git.js";
-import { create, enter, remove, ensureWorktree, exists, resolveMainBranch } from "../worktree.js";
+import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMainBranch } from "../git/worktree.js";
 
 /**
  * Integration tests for the worktree manager.

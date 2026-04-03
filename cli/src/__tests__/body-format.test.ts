@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import type { PipelineManifest, ManifestFeature } from "../manifest-store";
-import { formatEpicBody, formatFeatureBody, formatClosingComment } from "../body-format";
+import type { PipelineManifest, ManifestFeature } from "../manifest/store";
+import { formatEpicBody, formatFeatureBody, formatClosingComment } from "../github/sync";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},

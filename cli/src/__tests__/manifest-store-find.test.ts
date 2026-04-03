@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
-import { find } from "../manifest-store";
+import { find } from "../manifest/store";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest-find");
 

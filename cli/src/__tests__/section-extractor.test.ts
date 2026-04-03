@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { extractSection, extractSectionFromFile, extractSections } from "../section-extractor.js";
+import { extractSection, extractSectionFromFile, extractSections } from "../artifacts/reader.js";
 
 // --- extractSection ---
 

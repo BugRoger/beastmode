@@ -1,14 +1,14 @@
 import { describe, test, expect, beforeEach, afterEach, it } from "bun:test";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { resolve } from "path";
-import { list } from "../manifest-store.js";
+import { list } from "../manifest/store.js";
 
 const PHASE_TS_PATH = resolve(import.meta.dir, "../commands/phase.ts");
 const phaseSource = readFileSync(PHASE_TS_PATH, "utf-8");
 
 describe("uniform dispatch — all phases use interactive runner", () => {
-  test("phase.ts imports runInteractive from interactive-runner", () => {
-    expect(phaseSource).toContain('from "../runners/interactive-runner"');
+  test("phase.ts imports runInteractive from dispatch/factory", () => {
+    expect(phaseSource).toContain('from "../dispatch/factory"');
     expect(phaseSource).toContain("runInteractive");
   });
 

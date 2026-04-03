@@ -5,8 +5,8 @@
  * and log a warning to stderr. Never throws.
  */
 
-import { createLogger } from "./logger.js";
-import type { Logger } from "./logger.js";
+import { createLogger } from "../logger.js";
+import type { Logger } from "../logger.js";
 
 export interface GhResult {
   stdout: string;

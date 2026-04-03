@@ -19,18 +19,18 @@ import {
   renameSync,
 } from "fs";
 import { resolve } from "path";
-import { git, gitCheck } from "./git.js";
-import type { Phase } from "./types";
-import { isValidPhase } from "./types";
-import { renameTags } from "./phase-tags.js";
+import { git, gitCheck } from "../git/worktree.js";
+import type { Phase } from "../types";
+import { isValidPhase } from "../types";
+import { renameTags } from "../git/tags.js";
 
 import { basename } from "path";
-import { deriveNextAction } from "./manifest.js";
-import type { NextAction } from "./manifest.js";
-import { createLogger } from "./logger";
+import { deriveNextAction } from "./pure.js";
+import type { NextAction } from "./pure.js";
+import { createLogger } from "../logger";
 
 // Re-export for consumers that previously imported from state-scanner
-export type { NextAction } from "./manifest.js";
+export type { NextAction } from "./pure.js";
 
 // --- Types ---
 

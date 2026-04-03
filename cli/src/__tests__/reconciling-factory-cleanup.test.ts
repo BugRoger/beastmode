@@ -1,12 +1,12 @@
 import { describe, it, expect, mock } from "bun:test";
-import type { SessionFactory, SessionCreateOpts, SessionHandle } from "../session.js";
-import type { SessionResult } from "../watch-types.js";
+import type { SessionFactory, SessionCreateOpts, SessionHandle } from "../dispatch/factory.js";
+import type { SessionResult } from "../dispatch/types.js";
 
 // ---------------------------------------------------------------------------
 // Mock external deps BEFORE importing watch-command
 // ---------------------------------------------------------------------------
 
-mock.module("../worktree.js", () => ({
+mock.module("../git/worktree.js", () => ({
   archive: mock(() => Promise.resolve("archive/v1.0.0")),
   remove: mock(() => Promise.resolve()),
   create: mock(() => Promise.resolve({ path: "/tmp/test-worktree" })),
@@ -20,7 +20,7 @@ mock.module("../worktree.js", () => ({
   cleanArtifactOutputs: mock(() => {}),
 }));
 
-mock.module("../manifest-store.js", () => ({
+mock.module("../manifest/store.js", () => ({
   load: mock(() => ({ slug: "test-epic", phase: "release", lastUpdated: "2026-01-01" })),
   save: mock(() => {}),
   listEnriched: mock(() => ({ epics: [], blocked: [] })),
@@ -42,7 +42,7 @@ mock.module("../manifest-store.js", () => ({
   readLegacyManifest: mock(() => ({})),
 }));
 
-mock.module("../reconcile.js", () => ({
+mock.module("../manifest/reconcile.js", () => ({
   reconcileDesign: mock(() => Promise.resolve(undefined)),
   reconcilePlan: mock(() => Promise.resolve(undefined)),
   reconcileFeature: mock(() => Promise.resolve(undefined)),
@@ -52,12 +52,12 @@ mock.module("../reconcile.js", () => ({
   reconcileAll: mock(() => Promise.resolve()),
 }));
 
-mock.module("../github-sync.js", () => ({
+mock.module("../github/sync.js", () => ({
   syncGitHubForEpic: mock(() => Promise.resolve()),
   syncGitHub: mock(() => Promise.resolve()),
 }));
 
-mock.module("../github-discovery.js", () => ({
+mock.module("../github/discovery.js", () => ({
   discoverGitHub: mock(() => Promise.resolve(undefined)),
 }));
 

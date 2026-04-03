@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { toSnapshots, detectChanges } from "../change-detect";
-import type { EpicSnapshot } from "../change-detect";
-import type { EnrichedManifest } from "../manifest-store";
+import { toSnapshots, detectEpicChanges } from "../shared/status-data";
+import type { EpicSnapshot } from "../shared/status-data";
+import type { EnrichedManifest } from "../manifest/store";
 
 function makeEpic(overrides: Partial<EnrichedManifest> = {}): EnrichedManifest {
   return {
@@ -52,10 +52,10 @@ describe("toSnapshots", () => {
 });
 
 // ---------------------------------------------------------------------------
-// detectChanges
+// detectEpicChanges
 // ---------------------------------------------------------------------------
 
-describe("detectChanges", () => {
+describe("detectEpicChanges", () => {
   function snap(slug: string, overrides: Partial<EpicSnapshot> = {}): EpicSnapshot {
     return {
       slug,
@@ -73,13 +73,13 @@ describe("detectChanges", () => {
   test("returns empty set when nothing changed", () => {
     const prev = toMap(snap("a"), snap("b"));
     const curr = toMap(snap("a"), snap("b"));
-    expect(detectChanges(prev, curr).size).toBe(0);
+    expect(detectEpicChanges(prev, curr).size).toBe(0);
   });
 
   test("detects new epic appearing", () => {
     const prev = toMap(snap("a"));
     const curr = toMap(snap("a"), snap("b"));
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("b")).toBe(true);
     expect(changed.has("a")).toBe(false);
   });
@@ -87,7 +87,7 @@ describe("detectChanges", () => {
   test("detects epic disappearing", () => {
     const prev = toMap(snap("a"), snap("b"));
     const curr = toMap(snap("a"));
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("b")).toBe(true);
     expect(changed.has("a")).toBe(false);
   });
@@ -95,21 +95,21 @@ describe("detectChanges", () => {
   test("detects phase change", () => {
     const prev = toMap(snap("a", { phase: "design" }));
     const curr = toMap(snap("a", { phase: "plan" }));
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("a")).toBe(true);
   });
 
   test("detects completed features change", () => {
     const prev = toMap(snap("a", { completedFeatures: 1, totalFeatures: 3 }));
     const curr = toMap(snap("a", { completedFeatures: 2, totalFeatures: 3 }));
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("a")).toBe(true);
   });
 
   test("detects total features change", () => {
     const prev = toMap(snap("a", { totalFeatures: 2 }));
     const curr = toMap(snap("a", { totalFeatures: 3 }));
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("a")).toBe(true);
   });
 
@@ -124,7 +124,7 @@ describe("detectChanges", () => {
       snap("b"),                       // same
       snap("d"),                       // new
     );
-    const changed = detectChanges(prev, curr);
+    const changed = detectEpicChanges(prev, curr);
     expect(changed.has("a")).toBe(true);  // phase changed
     expect(changed.has("b")).toBe(false); // same
     expect(changed.has("c")).toBe(true);  // disappeared
@@ -132,7 +132,7 @@ describe("detectChanges", () => {
   });
 
   test("both maps empty returns empty set", () => {
-    const changed = detectChanges(new Map(), new Map());
+    const changed = detectEpicChanges(new Map(), new Map());
     expect(changed.size).toBe(0);
   });
 });

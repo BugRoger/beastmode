@@ -13,8 +13,8 @@ import {
   validate,
   slugify,
   isValidSlug,
-} from "../manifest-store";
-import type { PipelineManifest } from "../manifest-store";
+} from "../manifest/store";
+import type { PipelineManifest } from "../manifest/store";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest-store");
 

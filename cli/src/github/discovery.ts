@@ -12,9 +12,9 @@ import {
   ghRepoDiscover,
   ghProjectDiscover,
   ghFieldDiscover,
-} from "./gh";
-import { createLogger } from "./logger.js";
-import type { Logger } from "./logger.js";
+} from "./cli.js";
+import { createLogger } from "../logger.js";
+import type { Logger } from "../logger.js";
 
 /** Resolved GitHub metadata — the sync engine's input. */
 export interface ResolvedGitHub {

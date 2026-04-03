@@ -14,14 +14,14 @@
 
 import type { Phase } from "./types";
 import type { Logger } from "./logger";
-import * as store from "./manifest-store";
-import { loadWorktreePhaseOutput } from "./phase-output";
-import { syncGitHub } from "./github-sync";
-import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "./manifest";
-import { discoverGitHub } from "./github-discovery";
+import * as store from "./manifest/store";
+import { loadWorktreePhaseOutput } from "./artifacts/reader";
+import { syncGitHub } from "./github/sync";
+import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "./manifest/pure";
+import { discoverGitHub } from "./github/discovery";
 import { loadConfig } from "./config";
 import { createLogger } from "./logger";
-import { createTag } from "./phase-tags.js";
+import { createTag } from "./git/tags.js";
 import {
   reconcileDesign,
   reconcilePlan,
@@ -29,8 +29,8 @@ import {
   reconcileImplement,
   reconcileValidate,
   reconcileRelease,
-} from "./reconcile";
-import type { ReconcileResult } from "./reconcile";
+} from "./manifest/reconcile";
+import type { ReconcileResult } from "./manifest/reconcile";
 
 /** Options for the post-dispatch hook. */
 export interface PostDispatchOptions {

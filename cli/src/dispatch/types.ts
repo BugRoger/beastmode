@@ -1,10 +1,12 @@
 /**
  * Watch loop types — shared interfaces for the autonomous pipeline driver.
- * EnrichedManifest, ScanResult, and NextAction are canonical in manifest-store.ts.
+ * EnrichedManifest, ScanResult, and NextAction are canonical in manifest/store.
+ *
+ * Moved from: watch-types.ts
  */
 
-import type { EnrichedManifest, ScanResult, NextAction } from "./manifest-store.js";
-import type { SessionEmitter } from "./sdk-streaming.js";
+import type { EnrichedManifest, ScanResult, NextAction } from "../manifest/store.js";
+import type { SessionEmitter } from "./factory.js";
 export type { EnrichedManifest, ScanResult, NextAction };
 
 /** Tracks an active SDK session dispatched by the watch loop. */

@@ -6,7 +6,7 @@ import {
   splitSections,
   resolveArtifactPath,
   readArtifactSections,
-} from "../artifact-reader";
+} from "../artifacts/reader";
 
 // --- splitSections ---
 

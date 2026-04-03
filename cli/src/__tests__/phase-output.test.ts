@@ -10,7 +10,7 @@ import {
   findWorktreeOutputFile,
   loadWorktreePhaseOutput,
   filenameMatchesEpic,
-} from "../phase-output";
+} from "../artifacts/reader";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-output");
 

@@ -3,19 +3,26 @@
  *
  * Every function takes a PipelineManifest and returns a NEW PipelineManifest.
  * No mutation. No side effects. No fs. No path.
+ *
+ * Also includes actor hydration — restores an ephemeral xstate actor
+ * from a manifest snapshot.
  */
 
 import type {
   PipelineManifest,
   ManifestFeature,
-} from "./manifest-store";
-import type { Phase } from "./types";
+} from "./store";
+import type { Phase } from "../types";
+
+import { createActor } from "xstate";
+import { epicMachine } from "../pipeline-machine/index.js";
+import type { EpicContext, EpicEvent } from "../pipeline-machine/index.js";
 
 // Phase ordering for regression logic
 const PHASE_ORDER: readonly Phase[] = ["design", "plan", "implement", "validate", "release"];
 
 // Re-export types so consumers can import from either module
-export type { PipelineManifest, ManifestFeature, ManifestGitHub } from "./manifest-store";
+export type { PipelineManifest, ManifestFeature, ManifestGitHub } from "./store";
 
 // --- Timestamp helper ---
 
@@ -284,4 +291,27 @@ export function deriveNextAction(manifest: PipelineManifest): NextAction | null 
     args: [manifest.slug],
     type: "single",
   };
+}
+
+// --- Actor hydration ---
+
+export interface HydratedActor {
+  start(): void;
+  stop(): void;
+  send(event: EpicEvent): void;
+  getSnapshot(): { value: string | object; context: EpicContext };
+}
+
+/**
+ * Hydrate an ephemeral epic actor at the given phase/context.
+ * The actor is started and ready to receive events.
+ */
+export function hydrateEpicActor(phase: string, context: EpicContext): HydratedActor {
+  const resolvedSnapshot = epicMachine.resolveState({
+    value: phase,
+    context,
+  });
+  const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: context });
+  actor.start();
+  return actor as unknown as HydratedActor;
 }

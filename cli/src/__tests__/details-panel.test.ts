@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import type { EnrichedManifest, ManifestFeature } from "../manifest-store.js";
+import type { EnrichedManifest, ManifestFeature } from "../manifest/store.js";
 
 // ---------------------------------------------------------------------------
 // Mock factory

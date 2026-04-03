@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
-import { CmuxSessionFactory } from "../cmux-session";
-import type { ICmuxClient } from "../cmux-client";
-import type { SessionCreateOpts } from "../session";
+import { CmuxSessionFactory } from "../dispatch/cmux";
+import type { ICmuxClient } from "../dispatch/cmux";
+import type { SessionCreateOpts } from "../dispatch/factory";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-cmux-session");
 

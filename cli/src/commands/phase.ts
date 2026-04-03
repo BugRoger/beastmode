@@ -12,22 +12,21 @@
 import type { BeastmodeConfig } from "../config";
 import type { Phase } from "../types";
 import { resolve } from "node:path";
-import { runInteractive } from "../runners/interactive-runner";
+import { runInteractive } from "../dispatch/factory";
 import {
   ensureWorktree,
   enter as enterWorktree,
   remove as removeWorktree,
   isInsideWorktree,
   resolveMainCheckoutRoot,
-} from "../worktree";
+} from "../git/worktree";
 import { runPostDispatch } from "../post-dispatch";
-import * as store from "../manifest-store";
+import * as store from "../manifest/store";
 import { createLogger } from "../logger";
-import { loadWorktreePhaseOutput } from "../phase-output";
+import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig } from "../config";
 import { cancelEpic } from "../shared/cancel-logic.js";
-import { writeHitlSettings, cleanHitlSettings } from "../hitl-settings";
-import { buildPreToolUseHook, getPhaseHitlProse } from "../hitl-prompt";
+import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, getPhaseHitlProse } from "../hooks/pre-tool-use";
 
 /**
  * Execute a phase command. Called directly from the top-level router.

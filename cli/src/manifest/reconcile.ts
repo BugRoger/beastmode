@@ -9,17 +9,17 @@
  * and runPostDispatch (post-dispatch.ts).
  */
 
-import type { PipelineManifest } from "./manifest-store.js";
-import * as store from "./manifest-store.js";
-import type { Phase } from "./types.js";
-import type { PhaseOutput } from "./types.js";
+import type { PipelineManifest } from "./store.js";
+import * as store from "./store.js";
+import type { Phase } from "../types.js";
+import type { PhaseOutput } from "../types.js";
 import {
   loadWorktreePhaseOutput,
   loadWorktreeFeatureOutput,
-} from "./phase-output.js";
-import { hydrateEpicActor } from "./hydrate-actor.js";
-import type { HydratedActor } from "./hydrate-actor.js";
-import type { EpicContext } from "./pipeline-machine/index.js";
+} from "../artifacts/reader.js";
+import { hydrateEpicActor } from "./pure.js";
+import type { HydratedActor } from "./pure.js";
+import type { EpicContext } from "../pipeline-machine/index.js";
 
 // --- Result type ---
 

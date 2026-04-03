@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import type { DispatchedSession } from "../../watch-types.js";
-import type { LogEntry, SessionEmitter } from "../../sdk-streaming.js";
+import type { DispatchedSession } from "../../dispatch/types.js";
+import type { LogEntry, SessionEmitter } from "../../dispatch/factory.js";
 
 /** Merged log entry with session context for display. */
 export interface MergedLogEntry extends LogEntry {

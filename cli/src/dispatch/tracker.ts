@@ -3,9 +3,11 @@
  *
  * Tracks which epics/features have active sessions to avoid double-dispatch.
  * Provides completion callbacks for event-driven re-scanning.
+ *
+ * Moved from: dispatch-tracker.ts
  */
 
-import type { DispatchedSession, SessionResult } from "./watch-types.js";
+import type { DispatchedSession, SessionResult } from "./types.js";
 
 export class DispatchTracker {
   private sessions = new Map<string, DispatchedSession>();
