@@ -4,7 +4,9 @@
 - NEVER stash, switch branches, or modify worktrees without explicit user request
 - ALWAYS verify worktree context before modifying files
 - NEVER guess file paths — verify they exist first
-- Commits happen naturally during implementation — release owns the squash merge
+- Agents commit per task on the impl branch (`feature/<slug>/<feature-name>`) — never on the worktree branch
+- Three agent roles: implementer (TDD execution), spec-reviewer (trust-nothing verification), quality-reviewer (self-contained quality checklist)
+- Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
 
 ## Testing
 - ALWAYS verify L2 files contain project-specific content, not placeholder patterns
@@ -46,3 +48,31 @@
 6. CANCEL event must be valid from every non-terminal epic state
 7. Persist action accumulates state in memory only — no disk writes during machine transitions, single `store.save()` at end of dispatch
 8. REGRESS event replaces VALIDATE_FAILED — generic regression from any non-terminal state to any earlier phase except design, with full feature reset when regressing to or past implement
+
+## Write Plan
+- Write Plan replaces the implicit Decompose step — produces `.tasks.md` with header, file structure, and TDD task definitions before dispatch begins
+- `.tasks.md` uses checkbox tracking (`- [ ]`/`- [x]`) for cross-session resume — no separate .tasks.json
+- No YAML frontmatter in .tasks.md — prevents the stop hook from generating a spurious output.json
+- Self-review pass after writing: spec coverage against feature plan, placeholder scan (TBD/TODO/ellipsis), type/name consistency check
+- ALWAYS produce complete code in every step — no placeholders, no "add appropriate handling", no "similar to Task N"
+- ALWAYS duplicate context from feature plan into .tasks.md header — makes the document self-contained for agents
+
+context/implement/write-plan.md
+
+## Agent Review Pipeline
+- Three dedicated agent files: implementer.md (TDD), spec-reviewer.md (trust-nothing verification), quality-reviewer.md (self-contained checklist)
+- Four-status model replaces three-tier deviations: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED
+- Two-stage ordered review: spec compliance must pass before quality review runs
+- Review retry loop: max 2 attempts before marking task as blocked and escalating to user
+- NEVER trust the implementer's report — spec reviewer reads actual code independently
+
+context/implement/agent-review-pipeline.md
+
+## Branch Isolation
+- CLI creates `feature/<slug>/<feature-name>` branch before dispatch; agents commit per task on the impl branch
+- Checkpoint rebases impl branch onto worktree branch — fast-forward on success, conflict resolution agent on failure
+- Max 2 conflict resolution attempts before aborting and reporting to user
+- Resume model: first unchecked task in .tasks.md; prior tasks have commits on impl branch
+- Subagent Safety: agents commit on impl branch only, never on worktree branch
+
+context/implement/branch-isolation.md
