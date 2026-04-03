@@ -142,7 +142,8 @@ export async function phaseCommand(
 
 function deriveWorktreeSlug(phase: Phase, args: string[]): string {
   if (phase === "design") {
-    return randomHex(6);
+    // If an existing slug was passed (watch loop re-dispatch), reuse it
+    return args[0] || randomHex(6);
   }
   // All non-design phases use the epic slug directly
   return args[0] || "default";

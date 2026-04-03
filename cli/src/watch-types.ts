@@ -102,6 +102,7 @@ export interface WatchLoopEventMap {
   'session-completed': [SessionCompletedEvent];
   'scan-complete': [ScanCompleteEvent];
   'error': [WatchErrorEvent];
+  'epic-blocked': [{ epicSlug: string; gate: string; reason: string }];
   'epic-cancelled': [EpicCancelledEvent];
   /** Emitted when the loop starts. */
   'started': [{ version: string; pid: number; intervalSeconds: number }];

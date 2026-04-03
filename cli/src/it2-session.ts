@@ -154,7 +154,7 @@ export class ITermSessionFactory implements SessionFactory {
       : `-${epicSlug}.output.json`;
 
     // Set up promise that resolves when output.json appears
-    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal, outputSuffix, epicSlug);
+    const promise = this.watchForMarker(id, artifactDir, startTime, opts.signal, outputSuffix, epicSlug, !featureSlug);
 
     // Handle abort — close pane
     const onAbort = async () => {
@@ -245,10 +245,12 @@ export class ITermSessionFactory implements SessionFactory {
     signal: AbortSignal,
     outputSuffix: string,
     epicSlug: string,
+    broadMatch: boolean,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
       // Check if an output.json already exists that is newer than dispatch time.
-      const existing = this.findOutputJson(artifactDir, startTime, outputSuffix);
+      const existing = this.findOutputJson(artifactDir, startTime, outputSuffix)
+        ?? (broadMatch ? this.findOutputJsonBroad(artifactDir, epicSlug, startTime) : null);
       if (existing) {
         const result = this.readOutputJson(existing, startTime);
         if (result) {
@@ -269,25 +271,27 @@ export class ITermSessionFactory implements SessionFactory {
         mkdirSync(artifactDir, { recursive: true });
 
         watcher = watch(artifactDir, (_eventType, filename) => {
-          if (filename && filename.endsWith(outputSuffix)) {
-            const filePath = resolve(artifactDir, filename);
-            try {
-              if (statSync(filePath).mtimeMs < startTime) return;
-            } catch {
-              return;
-            }
-            const result = this.readOutputJson(filePath, startTime);
-            if (result) {
-              cleanup();
-              resolvePromise(result);
-            }
+          if (!filename || !filename.endsWith(".output.json")) return;
+          if (!filename.endsWith(outputSuffix) &&
+              !(broadMatch && filenameMatchesEpic(filename, epicSlug))) return;
+          const filePath = resolve(artifactDir, filename);
+          try {
+            if (statSync(filePath).mtimeMs < startTime) return;
+          } catch {
+            return;
+          }
+          const result = this.readOutputJson(filePath, startTime);
+          if (result) {
+            cleanup();
+            resolvePromise(result);
           }
         });
         this.watchers.set(sessionId, watcher);
       } catch {
         // Fall back to polling
         const pollInterval = setInterval(() => {
-          const found = this.findOutputJson(artifactDir, startTime, outputSuffix);
+          const found = this.findOutputJson(artifactDir, startTime, outputSuffix)
+            ?? (broadMatch ? this.findOutputJsonBroad(artifactDir, epicSlug, startTime) : null);
           if (found) {
             clearInterval(pollInterval);
             clearTimeout(timeout);

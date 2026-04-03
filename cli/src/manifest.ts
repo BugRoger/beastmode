@@ -235,7 +235,7 @@ export interface NextAction {
 
 /** Static dispatch type per phase — no XState needed. */
 const DISPATCH_TYPE: Record<string, "single" | "fan-out" | "skip"> = {
-  design: "single",
+  design: "skip",
   plan: "single",
   implement: "fan-out",
   validate: "single",

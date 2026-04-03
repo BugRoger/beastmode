@@ -152,6 +152,12 @@ export class WatchLoop extends EventEmitter {
   }
 
   private async processEpic(epic: EnrichedManifest): Promise<number> {
+    // Skip epics blocked on human gates or manual pause
+    if (epic.blocked) {
+      this.emitTyped('epic-blocked', { epicSlug: epic.slug, gate: epic.blocked.gate, reason: epic.blocked.reason });
+      return 0;
+    }
+
     // Skip epics with no actionable next step
     if (!epic.nextAction) return 0;
 
@@ -329,7 +335,7 @@ export class WatchLoop extends EventEmitter {
         });
 
         // Create phase tag for regression support (mirrors post-dispatch in CLI path)
-        if (result.success) {
+        if (result.success && session.phase !== "release") {
           try {
             const wtPath = resolve(this.config.projectRoot, ".claude", "worktrees", session.worktreeSlug);
             await createTag(session.epicSlug, session.phase, { cwd: wtPath });

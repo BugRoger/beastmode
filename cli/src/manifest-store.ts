@@ -57,6 +57,7 @@ export interface PipelineManifest {
   summary?: { problem: string; solution: string };
   worktree?: { branch: string; path: string };
   github?: ManifestGitHub;
+  blocked?: { gate: string; reason: string } | null;
   originId?: string;
   lastUpdated: string;
 }
