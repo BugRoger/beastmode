@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { DispatchedSession } from "../../dispatch/types.js";
 import type { LogEntry, SessionEmitter } from "../../dispatch/factory.js";
-import type { TreeState, EpicNode, PhaseNode, FeatureNode, TreeEntry } from "../tree-types.js";
+import type { TreeState, EpicNode, TreeEntry } from "../tree-types.js";
 import type { LogLevel } from "../../logger.js";
 
 export interface UseDashboardTreeStateOptions {

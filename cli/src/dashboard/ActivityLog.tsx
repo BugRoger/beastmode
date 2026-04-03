@@ -10,7 +10,6 @@ function eventTypeToLevel(type: DashboardEvent["type"]): LogLevel {
     case "dispatched":
     case "completed":
     case "scan":
-    case "held":
       return "info";
     default:
       return "info";
