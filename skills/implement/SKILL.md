@@ -14,9 +14,9 @@ No EnterPlanMode or ExitPlanMode.
 ## Guiding Principles
 
 - **One agent per task** — controller owns the plan, agents own the code
-- **Deviations are normal** — classify and handle systematically
-- **Spec check every result** — files match plan, verification passes, no unplanned changes
-- **Wave ordering drives parallelism** — foundation before consumers
+- **Four statuses, not three tiers** — DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED
+- **Two-stage review** — spec compliance first, code quality second
+- **Wave ordering drives sequencing** — foundation before consumers
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
 ## Phase 0: Prime
@@ -124,57 +124,85 @@ For each wave (ascending order):
    - All dependencies are completed (or no dependencies)
    - Task is not already completed (all checkboxes `- [x]` in .tasks.md)
 
-2. **Dispatch Subagents** — Check the wave's `**Parallel-safe:**` flag (appears after the first task's `**Wave:**` line).
+2. **Dispatch and Review** — Sequential dispatch only. For each runnable task in the wave:
 
-   **If Parallel-safe: true** — verify and dispatch in parallel:
+   #### A. Pre-Read
 
-   1. Verify: collect all file paths from all tasks in this wave and confirm no file appears in 2+ tasks
-   2. If verification passes:
-      - For each task: build the agent prompt (same as sequential — see below)
-      - Spawn all agents with `Agent(subagent_type="general-purpose", prompt=<built prompt>, run_in_background=true)`
-      - Collect all results via `TaskOutput(task_id=<agent_id>, block=true)`
-      - Run spec check (step 3) on each result in order
-   3. If verification fails:
-      - Log: `[Blocking] Wave N: parallel-safe flag incorrect, falling back to sequential`
-      - Fall through to sequential dispatch below
+   Read the task's **Files** section — pre-read the listed files so the agent has context.
 
-   **If no flag or Parallel-safe: false** — dispatch sequentially (default):
+   #### B. Dispatch Implementer
 
-   For each runnable task in the wave:
-
-   1. Read the task's **Files** section — pre-read the listed files
-   2. Build the agent prompt:
-      - Use the implementer agent role: It receives a single task spec with steps, files, and verification commands. It executes each step, classifies deviations, runs verification, and reports results. It does NOT read the plan file, commit changes, switch branches, or modify files outside its task's file list.
+   1. Build the implementer prompt:
+      - Reference: `.claude/agents/implementer.md` agent role
       - Append: full task text (all steps, files, verification)
       - Append: pre-read file contents
       - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
-   3. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
-   4. Collect the agent's result report
-   5. Run spec check (step 3) before dispatching next task
+   2. Spawn: `Agent(subagent_type="beastmode:implement-implementer", prompt=<built prompt>)`
+   3. Collect the agent's status report
 
-3. **Spec Check** — After each agent completes, the controller verifies:
+   #### C. Handle Implementer Status
 
-   1. **Files match plan?** — Check that files listed in the task's `**Files:**` section were actually modified
-   2. **Verification passes?** — Run the task's verification command if the agent didn't already
-   3. **No unplanned files?** — Compare `git diff --name-only` against baseline snapshot (from prime step 5) + plan's file list. Only flag files that are NEW since baseline AND not in the current task's file list.
+   Process the implementer's reported status:
 
-   If spec check fails:
-   - Re-dispatch the same task to a new agent with the failure context
-   - After 2 retries: mark task as blocked, report to user
+   - **DONE**: proceed to spec review (step D)
+   - **DONE_WITH_CONCERNS**: read the concerns.
+     - If correctness or scope issue: re-dispatch implementer with specific fix instructions (max 2 retries, then BLOCKED)
+     - If observation only: note the concern in the deviation log and proceed to spec review (step D)
+   - **NEEDS_CONTEXT**: provide the missing context and re-dispatch the same task to a new implementer agent. Max 2 retries. After max retries: mark task as blocked, report to user.
+   - **BLOCKED**: assess the blocker.
+     - Can the controller provide more context? Re-dispatch with context.
+     - Can the task be broken smaller? Split and re-dispatch.
+     - Otherwise: mark task as blocked, report to user.
 
-4. **Handle Deviations** — Process the agent's deviation report per the Deviation Rules (see Reference section):
+   Never ignore an escalation or force retry without changes.
 
-   - **Auto-fix / Blocking**: Log to deviation tracker, continue
+   #### D. Spec Compliance Review
 
-   **Architectural Deviation:** Evaluate the deviation and proceed with the proposed change. If clearly safe, continue. If ambiguous, proceed cautiously and log.
+   After implementer reports DONE (or DONE_WITH_CONCERNS with observation-only concerns):
 
-5. **Update Task Persistence** — After each task completes (or is blocked):
+   1. Build the spec-reviewer prompt:
+      - Reference: `.claude/agents/spec-reviewer.md` agent role
+      - Append: the task requirements (from .tasks.md)
+      - Append: the implementer's status report
+      - Append: the task's file list
+   2. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+   3. Collect the reviewer's verdict
+
+   **If PASS**: proceed to quality review (step E)
+
+   **If FAIL**: re-dispatch implementer to fix the issues.
+   - Provide the spec-reviewer's issue list as context
+   - After fix: re-dispatch spec-reviewer
+   - Max 2 review cycles. After max: mark task as blocked, report to user
+
+   #### E. Code Quality Review
+
+   After spec compliance passes:
+
+   1. Build the quality-reviewer prompt:
+      - Reference: `.claude/agents/quality-reviewer.md` agent role
+      - Append: the task requirements (for context)
+      - Append: the implementer's status report
+      - Append: the task's file list
+   2. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+   3. Collect the reviewer's verdict
+
+   **If APPROVED**: mark task as complete, proceed to next task
+
+   **If NOT_APPROVED with Critical or Important issues**: re-dispatch implementer to fix.
+   - Provide the quality-reviewer's issue list as context
+   - After fix: re-dispatch quality-reviewer
+   - Max 2 review cycles. After max: mark task as blocked, report to user
+
+   **If NOT_APPROVED with only Minor issues**: treat as approved — minor issues don't block.
+
+3. **Update Task Persistence** — After each task completes (or is blocked):
 
    1. Update `.beastmode/artifacts/implement/YYYY-MM-DD-<epic-name>-<feature-name>.tasks.md`:
       - Toggle completed steps from `- [ ]` to `- [x]`
       - If task is blocked, add `**Status: BLOCKED**` after the task header
 
-6. **Wave Checkpoint** — After ALL tasks in the current wave complete:
+4. **Wave Checkpoint** — After ALL tasks in the current wave complete:
 
    1. Run the project test suite (command from `.beastmode/context/implement/testing.md`)
    2. If tests fail:
@@ -193,7 +221,7 @@ Investigate the blocked task. If resolvable, fix and continue. If not, skip depe
 ### 4. Completion
 
 When all waves complete:
-- Report: "Implementation complete. N tasks done, M deviations tracked."
+- Report: "Implementation complete. N tasks done, M review cycles."
 - Proceed to validate phase.
 
 ## Phase 2: Validate
@@ -230,25 +258,25 @@ If any check fails:
 
 Do NOT just "stop and report" on first failure. Attempt a fix first.
 
-### 6. Deviation Summary
+### 6. Status Summary
 
-Print the accumulated deviation log from the execute phase:
+Print the accumulated status log from the execute phase:
 
-    ### Deviation Summary
+    ### Status Summary
 
-    Auto-fixed: N
-    - [Auto-fix] Task 3: Added missing import
-    - [Auto-fix] Task 5: Fixed type mismatch
+    Tasks: N completed, M blocked
+    Review cycles: N (spec: X, quality: Y)
 
-    Blocking: N
-    - [Blocking] Task 7: Installed missing package
+    Concerns noted:
+    - Task 3: File growing beyond plan's intent
+    - Task 5: Naming uncertainty on helper function
 
-    Architectural: N
-    - [Architectural] Task 9: User approved cache layer
+    Blocked tasks:
+    - Task 7: [blocker description]
 
-    Total: N deviations (N auto-fixed, N blocking, N architectural)
+    Total: N tasks, M review cycles, K concerns
 
-If no deviations: "No deviations — plan executed exactly as written."
+If all tasks completed with no concerns: "All tasks completed cleanly — no concerns or blockers."
 
 ### 7. Validation Failure Handling
 
@@ -260,7 +288,7 @@ Do NOT proceed to next phase if critical tests fail.
 
 ## Phase 3: Checkpoint
 
-### 1. Save Deviation Log
+### 1. Save Implementation Report
 
 Save to `.beastmode/artifacts/implement/YYYY-MM-DD-<epic-name>-<feature-name>.md`:
 
@@ -269,23 +297,24 @@ extra suffixes like `-deviations`. The stop hook derives the output.json filenam
 this basename, and the watch loop matches on `-<epic>-<feature>.output.json`. Any extra
 suffix breaks the match and the watch loop never sees completion.
 
-    # Implementation Deviations: <feature-name>
+    # Implementation Report: <feature-name>
 
     **Date:** YYYY-MM-DD
     **Feature Plan:** .beastmode/artifacts/plan/YYYY-MM-DD-<epic-name>-<feature-name>.md
     **Tasks completed:** N/M
-    **Deviations:** N total
+    **Review cycles:** N (spec: X, quality: Y)
+    **Concerns:** N
 
-    ## Auto-Fixed
+    ## Completed Tasks
+    - Task N: <description> — [clean | with concerns]
+
+    ## Concerns
     - Task N: <description>
 
-    ## Blocking
-    - Task N: <description>
+    ## Blocked Tasks
+    - Task N: <blocker description>
 
-    ## Architectural
-    - Task N: <description> — User decision: <choice>
-
-If no deviations, still write this file with "Deviations: 0" and "No deviations" body.
+If all tasks completed with no concerns, still write this file with "Concerns: 0" and empty sections.
 This file MUST always be written — the stop hook reads its frontmatter to generate
 output.json, which the watch loop uses to detect completion.
 
@@ -337,99 +366,82 @@ STOP. No additional output.
 
 - Spawn ONE agent per task (never parallel implementer agents on the same wave — file conflicts)
 - Controller stays in the working directory — agents inherit it
-- Agents must NOT commit, push, or switch branches
+- Agents commit per task on the current branch — never push or switch branches
 - Agents must NOT read the plan file — controller provides task text
 - Agents must NOT modify files outside their task's file list
-- If an agent returns ARCHITECTURAL_STOP, controller must present to user before continuing
+- If an agent returns BLOCKED, controller assesses and either re-dispatches or escalates to user
 
-### Deviation Handling
+### Status Handling
 
-- Auto-fix and Blocking deviations: agents handle autonomously
-- Architectural deviations: agents STOP, controller escalates to user
-- All deviations tracked in deviation log for checkpoint
-- See the Deviation Rules in Reference section for full taxonomy
+- DONE and DONE_WITH_CONCERNS: proceed through review pipeline
+- NEEDS_CONTEXT: controller provides context and re-dispatches
+- BLOCKED: controller assesses and either fixes, splits, or escalates
+- All statuses tracked in implementation report for checkpoint
+- See Agent Statuses in Reference section for full descriptions
 
 ## Reference
 
-### Deviation Rules
+### Agent Statuses
 
-Deviations from the plan are normal. Classify and handle them systematically.
+Four statuses replace the three-tier deviation system.
 
-### Tier 1: Auto-Fix
+### DONE
 
-**Trigger:** Bug, wrong type, missing import, broken test, security vulnerability, missing validation
-**Action:** Fix it, track it, keep going
-**Permission:** Automatic — no user approval needed
+Agent completed all steps. Tests pass. Code is clean.
+**Controller action:** Proceed to spec compliance review.
 
-Examples:
-- Import statement missing
-- Type mismatch between function signature and usage
-- Missing null check causing runtime error
-- Test assertion using wrong matcher
+### DONE_WITH_CONCERNS
 
-Track as: `[Auto-fix] Task N: <description>`
+Agent completed all steps but flagged something for attention.
+**Controller action:** Read concerns. If correctness/scope → address before review. If observation → note and proceed to review.
 
-### Tier 2: Blocking
+Typical concerns: file growing beyond plan's intent, naming uncertainty, potential edge case, design tension.
 
-**Trigger:** Missing dependency, environment issue, build broken, config missing, circular dependency
-**Action:** Fix the blocker, track it, keep going
-**Permission:** Automatic — no user approval needed
+### NEEDS_CONTEXT
 
-Examples:
-- Package not in dependencies
-- Environment variable not set
-- Build tool config missing
-- Circular import preventing compilation
-- Parallel-safe flag incorrect — file overlap detected at dispatch time, falling back to sequential
+Agent cannot proceed without information not provided in the task.
+**Controller action:** Provide the missing context and re-dispatch. Max 2 retries.
 
-Track as: `[Blocking] Task N: <description>`
+### BLOCKED
 
-### Tier 3: Architectural
+Agent hit an obstacle it cannot resolve.
+**Controller action:** Assess the blocker. Options:
+1. Provide more context and re-dispatch
+2. Break task into smaller pieces
+3. Escalate to user (plan itself may be wrong)
 
-**Trigger:** Schema change, new service, API change, library switch, scope expansion, breaking change
-**Action:** STOP, present to user, wait for decision
-**Permission:** Required — user must approve before proceeding
+Never force retry without changes.
 
-Present format:
+### Review Pipeline
 
-    Architectural Decision Needed
+Two-stage ordered review after each task:
 
-    Task: [current task]
-    Discovery: [what prompted this]
-    Proposed change: [what needs to change]
-    Impact: [what this affects]
+1. **Spec compliance** (`.claude/agents/spec-reviewer.md`) — verifies implementation matches requirements by reading actual code
+2. **Code quality** (`.claude/agents/quality-reviewer.md`) — evaluates code quality after spec compliance confirmed
 
-    Options:
-    1. Proceed with proposed change
-    2. Different approach: [alternative]
-    3. Defer and skip this task
+Review retry loop:
+- Reviewer finds issues → implementer fixes → reviewer re-reviews
+- Max 2 cycles per review stage
+- After max: mark task as blocked, report to user
 
-Track as: `[Architectural] Task N: <description> — User chose: <decision>`
-
-### Priority
-
-Tier 3 (STOP) > Tier 1-2 (auto) > Unsure → Tier 3
-
-### Heuristic
-
-- Affects correctness/security/completion? → Tier 1 or 2
-- Changes architecture or scope? → Tier 3
-- Not sure? → Tier 3 (safer to ask)
-
-### Deviation Log Format
+### Implementation Report Format
 
 Accumulated during execution, saved at checkpoint:
 
-    ## Deviations
+    ## Completed Tasks
+    - Task 0: Implementer agent — clean
+    - Task 1: Spec reviewer agent — clean
+    - Task 3: Controller update — with concerns (file size)
 
-    - [Auto-fix] Task 3: Added missing `zod` import in validation.ts
-    - [Blocking] Task 5: Installed `@types/node` — not in plan dependencies
-    - [Blocking] Wave 2: Parallel-safe flag incorrect, fell back to sequential dispatch
-    - [Architectural] Task 7: User approved adding Redis cache layer
+    ## Concerns
+    - Task 3: SKILL.md grew significantly during controller rewrite
 
-    **Summary:** 2 auto-fixed, 1 blocking, 1 architectural (approved)
+    ## Blocked Tasks
+    None
 
-If no deviations: `## Deviations\n\nNone — plan executed exactly as written.`
+    **Summary:** 4 tasks completed (1 with concerns), 0 blocked, 6 review cycles
+
+If no concerns or blocks: "All tasks completed cleanly — no concerns or blockers."
 
 ### Task Format
 
