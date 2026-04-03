@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: f2605d
+slug: release-serialization
 epic: release-serialization
 ---
 
