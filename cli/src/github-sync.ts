@@ -102,6 +102,7 @@ export async function syncGitHub(
   manifest: PipelineManifest,
   config: BeastmodeConfig,
   resolved: ResolvedGitHub,
+  opts: { logger?: Logger } = {},
 ): Promise<SyncResult> {
   const result: SyncResult = {
     epicCreated: false,
@@ -143,6 +144,7 @@ export async function syncGitHub(
       manifest.slug,
       initialEpicBody,
       ["type/epic", `phase/${manifest.phase}`],
+      { logger: opts.logger },
     );
     if (epicNumber) {
       result.mutations.push({ type: "setEpic", epicNumber, repo });
@@ -172,7 +174,7 @@ export async function syncGitHub(
     const storedEpicHash = manifest.github?.bodyHash;
 
     if (epicBodyHash !== storedEpicHash) {
-      const bodyUpdated = await ghIssueEdit(repo, epicNumber, { body: epicBody });
+      const bodyUpdated = await ghIssueEdit(repo, epicNumber, { body: epicBody }, { logger: opts.logger });
       if (bodyUpdated) {
         result.mutations.push({ type: "setEpicBodyHash", bodyHash: epicBodyHash });
         result.bodiesUpdated++;
@@ -184,7 +186,7 @@ export async function syncGitHub(
 
   // Blast-replace phase label on epic
   const targetPhaseLabel = `phase/${manifest.phase}`;
-  const currentLabels = await ghIssueLabels(repo, epicNumber);
+  const currentLabels = await ghIssueLabels(repo, epicNumber, { logger: opts.logger });
   if (currentLabels) {
     const currentPhaseLabels = currentLabels.filter((l) =>
       l.startsWith("phase/"),
@@ -196,7 +198,7 @@ export async function syncGitHub(
       await ghIssueEdit(repo, epicNumber, {
         removeLabels: ALL_PHASE_LABELS.filter((l) => currentLabels.includes(l)),
         addLabels: [targetPhaseLabel],
-      });
+      }, { logger: opts.logger });
       result.labelsUpdated++;
     }
   }
@@ -209,17 +211,18 @@ export async function syncGitHub(
     epicNumber,
     PHASE_TO_BOARD_STATUS[manifest.phase] ?? "Backlog",
     result,
+    opts,
   );
 
   // --- Feature Sync ---
 
   for (const feature of manifest.features) {
-    await syncFeature(repo, owner, epicNumber, feature, resolved, result);
+    await syncFeature(repo, owner, epicNumber, feature, resolved, result, opts);
   }
 
   // --- Epic Close (if done or cancelled) ---
   if (manifest.phase === "done" || manifest.phase === "cancelled") {
-    const closed = await ghIssueClose(repo, epicNumber);
+    const closed = await ghIssueClose(repo, epicNumber, { logger: opts.logger });
     if (closed) {
       result.epicClosed = true;
     } else {
@@ -227,7 +230,7 @@ export async function syncGitHub(
     }
 
     // Set project board to Done
-    await syncProjectStatus(resolved, owner, repo, epicNumber, "Done", result);
+    await syncProjectStatus(resolved, owner, repo, epicNumber, "Done", result, opts);
   }
 
   return result;
@@ -243,6 +246,7 @@ async function syncFeature(
   feature: ManifestFeature,
   resolved: ResolvedGitHub,
   result: SyncResult,
+  opts: { logger?: Logger } = {},
 ): Promise<void> {
   // Resolve or create the feature issue number — track locally, never mutate feature
   let featureNumber = feature.github?.issue;
@@ -258,6 +262,7 @@ async function syncFeature(
       feature.slug,
       featureBody,
       ["type/feature", STATUS_TO_LABEL[feature.status] ?? "status/ready"],
+      { logger: opts.logger },
     );
     if (featureNumber) {
       result.mutations.push({
@@ -276,7 +281,7 @@ async function syncFeature(
       featureJustCreated = true;
 
       // Link as sub-issue of epic
-      await ghSubIssueAdd(repo, epicNumber, featureNumber);
+      await ghSubIssueAdd(repo, epicNumber, featureNumber, { logger: opts.logger });
     } else {
       result.warnings.push(`Failed to create issue for feature ${feature.slug}`);
       return;
@@ -285,7 +290,7 @@ async function syncFeature(
 
   // Handle completed features — close them
   if (feature.status === "completed") {
-    const closed = await ghIssueClose(repo, featureNumber);
+    const closed = await ghIssueClose(repo, featureNumber, { logger: opts.logger });
     if (closed) {
       result.featuresClosed++;
     } else {
@@ -295,9 +300,9 @@ async function syncFeature(
   }
 
   // Reopen closed issues that should be open (e.g., after validate regression)
-  const issueState = await ghIssueState(repo, featureNumber);
+  const issueState = await ghIssueState(repo, featureNumber, { logger: opts.logger });
   if (issueState === "closed") {
-    const reopened = await ghIssueReopen(repo, featureNumber);
+    const reopened = await ghIssueReopen(repo, featureNumber, { logger: opts.logger });
     if (reopened) {
       result.featuresReopened++;
     } else {
@@ -315,7 +320,7 @@ async function syncFeature(
     const storedFeatureHash = feature.github?.bodyHash;
 
     if (featureBodyHash !== storedFeatureHash) {
-      const bodyUpdated = await ghIssueEdit(repo, featureNumber, { body: featureBody });
+      const bodyUpdated = await ghIssueEdit(repo, featureNumber, { body: featureBody }, { logger: opts.logger });
       if (bodyUpdated) {
         result.mutations.push({
           type: "setFeatureBodyHash",
@@ -332,7 +337,7 @@ async function syncFeature(
   // Blast-replace status label
   const targetStatusLabel = STATUS_TO_LABEL[feature.status];
   if (targetStatusLabel) {
-    const currentLabels = await ghIssueLabels(repo, featureNumber);
+    const currentLabels = await ghIssueLabels(repo, featureNumber, { logger: opts.logger });
     if (currentLabels) {
       const currentStatusLabels = currentLabels.filter((l) =>
         l.startsWith("status/"),
@@ -346,14 +351,14 @@ async function syncFeature(
             currentLabels.includes(l),
           ),
           addLabels: [targetStatusLabel],
-        });
+        }, { logger: opts.logger });
         result.labelsUpdated++;
       }
     }
   }
 
   // Remove feature from project board — only epics belong there
-  await removeFromProject(resolved, owner, repo, featureNumber, result);
+  await removeFromProject(resolved, owner, repo, featureNumber, result, opts);
 }
 
 /**
@@ -366,16 +371,17 @@ async function removeFromProject(
   repo: string,
   issueNumber: number,
   result: SyncResult,
+  opts: { logger?: Logger } = {},
 ): Promise<void> {
   const projectNumber = resolved.projectNumber;
   const projectId = resolved.projectId;
   if (!projectNumber || !projectId) return;
 
   const issueUrl = `https://github.com/${repo}/issues/${issueNumber}`;
-  const itemId = await ghProjectItemAdd(projectNumber, owner, issueUrl);
+  const itemId = await ghProjectItemAdd(projectNumber, owner, issueUrl, { logger: opts.logger });
   if (!itemId) return;
 
-  const deleted = await ghProjectItemDelete(projectId, itemId);
+  const deleted = await ghProjectItemDelete(projectId, itemId, { logger: opts.logger });
   if (!deleted) {
     result.warnings.push(`Failed to remove #${issueNumber} from project board`);
   }
@@ -392,6 +398,7 @@ async function syncProjectStatus(
   issueNumber: number,
   targetStatus: string,
   result: SyncResult,
+  opts: { logger?: Logger } = {},
 ): Promise<void> {
   const projectNumber = resolved.projectNumber;
   const projectId = resolved.projectId;
@@ -412,13 +419,13 @@ async function syncProjectStatus(
   }
 
   const issueUrl = `https://github.com/${repo}/issues/${issueNumber}`;
-  const itemId = await ghProjectItemAdd(projectNumber, owner, issueUrl);
+  const itemId = await ghProjectItemAdd(projectNumber, owner, issueUrl, { logger: opts.logger });
   if (!itemId) {
     result.warnings.push(`Failed to add #${issueNumber} to project board`);
     return;
   }
 
-  const updated = await ghProjectSetField(projectId, itemId, fieldId, optionId);
+  const updated = await ghProjectSetField(projectId, itemId, fieldId, optionId, { logger: opts.logger });
   if (updated) {
     result.projectUpdated = true;
   } else {
@@ -449,7 +456,7 @@ export async function syncGitHubForEpic(opts: {
       return;
     }
 
-    const result = await syncGitHub(manifest, config, resolved);
+    const result = await syncGitHub(manifest, config, resolved, { logger: opts.logger });
     for (const w of result.warnings) {
       opts.logger?.warn(`GitHub sync: ${w}`);
     }

@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-gh-error-diagnostics-logger-threading.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Fix gh() error message to include endpoint", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add logger to all 11 gh helper functions", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Thread logger through syncGitHub and helpers", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Run tests and verify", "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

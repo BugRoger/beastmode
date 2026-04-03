@@ -39,7 +39,7 @@ export async function gh(
 
     if (exitCode !== 0) {
       log.warn(
-        `gh ${args[0]} failed (exit ${exitCode}): ${stderr.trim()}`,
+        `gh ${args.slice(0, 2).join(" ")} failed (exit ${exitCode}): ${stderr.trim()}`,
       );
       return undefined;
     }
@@ -47,7 +47,7 @@ export async function gh(
     return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
   } catch (err) {
     log.warn(
-      `gh ${args[0]} failed: ${err instanceof Error ? err.message : String(err)}`,
+      `gh ${args.slice(0, 2).join(" ")} failed: ${err instanceof Error ? err.message : String(err)}`,
     );
     return undefined;
   }
@@ -107,12 +107,12 @@ export async function ghGraphQL<T = unknown>(
 export async function ghLabelCreate(
   repo: string,
   name: string,
-  opts: { description?: string; color?: string; cwd?: string } = {},
+  opts: { description?: string; color?: string; cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const args = ["label", "create", name, "--repo", repo, "--force"];
   if (opts.description) args.push("--description", opts.description);
   if (opts.color) args.push("--color", opts.color);
-  const result = await gh(args, { cwd: opts.cwd });
+  const result = await gh(args, { cwd: opts.cwd, logger: opts.logger });
   return result !== undefined;
 }
 
@@ -128,7 +128,7 @@ export async function ghIssueEdit(
     state?: "open" | "closed";
     body?: string;
   },
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const args = ["issue", "edit", String(issueNumber), "--repo", repo];
   if (edits.body !== undefined) args.push("--body", edits.body);
@@ -136,13 +136,13 @@ export async function ghIssueEdit(
     args.push("--add-label", edits.addLabels.join(","));
   if (edits.removeLabels?.length)
     args.push("--remove-label", edits.removeLabels.join(","));
-  const result = await gh(args, { cwd: opts.cwd });
+  const result = await gh(args, { cwd: opts.cwd, logger: opts.logger });
 
   if (result !== undefined && edits.state === "closed") {
     return (
       (await gh(
         ["issue", "close", String(issueNumber), "--repo", repo],
-        { cwd: opts.cwd },
+        { cwd: opts.cwd, logger: opts.logger },
       )) !== undefined
     );
   }
@@ -158,7 +158,7 @@ export async function ghIssueCreate(
   title: string,
   body: string,
   labels: string[] = [],
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<number | undefined> {
   const args = [
     "issue",
@@ -173,7 +173,7 @@ export async function ghIssueCreate(
   for (const label of labels) {
     args.push("--label", label);
   }
-  const result = await gh(args, { cwd: opts.cwd });
+  const result = await gh(args, { cwd: opts.cwd, logger: opts.logger });
   if (!result) return undefined;
 
   // gh issue create outputs the URL, extract the number
@@ -187,11 +187,11 @@ export async function ghIssueCreate(
 export async function ghIssueClose(
   repo: string,
   issueNumber: number,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const result = await gh(
     ["issue", "close", String(issueNumber), "--repo", repo],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return result !== undefined;
 }
@@ -202,11 +202,11 @@ export async function ghIssueClose(
 export async function ghIssueReopen(
   repo: string,
   issueNumber: number,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const result = await gh(
     ["issue", "reopen", String(issueNumber), "--repo", repo],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return result !== undefined;
 }
@@ -217,7 +217,7 @@ export async function ghIssueReopen(
 export async function ghIssueState(
   repo: string,
   issueNumber: number,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<"open" | "closed" | undefined> {
   const result = await ghJson<{ state: string }>(
     [
@@ -229,7 +229,7 @@ export async function ghIssueState(
       "--json",
       "state",
     ],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   if (result?.state === "OPEN") return "open";
   if (result?.state === "CLOSED") return "closed";
@@ -242,7 +242,7 @@ export async function ghIssueState(
 export async function ghIssueLabels(
   repo: string,
   issueNumber: number,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<string[] | undefined> {
   const result = await ghJson<Array<{ name: string }>>(
     [
@@ -256,7 +256,7 @@ export async function ghIssueLabels(
       "--jq",
       ".labels",
     ],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return result?.map((l) => l.name);
 }
@@ -268,7 +268,7 @@ export async function ghProjectItemAdd(
   projectNumber: number,
   owner: string,
   issueUrl: string,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<string | undefined> {
   const result = await ghJson<{ id: string }>(
     [
@@ -282,7 +282,7 @@ export async function ghProjectItemAdd(
       "--format",
       "json",
     ],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return result?.id;
 }
@@ -295,7 +295,7 @@ export async function ghProjectSetField(
   itemId: string,
   fieldId: string,
   optionId: string,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const data = await ghGraphQL(
     `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
@@ -309,7 +309,7 @@ export async function ghProjectSetField(
       }
     }`,
     { projectId, itemId, fieldId, optionId },
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return data !== undefined;
 }
@@ -320,7 +320,7 @@ export async function ghProjectSetField(
 export async function ghProjectItemDelete(
   projectId: string,
   itemId: string,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const data = await ghGraphQL(
     `mutation($projectId: ID!, $itemId: ID!) {
@@ -332,7 +332,7 @@ export async function ghProjectItemDelete(
       }
     }`,
     { projectId, itemId },
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return data !== undefined;
 }
@@ -484,7 +484,7 @@ export async function ghSubIssueAdd(
   repo: string,
   parentNumber: number,
   childNumber: number,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   // Get the child's database ID (integer) — the sub_issues REST API requires it, not node_id
   const [owner, repoName] = repo.split("/");
@@ -495,7 +495,7 @@ export async function ghSubIssueAdd(
       "--jq",
       "{id: .id}",
     ],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   if (!nodeData?.id) return false;
 
@@ -508,7 +508,7 @@ export async function ghSubIssueAdd(
       "-F",
       `sub_issue_id=${nodeData.id}`,
     ],
-    { cwd: opts.cwd },
+    { cwd: opts.cwd, logger: opts.logger },
   );
   return result !== undefined;
 }
