@@ -1,0 +1,154 @@
+import { useState, useEffect } from "react";
+import { Box, Text } from "ink";
+import type { EnrichedManifest } from "../manifest-store.js";
+
+// --- Shared utilities (from EpicTable.tsx) ---
+
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+const PHASE_COLOR: Record<string, string> = {
+  design: "magenta",
+  plan: "blue",
+  implement: "yellow",
+  validate: "cyan",
+  release: "green",
+  done: "green",
+  cancelled: "red",
+};
+
+function isDim(phase: string): boolean {
+  return phase === "done" || phase === "cancelled";
+}
+
+function InlineSpinner() {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFrame((prev) => (prev + 1) % SPINNER_FRAMES.length);
+    }, 80);
+    return () => clearInterval(timer);
+  }, []);
+  return <Text color="yellow">{SPINNER_FRAMES[frame]}</Text>;
+}
+
+function ProgressBar({
+  completed,
+  total,
+  width = 20,
+}: {
+  completed: number;
+  total: number;
+  width?: number;
+}) {
+  if (total === 0) return <Text dimColor>-</Text>;
+  const filled = Math.round((completed / total) * width);
+  const empty = width - filled;
+  return (
+    <Text>
+      <Text color="green">{"█".repeat(filled)}</Text>
+      <Text dimColor>{"░".repeat(empty)}</Text>
+      <Text>
+        {" "}
+        {completed}/{total}
+      </Text>
+    </Text>
+  );
+}
+
+// --- Props ---
+
+export interface EpicsPanelProps {
+  /** Epic list (already filtered/sorted by parent) */
+  epics: EnrichedManifest[];
+  /** Set of epic slugs with active sessions */
+  activeSessions: Set<string>;
+  /** Currently selected row index (0 = "(all)" entry) */
+  selectedIndex: number;
+  /** Slug currently in cancel-confirmation state */
+  cancelConfirmingSlug?: string;
+}
+
+// --- Component ---
+
+export default function EpicsPanel({
+  epics,
+  activeSessions,
+  selectedIndex,
+  cancelConfirmingSlug,
+}: EpicsPanelProps) {
+  const allSelected = selectedIndex === 0;
+  const slugWidth =
+    Math.max(12, ...epics.map((e) => e.slug.length)) + 2;
+
+  return (
+    <Box flexDirection="column">
+      {/* (all) entry — always index 0 */}
+      <Box>
+        <Box width={2}>
+          <Text color="cyan">{allSelected ? ">" : " "}</Text>
+        </Box>
+        <Text inverse={allSelected} color={allSelected ? "cyan" : undefined}>
+          (all)
+        </Text>
+      </Box>
+
+      {/* Epic rows or empty state */}
+      {epics.length === 0 ? (
+        <Box paddingLeft={2}>
+          <Text dimColor>no epics</Text>
+        </Box>
+      ) : (
+        epics.map((epic, i) => {
+          const rowIndex = i + 1;
+          const isSelected = rowIndex === selectedIndex;
+          const completed = epic.features.filter(
+            (f) => f.status === "completed",
+          ).length;
+          const total = epic.features.length;
+          const isActive = activeSessions.has(epic.slug);
+          const isConfirming = cancelConfirmingSlug === epic.slug;
+          const dim = isDim(epic.phase);
+
+          return (
+            <Box key={epic.slug}>
+              <Box width={2}>
+                <Text color="cyan">{isSelected ? ">" : " "}</Text>
+              </Box>
+              <Box width={slugWidth}>
+                <Text inverse={isSelected} dimColor={dim}>
+                  {epic.slug}
+                </Text>
+              </Box>
+              <Box width={12}>
+                <Text
+                  color={PHASE_COLOR[epic.phase] as Parameters<typeof Text>[0]["color"]}
+                  dimColor={dim}
+                  inverse={isSelected}
+                >
+                  {epic.phase}
+                </Text>
+              </Box>
+              <Box width={30}>
+                <ProgressBar completed={completed} total={total} />
+              </Box>
+              <Box>
+                {isConfirming ? (
+                  <Text color="red" bold>
+                    Cancel {epic.slug}? y/n
+                  </Text>
+                ) : isActive ? (
+                  <>
+                    <InlineSpinner />
+                    <Text> running</Text>
+                  </>
+                ) : (
+                  <Text dimColor>{epic.phase}</Text>
+                )}
+              </Box>
+            </Box>
+          );
+        })
+      )}
+    </Box>
+  );
+}

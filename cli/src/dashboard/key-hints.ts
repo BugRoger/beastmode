@@ -1,18 +1,22 @@
-import type { ViewType } from "./view-stack.js";
+/** Dashboard interaction mode — determines which key hints to show. */
+export type KeyHintMode = "normal" | "filter" | "confirm";
 
-/** Key hint strings per view type. */
-const KEY_HINTS: Record<ViewType["type"], string> = {
-  "epic-list": "q quit  ↑↓ navigate  ↵ drill  x cancel  a all",
-  "feature-list": "q quit  ↑↓ navigate  ↵ drill  ⎋ back",
-  "agent-log": "q quit  ↑↓ scroll  ⎋ back  f follow",
+/** Key hint strings per dashboard mode. */
+const MODE_HINTS: Record<
+  KeyHintMode,
+  string | ((ctx: { slug?: string; filterInput?: string }) => string)
+> = {
+  normal: "q quit  ↑↓ navigate  / filter  x cancel  a all",
+  filter: (ctx) => `/${ctx?.filterInput ?? ""}  ↵ apply  ⎋ clear`,
+  confirm: (ctx) => `Cancel ${ctx?.slug ?? ""}? y confirm  n/⎋ abort`,
 };
 
-/** Get the key hints string for the given view type. */
-export function getKeyHints(viewType: ViewType["type"]): string {
-  return KEY_HINTS[viewType];
-}
-
-/** Get the key hints string from a ViewType object. */
-export function getKeyHintsForView(view: ViewType): string {
-  return KEY_HINTS[view.type];
+/** Get the key hints string for the given mode with optional context. */
+export function getKeyHints(
+  mode: KeyHintMode,
+  ctx?: { slug?: string; filterInput?: string },
+): string {
+  const hint = MODE_HINTS[mode];
+  if (typeof hint === "function") return hint(ctx ?? {});
+  return hint;
 }

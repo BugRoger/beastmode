@@ -1,0 +1,11 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-dashboard-rework-three-panel-layout.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: useTerminalSize hook + MinSizeGate", "status": "completed"},
+    {"id": 1, "subject": "Task 1: PanelBox component", "status": "completed"},
+    {"id": 2, "subject": "Task 2: ThreePanelLayout root component", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Wire App.tsx to use ThreePanelLayout", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Tests for three-panel layout components", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T12:30:00Z"
+}

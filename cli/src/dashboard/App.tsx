@@ -14,6 +14,7 @@ import * as VS from "./view-stack.js";
 import { useKeyboardController, useKeyboardNav } from "./hooks/index.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { createLogger } from "../logger.js";
+import ThreePanelLayout from "./ThreePanelLayout.js";
 
 /** Activity log event for the dashboard. */
 export interface DashboardEvent {
@@ -365,58 +366,21 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   }
 
   return (
-    <Box flexDirection="column" width="100%">
-      {/* Header zone */}
-      <Box flexDirection="row" justifyContent="space-between" paddingX={1}>
-        <Text bold color="green">
-          beastmode dashboard
-        </Text>
-        <Box>
-          <Text dimColor={!watchRunning} color={watchRunning ? "green" : undefined}>
-            {watchRunning ? "watch: running" : "watch: stopped"}
-          </Text>
-          <Text> </Text>
-          <Text dimColor>{clock}</Text>
-        </Box>
-      </Box>
-
-      {/* Crumb bar — only show when drilled in */}
-      {activeView.type !== "epic-list" && <CrumbBar crumbs={crumbs} />}
-
-      <Box paddingX={1}>
-        <Text dimColor>{"─".repeat(78)}</Text>
-      </Box>
-
-      {/* Content area — view switcher */}
-      <Box flexDirection="column" flexGrow={1} paddingX={1}>
-        {renderContent()}
-      </Box>
-
-      {/* Cancel confirmation */}
-      {cancelConfirmingSlug && (
-        <Box paddingX={1}>
-          <Text color="yellow">Cancel {cancelConfirmingSlug}? (y/n)</Text>
-        </Box>
-      )}
-
-      {/* Separator */}
-      <Box paddingX={1}>
-        <Text dimColor>{"─".repeat(78)}</Text>
-      </Box>
-
-      {/* Activity log zone */}
-      <Box flexDirection="column" paddingX={1}>
-        <ActivityLog events={events} />
-      </Box>
-
-      {/* Footer — context-sensitive key hints */}
-      <Box paddingX={1}>
-        {keyboard.shutdown.isShuttingDown ? (
-          <Text color="yellow">shutting down...</Text>
-        ) : (
-          <Text dimColor>{keyHintText}</Text>
-        )}
-      </Box>
-    </Box>
+    <ThreePanelLayout
+      watchRunning={watchRunning}
+      clock={clock}
+      keyHints={keyHintText}
+      isShuttingDown={keyboard.shutdown.isShuttingDown}
+      epicsSlot={renderContent()}
+      detailsSlot={<Text dimColor>select an epic</Text>}
+      logSlot={<Text dimColor>no active sessions</Text>}
+      cancelPrompt={
+        cancelConfirmingSlug ? (
+          <Box paddingX={1}>
+            <Text color="yellow">Cancel {cancelConfirmingSlug}? (y/n)</Text>
+          </Box>
+        ) : undefined
+      }
+    />
   );
 }
