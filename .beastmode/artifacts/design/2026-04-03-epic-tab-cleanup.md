@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: 80ea56
+slug: epic-tab-cleanup
 epic: epic-tab-cleanup
 ---
 
