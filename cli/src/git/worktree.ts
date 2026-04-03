@@ -413,6 +413,7 @@ export async function merge(
 
 /**
  * Remove a worktree and optionally delete its branch.
+ * Also deletes all impl/<slug>--* branches for the slug.
  */
 export async function remove(
   slug: string,
@@ -430,6 +431,22 @@ export async function remove(
 
   // Prune to clean up
   await git(["worktree", "prune"], { cwd, allowFailure: true });
+
+  // Delete all impl branches for this slug (impl/<slug>--*)
+  const implPrefix = `impl/${slug}--`;
+  const branchList = await git(["branch", "--list", `${implPrefix}*`], {
+    cwd,
+    allowFailure: true,
+  });
+  if (branchList.exitCode === 0 && branchList.stdout.trim()) {
+    const implBranches = branchList.stdout
+      .split("\n")
+      .map((b) => b.trim().replace(/^\*\s*/, ""))
+      .filter((b) => b.length > 0);
+    for (const b of implBranches) {
+      await git(["branch", "-D", b], { cwd, allowFailure: true });
+    }
+  }
 
   // Optionally delete the branch
   if (opts.deleteBranch !== false) {

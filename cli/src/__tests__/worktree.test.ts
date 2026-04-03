@@ -493,3 +493,59 @@ describe("createImplBranch", () => {
     await remove("test-no-conflict", { cwd: repoDir });
   });
 });
+
+describe("impl branch cleanup on remove", () => {
+  test("remove() deletes all impl/<slug>--* branches for the slug", async () => {
+    // Create a worktree
+    await create("test-cleanup", { cwd: repoDir });
+
+    // Create several impl branches for this slug
+    await git(["branch", "impl/test-cleanup--feat-a"], { cwd: repoDir });
+    await git(["branch", "impl/test-cleanup--feat-b"], { cwd: repoDir });
+    await git(["branch", "impl/test-cleanup--feat-c"], { cwd: repoDir });
+
+    // Also create an impl branch for a DIFFERENT slug (should not be deleted)
+    await git(["branch", "impl/other-slug--feat-x"], { cwd: repoDir });
+
+    // Remove the worktree
+    await remove("test-cleanup", { cwd: repoDir });
+
+    // All impl branches for test-cleanup should be gone
+    const aExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", "refs/heads/impl/test-cleanup--feat-a"],
+      { cwd: repoDir },
+    );
+    const bExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", "refs/heads/impl/test-cleanup--feat-b"],
+      { cwd: repoDir },
+    );
+    const cExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", "refs/heads/impl/test-cleanup--feat-c"],
+      { cwd: repoDir },
+    );
+    expect(aExists).toBe(false);
+    expect(bExists).toBe(false);
+    expect(cExists).toBe(false);
+
+    // impl branch for other-slug should still exist
+    const otherExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", "refs/heads/impl/other-slug--feat-x"],
+      { cwd: repoDir },
+    );
+    expect(otherExists).toBe(true);
+
+    // Clean up the other slug's branch
+    await git(["branch", "-D", "impl/other-slug--feat-x"], { cwd: repoDir, allowFailure: true });
+  });
+
+  test("remove() succeeds when no impl branches exist", async () => {
+    await create("test-cleanup-empty", { cwd: repoDir });
+
+    // Remove without any impl branches — should not error
+    await remove("test-cleanup-empty", { cwd: repoDir });
+
+    // Verify worktree is gone
+    const wtExists = await exists("test-cleanup-empty", { cwd: repoDir });
+    expect(wtExists).toBe(false);
+  });
+});
