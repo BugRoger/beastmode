@@ -1,8 +1,8 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-artifact-reader.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Create artifact-reader module", "status": "pending"},
-    {"id": 1, "subject": "Task 1: Create artifact-reader tests", "status": "pending"}
+    {"id": 0, "subject": "Task 0: Section splitter + artifact path resolver implementation", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Orchestrating read + full test suite", "status": "pending"}
   ],
   "lastUpdated": "2026-04-03T00:00:00Z"
 }

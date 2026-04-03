@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-section-extractor.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Write section-extractor.ts with all three functions", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Write section-extractor.test.ts with full coverage", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T12:00:00Z"
+}

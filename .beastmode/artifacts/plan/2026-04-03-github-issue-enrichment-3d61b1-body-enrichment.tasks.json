@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-body-enrichment.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Extend body-format interfaces and rendering", "wave": 1, "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add body-format unit tests for new sections", "wave": 1, "status": "pending"},
+    {"id": 2, "subject": "Task 2: Wire github-sync to read artifacts and enrich bodies", "wave": 2, "status": "pending"},
+    {"id": 3, "subject": "Task 3: Add github-sync integration tests for enriched bodies", "wave": 2, "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

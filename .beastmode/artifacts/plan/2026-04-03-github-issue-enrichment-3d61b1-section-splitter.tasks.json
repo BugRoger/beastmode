@@ -1,9 +1,11 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-04-03-github-issue-enrichment-3d61b1-section-splitter.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Create section-splitter module with unit tests", "status": "pending"},
-    {"id": 1, "subject": "Task 1: Create artifact-reader module with unit tests", "status": "pending"},
-    {"id": 2, "subject": "Task 2: Register new test files in package.json test command", "status": "pending"}
+    {"id": 0, "subject": "Task 0: Create section-splitter module", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Create section-splitter unit tests", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Create artifact-reader module", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Create artifact-reader unit tests", "status": "pending"},
+    {"id": 4, "subject": "Task 4: Register new test files in package.json", "status": "pending"}
   ],
-  "lastUpdated": "2026-04-03T00:00:00Z"
+  "lastUpdated": "2026-04-03T12:00:00Z"
 }
