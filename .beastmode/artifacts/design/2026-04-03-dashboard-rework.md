@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: "870229"
+slug: dashboard-rework
 epic: dashboard-rework
 ---
 
