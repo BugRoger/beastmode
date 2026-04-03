@@ -5,7 +5,6 @@ import {
   openPhase,
   closePhase,
 } from "../tree-view/tree-state.js";
-import type { TreeState } from "../tree-view/types.js";
 
 describe("createTreeState", () => {
   test("returns empty tree state", () => {

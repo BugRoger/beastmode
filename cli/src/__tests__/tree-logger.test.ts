@@ -1,7 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { TreeLogger } from "../tree-view/tree-logger.js";
 import { createTreeState } from "../tree-view/tree-state.js";
-import type { TreeState } from "../tree-view/types.js";
 import type { Logger } from "../logger.js";
 
 describe("TreeLogger", () => {
