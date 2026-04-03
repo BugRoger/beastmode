@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { formatLogEntry, detectTag } from "../hooks/post-tool-use";
-import type { ToolInput, ToolOutput } from "../hooks/post-tool-use";
+import { formatLogEntry, detectTag } from "../hooks/hitl-log";
+import type { ToolInput, ToolOutput } from "../hooks/hitl-log";
 
 // --- Fixture helpers ---
 

@@ -176,7 +176,7 @@ function buildPostToolUseHook(phase: string): HookEntry {
     hooks: [
       {
         type: "command",
-        command: `bun run "$(git rev-parse --show-toplevel)/cli/src/hitl-log.ts" ${phase}`,
+        command: `bun run "$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts" ${phase}`,
       },
     ],
   };

@@ -43,7 +43,7 @@ import {
   cleanHitlSettings,
   buildPreToolUseHook,
   getPhaseHitlProse,
-} from "../hooks/pre-tool-use.js";
+} from "../hooks/hitl-settings.js";
 import type { BeastmodeConfig } from "../config.js";
 
 /** Dispatch strategy type -- determines how the phase session runs. */

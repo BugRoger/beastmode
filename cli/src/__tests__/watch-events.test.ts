@@ -8,8 +8,8 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import { WatchLoop, attachLoggerSubscriber } from "../watch";
-import type { WatchDeps } from "../watch";
+import { WatchLoop, attachLoggerSubscriber } from "../commands/watch-loop";
+import type { WatchDeps } from "../commands/watch-loop";
 import type { EnrichedManifest } from "../manifest/store";
 import type { SessionHandle, SessionCreateOpts } from "../dispatch/factory";
 import type { WatchConfig } from "../dispatch/types";

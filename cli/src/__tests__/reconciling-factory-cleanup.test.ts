@@ -3,7 +3,7 @@ import type { SessionFactory, SessionCreateOpts, SessionHandle } from "../dispat
 import type { SessionResult } from "../dispatch/types.js";
 
 // ---------------------------------------------------------------------------
-// Mock external deps BEFORE importing watch-command
+// Mock external deps BEFORE importing commands/watch
 // ---------------------------------------------------------------------------
 
 mock.module("../git/worktree.js", () => ({
@@ -71,7 +71,6 @@ mock.module("../artifacts/reader.js", () => ({
   readArtifact: mock(() => undefined),
   resolveArtifact: mock(() => undefined),
   splitSections: mock(() => new Map()),
-  splitSectionsSimple: mock(() => new Map()),
   extractSection: mock(() => undefined),
   extractSections: mock(() => new Map()),
 }));
@@ -90,7 +89,7 @@ mock.module("../manifest/pure.js", () => ({
   deriveNextPhase: mock(() => "done"),
 }));
 
-mock.module("../hooks/pre-tool-use.js", () => ({
+mock.module("../hooks/hitl-settings.js", () => ({
   writeHitlSettings: mock(() => {}),
   cleanHitlSettings: mock(() => {}),
   buildPreToolUseHook: mock(() => ({})),
@@ -107,7 +106,7 @@ mock.module("../config.js", () => ({
 }));
 
 // Import AFTER mocking
-const { ReconcilingFactory } = await import("../watch-command.js");
+const { ReconcilingFactory } = await import("../commands/watch.js");
 import { createLogger } from "../logger.js";
 
 // ---------------------------------------------------------------------------

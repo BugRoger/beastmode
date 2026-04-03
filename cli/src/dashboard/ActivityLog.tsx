@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import type { DashboardEvent } from "./App.js";
-import { formatLogLine, type LogLevel } from "../shared/log-format.js";
+import { formatLogLine, type LogLevel } from "../logger.js";
 
 /** Map DashboardEvent type to LogLevel. */
 function eventTypeToLevel(type: DashboardEvent["type"]): LogLevel {

@@ -29,8 +29,8 @@ mock.module("../github/cli.js", () => ({
 }));
 
 // Import AFTER mocking
-import { cancelEpic } from "../shared/cancel-logic.js";
-import type { CancelConfig } from "../shared/cancel-logic.js";
+import { cancelEpic } from "../commands/cancel-logic.js";
+import type { CancelConfig } from "../commands/cancel-logic.js";
 import { createNullLogger } from "../logger.js";
 import * as store from "../manifest/store.js";
 

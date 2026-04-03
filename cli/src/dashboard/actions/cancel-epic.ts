@@ -5,7 +5,7 @@
  * 2. Delegate to the shared cancel-logic module for full 6-step cleanup
  */
 
-import { cancelEpic } from "../../shared/cancel-logic.js";
+import { cancelEpic } from "../../commands/cancel-logic.js";
 import type { DispatchTracker } from "../../dispatch/tracker.js";
 import type { Logger } from "../../logger.js";
 

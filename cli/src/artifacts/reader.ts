@@ -1,70 +1,12 @@
 /**
- * Artifact reader — unified module for phase output parsing, artifact resolution,
+ * Artifact reader — phase output parsing, artifact resolution,
  * section extraction, and section splitting.
- *
- * Merged from:
- *   - phase-output.ts (phase output file discovery and parsing)
- *   - artifact-reader.ts (artifact resolution, reading, and section splitting with frontmatter)
- *   - section-extractor.ts (named section extraction from markdown)
- *   - section-splitter.ts (simple section splitting without frontmatter stripping)
  */
 
 import { readFileSync, existsSync, readdirSync } from "fs";
 import { resolve, join, relative } from "path";
 import type { Phase, PhaseOutput } from "../types.js";
 import type { Logger } from "../logger.js";
-
-// =============================================================================
-// Section Splitter (from section-splitter.ts)
-// =============================================================================
-
-/**
- * Split markdown content into sections by `## ` headings.
- *
- * Each section includes the content between its heading and the next heading (or EOF).
- * Heading names are trimmed and case-preserved as map keys.
- * Content before the first heading is stored under key "" (empty string).
- *
- * Note: Does NOT strip YAML frontmatter. For frontmatter-aware splitting,
- * use splitSections() instead.
- *
- * @param content - Raw markdown string, or undefined
- * @returns Map of heading name → section body text (trimmed)
- */
-export function splitSectionsRaw(
-  content: string | undefined,
-): Map<string, string> {
-  const sections = new Map<string, string>();
-  if (!content) return sections;
-
-  const lines = content.split("\n");
-  let currentHeading = "";
-  let currentBody: string[] = [];
-
-  for (const line of lines) {
-    if (line.startsWith("## ")) {
-      // Flush previous section
-      if (currentHeading !== "" || currentBody.length > 0) {
-        sections.set(currentHeading, currentBody.join("\n").trim());
-      }
-      currentHeading = line.slice(3).trim();
-      currentBody = [];
-    } else {
-      currentBody.push(line);
-    }
-  }
-
-  // Flush last section
-  if (currentHeading !== "" || currentBody.length > 0) {
-    sections.set(currentHeading, currentBody.join("\n").trim());
-  }
-
-  return sections;
-}
-
-// =============================================================================
-// Artifact Reader (from artifact-reader.ts)
-// =============================================================================
 
 /**
  * Split markdown content into sections by `## ` headings.
@@ -211,10 +153,6 @@ export function readArtifactSections(
   return sections;
 }
 
-// =============================================================================
-// Section Extractor (from section-extractor.ts)
-// =============================================================================
-
 /** Strip YAML frontmatter (--- delimited block at start of content). */
 function stripFrontmatter(content: string): string {
   if (!content.startsWith("---")) return content;
@@ -297,10 +235,6 @@ export function extractSections(
   return result;
 }
 
-// =============================================================================
-// Phase Output (from phase-output.ts)
-// =============================================================================
-
 /**
  * Resolve the expected output file path for a phase and slug.
  * Convention: .beastmode/state/<phase>/YYYY-MM-DD-<slug>.output.json
@@ -337,11 +271,13 @@ export function findOutputFile(projectRoot: string, phase: Phase, slug: string):
  * Throws on corrupt/malformed JSON.
  */
 export function readOutput(filePath: string): PhaseOutput {
-  if (!existsSync(filePath)) {
+  let raw: string;
+  try {
+    raw = readFileSync(filePath, "utf-8");
+  } catch {
     throw new Error(`Phase output file not found: ${filePath}`);
   }
 
-  const raw = readFileSync(filePath, "utf-8");
   let parsed: unknown;
 
   try {

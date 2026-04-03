@@ -89,12 +89,12 @@ mock.module("../manifest/pure.js", () => ({
   setFeatureBodyHash: mock((m: any) => m),
 }));
 
-// Mock hooks/pre-tool-use
+// Mock hooks/hitl-settings
 const mockCleanHitlSettings = mock((_dir: string) => {});
 const mockWriteHitlSettings = mock((_opts: any) => {});
 const mockBuildPreToolUseHook = mock(() => ({}));
 const mockGetPhaseHitlProse = mock(() => "test prose");
-mock.module("../hooks/pre-tool-use.js", () => ({
+mock.module("../hooks/hitl-settings.js", () => ({
   cleanHitlSettings: mockCleanHitlSettings,
   writeHitlSettings: mockWriteHitlSettings,
   buildPreToolUseHook: mockBuildPreToolUseHook,

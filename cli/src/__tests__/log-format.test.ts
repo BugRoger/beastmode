@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import chalk from "chalk";
-import { formatLogLine } from "../shared/log-format";
-import type { LogLevel, LogContext } from "../shared/log-format";
+import { formatLogLine } from "../logger";
+import type { LogLevel, LogContext } from "../logger";
 
 // Strip ANSI codes for content assertions
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");

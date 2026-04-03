@@ -72,28 +72,28 @@ describe("createLogger", () => {
   });
 
   describe("output format", () => {
-    test("full context: [HH:MM:SS] LEVEL  (phase/epic/feature):  msg", () => {
+    test("full context: [HH:MM:SS] LEVEL  PHASE  (epic/feature):  msg", () => {
       const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic", feature: "auth" }, (l) => {
         l.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\/my-epic\/auth\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\/auth\):\s+test message\n$/);
     });
 
-    test("phase+epic context: (phase/epic) scope", () => {
+    test("phase+epic context: PHASE  (epic) scope", () => {
       const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic" }, (l) => {
         l.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\/my-epic\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\):\s+test message\n$/);
     });
 
-    test("phase-only context: (phase) scope", () => {
+    test("phase-only context: PHASE  (cli) scope", () => {
       const { stdout } = captureWith(0, { phase: "plan" }, (l) => {
         l.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(cli\):\s+test message\n$/);
     });
 
     test("no context: falls back to (cli) scope", () => {
@@ -122,7 +122,7 @@ describe("createLogger", () => {
         l.log("a"); l.detail("b"); l.debug("c"); l.trace("d"); l.warn("e"); l.error("f");
       });
       for (const line of [...stdout, ...stderr]) {
-        expect(stripAnsi(line)).toContain("(plan/my-epic/auth):");
+        expect(stripAnsi(line)).toContain("(my-epic/auth):");
       }
     });
   });
@@ -134,7 +134,7 @@ describe("createLogger", () => {
         child.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\/my-epic\/auth\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\/auth\):\s+test message\n$/);
     });
 
     test("child inherits parent verbosity", () => {
@@ -153,7 +153,7 @@ describe("createLogger", () => {
         child.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\/new-epic\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(new-epic\):\s+test message\n$/);
     });
 
     test("child does not modify parent context", () => {
@@ -162,7 +162,7 @@ describe("createLogger", () => {
         l.log("test message");
       });
       const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(plan\/my-epic\):\s+test message\n$/);
+      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\):\s+test message\n$/);
     });
   });
 });

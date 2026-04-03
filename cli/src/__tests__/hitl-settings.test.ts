@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { writeHitlSettings, cleanHitlSettings } from "../hooks/pre-tool-use";
-import type { WriteSettingsOptions } from "../hooks/pre-tool-use";
+import { writeHitlSettings, cleanHitlSettings } from "../hooks/hitl-settings";
+import type { WriteSettingsOptions } from "../hooks/hitl-settings";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";

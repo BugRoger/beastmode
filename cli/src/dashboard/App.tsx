@@ -3,7 +3,7 @@ import { Box, Text, useApp } from "ink";
 import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import type { WatchLoopEventMap } from "../dispatch/types.js";
-import type { WatchLoop } from "../watch.js";
+import type { WatchLoop } from "../commands/watch-loop.js";
 import EpicTable from "./EpicTable.js";
 import ActivityLog from "./ActivityLog.js";
 import CrumbBar from "./CrumbBar.js";

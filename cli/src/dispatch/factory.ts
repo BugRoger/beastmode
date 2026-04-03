@@ -7,17 +7,11 @@
  *
  * Also includes the interactive runner for manual phase commands and
  * SDK streaming types/ring buffer for live agent output.
- *
- * Merged from: session.ts, runners/interactive-runner.ts, sdk-streaming.ts
  */
 
 import { EventEmitter } from "node:events";
 import type { Phase, PhaseResult } from "../types.js";
 import type { SessionResult } from "./types.js";
-
-// ==========================================================================
-// SDK streaming types and ring buffer (from sdk-streaming.ts)
-// ==========================================================================
 
 // --- SDK message types (subset we care about) ---
 
@@ -155,10 +149,6 @@ export class SessionEmitter extends EventEmitter {
   }
 }
 
-// ==========================================================================
-// Session factory interfaces (from session.ts)
-// ==========================================================================
-
 /** Options for creating a new session. */
 export interface SessionCreateOpts {
   epicSlug: string;
@@ -208,10 +198,6 @@ export class SdkSessionFactory implements SessionFactory {
     return this.dispatchFn(opts);
   }
 }
-
-// ==========================================================================
-// Interactive runner (from runners/interactive-runner.ts)
-// ==========================================================================
 
 export interface InteractiveRunnerOptions {
   phase: Phase;

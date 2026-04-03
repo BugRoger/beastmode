@@ -2,13 +2,13 @@ import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import type { BeastmodeConfig } from "../config.js";
 import { createLogger } from "../logger.js";
-import { WatchLoop } from "../watch.js";
-import type { WatchDeps } from "../watch.js";
+import { WatchLoop } from "./watch-loop.js";
+import type { WatchDeps } from "./watch-loop.js";
 import { listEnriched } from "../manifest/store.js";
 import {
   dispatchPhase,
   ReconcilingFactory,
-} from "../watch-command.js";
+} from "./watch.js";
 import { SdkSessionFactory } from "../dispatch/factory.js";
 import type { SessionFactory } from "../dispatch/factory.js";
 import { discoverGitHub } from "../github/discovery.js";

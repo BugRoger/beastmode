@@ -5,7 +5,7 @@ import {
   iterm2Available,
   IT2_SETUP_INSTRUCTIONS,
   type SpawnFn,
-} from "../iterm2-detect";
+} from "../dispatch/it2";
 
 // ---------------------------------------------------------------------------
 // Mock helpers (same pattern as cmux-client.test.ts)

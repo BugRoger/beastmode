@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { WatchLoop } from "../watch.js";
-import type { WatchDeps } from "../watch.js";
+import { WatchLoop } from "../commands/watch-loop.js";
+import type { WatchDeps } from "../commands/watch-loop.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import type { SessionResult } from "../dispatch/types.js";
 import { SdkSessionFactory } from "../dispatch/factory.js";

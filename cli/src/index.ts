@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 
   switch (command) {
     case "watch":
-      await watchCommand(config, verbosity);
+      await watchCommand(args, verbosity);
       break;
     case "status":
       await statusCommand(config, args, verbosity);

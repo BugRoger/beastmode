@@ -5,22 +5,22 @@
  * handles implement fan-out and graceful shutdown.
  */
 
-import type { EnrichedManifest, ScanResult } from "./manifest/store.js";
+import type { EnrichedManifest, ScanResult } from "../manifest/store.js";
 import type {
   DispatchedSession,
   WatchConfig,
   WatchLoopEventMap,
-} from "./dispatch/types.js";
-import type { SessionFactory } from "./dispatch/factory.js";
-import type { Logger } from "./logger.js";
+} from "../dispatch/types.js";
+import type { SessionFactory } from "../dispatch/factory.js";
+import type { Logger } from "../logger.js";
 import { EventEmitter } from "node:events";
-import { DispatchTracker } from "./dispatch/tracker.js";
-import { acquireLock, releaseLock } from "./lockfile.js";
+import { DispatchTracker } from "../dispatch/tracker.js";
+import { acquireLock, releaseLock } from "../lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
-import { createLogger } from "./logger.js";
-import { createTag } from "./git/tags.js";
+import { createLogger } from "../logger.js";
+import { createTag } from "../git/tags.js";
 
 // --- Version banner ---
 
@@ -178,6 +178,16 @@ export class WatchLoop extends EventEmitter {
     // Don't dispatch if the epic worktree is already in use by another phase
     if (this.tracker.hasPhaseSession(epic.slug, action.phase)) return 0;
     if (this.tracker.hasEpicWorktreeSession(epic.slug)) return 0;
+
+    // Release serialization — only one epic releases at a time
+    if (action.phase === "release" && this.tracker.hasAnyReleaseSession()) {
+      const blockingSlug = this.tracker.getActiveReleaseSlug();
+      this.emitTyped('release:held', {
+        waitingSlug: epic.slug,
+        blockingSlug: blockingSlug ?? "unknown",
+      });
+      return 0;
+    }
 
     // Reserve the slot synchronously before the async create to prevent
     // concurrent rescans from dispatching the same phase.
@@ -424,6 +434,10 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     } else {
       logger.error(message);
     }
+  });
+
+  loop.on('release:held', ({ waitingSlug, blockingSlug }) => {
+    logger.child({ epic: waitingSlug }).log(`release held: ${waitingSlug} blocked by ${blockingSlug}`);
   });
 
 }

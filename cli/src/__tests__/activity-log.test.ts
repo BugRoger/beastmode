@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { formatLogLine, type LogLevel } from "../shared/log-format";
+import { formatLogLine, type LogLevel } from "../logger";
 
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
 

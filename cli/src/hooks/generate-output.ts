@@ -16,7 +16,7 @@
 import { readdirSync, readFileSync, writeFileSync, renameSync, statSync, existsSync } from "node:fs";
 import { resolve, basename, join } from "node:path";
 import { execSync } from "node:child_process";
-import type { PhaseOutput } from "./types.js";
+import type { PhaseOutput } from "../types.js";
 
 const WORKFLOW_PHASES: readonly string[] = ["design", "plan", "implement", "validate", "release"];
 

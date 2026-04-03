@@ -7,8 +7,8 @@
  */
 
 import { describe, test, expect } from "bun:test";
-import { WatchLoop } from "../watch.js";
-import type { WatchDeps } from "../watch.js";
+import { WatchLoop } from "../commands/watch-loop.js";
+import type { WatchDeps } from "../commands/watch-loop.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import type { SessionHandle, SessionCreateOpts } from "../dispatch/factory.js";
 import type { WatchConfig } from "../dispatch/types.js";

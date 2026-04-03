@@ -103,7 +103,7 @@ function writeOutputJson(
 }
 
 /** Small delay to ensure file mtime > session start time. */
-const tick = () => new Promise<void>((r) => setTimeout(r, 50));
+const tick = () => new Promise<void>((r) => setTimeout(r, 5));
 
 describe("ITermSessionFactory", () => {
   let mockClient: ReturnType<typeof createMockIt2Client>;

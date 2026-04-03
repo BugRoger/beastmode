@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseArgs } from "../args";
-import { cancelEpic } from "../shared/cancel-logic";
-import type { CancelConfig } from "../shared/cancel-logic";
+import { cancelEpic } from "../commands/cancel-logic";
+import type { CancelConfig } from "../commands/cancel-logic";
 import type { Logger } from "../logger";
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readdirSync } from "fs";
 import { resolve } from "path";

@@ -7,7 +7,7 @@ import {
   scanPlanFeatures,
   processArtifact,
   generateAll,
-} from "../generate-output";
+} from "../hooks/generate-output";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-generate-output");
 const ARTIFACTS_DIR = join(TEST_ROOT, ".beastmode", "artifacts");

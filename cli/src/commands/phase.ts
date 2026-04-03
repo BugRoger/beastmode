@@ -26,8 +26,8 @@ import * as store from "../manifest/store";
 import { createLogger } from "../logger";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig } from "../config";
-import { cancelEpic } from "../shared/cancel-logic.js";
-import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, getPhaseHitlProse } from "../hooks/pre-tool-use";
+import { cancelEpic } from "./cancel-logic.js";
+import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, getPhaseHitlProse } from "../hooks/hitl-settings";
 
 /**
  * Execute a phase command. Called directly from the top-level router.

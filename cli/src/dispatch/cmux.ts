@@ -4,8 +4,6 @@
  * Communicates with cmux by shelling out to the `cmux` binary.
  * Creates one workspace per epic, one surface per dispatched phase/feature.
  * Completion is detected via fs.watch on *.output.json files.
- *
- * Merged from: cmux-client.ts, cmux-session.ts, cmux-types.ts
  */
 
 import { watch, type FSWatcher } from "node:fs";
@@ -19,10 +17,6 @@ import type {
 import type { SessionResult } from "./types.js";
 import { filenameMatchesEpic } from "../artifacts/reader.js";
 import * as worktree from "../git/worktree.js";
-
-// ==========================================================================
-// Error classes (from cmux-client.ts)
-// ==========================================================================
 
 export class CmuxError extends Error {
   constructor(message: string) {
@@ -38,10 +32,6 @@ export class CmuxConnectionError extends CmuxError {
   }
 }
 
-// ==========================================================================
-// Client types (from cmux-client.ts)
-// ==========================================================================
-
 export interface CmuxClientWorkspace {
   name: string;
   surfaces: string[];
@@ -52,10 +42,6 @@ export interface CmuxClientSurface {
   workspace: string;
   pid?: number;
 }
-
-// ==========================================================================
-// Client interface (from cmux-client.ts)
-// ==========================================================================
 
 export interface ICmuxClient {
   ping(): Promise<boolean>;
@@ -68,10 +54,6 @@ export interface ICmuxClient {
   getSurface(workspace: string, surface: string): Promise<CmuxClientSurface | null>;
   notify(title: string, body: string): Promise<void>;
 }
-
-// ==========================================================================
-// Spawn function type (from cmux-client.ts)
-// ==========================================================================
 
 /**
  * Spawn function signature matching the subset of Bun.spawn we need.
@@ -86,10 +68,6 @@ export type SpawnFn = (
   stderr: ReadableStream | null;
   exited: Promise<number>;
 };
-
-// ==========================================================================
-// Binary resolution (from cmux-client.ts)
-// ==========================================================================
 
 const CMUX_APP_BIN = "/Applications/cmux.app/Contents/Resources/bin/cmux";
 
@@ -117,10 +95,6 @@ function cmuxBinary(): string {
   if (_resolvedBinary === null) _resolvedBinary = resolveCmuxBinary();
   return _resolvedBinary;
 }
-
-// ==========================================================================
-// Client implementation (from cmux-client.ts)
-// ==========================================================================
 
 /**
  * Parse a workspace ref from cmux output.
@@ -341,22 +315,16 @@ export class CmuxClient implements ICmuxClient {
   }
 }
 
-// ==========================================================================
-// Availability helper (from cmux-client.ts)
-// ==========================================================================
-
 /** Check if cmux is available by attempting a ping. */
 export async function cmuxAvailable(): Promise<boolean> {
   const client = new CmuxClient({ timeoutMs: 3_000 });
   return client.ping();
 }
 
-// ==========================================================================
-// Reconciliation types (from cmux-types.ts)
+// --- Reconciliation types ---
 //
-// These model the structured JSON responses from the cmux binary and
-// the client interface consumed by reconciliation and strategy modules.
-// ==========================================================================
+// Structured JSON responses from the cmux binary and the client interface
+// consumed by reconciliation and strategy modules.
 
 /** A cmux surface within a workspace (reconciliation model). */
 export interface CmuxSurface {
@@ -389,10 +357,6 @@ export interface CmuxClientLike {
   /** Close a workspace and all its surfaces by ID. */
   closeWorkspace(workspaceId: string): Promise<void>;
 }
-
-// ==========================================================================
-// Session factory (from cmux-session.ts)
-// ==========================================================================
 
 /** Function that creates a worktree and returns its info. */
 export type CreateWorktreeFn = (

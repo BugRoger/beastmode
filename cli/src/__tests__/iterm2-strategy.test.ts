@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { selectStrategy } from "../watch-command";
-import type { ITerm2AvailabilityResult } from "../iterm2-detect";
+import { selectStrategy } from "../commands/watch";
+import type { ITerm2AvailabilityResult } from "../dispatch/it2";
 
 // ---------------------------------------------------------------------------
 // Mock helpers

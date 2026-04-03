@@ -7,7 +7,7 @@
 
 import type { BeastmodeConfig } from "../config";
 import { createLogger } from "../logger";
-import { cancelEpic } from "../shared/cancel-logic.js";
+import { cancelEpic } from "./cancel-logic.js";
 
 export async function cancelCommand(
   args: string[],
