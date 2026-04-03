@@ -13,9 +13,9 @@
 import { describe, test, expect } from "bun:test";
 import { WatchLoop } from "../watch";
 import type { WatchDeps } from "../watch";
-import type { EnrichedManifest } from "../manifest-store";
-import type { SessionHandle, SessionCreateOpts } from "../session";
-import type { SessionResult } from "../watch-types";
+import type { EnrichedManifest } from "../manifest/store";
+import type { SessionHandle, SessionCreateOpts } from "../dispatch/factory";
+import type { SessionResult } from "../dispatch/types";
 
 function makeEpic(features: Array<{ slug: string; status: string }>): EnrichedManifest {
   return {

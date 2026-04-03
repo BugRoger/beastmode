@@ -5,7 +5,7 @@ import {
   CmuxConnectionError,
   cmuxAvailable,
   type SpawnFn,
-} from "../cmux-client";
+} from "../dispatch/cmux";
 
 // ---------------------------------------------------------------------------
 // Mock helpers

@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-cli-restructure-rebase-step.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Implement rebase() function in git/worktree.ts", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Write tests for rebase() in worktree.test.ts", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T17:45:00Z"
+}

@@ -10,9 +10,9 @@
 import { describe, test, expect } from "bun:test";
 import { WatchLoop, attachLoggerSubscriber } from "../watch";
 import type { WatchDeps } from "../watch";
-import type { EnrichedManifest } from "../manifest-store";
-import type { SessionHandle, SessionCreateOpts } from "../session";
-import type { WatchConfig } from "../watch-types";
+import type { EnrichedManifest } from "../manifest/store";
+import type { SessionHandle, SessionCreateOpts } from "../dispatch/factory";
+import type { WatchConfig } from "../dispatch/types";
 import { createNullLogger } from "../logger";
 import type { Logger } from "../logger";
 

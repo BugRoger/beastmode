@@ -5,22 +5,22 @@
  * handles implement fan-out and graceful shutdown.
  */
 
-import type { EnrichedManifest, ScanResult } from "./manifest-store.js";
+import type { EnrichedManifest, ScanResult } from "./manifest/store.js";
 import type {
   DispatchedSession,
   WatchConfig,
   WatchLoopEventMap,
-} from "./watch-types.js";
-import type { SessionFactory } from "./session.js";
+} from "./dispatch/types.js";
+import type { SessionFactory } from "./dispatch/factory.js";
 import type { Logger } from "./logger.js";
 import { EventEmitter } from "node:events";
-import { DispatchTracker } from "./dispatch-tracker.js";
+import { DispatchTracker } from "./dispatch/tracker.js";
 import { acquireLock, releaseLock } from "./lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 import { createLogger } from "./logger.js";
-import { createTag } from "./phase-tags.js";
+import { createTag } from "./git/tags.js";
 
 // --- Version banner ---
 

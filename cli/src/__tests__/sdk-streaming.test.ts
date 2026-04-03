@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { RingBuffer, SessionEmitter } from "../sdk-streaming.js";
-import type { LogEntry } from "../sdk-streaming.js";
+import { RingBuffer, SessionEmitter } from "../dispatch/factory.js";
+import type { LogEntry } from "../dispatch/factory.js";
 
 describe("RingBuffer", () => {
   test("stores entries up to capacity", () => {

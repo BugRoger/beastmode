@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, buildSnapshot, detectChanges, highlightRow, formatWaveIndicator, buildVerboseWaveRows } from "../commands/status";
 import type { WatchMeta, StatusSnapshot } from "../commands/status";
-import type { EnrichedManifest } from "../manifest-store";
+import type { EnrichedManifest } from "../manifest/store";
 
 /**
  * Strip ANSI escape codes for assertion on visible text.

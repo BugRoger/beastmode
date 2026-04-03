@@ -12,8 +12,8 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { reconcileFeature } from "../reconcile";
-import type { PipelineManifest } from "../manifest";
+import { reconcileFeature } from "../manifest/reconcile";
+import type { PipelineManifest } from "../manifest/pure";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-reconcile");
 const WORKTREE = resolve(TEST_ROOT, "worktree");

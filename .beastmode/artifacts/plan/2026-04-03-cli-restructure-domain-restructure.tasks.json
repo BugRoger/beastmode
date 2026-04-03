@@ -1,0 +1,18 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-cli-restructure-domain-restructure.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create git/ domain", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Create hooks/ domain", "status": "pending", "wave": 1},
+    {"id": 2, "subject": "Task 2: Create dispatch/ domain", "status": "pending", "wave": 1},
+    {"id": 3, "subject": "Task 3: Create artifacts/ domain", "status": "pending", "wave": 1},
+    {"id": 4, "subject": "Task 4: Create manifest/ domain", "status": "pending", "wave": 1},
+    {"id": 5, "subject": "Task 5: Create github/ domain", "status": "pending", "wave": 1},
+    {"id": 6, "subject": "Task 6: Create pipeline/ domain + absorb root files", "status": "pending", "wave": 1},
+    {"id": 7, "subject": "Task 7: Absorb shared/ changes + root file collapses", "status": "pending", "wave": 1},
+    {"id": 8, "subject": "Task 8: Rewrite all imports across codebase", "status": "pending", "wave": 2},
+    {"id": 9, "subject": "Task 9: Move tests to match new source paths", "status": "pending", "wave": 2},
+    {"id": 10, "subject": "Task 10: Delete old source files + runners/", "status": "pending", "wave": 3},
+    {"id": 11, "subject": "Task 11: Verify tsc + bun test", "status": "pending", "wave": 4}
+  ],
+  "lastUpdated": "2026-04-03T12:00:00Z"
+}

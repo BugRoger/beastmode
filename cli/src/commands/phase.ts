@@ -1,44 +1,37 @@
 /**
  * `beastmode <phase> <args...>`
  *
- * Orchestrates: worktree creation -> interactive session -> run logging.
+ * Thin CLI wrapper: parses context, selects dispatch strategy, delegates to
+ * pipeline/runner.run() for the full 9-step pipeline.
  *
- * All five manual phase commands (design, plan, implement, validate, release)
- * dispatch through the interactive runner. No phase-specific branching except
- * release teardown (remove worktree on success).
- *
+ * Two invocation contexts:
+ *   1. Manual -- user runs `beastmode design <topic>` from the project root.
+ *      Delegates to the pipeline runner for worktree + dispatch + post-dispatch.
+ *   2. Cmux -- the watch loop already created the worktree and CDed into it.
+ *      Runs interactive dispatch only; post-dispatch is handled by the watch
+ *      loop's ReconcilingFactory.
  */
 
 import type { BeastmodeConfig } from "../config";
 import type { Phase } from "../types";
 import { resolve } from "node:path";
-import { runInteractive } from "../runners/interactive-runner";
+import { runInteractive } from "../dispatch/factory";
 import {
-  ensureWorktree,
   enter as enterWorktree,
-  remove as removeWorktree,
   isInsideWorktree,
   resolveMainCheckoutRoot,
-} from "../worktree";
-import { runPostDispatch } from "../post-dispatch";
-import * as store from "../manifest-store";
+} from "../git/worktree";
+import { run as runPipeline } from "../pipeline/runner.js";
+import * as store from "../manifest/store";
 import { createLogger } from "../logger";
-import { loadWorktreePhaseOutput } from "../phase-output";
+import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig } from "../config";
 import { cancelEpic } from "../shared/cancel-logic.js";
-import { writeHitlSettings, cleanHitlSettings } from "../hitl-settings";
-import { buildPreToolUseHook, getPhaseHitlProse } from "../hitl-prompt";
+import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, getPhaseHitlProse } from "../hooks/pre-tool-use";
 
 /**
  * Execute a phase command. Called directly from the top-level router.
  * Phase is already validated by the argument parser.
- *
- * Two invocation contexts:
- *   1. Manual — user runs `beastmode design <topic>` from the project root.
- *      We create/enter the worktree and run post-dispatch + teardown.
- *   2. Cmux — the watch loop already created the worktree and CDed into it.
- *      We skip worktree creation and defer post-dispatch to the watch loop's
- *      ReconcilingFactory (which has the correct projectRoot).
  */
 export async function phaseCommand(
   phase: Phase,
@@ -54,7 +47,6 @@ export async function phaseCommand(
   const worktreeSlug = deriveWorktreeSlug(phase, args);
 
   // Fail-fast: non-design phases require the slug to exist in the store.
-  // Check before creating the worktree to avoid orphaned worktrees.
   if (phase !== "design") {
     const existing = store.find(projectRoot, worktreeSlug);
     if (!existing) {
@@ -63,42 +55,62 @@ export async function phaseCommand(
     }
   }
 
-  let cwd: string;
+  const epicSlug = phase === "design" ? worktreeSlug : (args[0] || worktreeSlug);
+
+  // ── Cmux path ─────────────────────────────────────────────────────────
+  // Already in a worktree (cmux dispatch) — run interactive dispatch only.
+  // Post-dispatch is handled by the watch loop's ReconcilingFactory.
   if (inWorktree) {
-    // Already in a worktree (cmux dispatch) — use cwd as-is
-    cwd = process.cwd();
-  } else {
-    // Manual invocation — create/enter worktree
-    await ensureWorktree(worktreeSlug);
-    cwd = enterWorktree(worktreeSlug);
+    const cwd = process.cwd();
+
+    // Write HITL settings
+    const claudeDir = resolve(cwd, ".claude");
+    cleanHitlSettings(claudeDir);
+    const hitlProse = getPhaseHitlProse(_config.hitl, phase);
+    const preToolUseHook = buildPreToolUseHook(hitlProse, _config.hitl.model, _config.hitl.timeout);
+    writeHitlSettings({ claudeDir, preToolUseHook, phase });
+
+    const result = await runInteractive({ phase, args, cwd });
+    logger.log(`${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`);
+    if (result.exit_status === "error") process.exit(1);
+    if (result.exit_status === "cancelled") process.exit(130);
+    return;
   }
 
-  // Seed manifest for design phase so runPostDispatch can enrich it
-  const epicSlug = phase === "design" ? worktreeSlug : (args[0] || worktreeSlug);
+  // ── Manual path ───────────────────────────────────────────────────────
+  // Full pipeline via runner: worktree + rebase + HITL + dispatch +
+  // reconcile + GitHub sync + cleanup.
+
+  // Seed manifest for design phase so the runner can enrich it
   if (phase === "design" && !store.manifestExists(projectRoot, epicSlug)) {
+    const predictedPath = enterWorktree(epicSlug, { cwd: projectRoot });
     store.create(projectRoot, epicSlug, {
-      worktree: { branch: `feature/${worktreeSlug}`, path: cwd },
+      worktree: { branch: `feature/${worktreeSlug}`, path: predictedPath },
     });
   }
 
-  logger.log(`Phase: ${phase}`);
-  logger.log(`Worktree: ${cwd}`);
+  // Interactive dispatch wrapper matching the runner's dispatch signature
+  const dispatch = async (opts: { phase: Phase; args: string[]; cwd: string }) => {
+    const result = await runInteractive({ phase: opts.phase, args: opts.args, cwd: opts.cwd });
+    return { success: result.exit_status === "success", result };
+  };
 
-  // Clean stale HITL hooks, then write fresh ones before dispatch
-  const claudeDir = resolve(cwd, ".claude");
-  cleanHitlSettings(claudeDir);
-  const hitlProse = getPhaseHitlProse(_config.hitl, phase);
-  const preToolUseHook = buildPreToolUseHook(hitlProse, _config.hitl.model, _config.hitl.timeout);
-  writeHitlSettings({ claudeDir, preToolUseHook, phase });
+  const pipelineResult = await runPipeline({
+    phase,
+    epicSlug,
+    args,
+    projectRoot,
+    strategy: "interactive",
+    config: _config,
+    logger,
+    dispatch,
+  });
 
-  const result = await runInteractive({ phase, args, cwd });
-
-  // Design abandon guard: if design phase produced no PRD, clean up everything
-  if (!inWorktree && phase === "design") {
-    const designOutput = loadWorktreePhaseOutput(cwd, "design", epicSlug);
+  // Design abandon guard: if design phase produced no output, clean up everything
+  if (phase === "design" && !pipelineResult.success) {
+    const designOutput = loadWorktreePhaseOutput(pipelineResult.worktreePath, "design", epicSlug);
     if (!designOutput) {
       logger.log("Design abandoned — cleaning up");
-
       const config = loadConfig(projectRoot);
       await cancelEpic({
         identifier: epicSlug,
@@ -107,48 +119,17 @@ export async function phaseCommand(
         force: true,
         logger,
       });
-
       return;
     }
   }
 
-  // Post-dispatch: only when not in a worktree.
-  // Cmux path defers to the watch loop's ReconcilingFactory.
-  if (!inWorktree) {
-    await runPostDispatch({
-      worktreePath: cwd,
-      projectRoot,
-      epicSlug,
-      phase,
-      success: result.exit_status === "success",
-      logger,
-    });
-  }
-
-  logger.log(`${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`);
-
-  // Release teardown: only from main checkout (watch loop handles its own)
-  if (!inWorktree && phase === "release" && result.exit_status === "success") {
-    try {
-      logger.log("Release successful — removing worktree...");
-
-      await removeWorktree(worktreeSlug, { cwd: projectRoot });
-      logger.log("Worktree removed");
-
-      logger.log("Release teardown complete");
-    } catch (err) {
-      logger.error(`Release teardown failed: ${err instanceof Error ? err.message : String(err)}`);
-      logger.error("Worktree preserved for manual cleanup");
-    }
-  }
-
-  if (result.exit_status === "error") {
+  // Exit code handling
+  if (!pipelineResult.success) {
     process.exit(1);
   }
-  if (result.exit_status === "cancelled") {
-    process.exit(130);
-  }
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 function deriveWorktreeSlug(phase: Phase, args: string[]): string {
   if (phase === "design") {

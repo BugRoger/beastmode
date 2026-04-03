@@ -9,7 +9,7 @@ import {
   deleteAllTags,
   renameTags,
   listTags,
-} from "../phase-tags";
+} from "../git/tags";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-tags");
 

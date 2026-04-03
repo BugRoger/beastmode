@@ -3,21 +3,21 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 const PHASE_TS = readFileSync(resolve(import.meta.dir, "../commands/phase.ts"), "utf-8");
-const POST_DISPATCH_TS = readFileSync(resolve(import.meta.dir, "../post-dispatch.ts"), "utf-8");
+const RUNNER_TS = readFileSync(resolve(import.meta.dir, "../pipeline/runner.ts"), "utf-8");
 
 describe("design abandon guard — primary gate in phase.ts", () => {
-  test("imports loadWorktreePhaseOutput from phase-output", () => {
+  test("imports loadWorktreePhaseOutput from artifacts/reader", () => {
     expect(PHASE_TS).toContain("loadWorktreePhaseOutput");
-    expect(PHASE_TS).toContain("phase-output");
+    expect(PHASE_TS).toContain("artifacts/reader");
   });
 
-  test("checks for design output before post-dispatch", () => {
-    // The abandon guard must appear BEFORE the runPostDispatch call
+  test("checks for design output after pipeline run", () => {
+    // The abandon guard must appear AFTER the runPipeline call
     const guardIndex = PHASE_TS.indexOf("Design abandoned");
-    const postDispatchIndex = PHASE_TS.indexOf("runPostDispatch(");
+    const pipelineIndex = PHASE_TS.indexOf("runPipeline(");
     expect(guardIndex).toBeGreaterThan(-1);
-    expect(postDispatchIndex).toBeGreaterThan(-1);
-    expect(guardIndex).toBeLessThan(postDispatchIndex);
+    expect(pipelineIndex).toBeGreaterThan(-1);
+    expect(guardIndex).toBeGreaterThan(pipelineIndex);
   });
 
   test("delegates cleanup to shared cancel-logic module", () => {
@@ -33,47 +33,42 @@ describe("design abandon guard — primary gate in phase.ts", () => {
     expect(remaining).toContain("force: true");
   });
 
-  test("returns early after cleanup (skips post-dispatch)", () => {
+  test("returns early after cleanup", () => {
     const guardIndex = PHASE_TS.indexOf("Design abandoned");
-    const postDispatchIndex = PHASE_TS.indexOf("runPostDispatch(");
-    // Between the guard and postDispatch, there should be a return
-    const between = PHASE_TS.slice(guardIndex, postDispatchIndex);
-    expect(between).toContain("return;");
+    const remaining = PHASE_TS.slice(guardIndex);
+    expect(remaining).toContain("return;");
   });
 
-  test("only triggers for design phase in manual mode", () => {
-    // The guard should check both phase === "design" and !inWorktree
+  test("only triggers for design phase", () => {
+    // The guard should check phase === "design"
     const guardIndex = PHASE_TS.indexOf("Design abandoned");
-    // Look backwards for the condition
     const beforeGuard = PHASE_TS.slice(0, guardIndex);
     const lastCondition = beforeGuard.lastIndexOf('phase === "design"');
     expect(lastCondition).toBeGreaterThan(-1);
-    expect(beforeGuard).toContain("!inWorktree");
   });
 });
 
-describe("design abandon guard — secondary guard in post-dispatch.ts", () => {
-  test("post-dispatch checks for design output", () => {
+describe("design abandon guard — secondary guard in pipeline/runner.ts", () => {
+  test("runner checks for design output", () => {
     // Should have a specific check for design phase + no output
-    expect(POST_DISPATCH_TS).toContain('opts.phase === "design"');
-    // The design-specific guard should call loadWorktreePhaseOutput for design
-    expect(POST_DISPATCH_TS).toContain('"design"');
+    expect(RUNNER_TS).toContain('config.phase === "design"');
+    expect(RUNNER_TS).toContain("loadWorktreePhaseOutput");
   });
 
   test("returns early for design with no output", () => {
     // Find the design abandon guard section
-    const guardIndex = POST_DISPATCH_TS.indexOf("skipping post-dispatch");
+    const guardIndex = RUNNER_TS.indexOf("no output -- skipping post-dispatch");
     expect(guardIndex).toBeGreaterThan(-1);
     // It should return before the reconcile switch/case block
-    const reconcileCallIndex = POST_DISPATCH_TS.indexOf("await reconcileDesign(");
+    const reconcileCallIndex = RUNNER_TS.indexOf("reconcileDesign(");
     expect(reconcileCallIndex).toBeGreaterThan(-1);
     expect(guardIndex).toBeLessThan(reconcileCallIndex);
   });
 
   test("secondary guard is after failure early exit", () => {
     // The design guard should come after the success/failure check
-    const failureExitIndex = POST_DISPATCH_TS.indexOf("skipping updates");
-    const designGuardIndex = POST_DISPATCH_TS.indexOf("skipping post-dispatch");
+    const failureExitIndex = RUNNER_TS.indexOf("skipping post-dispatch steps");
+    const designGuardIndex = RUNNER_TS.indexOf("no output -- skipping post-dispatch");
     expect(failureExitIndex).toBeGreaterThan(-1);
     expect(designGuardIndex).toBeGreaterThan(-1);
     expect(designGuardIndex).toBeGreaterThan(failureExitIndex);
@@ -82,7 +77,7 @@ describe("design abandon guard — secondary guard in post-dispatch.ts", () => {
 
 describe("manifest store.remove() idempotency", () => {
   test("store module exports remove function", async () => {
-    const store = await import("../manifest-store");
+    const store = await import("../manifest/store");
     expect(typeof store.remove).toBe("function");
   });
 });

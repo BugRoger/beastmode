@@ -7,7 +7,7 @@ import {
   it2Available,
   isInsideITerm2,
   type SpawnFn,
-} from "../it2-client";
+} from "../dispatch/it2";
 
 // ---------------------------------------------------------------------------
 // Mock helpers

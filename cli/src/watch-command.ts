@@ -12,29 +12,19 @@ import { createLogger } from "./logger.js";
 import type { Logger } from "./logger.js";
 import { WatchLoop, attachLoggerSubscriber } from "./watch.js";
 import type { WatchDeps } from "./watch.js";
-import type { SessionResult } from "./watch-types.js";
-import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./session.js";
-import { SdkSessionFactory } from "./session.js";
-import { SessionEmitter } from "./sdk-streaming.js";
-import { CmuxSessionFactory } from "./cmux-session.js";
-import { CmuxClient, cmuxAvailable } from "./cmux-client.js";
-import { ITermSessionFactory } from "./it2-session.js";
-import { It2Client } from "./it2-client.js";
+import type { SessionResult } from "./dispatch/types.js";
+import type { SessionFactory, SessionCreateOpts, SessionHandle } from "./dispatch/factory.js";
+import { SdkSessionFactory, SessionEmitter } from "./dispatch/factory.js";
+import { CmuxSessionFactory, CmuxClient, cmuxAvailable } from "./dispatch/cmux.js";
+import { ITermSessionFactory } from "./dispatch/it2.js";
+import { It2Client } from "./dispatch/it2.js";
 import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "./iterm2-detect.js";
-import * as worktree from "./worktree.js";
-import { listEnriched } from "./manifest-store.js";
-import * as store from "./manifest-store.js";
+import * as worktree from "./git/worktree.js";
+import { listEnriched } from "./manifest/store.js";
 import type { Phase } from "./types.js";
-import {
-  reconcileDesign,
-  reconcilePlan,
-  reconcileFeature,
-  reconcileValidate,
-  reconcileRelease,
-} from "./reconcile.js";
-import { syncGitHubForEpic } from "./github-sync.js";
-import { discoverGitHub } from "./github-discovery.js";
-import type { ResolvedGitHub } from "./github-discovery.js";
+import { run as runPipeline } from "./pipeline/runner.js";
+import { discoverGitHub } from "./github/discovery.js";
+import type { ResolvedGitHub } from "./github/discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {
@@ -47,9 +37,10 @@ function findProjectRoot(from: string = process.cwd()): string {
 }
 
 /**
- * Reconciling factory — wraps any SessionFactory with state reconciliation
- * and release teardown. Both SDK and cmux paths get identical post-dispatch
- * behavior without duplicating the logic.
+ * Reconciling factory — wraps any SessionFactory with the unified pipeline
+ * runner for post-dispatch processing. Both SDK and cmux paths get identical
+ * behavior (reconciliation, GitHub sync, release teardown) without
+ * duplicating the logic that lives in pipeline/runner.ts.
  */
 export class ReconcilingFactory implements SessionFactory {
   private inner: SessionFactory;
@@ -68,91 +59,52 @@ export class ReconcilingFactory implements SessionFactory {
     const handle = await this.inner.create(opts);
     const { projectRoot, logger } = this;
 
-    const worktreePath = resolve(
-      projectRoot,
-      ".claude",
-      "worktrees",
-      handle.worktreeSlug,
-    );
+    const wrappedPromise = handle.promise.then(async (sessionResult) => {
+      const config = loadConfig(projectRoot);
+      const scopedLogger = logger.child({
+        phase: opts.phase,
+        epic: opts.epicSlug,
+        ...(opts.featureSlug ? { feature: opts.featureSlug } : {}),
+      });
 
-    const scopedLogger = logger.child({ phase: opts.phase, epic: opts.epicSlug, ...(opts.featureSlug ? { feature: opts.featureSlug } : {}) });
+      // Delegate all post-dispatch work (steps 5-9) to the pipeline runner.
+      // skipPreDispatch: true  -> skip worktree/rebase/settings (already done)
+      // dispatch returns the pre-computed session result immediately.
+      const pipelineResult = await runPipeline({
+        phase: opts.phase as Phase,
+        epicSlug: opts.epicSlug,
+        args: opts.args,
+        projectRoot,
+        strategy: "sdk",
+        featureSlug: opts.featureSlug,
+        config,
+        logger: scopedLogger,
+        resolved: this.resolved,
+        skipPreDispatch: true,
+        dispatch: async () => ({ success: sessionResult.success }),
+      });
 
-    const wrappedPromise = handle.promise.then(async (result) => {
-      let sessionResult = result;
-
-      // Release teardown: archive, remove on success
-      if (opts.phase === "release" && sessionResult.success) {
-        try {
-          scopedLogger.log("release teardown — archiving branch...");
-          const tagName = await worktree.archive(handle.worktreeSlug, { cwd: projectRoot });
-          scopedLogger.log(`archived as ${tagName}`);
-
-          await worktree.remove(handle.worktreeSlug, { cwd: projectRoot });
-          scopedLogger.log("worktree removed");
-
-          // Mark manifest as done so scanner skips it
-          const doneManifest = store.load(projectRoot, opts.epicSlug);
-          if (doneManifest) {
-            store.save(projectRoot, opts.epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
+      // Release cleanup: close cmux/iterm2 surfaces on success, badge on failure
+      if (opts.phase === "release") {
+        if (pipelineResult.success) {
+          try {
+            await this.inner.cleanup?.(opts.epicSlug);
+          } catch {
+            // Best-effort — surface cleanup should not block the result
           }
-          scopedLogger.log("manifest marked done");
-        } catch (err) {
-          scopedLogger.error(`release teardown failed: ${err}`);
-          scopedLogger.error("worktree preserved for manual cleanup");
-          sessionResult = { ...sessionResult, success: false };
-        }
-      }
-
-      // State reconciliation via reconcile module
-      let progress: { completed: number; total: number } | undefined;
-
-      // Skip manifest updates on failure — except validate (REGRESS path)
-      if (sessionResult.success || opts.phase === "validate") {
-        try {
-          const phase = opts.phase as Phase;
-          let result;
-
-          switch (phase) {
-            case "design":
-              result = await reconcileDesign(projectRoot, opts.epicSlug, worktreePath);
-              break;
-            case "plan":
-              result = await reconcilePlan(projectRoot, opts.epicSlug, worktreePath);
-              break;
-            case "implement":
-              if (opts.featureSlug) {
-                result = await reconcileFeature(projectRoot, opts.epicSlug, opts.featureSlug, worktreePath);
-              }
-              break;
-            case "validate":
-              result = await reconcileValidate(projectRoot, opts.epicSlug, worktreePath);
-              break;
-            case "release":
-              result = await reconcileRelease(projectRoot, opts.epicSlug, worktreePath);
-              break;
+        } else {
+          try {
+            await this.inner.setBadgeOnContainer?.(opts.epicSlug, "ERROR: release failed");
+          } catch {
+            // Best-effort — badge failure is non-blocking
           }
-
-          progress = result?.progress;
-        } catch (err) {
-          scopedLogger.error(`reconciliation failed: ${err}`);
         }
       }
 
-      // GitHub sync — warn-and-continue, never blocks reconciliation
-      if (this.resolved) {
-        try {
-          await syncGitHubForEpic({
-            projectRoot,
-            epicSlug: opts.epicSlug,
-            resolved: this.resolved,
-            logger: this.logger.child({ epic: opts.epicSlug }),
-          });
-        } catch (err) {
-          scopedLogger.warn(`GitHub sync failed: ${err}`);
-        }
-      }
-
-      return { ...sessionResult, progress };
+      return {
+        ...sessionResult,
+        progress: pipelineResult.reconcileResult?.progress,
+      };
     });
 
     return { ...handle, promise: wrappedPromise };

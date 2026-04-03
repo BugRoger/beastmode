@@ -1,5 +1,5 @@
 import type { Phase } from "../types";
-import type { ManifestFeature } from "../manifest-store";
+import type { ManifestFeature } from "../manifest/store";
 
 // ── Epic (top-level pipeline unit) ──────────────────────────────
 

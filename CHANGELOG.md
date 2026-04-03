@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.71.0 — CLI Restructure (Apr 2026)
+
+- **Unified pipeline runner** — Both manual CLI and watch loop call the same 9-step `pipeline/runner.ts`, eliminating duplicated worktree setup, dispatch, reconciliation, and teardown logic
+- **Worktree rebase step** — Feature branches automatically rebase onto local main before each phase dispatch (except design), preventing merge distance accumulation across multi-phase workflows
+- **Domain directory restructure** — CLI source reorganized into seven domain directories (`git/`, `hooks/`, `dispatch/`, `pipeline/`, `settings/`, `artifacts/`, `manifest/`) with uniform CRUD verb naming
+- **Dead code removal** — Unused exports, orphan modules, and stale files cleaned up; net reduction in codebase size
+
+---
+
 ### v0.70.0 — GitHub Issue Enrichment (Apr 2026)
 
 - **Progressive body enrichment** — Epic and feature issue bodies fill with PRD content, user stories, artifact links, and git metadata as epics advance through phases

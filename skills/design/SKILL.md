@@ -29,21 +29,14 @@ Greet in persona voice. One sentence. Set expectations for what this phase does 
 
 ### 2. Problem-First Question
 
-Before loading any project context or exploring the codebase, ask the user:
-
-> What are you trying to solve?
-
-If the skill arguments contain topic text (e.g., `beastmode design improve error handling`), present it back as context:
-
-> You mentioned: "<topic text>". What problem are you trying to solve?
-
-Wait for the user's response. Their framing drives the entire design — do not proceed until they answer.
+Before loading any project context or exploring the codebase, ask the user
+what they are trying to solve.
 
 **Do NOT:**
 - Explore the codebase yet
 - Load project context yet
-- Infer an epic name from the arguments
-- Treat arguments as an identifier — they are optional topic context only
+
+Wait for the user's response. Their framing drives the entire design — do not proceed until they answer.
 
 ### 3. Load Project Context
 

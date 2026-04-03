@@ -20,7 +20,7 @@ let mockFieldDiscover:
   | ((projectId: string, fieldName: string) => Promise<{ fieldId: string; options: Record<string, string> } | undefined>)
   | undefined;
 
-mock.module("../gh", () => ({
+mock.module("../github/cli", () => ({
   ghRepoDiscover: async (...args: unknown[]) => {
     return mockRepoDiscover ? mockRepoDiscover() : undefined;
   },
@@ -32,7 +32,7 @@ mock.module("../gh", () => ({
   },
 }));
 
-import { discoverGitHub, type ResolvedGitHub } from "../github-discovery";
+import { discoverGitHub, type ResolvedGitHub } from "../github/discovery";
 
 // --- Test helpers ---
 

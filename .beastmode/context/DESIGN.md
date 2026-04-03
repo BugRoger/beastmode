@@ -90,7 +90,7 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 2. ALWAYS use `DispatchedSession` abstraction for phase dispatch — `SdkSession` for SDK `query()`, `CmuxSession` for cmux terminal surfaces, `SessionFactory` selects based on config and runtime
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
 4. ALWAYS own manifest lifecycle via manifest-store.ts (filesystem — get, list, save, create, validate, rename, find, slugify) and manifest.ts (pure functions) — store is the sole filesystem accessor, pure functions return new manifests without mutation
-5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/` by hex slug match, enriches manifest via pure functions, optionally calls `store.rename()` for design phase, single `store.save()`, then runs `syncGitHub(manifest, config)`
+5. ALWAYS run unified pipeline via `pipeline/runner.ts` — both manual CLI and watch loop call the same 9-step runner: worktree prepare, rebase (skip for design), settings create, dispatch, artifact collect, manifest reconcile, manifest advance, GitHub mirror, worktree cleanup (release only)
 6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup
 7. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 8. ALWAYS use flat-file manifest path convention — state/YYYY-MM-DD-<slug>.manifest.json, no directory-per-slug

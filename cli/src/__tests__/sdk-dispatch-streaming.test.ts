@@ -9,11 +9,11 @@
 import { describe, test, expect } from "bun:test";
 import { WatchLoop } from "../watch.js";
 import type { WatchDeps } from "../watch.js";
-import type { EnrichedManifest } from "../manifest-store.js";
-import type { SessionHandle, SessionCreateOpts } from "../session.js";
-import type { WatchConfig } from "../watch-types.js";
-import { SessionEmitter } from "../sdk-streaming.js";
-import type { LogEntry } from "../sdk-streaming.js";
+import type { EnrichedManifest } from "../manifest/store.js";
+import type { SessionHandle, SessionCreateOpts } from "../dispatch/factory.js";
+import type { WatchConfig } from "../dispatch/types.js";
+import { SessionEmitter } from "../dispatch/factory.js";
+import type { LogEntry } from "../dispatch/factory.js";
 import { createNullLogger } from "../logger.js";
 
 function makeEpic(overrides?: Partial<EnrichedManifest>): EnrichedManifest {

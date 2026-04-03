@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
-import { loadWorktreePhaseOutput } from "../phase-output";
+import { loadWorktreePhaseOutput } from "../artifacts/reader";
 
 const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-abandon");
 

@@ -17,16 +17,14 @@ const mockGit = mock(async () => ({ stdout: "", stderr: "", exitCode: 0 }));
 const mockDeleteAllTags = mock(async () => {});
 const mockGh = mock(async () => ({ stdout: "", stderr: "", exitCode: 0 }));
 
-mock.module("../worktree.js", () => ({
+mock.module("../git/worktree.js", () => ({
   remove: mockRemoveWorktree,
-}));
-mock.module("../git.js", () => ({
   git: mockGit,
 }));
-mock.module("../phase-tags.js", () => ({
+mock.module("../git/tags.js", () => ({
   deleteAllTags: mockDeleteAllTags,
 }));
-mock.module("../gh.js", () => ({
+mock.module("../github/cli.js", () => ({
   gh: mockGh,
 }));
 
@@ -34,7 +32,7 @@ mock.module("../gh.js", () => ({
 import { cancelEpic } from "../shared/cancel-logic.js";
 import type { CancelConfig } from "../shared/cancel-logic.js";
 import { createNullLogger } from "../logger.js";
-import * as store from "../manifest-store.js";
+import * as store from "../manifest/store.js";
 
 // ---------------------------------------------------------------------------
 // Test scaffolding

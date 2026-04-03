@@ -6,7 +6,7 @@
  */
 
 import { cancelEpic } from "../../shared/cancel-logic.js";
-import type { DispatchTracker } from "../../dispatch-tracker.js";
+import type { DispatchTracker } from "../../dispatch/tracker.js";
 import type { Logger } from "../../logger.js";
 
 export interface CancelEpicOpts {

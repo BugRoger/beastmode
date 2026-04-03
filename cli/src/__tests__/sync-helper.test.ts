@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect, mock, beforeEach } from "bun:test";
-import type { ResolvedGitHub } from "../github-discovery";
+import type { ResolvedGitHub } from "../github/discovery";
 
 // --- Mock state ---
 
@@ -62,14 +62,14 @@ mock.module("../config", () => ({
   },
 }));
 
-mock.module("../github-discovery", () => ({
+mock.module("../github/discovery", () => ({
   discoverGitHub: async (...args: unknown[]) => {
     trackCall("discoverGitHub", ...args);
     return mockState.discoveryResult;
   },
 }));
 
-mock.module("../manifest-store", () => ({
+mock.module("../manifest/store", () => ({
   load: (...args: unknown[]) => {
     trackCall("store.load", ...args);
     return mockState.manifest ? JSON.parse(JSON.stringify(mockState.manifest)) : undefined;
@@ -87,7 +87,7 @@ mock.module("../manifest-store", () => ({
   },
 }));
 
-mock.module("../manifest", () => ({
+mock.module("../manifest/pure", () => ({
   setGitHubEpic: (manifest: unknown, epicNumber: unknown, repo: unknown) => {
     trackCall("setGitHubEpic", manifest, epicNumber, repo);
     return { ...(manifest as Record<string, unknown>), github: { epic: epicNumber, repo } };
@@ -99,7 +99,7 @@ mock.module("../manifest", () => ({
 }));
 
 // Mock the gh module to prevent real CLI calls
-mock.module("../gh", () => ({
+mock.module("../github/cli", () => ({
   ghIssueCreate: async () => 42,
   ghIssueEdit: async () => true,
   ghIssueClose: async () => true,
@@ -115,7 +115,7 @@ mock.module("../gh", () => ({
 }));
 
 // Dynamically mock syncGitHub on the module itself
-const ghSyncModule = await import("../github-sync");
+const ghSyncModule = await import("../github/sync");
 
 // We need to intercept syncGitHub calls. Since syncGitHubForEpic calls syncGitHub
 // internally and they're in the same module, we can't mock syncGitHub directly.

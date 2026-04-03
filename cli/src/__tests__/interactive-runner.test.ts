@@ -7,7 +7,7 @@ import {
   mock,
   spyOn,
 } from "bun:test";
-import type { InteractiveRunnerOptions } from "../runners/interactive-runner";
+import type { InteractiveRunnerOptions } from "../dispatch/factory";
 
 describe("interactive-runner", () => {
   let spawnSpy: ReturnType<typeof spyOn>;
@@ -42,7 +42,7 @@ describe("interactive-runner", () => {
   describe("prompt construction", () => {
     test("design phase constructs /beastmode:design <topic>", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -64,7 +64,7 @@ describe("interactive-runner", () => {
 
     test("plan phase constructs /beastmode:plan <slug>", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "plan",
@@ -85,7 +85,7 @@ describe("interactive-runner", () => {
 
     test("implement phase constructs /beastmode:implement <epic> <feature>", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "implement",
@@ -106,7 +106,7 @@ describe("interactive-runner", () => {
 
     test("validate phase constructs /beastmode:validate <slug>", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "validate",
@@ -127,7 +127,7 @@ describe("interactive-runner", () => {
 
     test("release phase constructs /beastmode:release <slug>", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "release",
@@ -151,7 +151,7 @@ describe("interactive-runner", () => {
   describe("spawn options", () => {
     test("passes cwd and inherited stdio", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -173,7 +173,7 @@ describe("interactive-runner", () => {
   describe("exit status", () => {
     test("exit code 0 returns success", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -187,7 +187,7 @@ describe("interactive-runner", () => {
 
     test("non-zero exit code returns error", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "plan",
@@ -201,7 +201,7 @@ describe("interactive-runner", () => {
 
     test("returns duration_ms", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -215,7 +215,7 @@ describe("interactive-runner", () => {
 
     test("session_id is null", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -232,7 +232,7 @@ describe("interactive-runner", () => {
   describe("SIGINT handling", () => {
     test("SIGINT propagates kill to child process", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const promise = runInteractive({
         phase: "design",
@@ -255,7 +255,7 @@ describe("interactive-runner", () => {
 
     test("SIGINT listener is cleaned up after completion", async () => {
       const { runInteractive } = await import(
-        "../runners/interactive-runner"
+        "../dispatch/factory"
       );
       const listenerCountBefore = process.listenerCount("SIGINT");
 

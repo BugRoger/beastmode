@@ -1,12 +1,12 @@
 import { describe, test, expect } from "bun:test";
-import type { PipelineManifest, ManifestFeature } from "../manifest-store";
+import type { PipelineManifest, ManifestFeature } from "../manifest/store";
 import {
   enrich,
   markFeature,
   setGitHubEpic,
   setFeatureGitHubIssue,
   getPendingFeatures,
-} from "../manifest";
+} from "../manifest/pure";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},

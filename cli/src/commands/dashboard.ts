@@ -4,14 +4,14 @@ import type { BeastmodeConfig } from "../config.js";
 import { createLogger } from "../logger.js";
 import { WatchLoop } from "../watch.js";
 import type { WatchDeps } from "../watch.js";
-import { listEnriched } from "../manifest-store.js";
+import { listEnriched } from "../manifest/store.js";
 import {
   dispatchPhase,
   ReconcilingFactory,
 } from "../watch-command.js";
-import { SdkSessionFactory } from "../session.js";
-import type { SessionFactory } from "../session.js";
-import { discoverGitHub } from "../github-discovery.js";
+import { SdkSessionFactory } from "../dispatch/factory.js";
+import type { SessionFactory } from "../dispatch/factory.js";
+import { discoverGitHub } from "../github/discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
 function findProjectRoot(from: string = process.cwd()): string {

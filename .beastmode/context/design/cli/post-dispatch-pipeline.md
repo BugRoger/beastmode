@@ -11,6 +11,8 @@ Secondary guard for design phase: before the design case generates a `DESIGN_COM
 ## Rationale
 Stop hook generates output.json by infrastructure, eliminating skill-authored output steps. Pure function enrichment is testable without filesystem mocks. Mutation-return from github-sync.ts ensures all manifest writes go through the store, maintaining the single-writer invariant. The secondary guard provides defense-in-depth against the state machine seeing an incomplete design — the primary gate in phase.ts handles cleanup, but the guard prevents advancement independently.
 
+As of cli-restructure (2026-04-03), post-dispatch.ts is absorbed into pipeline/runner.ts. Both manual CLI and watch loop call the same 9-step runner: (1) worktree prepare, (2) rebase onto local main (skip for design), (3) settings create, (4) dispatch, (5) artifact collect, (6) manifest reconcile, (7) manifest advance, (8) GitHub mirror, (9) worktree cleanup (release only). The rebase step targets local main with no network dependency; on conflict it aborts and proceeds on stale base.
+
 ## Source
 .beastmode/artifacts/design/2026-03-29-github-cli-migration.md
 .beastmode/artifacts/design/2026-03-29-manifest-file-management.md

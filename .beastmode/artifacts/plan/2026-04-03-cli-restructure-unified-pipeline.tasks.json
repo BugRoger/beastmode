@@ -1,0 +1,11 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-cli-restructure-unified-pipeline.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create pipeline/runner.ts with run() function", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Thin out commands/phase.ts to call runner", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Thin out watch-command.ts and dashboard.ts to call runner", "status": "completed"},
+    {"id": 3, "subject": "Task 3: Write tests for pipeline/runner.ts", "status": "completed"},
+    {"id": 4, "subject": "Task 4: Update imports and delete post-dispatch.ts", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T18:15:00Z"
+}

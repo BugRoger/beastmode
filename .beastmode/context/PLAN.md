@@ -54,3 +54,9 @@ CLI-owned GitHub sync system. The CLI invokes a stateless `syncGitHub(manifest, 
 10. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
 
 context/plan/github-integration.md
+
+## File Collapse
+- ALWAYS audit exported symbol names across all source files being collapsed into a single target — name collisions from file merges are predictable and should be resolved in the plan, not auto-fixed during implementation
+- ALWAYS run full reverse-dependency analysis (grep for all import paths being changed) when planning file moves — enumerate every consumer, including transitive importers in unrelated domains (dashboard, lockfile, etc.)
+
+context/plan/file-collapse.md

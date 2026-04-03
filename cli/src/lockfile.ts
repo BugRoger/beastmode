@@ -9,7 +9,7 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { createLogger } from "./logger.js";
 import type { Logger } from "./logger.js";
-import type { LockfileInfo } from "./watch-types.js";
+import type { LockfileInfo } from "./dispatch/types.js";
 
 const LOCKFILE_NAME = ".beastmode-watch.lock";
 

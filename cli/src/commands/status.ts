@@ -1,12 +1,10 @@
 import type { BeastmodeConfig } from "../config";
-import type { EnrichedManifest } from "../manifest-store";
-import { listEnriched } from "../manifest-store";
-import { findProjectRoot } from "../project-root";
+import type { EnrichedManifest } from "../manifest/store";
+import { listEnriched } from "../manifest/store";
+import { findProjectRoot } from "../config";
 import { readLockfile } from "../lockfile";
-import { toSnapshots, detectChanges as detectMapChanges } from "../change-detect";
-import type { EpicSnapshot } from "../change-detect";
-import { buildStatusRows as sharedBuildStatusRows } from "../shared/status-data";
-import type { StatusRow, WatchMeta } from "../shared/status-data";
+import { toSnapshots, detectEpicChanges as detectMapChanges, buildStatusRows as sharedBuildStatusRows } from "../shared/status-data";
+import type { EpicSnapshot, StatusRow, WatchMeta } from "../shared/status-data";
 
 export type { StatusRow, WatchMeta, StatusSnapshot } from "../shared/status-data";
 export { PHASE_ORDER, buildSnapshot, detectChanges } from "../shared/status-data";
