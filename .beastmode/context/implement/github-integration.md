@@ -22,9 +22,9 @@
 - Release checkpoint: advance Epic to `phase/done`, close Epic issue
 
 ## API Boundary
-- ALL GitHub operations go through `_shared/github.md` — checkpoint skills @import it, never inline gh CLI
-- Only gh CLI is used — no direct REST/GraphQL outside the shared utility
-- Shared utility provides: label ops, issue CRUD, epic management, project V2 setup
+- ALL GitHub operations are CLI-owned via github-sync.ts — skills never call gh CLI or perform GitHub operations
+- Skills are pure content processors writing artifacts with YAML frontmatter only
+- The CLI post-dispatch pipeline handles all GitHub sync after output.json generation
 
 ## Label Taxonomy
 - 12 labels total: `type/epic`, `type/feature`, `phase/backlog`, `phase/design`, `phase/plan`, `phase/implement`, `phase/validate`, `phase/release`, `phase/done`, `status/ready`, `status/in-progress`, `status/blocked`

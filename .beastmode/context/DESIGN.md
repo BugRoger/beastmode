@@ -14,7 +14,7 @@
 - research/ lives at .beastmode/ root, not under state/ — reference material is not workflow state
 - Sub-phase anatomy is invariant: prime -> execute -> validate -> checkpoint
 - Skills MUST detect when already running inside an agent worktree and skip their own worktree creation — prevents double-worktree nesting
-- Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number
+- Each SKILL.md is self-contained with inline phase sections — no external imports or blockquote directives
 - NEVER write to context/ directly from phases — retro and the compaction agent are the sole gatekeepers
 - Retro runs once at release with all phase artifacts — context walker processes the full cycle in a single pass
 - Context walker ALWAYS applies value-add gate before creating L3 — skip records that add no rationale, constraints, provenance, or dissenting context beyond the L2 summary

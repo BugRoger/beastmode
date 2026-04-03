@@ -1,7 +1,7 @@
 # Structure
 
 ## Core Directories
-- ALWAYS put phase-specific logic in `skills/{verb}/phases/` — colocated with skill
+- ALWAYS put phase-specific logic inline in `skills/{verb}/SKILL.md` — self-contained per verb
 - ALWAYS put cross-skill utilities in `skills/` root — colocated with skill directories, no nested `_shared/`
 - ALWAYS put agent prompts in `agents/` as standalone documents — separation from skills
 - ALWAYS put plugin lifecycle hooks in `hooks/` as executable scripts — lifecycle management

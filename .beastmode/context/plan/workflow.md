@@ -10,7 +10,7 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 ## Session Tracking
 - ALWAYS update status file on phase completion — `.beastmode/status/YYYY-MM-DD-<feature>.md`
 - ALWAYS record session file paths for retro agent inspection — traceability
-- Shared reference `skills/_shared/session-tracking.md` provides the template — standardized format
+- Shared reference is no longer needed — session tracking is inline per skill
 
 ## Parallel Execution
 - ALWAYS batch independent tasks for parallel execution in /implement — throughput
@@ -21,7 +21,7 @@ Five-phase core workflow: design -> plan -> implement -> validate -> release. Ea
 ## Retro Agents
 - ALWAYS pass L1 paths (not hardcoded file lists) to retro agents — dynamic discovery
 - ALWAYS include session context block in agent prompts — scoped review
-- Context walker parses @imports from L1 files to discover L2 review targets — hierarchy-driven
+- Context walker uses convention-based paths from L1 files to discover L2 review targets — hierarchy-driven
 - Meta walker classifies findings as SOPs, overrides, or learnings — categorized knowledge
 
 ## Release Git Workflow
