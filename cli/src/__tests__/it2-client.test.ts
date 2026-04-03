@@ -1,11 +1,11 @@
-import { describe, test, expect, spyOn } from "bun:test";
+import { describe, test, expect } from "bun:test";
 import {
   It2Client,
   It2Error,
   It2ConnectionError,
   It2NotInstalledError,
-  it2Available,
-  isInsideITerm2,
+  checkIt2Available,
+  detectITerm2Env,
   type SpawnFn,
 } from "../dispatch/it2";
 
@@ -418,95 +418,52 @@ describe("It2Client", () => {
 });
 
 // ---------------------------------------------------------------------------
-// it2Available helper — uses Bun.spawn directly, needs spyOn
+// checkIt2Available helper
 // ---------------------------------------------------------------------------
 
-describe("it2Available", () => {
-  test("returns true when ping succeeds", async () => {
-    const spy = spyOn(Bun, "spawn").mockReturnValue(
-      mockProc("session-list-output\n", "", 0) as any,
-    );
-    try {
-      expect(await it2Available()).toBe(true);
-    } finally {
-      spy.mockRestore();
-    }
+describe("checkIt2Available", () => {
+  test("returns true when it2 --version exits 0", async () => {
+    const spawn: SpawnFn = () => mockProc("0.1.0\n", "", 0);
+    expect(await checkIt2Available(spawn)).toBe(true);
   });
 
-  test("returns false when ping fails", async () => {
-    const spy = spyOn(Bun, "spawn").mockImplementation(() => {
-      throw new Error("spawn failed");
-    });
-    try {
-      expect(await it2Available()).toBe(false);
-    } finally {
-      spy.mockRestore();
-    }
+  test("returns false when spawn throws", async () => {
+    const spawn: SpawnFn = () => { throw new Error("spawn failed"); };
+    expect(await checkIt2Available(spawn)).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// isInsideITerm2 helper
+// detectITerm2Env helper
 // ---------------------------------------------------------------------------
 
-describe("isInsideITerm2", () => {
-  test("returns true when both env vars are set", () => {
-    const origSession = process.env.ITERM_SESSION_ID;
-    const origProgram = process.env.TERM_PROGRAM;
-    try {
-      process.env.ITERM_SESSION_ID = "w0t0p0:12345";
-      process.env.TERM_PROGRAM = "iTerm.app";
-      expect(isInsideITerm2()).toBe(true);
-    } finally {
-      if (origSession !== undefined) process.env.ITERM_SESSION_ID = origSession;
-      else delete process.env.ITERM_SESSION_ID;
-      if (origProgram !== undefined) process.env.TERM_PROGRAM = origProgram;
-      else delete process.env.TERM_PROGRAM;
-    }
+describe("detectITerm2Env", () => {
+  test("returns detected: true when both env vars are set", () => {
+    const result = detectITerm2Env({
+      TERM_PROGRAM: "iTerm.app",
+      ITERM_SESSION_ID: "w0t0p0:12345",
+    });
+    expect(result.detected).toBe(true);
+    expect(result.sessionId).toBe("w0t0p0:12345");
   });
 
-  test("returns false when ITERM_SESSION_ID is missing", () => {
-    const origSession = process.env.ITERM_SESSION_ID;
-    const origProgram = process.env.TERM_PROGRAM;
-    try {
-      delete process.env.ITERM_SESSION_ID;
-      process.env.TERM_PROGRAM = "iTerm.app";
-      expect(isInsideITerm2()).toBe(false);
-    } finally {
-      if (origSession !== undefined) process.env.ITERM_SESSION_ID = origSession;
-      else delete process.env.ITERM_SESSION_ID;
-      if (origProgram !== undefined) process.env.TERM_PROGRAM = origProgram;
-      else delete process.env.TERM_PROGRAM;
-    }
+  test("returns detected: false when ITERM_SESSION_ID is missing", () => {
+    const result = detectITerm2Env({
+      TERM_PROGRAM: "iTerm.app",
+    });
+    expect(result.detected).toBe(false);
   });
 
-  test("returns false when TERM_PROGRAM is not iTerm.app", () => {
-    const origSession = process.env.ITERM_SESSION_ID;
-    const origProgram = process.env.TERM_PROGRAM;
-    try {
-      process.env.ITERM_SESSION_ID = "w0t0p0:12345";
-      process.env.TERM_PROGRAM = "Apple_Terminal";
-      expect(isInsideITerm2()).toBe(false);
-    } finally {
-      if (origSession !== undefined) process.env.ITERM_SESSION_ID = origSession;
-      else delete process.env.ITERM_SESSION_ID;
-      if (origProgram !== undefined) process.env.TERM_PROGRAM = origProgram;
-      else delete process.env.TERM_PROGRAM;
-    }
+  test("returns detected: false when TERM_PROGRAM is not iTerm.app", () => {
+    const result = detectITerm2Env({
+      TERM_PROGRAM: "Apple_Terminal",
+      ITERM_SESSION_ID: "w0t0p0:12345",
+    });
+    expect(result.detected).toBe(false);
   });
 
-  test("returns false when both env vars are missing", () => {
-    const origSession = process.env.ITERM_SESSION_ID;
-    const origProgram = process.env.TERM_PROGRAM;
-    try {
-      delete process.env.ITERM_SESSION_ID;
-      delete process.env.TERM_PROGRAM;
-      expect(isInsideITerm2()).toBe(false);
-    } finally {
-      if (origSession !== undefined) process.env.ITERM_SESSION_ID = origSession;
-      else delete process.env.ITERM_SESSION_ID;
-      if (origProgram !== undefined) process.env.TERM_PROGRAM = origProgram;
-      else delete process.env.TERM_PROGRAM;
-    }
+  test("returns detected: false when both env vars are missing", () => {
+    const result = detectITerm2Env({});
+    expect(result.detected).toBe(false);
   });
 });

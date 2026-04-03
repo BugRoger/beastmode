@@ -95,6 +95,7 @@ describe("WatchLoop event emission", () => {
     expect(events.length).toBe(1);
     expect(events[0].epicsScanned).toBe(2);
     expect(events[0].dispatched).toBe(1);
+    loop.setRunning(false);
   });
 
   test("single dispatch emits session-started", async () => {
@@ -126,6 +127,7 @@ describe("WatchLoop event emission", () => {
     expect(events[0].phase).toBe("design");
     expect(typeof events[0].sessionId).toBe("string");
     expect(events[0].sessionId.length).toBeGreaterThan(0);
+    loop.setRunning(false);
   });
 
   test("session completion emits session-completed", async () => {
@@ -254,6 +256,7 @@ describe("WatchLoop event emission", () => {
       expect(event.epicSlug).toBe("fanout-epic");
       expect(event.phase).toBe("implement");
     }
+    loop.setRunning(false);
   });
 
   test("attachLoggerSubscriber routes events to logger", () => {
@@ -357,5 +360,6 @@ describe("WatchLoop event emission", () => {
     expect(held.length).toBe(1);
     expect(held[0].waitingSlug).toBe("epic-b");
     expect(held[0].blockingSlug).toBe("epic-a");
+    loop.setRunning(false);
   });
 });
