@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-dashboard-rework-details-panel.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Create DetailsPanel component", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Wire DetailsPanel into App.tsx", "wave": 2, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add DetailsPanel unit tests", "wave": 2, "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T12:32:00Z"
+}

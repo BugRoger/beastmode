@@ -233,6 +233,7 @@ export class WatchLoop extends EventEmitter {
     let featuresToDispatch = features;
 
     if (existsSync(worktreePath)) {
+      const epicName = epic.epic ?? epic.slug;
       const validFeatures = features.filter((featureSlug) => {
         const feature = epic.features.find((f) => f.slug === featureSlug);
         if (!feature?.plan) {
@@ -249,8 +250,8 @@ export class WatchLoop extends EventEmitter {
           const match = content.match(/^epic:\s*(.+)$/m);
           if (match) {
             const fileEpic = match[1].trim().replace(/^['"]|['"]$/g, "");
-            if (fileEpic !== epic.slug) {
-              this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epic.slug}, got ${fileEpic})`);
+            if (fileEpic !== epicName) {
+              this.logger.debug(`${epic.slug}: skipping feature ${featureSlug} — plan epic mismatch (expected ${epicName}, got ${fileEpic})`);
               return false;
             }
           }
@@ -414,11 +415,11 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     }
   });
 
-  loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs, costUsd }) => {
+  loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs }) => {
     const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
     const status = success ? 'completed' : 'failed';
     child.log(
-      `${status} ($${costUsd.toFixed(2)}, ${(durationMs / 1000).toFixed(0)}s)`,
+      `${status} (${(durationMs / 1000).toFixed(0)}s)`,
     );
   });
 

@@ -4,7 +4,19 @@ All notable changes to beastmode.
 
 ---
 
+### v0.66.0 — Dashboard Rework (Apr 2026)
+
+- **Three-panel layout** — k9s-style split screen with epics list (top-left), details (top-right), and log (bottom full-width), replacing the old drill-down navigation model
+- **Epics panel** — Keyboard navigation, `/` filter, `x` cancel with inline confirmation, `a` toggle done/cancelled
+- **Details panel** — Epic metadata, feature list with phase-colored status indicators, and progress bars
+- **Log panel** — Auto-follow log stream, epic-filtered or aggregate "(all)" mode with ring buffer per session
+- **Old dashboard cleanup** — Removed view stack, push/pop navigation, breadcrumb bar, and activity log components
+- **99 new tests** — Full test coverage across all four new panels
+
+---
+
 ### v0.65.0 — Structured Logging (Apr 2026)
+
 
 - **Shared format function** — `shared/log-format.ts` with Pino-pretty style output: `[HH:MM:SS] LEVEL  (phase/epic/feature):  message`
 - **Logger API** — `createLogger(verbosity, context)` with `.child()` context merging, replacing flat slug strings

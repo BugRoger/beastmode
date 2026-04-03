@@ -53,6 +53,7 @@
 - NEVER put tasks with shared file targets in the same wave
 - ALWAYS include a final verification task that checks the full output tree
 - ALWAYS decompose multi-feature epics into a manifest JSON plus N independent feature plans
+- ALWAYS verify deletion targets have no active consumers before specifying file deletion in plans — grep for imports before listing files to delete
 
 ## Implement Process
 

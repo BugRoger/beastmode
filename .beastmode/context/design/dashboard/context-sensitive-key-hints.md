@@ -1,13 +1,13 @@
 # Context-Sensitive Key Hints
 
 ## Context
-Different views support different keybindings. A static key hints bar would show keys that don't work in the current context, confusing users.
+The dashboard supports multiple interaction modes (normal, filter, cancel confirmation). The key hints bar must reflect the currently available keybindings.
 
 ## Decision
-Each view type exports its own key hint set. The bottom bar updates on every push/pop. EpicList: `q quit ↑↓ navigate ↵ drill x cancel a all`. FeatureList: `q quit ↑↓ navigate ↵ drill ⎋ back`. AgentLog: `q quit ↑↓ scroll ⎋ back f follow`.
+A single key hints bar at the bottom updates based on interaction mode. Normal mode: `q quit Up/Down navigate / filter x cancel a all`. Filter mode: inline text prompt replacing key hints. Cancel confirmation: `Cancel {slug}? y confirm n/esc abort`. Only one mode active at a time — cancel blocks all other input.
 
 ## Rationale
-The interface teaches itself — users always see exactly which keys are available. This follows k9s's pattern where the bottom bar reflects the current resource context.
+The interface teaches itself — users always see exactly which keys are available. Mode-based rather than view-based after the switch from drill-down to flat three-panel layout.
 
 ## Source
-.beastmode/artifacts/design/2026-04-02-dashboard-drilldown.md
+.beastmode/artifacts/design/2026-04-03-dashboard-rework.md
