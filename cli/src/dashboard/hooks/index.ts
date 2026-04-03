@@ -18,3 +18,6 @@ export type { DashboardMode, DashboardKeyboardDeps, DashboardKeyboardState } fro
 
 export { useDashboardTreeState } from "./use-dashboard-tree-state.js";
 export type { UseDashboardTreeStateOptions, UseDashboardTreeStateResult } from "./use-dashboard-tree-state.js";
+
+export { useKeyboardController } from "./use-keyboard-controller.js";
+export type { UseKeyboardControllerOptions, UseKeyboardControllerResult } from "./use-keyboard-controller.js";

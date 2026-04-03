@@ -8,7 +8,8 @@ import EpicTable from "./EpicTable.js";
 import ActivityLog from "./ActivityLog.js";
 import CrumbBar from "./CrumbBar.js";
 import FeatureList from "./FeatureList.js";
-import AgentLog from "./AgentLog.js";
+import LogPanel from "./LogPanel.js";
+import { useDashboardTreeState } from "./hooks/use-dashboard-tree-state.js";
 import { getKeyHints } from "./key-hints.js";
 import * as VS from "./view-stack.js";
 import { useKeyboardController, useKeyboardNav } from "./hooks/index.js";
@@ -55,6 +56,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [watchRunning, setWatchRunning] = useState(false);
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
+  const [trackerSessions, setTrackerSessions] = useState<import("../dispatch/types.js").DispatchedSession[]>([]);
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
@@ -166,6 +168,14 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     onToggleFollow: handleToggleFollow,
   });
 
+  // --- Tree state for log panel (agent-log view) ---
+  const { state: treeState } = useDashboardTreeState({
+    sessions: trackerSessions,
+    selectedEpicSlug: activeView.type === "agent-log"
+      ? (activeView as VS.AgentLogView).epicSlug
+      : undefined,
+  });
+
   // --- Keep refs in sync with navigation state ---
   useEffect(() => {
     epicSelectedRef.current = keyboard.nav.selectedIndex;
@@ -218,6 +228,10 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   useEffect(() => {
     if (!loop) return;
 
+    const refreshSessions = () => {
+      setTrackerSessions(loop.getTracker().getAll());
+    };
+
     const onStarted = () => {
       setWatchRunning(true);
       pushEvent("scan", "watch loop started");
@@ -231,6 +245,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
       const target = ev.featureSlug ? `${ev.epicSlug}/${ev.featureSlug}` : ev.epicSlug;
       pushEvent("dispatched", `${ev.phase} for ${target}`, { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug });
+      refreshSessions();
     };
 
     const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
@@ -249,12 +264,14 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         `${ev.phase} ${status} for ${target} (${detail})`,
         { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug },
       );
+      refreshSessions();
     };
 
     const onScanComplete = (ev: WatchLoopEventMap["scan-complete"][0]) => {
       // Refresh active sessions from tracker
       const activeEpicSlugs = new Set(loop.getTracker().getAll().map((s) => s.epicSlug));
       setActiveSessions(activeEpicSlugs);
+      refreshSessions();
       if (ev.dispatched > 0) {
         pushEvent("scan", `scanned ${ev.epicsScanned} epics, dispatched ${ev.dispatched}`);
       }
@@ -352,13 +369,10 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         );
       }
       case "agent-log":
-        // TODO: Wire up emitter from DispatchTracker when SDK streaming is connected
         return (
-          <AgentLog
-            epicSlug={activeView.epicSlug}
-            featureSlug={activeView.featureSlug}
-            emitter={null}
-            follow={followMode}
+          <LogPanel
+            state={treeState}
+            maxVisibleLines={followMode ? 30 : undefined}
           />
         );
     }
