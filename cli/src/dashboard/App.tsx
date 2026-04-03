@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Text, useApp } from "ink";
 import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedManifest } from "../manifest/store.js";
-import type { WatchLoopEventMap } from "../dispatch/types.js";
+import type { WatchLoopEventMap, DispatchedSession } from "../dispatch/types.js";
 import type { WatchLoop } from "../commands/watch-loop.js";
 import EpicTable from "./EpicTable.js";
 import ActivityLog from "./ActivityLog.js";
@@ -56,7 +56,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [watchRunning, setWatchRunning] = useState(false);
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
-  const [trackerSessions, setTrackerSessions] = useState<import("../dispatch/types.js").DispatchedSession[]>([]);
+  const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
