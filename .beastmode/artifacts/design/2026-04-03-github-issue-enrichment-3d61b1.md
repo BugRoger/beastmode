@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: 3d61b1
+slug: github-issue-enrichment-3d61b1
 epic: github-issue-enrichment
 ---
 
