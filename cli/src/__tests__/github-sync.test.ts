@@ -95,11 +95,6 @@ mock.module("../gh", () => ({
     if (mockErrors.ghProjectItemDelete) return false;
     return mockReturns.ghProjectItemDelete ?? true;
   },
-  ghIssueComment: async (...args: unknown[]) => {
-    trackCall("ghIssueComment", ...args);
-    if (mockErrors.ghIssueComment) return false;
-    return mockReturns.ghIssueComment ?? true;
-  },
 }));
 
 // NOW import the module under test
@@ -914,6 +909,62 @@ describe("syncGitHub", () => {
       expect(calls).toHaveLength(1);
       // Body should contain fallback "unreleased" version
       expect(calls[0].args[2]).toContain("unreleased");
+
+      removeReleaseTag();
+      removePluginTemp();
+    });
+
+    test("skips comment when duplicate already exists", async () => {
+      createPluginJson("1.2.0");
+      createReleaseTag();
+      // Simulate existing comment containing the version string
+      mockReturns.ghIssueComments = [
+        { body: "## Released: 1.2.0\n\n- **Tag:** ..." },
+      ];
+      const manifest = makeManifest({ phase: "done" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      // Should NOT post a new comment — duplicate detected
+      expect(result.releaseCommentPosted).toBe(false);
+      expect(result.commentsPosted).toBe(0);
+      const calls = callsTo("ghIssueComment");
+      expect(calls).toHaveLength(0);
+
+      // ghIssueComments should have been called for the check
+      const commentsCalls = callsTo("ghIssueComments");
+      expect(commentsCalls).toHaveLength(1);
+      expect(commentsCalls[0].args[0]).toBe("org/repo");
+      expect(commentsCalls[0].args[1]).toBe(10);
+
+      removeReleaseTag();
+      removePluginTemp();
+    });
+
+    test("posts comment when existing comments don't match version", async () => {
+      createPluginJson("2.0.0");
+      createReleaseTag();
+      // Existing comments but for a different version
+      mockReturns.ghIssueComments = [
+        { body: "## Released: 1.0.0\n\n- **Tag:** ..." },
+      ];
+      const manifest = makeManifest({ phase: "done" });
+      const config = makeConfig();
+      const resolved = makeResolved();
+
+      const result = await syncGitHub(manifest, config, resolved, {
+        projectRoot: commentTempDir,
+      });
+
+      // Should post — no duplicate for version 2.0.0
+      expect(result.releaseCommentPosted).toBe(true);
+      expect(result.commentsPosted).toBe(1);
+      const calls = callsTo("ghIssueComment");
+      expect(calls).toHaveLength(1);
 
       removeReleaseTag();
       removePluginTemp();
