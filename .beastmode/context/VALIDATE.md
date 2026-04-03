@@ -13,3 +13,4 @@
 
 ## Known Pre-existing Failures
 - `state-scanner.test.ts` line 109: expects `design -> single` but v0.59.0 changed dispatch to `design -> skip` — not in scope for any current epic, do not triage repeatedly
+- `watch-events.test.ts` line 292: `costUsd` removed from `SessionResult` in prior epic — not introduced by dashboard-rework, do not triage repeatedly
