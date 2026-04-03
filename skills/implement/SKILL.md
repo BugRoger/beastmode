@@ -163,7 +163,7 @@ For each wave (ascending order):
       - Append: full task text (all steps, files, verification)
       - Append: pre-read file contents
       - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
-   2. Spawn: `Agent(subagent_type="beastmode:implement-implementer", prompt=<built prompt>)`
+   2. Spawn: `Agent(subagent_type="beastmode:implement-implementer", model=<current tier from escalation state>, prompt=<built prompt>)`
    3. Collect the agent's status report
 
    #### C. Handle Implementer Status
