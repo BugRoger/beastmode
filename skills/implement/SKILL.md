@@ -309,6 +309,10 @@ Print the accumulated status log from the execute phase:
 
     Total: N tasks, M review cycles, K concerns
 
+    Escalations: N tasks escalated (X to sonnet, Y to opus)
+
+Omit the Escalations line if no tasks escalated.
+
 If all tasks completed with no concerns: "All tasks completed cleanly — no concerns or blockers."
 
 ### 7. Validation Failure Handling
@@ -339,7 +343,7 @@ suffix breaks the match and the watch loop never sees completion.
     **Concerns:** N
 
     ## Completed Tasks
-    - Task N: <description> — [clean | with concerns]
+    - Task N: <description> (<model tier>) — [clean | with concerns | escalated from <prior tier>: <reason>]
 
     ## Concerns
     - Task N: <description>
@@ -519,9 +523,9 @@ Review retry loop:
 Accumulated during execution, saved at checkpoint:
 
     ## Completed Tasks
-    - Task 0: Implementer agent — clean
-    - Task 1: Spec reviewer agent — clean
-    - Task 3: Controller update — with concerns (file size)
+    - Task 0: Implementer agent (haiku) — clean
+    - Task 1: Implementer agent (sonnet) — clean (escalated from haiku: BLOCKED)
+    - Task 3: Implementer agent (opus) — with concerns (escalated from sonnet: quality NOT_APPROVED)
 
     ## Concerns
     - Task 3: SKILL.md grew significantly during controller rewrite
@@ -529,7 +533,7 @@ Accumulated during execution, saved at checkpoint:
     ## Blocked Tasks
     None
 
-    **Summary:** 4 tasks completed (1 with concerns), 0 blocked, 6 review cycles
+    **Summary:** 4 tasks completed (1 with concerns), 0 blocked, 6 review cycles, 2 escalations
 
 If no concerns or blocks: "All tasks completed cleanly — no concerns or blockers."
 
