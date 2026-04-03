@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: c74fa6
+slug: gray-area-sweep-simplify
 epic: gray-area-sweep-simplify
 ---
 
