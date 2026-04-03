@@ -51,6 +51,7 @@
 - ALWAYS derive wave ordering from the component dependency graph — foundation before consumers before integration
 - ALWAYS group independent tasks into waves for parallel execution
 - NEVER put tasks with shared file targets in the same wave
+- NEVER put features with shared file targets in the same wave — file isolation analysis applies across features, not just across tasks within a single feature
 - ALWAYS include a final verification task that checks the full output tree
 - ALWAYS decompose multi-feature epics into a manifest JSON plus N independent feature plans
 
