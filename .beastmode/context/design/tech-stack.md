@@ -15,7 +15,7 @@
 ## Dependencies
 - ALWAYS use Git for version control and worktree isolation — core dependency
 - Plugin components: Claude Code CLI (runtime), Anthropic Claude API (LLM backend), Git (VCS + worktrees), Markdown + YAML (docs + metadata), GitHub API via `gh` CLI (state externalization) — minimal plugin stack
-- CLI components: Bun (runtime), Claude Agent SDK (session management), Git (worktree lifecycle) — CLI-specific stack
+- CLI components: Bun (runtime), Claude Agent SDK (session management), Git (worktree lifecycle), chalk (logger color output) — CLI-specific stack
 
 ## Development
 - Plugin testing is manual — invoke skills and verify behavior
