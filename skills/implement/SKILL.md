@@ -60,7 +60,22 @@ git diff --name-only HEAD > /tmp/beastmode-baseline-$(date +%s).txt
 
 Store the baseline file list. Spec checks in execute will diff against this baseline to avoid flagging files from prior feature implementations.
 
-### 6. Prepare Environment
+### 6. Verify Implementation Branch
+
+The CLI creates and checks out `feature/<slug>/<feature-name>` before dispatch. Verify:
+
+```bash
+current_branch=$(git branch --show-current)
+expected_branch="feature/${epic}/${feature}"
+if [ "$current_branch" != "$expected_branch" ]; then
+  echo "ERROR: Expected branch '$expected_branch' but on '$current_branch'"
+  exit 1
+fi
+```
+
+If the branch check fails, error: "Implementation branch not found. The CLI must create and check out `feature/<slug>/<feature-name>` before running /implement."
+
+### 7. Prepare Environment
 
     # Install dependencies if needed
     npm install  # or appropriate command from .beastmode/context/
