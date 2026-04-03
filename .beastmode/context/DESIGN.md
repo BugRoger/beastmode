@@ -3,7 +3,7 @@
 ## Product
 - ALWAYS design before code — structured phases prevent wasted implementation
 - NEVER skip retro at release — it's the sole mechanism for updating the knowledge hierarchy
-- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, phase regression/rerun via overloaded `beastmode <phase> <slug>` with CLI-managed git tags (`beastmode/<slug>/<phase>`) as deterministic reset targets and confirmation prompt before destructive reset, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan and EventEmitter-based typed events, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, fullscreen TUI dashboard via `beastmode dashboard` (Ink v6 + React, k9s-style push/pop drill-down with view stack, live SDK streaming with message mapper and ring buffers, breadcrumb bar, context-sensitive key hints, keyboard navigation, inline epic cancellation, embedded watch loop), and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and on-demand compaction agent (staleness removal, restatement folding, L0 promotion detection) via `beastmode compact`
+- Capabilities include: collaborative design, bite-sized planning, parallel wave execution, git worktree isolation via TypeScript CLI orchestrator (`beastmode`), brownfield discovery with 17-domain init system, progressive knowledge hierarchy, self-improving retro, commit-per-phase with squash-at-release, phase regression/rerun via overloaded `beastmode <phase> <slug>` with CLI-managed git tags (`beastmode/<slug>/<phase>`) as deterministic reset targets and confirmation prompt before destructive reset, session-start hook, unified /beastmode command (init, ideas subcommands), deferred ideas capture and reconciliation, deadpan persona, manifest-based local state with optional GitHub mirroring for issue-based lifecycle tracking, CLI-owned worktree lifecycle with feature branch detection, pipeline orchestration via `beastmode watch` with event-driven re-scan and EventEmitter-based typed events, multi-epic parallelism, per-feature agent fan-out, `beastmode status` for pipeline state visibility with `--watch` live-updating terminal dashboard, fullscreen TUI dashboard via `beastmode dashboard` (Ink v6 + React, k9s-style push/pop drill-down with view stack, live SDK streaming with message mapper and ring buffers, breadcrumb bar, context-sensitive key hints, keyboard navigation, inline epic cancellation, embedded watch loop), and optional cmux terminal multiplexer integration for live pipeline visibility with workspace-per-epic surface model, context tree compaction with retro value-add gate (prevents redundant L3 creation) and on-demand compaction agent (staleness removal, restatement folding, L0 promotion detection) via `beastmode compact`, configurable human-in-the-loop control via per-phase prose config in `config.yaml` with PreToolUse/PostToolUse hooks on `AskUserQuestion` for gradual delegation from manual to automated decisions with decision logging and retro-driven automation suggestions
 
 ## Architecture
 - ALWAYS follow the progressive loading pattern — L0 autoloads, L1 loads at prime, L2 on-demand
@@ -90,7 +90,7 @@ TypeScript CLI (`beastmode`) built with Bun and Claude Agent SDK that provides m
 3. ALWAYS own worktree lifecycle in the CLI — create at first phase, persist through phases, squash-merge at release
 4. ALWAYS own manifest lifecycle via manifest-store.ts (filesystem — get, list, save, create, validate, rename, find, slugify) and manifest.ts (pure functions) — store is the sole filesystem accessor, pure functions return new manifests without mutation
 5. ALWAYS run post-dispatch pipeline: Stop hook generates output.json from artifact frontmatter, CLI reads it from `artifacts/<phase>/` by hex slug match, enriches manifest via pure functions, optionally calls `store.rename()` for design phase, single `store.save()`, then runs `syncGitHub(manifest, config)`
-6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, and `github:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup
+6. ALWAYS reuse `.beastmode/config.yaml` with `cli:`, `cmux:`, `github:`, and `hitl:` sections — github config block extended with project-id, field-id, and option ID mappings written by setup; hitl section has per-phase prose fields plus model and timeout
 7. ALWAYS use lockfile to prevent duplicate watch instances — single orchestrator guarantee
 8. ALWAYS use flat-file manifest path convention — state/YYYY-MM-DD-<slug>.manifest.json, no directory-per-slug
 9. ALWAYS use findProjectRoot() in status command — not process.cwd(), works from subdirectories
@@ -169,8 +169,14 @@ Two mechanisms prevent and clean up L3 bloat: a retro value-add gate that checks
 
 context/design/compaction.md
 
-## HITL Contract
-- All user input during phase sessions MUST go through `AskUserQuestion` — freeform print-and-wait is not interceptable by HITL hooks
-- HITL hooks use `PreToolUse` on `AskUserQuestion` to auto-answer or defer questions based on per-phase prose config in `config.yaml`
-- Skill authors MUST route every user-facing question through `AskUserQuestion`; direct prompting bypasses the HITL pipeline entirely
-- Runtime enforcement is out of scope — this is a documentation-enforced contract
+## HITL System
+Per-phase human-in-the-loop control via prose config in `config.yaml` under `hitl:` key, interpreted as a prompt hook on `AskUserQuestion`. CLI templates phase-specific prose into `settings.local.json` at dispatch time. PreToolUse prompt hook auto-answers or silently defers to human. PostToolUse command hook logs all decisions to `hitl-log.md`. Retro analyzes logs and proposes config snippets for automating repetitive human decisions. All hooks fail-open. HITL applies to top-level sessions only, not subagents.
+
+1. All user input during phase sessions MUST go through `AskUserQuestion` — freeform print-and-wait is not interceptable by HITL hooks
+2. ALWAYS keep committed hooks in `settings.json` and generated HITL hooks in `settings.local.json` — different events, no conflict, no git noise
+3. ALWAYS clean and rewrite HITL settings before each dispatch — prevents stale phase prose from leaking between dispatches
+4. ALWAYS fail-open on hook errors — prompt hook defers to human, logging hook exits silently
+5. ALWAYS use all-or-nothing for multi-question batches — partial auto-answer is not supported
+6. ALWAYS seed HITL config with "always defer to human" defaults at init — nothing automated until explicit opt-in
+
+context/design/hitl.md

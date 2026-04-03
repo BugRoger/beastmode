@@ -79,4 +79,5 @@
 
 ## Configuration
 
-- `.beastmode/config.yaml` controls CLI and GitHub settings
+- `.beastmode/config.yaml` controls CLI, GitHub, and HITL settings
+- `hitl:` section has per-phase prose fields for human-in-the-loop control — "always defer to human" defaults
