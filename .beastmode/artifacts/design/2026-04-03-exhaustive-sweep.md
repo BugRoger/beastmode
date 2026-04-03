@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: c549d5
+slug: exhaustive-sweep
 epic: exhaustive-sweep
 ---
 
