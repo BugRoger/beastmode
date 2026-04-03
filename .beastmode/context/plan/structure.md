@@ -1,7 +1,7 @@
 # Structure
 
 ## Core Directories
-- ALWAYS put phase-specific logic in `skills/{verb}/phases/` — colocated with skill
+- ALWAYS put phase-specific logic inline in `skills/{verb}/SKILL.md` — self-contained per verb
 - ALWAYS put cross-skill utilities in `skills/` root — colocated with skill directories, no nested `_shared/`
 - ALWAYS put agent prompts in `agents/` as standalone documents — separation from skills
 - ALWAYS put plugin lifecycle hooks in `hooks/` as executable scripts — lifecycle management
@@ -22,7 +22,7 @@
 - ALWAYS wire CLAUDE.md -> BEASTMODE.md as sole autoload — minimal L0
 - NEVER add additional @imports to CLAUDE.md — one entry point
 - Skills discover their own L1/L2 context during 0-prime sub-phase — self-loading
-- Each SKILL.md imports the shared task-runner at the end — standardized execution
+- Each SKILL.md is self-contained with inline phases — no external imports
 
 ## Related Decisions
 - Migration from .agents/ to .beastmode/ — see [agents-to-beastmode-migration](../../state/plan/2026-03-04-agents-to-beastmode-migration.md)

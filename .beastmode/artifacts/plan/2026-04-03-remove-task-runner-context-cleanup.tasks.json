@@ -1,0 +1,12 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-remove-task-runner-context-cleanup.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Delete context/design/task-runner.md and context/design/task-runner/ directory", "wave": 1, "status": "pending", "files": ["context/design/task-runner.md", "context/design/task-runner/lazy-expansion.md", "context/design/task-runner/validation-reset.md"]},
+    {"id": 1, "subject": "Task 1: Remove Task Runner section from context/DESIGN.md", "wave": 1, "status": "pending", "files": ["context/DESIGN.md"]},
+    {"id": 2, "subject": "Task 2: Remove task-runner reference from context/IMPLEMENT.md", "wave": 1, "status": "pending", "files": ["context/IMPLEMENT.md"]},
+    {"id": 3, "subject": "Task 3: Update context/plan/conventions.md — remove task-runner convention", "wave": 1, "status": "pending", "files": ["context/plan/conventions.md"]},
+    {"id": 4, "subject": "Task 4: Rewrite context/plan/structure/entry-points.md for self-contained SKILL.md", "wave": 1, "status": "pending", "files": ["context/plan/structure/entry-points.md"]},
+    {"id": 5, "subject": "Task 5: Verification — grep context/ for task-runner and TodoWrite", "wave": 2, "status": "pending", "files": []}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

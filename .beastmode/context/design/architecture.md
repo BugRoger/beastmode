@@ -20,7 +20,7 @@
 - ALWAYS create a matching L3 directory (with .gitkeep) for every L2 file — ready for retro expansion
 
 ## Sub-Phase Anatomy
-- Every phase follows: 0-prime, 1-execute, 2-validate, 3-checkpoint — standardized lifecycle
+- Every phase follows sub-phase anatomy: prime -> execute -> validate -> checkpoint as inline sections within SKILL.md — standardized lifecycle
 - ALWAYS enter worktree in prime before state file reads — step 3 in plan/implement primes
 - 0-prime is read-only except for worktree entry (cd) — no other side effects
 - 3-checkpoint commits work and hands off to next phase — retro runs only at release
@@ -28,9 +28,9 @@
 ## Component Architecture
 - Skills (workflow verbs) in `/skills/`, context walker agent and utility agents (compaction) in `/agents/` — separation of concerns
 - ALWAYS colocate interface (SKILL.md) with implementation — discoverability
-- NEVER put shared logic in individual skills — extract to `skills/_shared/`
+- NEVER put shared logic in individual skills — extract to shared agents or CLI modules
 - Context walker agent receives all phase artifacts at release — single-pass review across the full cycle
-- Phase checkpoint files MAY use blockquote directives before @imports to override shared skill behavior — reference sections by name, not step number, to survive renumbering
+- Each SKILL.md is self-contained with inline phase sections — no external imports or blockquote directives
 
 ## Worktree Isolation
 - ALWAYS use `git merge --squash` for releases — one commit per version on main

@@ -6,12 +6,10 @@
 - NEVER mix naming conventions within a directory level — consistency
 
 ## Skill Definitions
-- ALWAYS define skill interface in SKILL.md with YAML frontmatter — standardized discovery
-- ALWAYS number phase files: 0-prime, 1-execute, 2-validate, 3-checkpoint — sub-phase anatomy
+- ALWAYS define skill as a single self-contained SKILL.md with YAML frontmatter — standardized discovery
+- ALWAYS use inline phase sections within SKILL.md — no external phase files or @imports
 - ALWAYS write phase instructions in imperative voice with numbered steps — actionable clarity
-- ALWAYS keep 0-prime read-only — no worktree entry, no file writes
-- ALWAYS make worktree entry step 1 of 1-execute — first side effect
-- ALWAYS reference task-runner as first line inside HARD-GATE block — never as trailing @import
+- NEVER use @imports between skills — each SKILL.md is self-contained
 
 ## Branch Naming
 - ALWAYS use `feature/<feature>` branch naming — convention
@@ -20,8 +18,8 @@
 - Design creates both branch and worktree, all phases inherit, /release merges and cleans up — full lifecycle
 
 ## Anti-Patterns
-- NEVER put shared logic in individual skills — extract to `skills/` root as shared utilities
-- NEVER create circular @imports between files — dependency loops
+- NEVER put shared logic in individual skills — extract to shared agents or CLI modules
+- NEVER create circular dependencies between files — dependency loops
 - NEVER hardcode paths that should be convention-based — brittleness
 - NEVER add "just in case" sections to context docs — document what exists
 - NEVER commit during implement phase — /release owns the merge
@@ -36,5 +34,6 @@
 ## Related Decisions
 - Skill anatomy standardized to 4 sub-phases — see [skill-anatomy-refactor](../../state/plan/2026-03-04-skill-anatomy-refactor.md)
 - Lean prime refactor — 0-prime read-only, see [lean-prime-refactor](../../state/plan/2026-03-04-lean-prime-refactor.md)
+- Skill flattening to self-contained SKILL.md — see remove-task-runner release (2026-04-03)
 - Git branching with feature/<feature> convention — see [git-branching-strategy](../../state/plan/2026-03-04-git-branching-strategy.md)
 - Init L2 expansion and context doc format — see [init-l2-expansion](../../state/plan/2026-03-08-init-l2-expansion.md)

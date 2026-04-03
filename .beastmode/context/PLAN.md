@@ -3,11 +3,11 @@
 Conventions, structure, task format, and workflow for implementation. Naming patterns, directory layout, wave-ordered tasks, and phase lifecycle with exclusive transition authority in checkpoints.
 
 ## Conventions
-Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill manifest with YAML frontmatter and task-runner in HARD-GATE, phase file rules (0-prime read-only, 1-execute owns side effects, imperative voice), HARD-GATE for unconditional constraints, @import semantics (standalone = mandatory, inline = markdown link), branch naming (feature/<feature>), context document format (retro-compatible ALWAYS/NEVER bullets, L2+L3 structural invariant), and anti-patterns to avoid.
+Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill manifest with YAML frontmatter, self-contained SKILL.md files with inline phase sections, HARD-GATE for unconditional constraints, branch naming (feature/<feature>), context document format (retro-compatible ALWAYS/NEVER bullets, L2+L3 structural invariant), and anti-patterns to avoid.
 
 1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
-2. ALWAYS number phase files 0-3 (0-prime read-only, 1-execute, 2-validate, 3-checkpoint)
-3. ALWAYS compose shared functionality via @imports from `skills/` — NEVER @import between knowledge hierarchy levels (L0/L1/L2/L3)
+2. ALWAYS use a single self-contained SKILL.md per verb with inline phase sections — no external phase files or @imports
+3. ALWAYS keep each SKILL.md self-contained — no @imports between skills
 4. ALWAYS use `feature/<feature>` branch naming convention
 
 context/plan/conventions.md

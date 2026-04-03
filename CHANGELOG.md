@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.60.1 — Remove Task Runner (Apr 2026)
+
+- **Skill flattening** — All 5 phase skills (design, plan, implement, validate, release) collapsed from multi-file `phases/` + `references/` structure into single self-contained SKILL.md files with inline phase sections
+- **Task runner removed** — `skills/task-runner.md` deleted; TodoWrite references removed from all HARD-GATE blocks
+- **Context cleanup** — Task-runner L2/L3 docs removed; 16 stale references to `phases/`, `_shared/`, and `@imports` fixed across context hierarchy
+- **Net reduction** — 1782 added, 1743 removed across 63 files
+
+---
+
 ### v0.60.0 — Dashboard Drill-Down (Apr 2026)
 
 - **View stack navigation** — k9s-style push/pop drill-down across three views: EpicList, FeatureList, AgentLog (Enter to drill, Escape to pop)
