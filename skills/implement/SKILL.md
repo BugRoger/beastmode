@@ -18,6 +18,7 @@ No EnterPlanMode or ExitPlanMode.
 - **Two-stage review** — spec compliance first, code quality second
 - **Wave ordering drives sequencing** — foundation before consumers
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
+- **Model escalation** — start cheap (haiku), escalate on failure (sonnet, then opus)
 
 ## Phase 0: Prime
 
@@ -81,6 +82,16 @@ If the branch check fails, error: "Implementation branch not found. The CLI must
     npm install  # or appropriate command from .beastmode/context/
 
 ## Phase 1: Execute
+
+### Escalation State
+
+The controller maintains per-task escalation state:
+
+- **Model ladder:** `["haiku", "sonnet", "opus"]`
+- **Current tier index:** starts at 0 (haiku) for each new task
+- **Tier retry counter:** starts at 0 for each new task, resets on escalation
+
+When a task begins, reset both to zero. The tier index selects the model passed to the Agent tool's `model` parameter for implementer dispatch. Reviewer agents (spec-reviewer, quality-reviewer) do not receive a model parameter — they use the default model.
 
 ### 0. Write Plan
 
