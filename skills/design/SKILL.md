@@ -19,6 +19,7 @@ No Plan Mode — this skill operates in normal mode. EnterPlanMode/ExitPlanMode 
 - **The user frames the problem.** Their words drive the design. Ask before exploring; listen before loading context.
 - **Decision tree before document.** Walk every branch, sweep for gray areas, then write. The PRD is the output, not the process.
 - **Scope is protected by default.** New capabilities get deferred unless the user explicitly pulls them in.
+- **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
 ## Phase 0: Prime
 

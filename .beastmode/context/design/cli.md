@@ -29,6 +29,7 @@
 - ALWAYS reuse `.beastmode/config.yaml` with `cli:` section — no separate config file
 - `cli.interval` controls poll interval (default 60 seconds)
 - `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
+- `hitl:` section added with per-phase prose fields (`design:`, `plan:`, `implement:`, `validate:`, `release:`) plus `model` (default: haiku) and `timeout` (default: 30s)
 - No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
 - Gates and other config sections are unchanged
 
@@ -61,6 +62,13 @@
 - github-sync.ts returns mutations instead of mutating manifests in-place — caller applies via manifest.ts + store.save()
 - Same code path for manual `beastmode <phase>` and watch loop dispatch — no separate sync logic
 - ALWAYS use post-only stateless sync — no pre-sync, no phase parameter, function reads manifest and makes GitHub match
+
+## HITL Hook Dispatch
+- CLI reads `hitl.<phase>` prose from `config.yaml`, templates it into a PreToolUse prompt hook config targeting `AskUserQuestion`, and writes to `.claude/settings.local.json` in the worktree before dispatching the session
+- PostToolUse command hook for `AskUserQuestion` is written alongside the PreToolUse hook — logs auto/human decisions to `artifacts/<phase>/hitl-log.md`
+- `cleanHitlSettings()` runs before `writeHitlSettings()` at each dispatch — prevents stale hooks from previous phases
+- `settings.local.json` is gitignored — generated per-dispatch, no version control noise
+- All dispatch paths (manual `beastmode <phase>` and watch loop) go through `phase.ts` which calls the HITL settings functions — uniform hook injection
 
 ## Phase Output Contract
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests

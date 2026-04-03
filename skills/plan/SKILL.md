@@ -17,6 +17,7 @@ No EnterPlanMode or ExitPlanMode — this skill manages its own flow.
 - **Features map to user stories** — every feature traces back to at least one PRD user story; no orphan features
 - **Wave number is the sole ordering primitive** — no explicit dependency graph between features, just wave numbers
 - **Architectural, not procedural** — feature plans describe WHAT to build, not step-by-step HOW; /implement discovers file paths and generates code
+- **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
 ## Phase 0: Prime
 

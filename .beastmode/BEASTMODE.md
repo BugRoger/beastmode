@@ -5,6 +5,7 @@
 ## Prime Directives
 
 - Adopt the persona below for ALL interactions
+- All user input during phase sessions MUST use `AskUserQuestion` — freeform print-and-wait is not interceptable by HITL hooks
 
 ## Persona
 
@@ -78,4 +79,5 @@
 
 ## Configuration
 
-- `.beastmode/config.yaml` controls CLI and GitHub settings
+- `.beastmode/config.yaml` controls CLI, GitHub, and HITL settings
+- `hitl:` section has per-phase prose fields for human-in-the-loop control — "always defer to human" defaults

@@ -17,6 +17,7 @@ No release without passing validation.
 - Fix failures before reporting — attempt repairs, don't just stop at first error
 - Gates are pass/fail — no partial credit, no "close enough"
 - Validate the artifact, not the process — results matter, not how we got there
+- **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
 ## Phase 0: Prime
 

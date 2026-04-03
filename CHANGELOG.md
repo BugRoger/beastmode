@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.63.0 — HITL Config (Apr 2026)
+
+- **Per-phase HITL config** — Prose config in `config.yaml` under `hitl:` key with "always defer to human" defaults for all phases
+- **Prompt hook** — `PreToolUse` hook on `AskUserQuestion` reads HITL instructions and auto-answers or silently defers to the human
+- **Decision logging** — `PostToolUse` command hook logs all auto and human decisions to `hitl-log.md` per phase
+- **Skill contract** — L0 prime directive + guiding principle in all 5 skill files requiring `AskUserQuestion` for all user input
+- **Retro integration** — Context walker analyzes HITL logs, identifies repetitive human decisions, generates `config.yaml` snippets for automation
+
+---
+
 ### v0.62.0 — Epic Tab Cleanup (Apr 2026)
 
 - **Release cleanup** — Wire `cleanup()` into ReconcilingFactory's release teardown so epic tabs/workspaces close automatically on successful release

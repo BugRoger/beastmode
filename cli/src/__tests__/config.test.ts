@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { loadConfig } from "../config";
+import { loadConfig, DEFAULT_HITL_PROSE } from "../config";
+import type { HitlConfig } from "../config";
 import { mkdtempSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -81,5 +82,73 @@ github:
     );
     const config = loadConfig(tempDir);
     expect(config.cli["dispatch-strategy"]).toBe("auto");
+  });
+
+  test("default hitl config returns safe defaults", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+    const config = loadConfig(tempDir);
+    expect(config.hitl.design).toBe("always defer to human");
+    expect(config.hitl.plan).toBe("always defer to human");
+    expect(config.hitl.implement).toBe("always defer to human");
+    expect(config.hitl.validate).toBe("always defer to human");
+    expect(config.hitl.release).toBe("always defer to human");
+    expect(config.hitl.model).toBe("haiku");
+    expect(config.hitl.timeout).toBe(30);
+  });
+
+  test("parses hitl section with custom prose", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+    mkdirSync(join(tempDir, ".beastmode"), { recursive: true });
+    writeFileSync(
+      join(tempDir, ".beastmode", "config.yaml"),
+      `hitl:
+  model: sonnet
+  timeout: 60
+  design: "auto-approve all section structure questions"
+  plan: "auto-approve wave ordering"
+  implement: "always defer to human"
+  validate: "auto-approve lint fixes"
+  release: "always defer to human"
+`,
+    );
+
+    const config = loadConfig(tempDir);
+    expect(config.hitl.model).toBe("sonnet");
+    expect(config.hitl.timeout).toBe(60);
+    expect(config.hitl.design).toBe("auto-approve all section structure questions");
+    expect(config.hitl.plan).toBe("auto-approve wave ordering");
+    expect(config.hitl.implement).toBe("always defer to human");
+    expect(config.hitl.validate).toBe("auto-approve lint fixes");
+    expect(config.hitl.release).toBe("always defer to human");
+  });
+
+  test("partial hitl fills defaults for missing phases", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+    mkdirSync(join(tempDir, ".beastmode"), { recursive: true });
+    writeFileSync(
+      join(tempDir, ".beastmode", "config.yaml"),
+      `hitl:\n  design: "auto-approve all"\n  model: sonnet\n`,
+    );
+
+    const config = loadConfig(tempDir);
+    expect(config.hitl.design).toBe("auto-approve all");
+    expect(config.hitl.model).toBe("sonnet");
+    expect(config.hitl.plan).toBe("always defer to human");
+    expect(config.hitl.timeout).toBe(30);
+  });
+
+  test("hitl config exports types for downstream use", () => {
+    expect(DEFAULT_HITL_PROSE).toBe("always defer to human");
+    // Type-level check: HitlConfig is usable as a type annotation
+    const stub: HitlConfig = {
+      design: "test",
+      plan: "test",
+      implement: "test",
+      validate: "test",
+      release: "test",
+      model: "haiku",
+      timeout: 30,
+    };
+    expect(stub.model).toBe("haiku");
   });
 });

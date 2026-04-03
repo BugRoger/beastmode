@@ -12,6 +12,7 @@
 - ALWAYS follow uniform section ordering in phase skills: Title > HARD-GATE > Guiding Principles > Phase 0-3 > Constraints > Reference — structural consistency
 - ALWAYS use 3 heading levels max in skill files: `#` title, `##` major sections, `###` subsections — prevents hierarchy pollution
 - ALWAYS place templates and reference material in a `## Reference` section at the end — separates instructions from reference data
+- ALWAYS include "All user input via AskUserQuestion" in skill guiding principles — enables HITL hook interception
 - NEVER use @imports between skills — each SKILL.md is self-contained
 
 ## Branch Naming

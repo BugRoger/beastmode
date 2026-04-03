@@ -13,14 +13,36 @@ export interface CliConfig {
   "dispatch-strategy"?: DispatchStrategy;
 }
 
+export interface HitlConfig {
+  design?: string;
+  plan?: string;
+  implement?: string;
+  validate?: string;
+  release?: string;
+  model: string;
+  timeout: number;
+}
+
 export interface BeastmodeConfig {
   github: GitHubConfig;
   cli: CliConfig;
+  hitl: HitlConfig;
 }
+
+export const DEFAULT_HITL_PROSE = "always defer to human";
 
 const DEFAULT_CONFIG: BeastmodeConfig = {
   github: { enabled: false },
   cli: { interval: 60, "dispatch-strategy": "sdk" },
+  hitl: {
+    design: DEFAULT_HITL_PROSE,
+    plan: DEFAULT_HITL_PROSE,
+    implement: DEFAULT_HITL_PROSE,
+    validate: DEFAULT_HITL_PROSE,
+    release: DEFAULT_HITL_PROSE,
+    model: "haiku",
+    timeout: 30,
+  },
 };
 
 /**
@@ -93,5 +115,16 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
       (((raw.cli as Record<string, unknown>)?.["dispatch-strategy"] as string) ?? "sdk") as DispatchStrategy,
   } satisfies CliConfig;
 
-  return { github, cli };
+  const rawHitl = (raw.hitl ?? {}) as Record<string, unknown>;
+  const hitl = {
+    design: (rawHitl.design as string) ?? DEFAULT_CONFIG.hitl.design,
+    plan: (rawHitl.plan as string) ?? DEFAULT_CONFIG.hitl.plan,
+    implement: (rawHitl.implement as string) ?? DEFAULT_CONFIG.hitl.implement,
+    validate: (rawHitl.validate as string) ?? DEFAULT_CONFIG.hitl.validate,
+    release: (rawHitl.release as string) ?? DEFAULT_CONFIG.hitl.release,
+    model: (rawHitl.model as string) ?? DEFAULT_CONFIG.hitl.model,
+    timeout: (rawHitl.timeout as number) ?? DEFAULT_CONFIG.hitl.timeout,
+  } satisfies HitlConfig;
+
+  return { github, cli, hitl };
 }

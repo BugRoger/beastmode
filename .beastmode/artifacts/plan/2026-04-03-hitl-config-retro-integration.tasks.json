@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-hitl-config-retro-integration.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Extend release skill to include HITL logs in retro artifact list", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Add HITL analysis section to retro-context agent", "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

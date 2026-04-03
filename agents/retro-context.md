@@ -58,7 +58,50 @@ Before proposing any new L3 record, evaluate whether it adds at least one of:
 
 If none apply, silently skip the L3 proposal — the L2 already covers the finding. No L2 enrichment occurs.
 
-### 4. New Area Recognition
+### 4. HITL Pattern Analysis
+
+Among the provided artifacts, identify any files named `hitl-log.md`. These contain timestamped HITL decision logs with entries tagged `auto` or `human`.
+
+If no HITL logs found → skip to the next step.
+
+If HITL logs exist:
+
+1. **Parse entries** — Extract all entries, grouping by question text (the `### Q:` heading)
+2. **Identify repetitive human decisions** — Find questions tagged `human` where the same question received the same answer 2+ times across the logs. These are automation candidates.
+3. **Generate config proposals** — For each identified pattern, produce a copy-paste ready `config.yaml` snippet:
+
+   ```yaml
+   hitl:
+     <phase>: |
+       <proposed prose rule derived from the repeated decision>
+   ```
+
+   The prose should describe the decision rule in natural language, e.g.:
+   - "When asked about test framework, always choose vitest"
+   - "For component placement questions, prefer src/components/"
+
+4. **Include in output** — Add a dedicated `## HITL Config Proposals` section to the output (before the standard `## Proposed Changes`). Format:
+
+   ```
+   ## HITL Config Proposals
+
+   Found N repetitive human decisions across M log entries.
+
+   ### Pattern 1: [question summary]
+   - **Occurrences:** N times, always answered "[answer]"
+   - **Proposed config:**
+     ```yaml
+     hitl:
+       <phase>: |
+         <prose rule>
+     ```
+
+   ### Pattern 2: ...
+   ```
+
+   If no patterns detected: `## HITL Config Proposals\n\nNo repetitive patterns found.`
+
+### 5. New Area Recognition
 
 Does the artifact introduce a concept that has no L2 home?
 
@@ -77,7 +120,7 @@ Every L2 section SHOULD have a corresponding L3 record, unless the L3 would be a
 
 This is NOT gap detection. No confidence scoring, no accumulation thresholds. Just: "this concept has no doc home, here's a draft with L3 provenance."
 
-### 5. L3 Completeness Check
+### 6. L3 Completeness Check
 
 For each existing L2 file flagged in step 3:
 
@@ -88,7 +131,7 @@ For each existing L2 file flagged in step 3:
    - Source: infer from the artifact or mark as "Source artifact unknown — backfill needed"
    If the section fails the gate (L3 would be a pure restatement), skip silently.
 
-### 6. Emit Changes
+### 7. Emit Changes
 
 Return a structured list of all proposed changes.
 
@@ -124,3 +167,4 @@ No changes needed. L1 summaries already account for this artifact.
 - **No gap detection** — only recognize obvious new areas, don't scan for patterns
 - **No confidence scoring** — propose changes or don't; no HIGH/MEDIUM/LOW
 - **L1 format** — L1 sections contain heading + summary paragraph + numbered rules only. No L2 file paths, no @imports, no cross-level references of any kind
+- **HITL analysis** — only flag human decisions repeated 2+ times with the same answer; auto decisions are already handled

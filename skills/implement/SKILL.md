@@ -17,6 +17,7 @@ No EnterPlanMode or ExitPlanMode.
 - **Deviations are normal** — classify and handle systematically
 - **Spec check every result** — files match plan, verification passes, no unplanned changes
 - **Wave ordering drives parallelism** — foundation before consumers
+- **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
 ## Phase 0: Prime
 
