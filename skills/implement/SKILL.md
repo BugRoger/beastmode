@@ -218,7 +218,9 @@ For each wave (ascending order):
    **If NOT_APPROVED with Critical or Important issues**: re-dispatch implementer to fix.
    - Provide the quality-reviewer's issue list as context
    - After fix: re-dispatch quality-reviewer
-   - Max 2 review cycles. After max: mark task as blocked, report to user
+   - Max 2 review-fix cycles at the current model tier. After exhausting cycles:
+     - If a higher tier exists: **escalate** — increment the tier index, reset the tier retry counter to 0, re-dispatch implementer at the new model tier, then re-run the full review pipeline (spec compliance + quality)
+     - If at opus (top tier): mark task as BLOCKED, report to user. Maximum quality review escalation reached.
 
    **If NOT_APPROVED with only Minor issues**: treat as approved — minor issues don't block.
 
