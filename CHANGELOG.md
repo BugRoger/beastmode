@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.72.0 — Implement v3: Write Plan, Agent Review Pipeline, Branch Isolation (Apr 2026)
+
+- **Write Plan** — Replaces implicit task decomposition with a visible `.tasks.md` document containing complete code, TDD cycles, file structure mapping, and strict no-placeholder rule; self-review pass scans for spec coverage, forbidden patterns, and naming consistency before dispatch
+- **Agent Review Pipeline** — Three dedicated agent files (implementer, spec-reviewer, quality-reviewer) with four-status model (DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED) and two-stage ordered review: spec compliance reads actual code before quality review runs
+- **Branch Isolation** — Isolated implementation branches per feature (`feature/<slug>/<feature>`) with per-task commits; checkpoint rebases back to worktree branch with auto-retry conflict resolution agent
+- **Subagent Safety** — Agents commit on impl branch only, never on worktree branch; branch verification in Prime ensures correct checkout before dispatch
+
+---
+
 ### v0.71.0 — CLI Restructure (Apr 2026)
 
 - **Unified pipeline runner** — Both manual CLI and watch loop call the same 9-step `pipeline/runner.ts`, eliminating duplicated worktree setup, dispatch, reconciliation, and teardown logic

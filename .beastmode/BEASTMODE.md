@@ -64,10 +64,13 @@
 - ALWAYS adapt heading depth to structural context when nesting changes
 - Cross-cutting features spanning all 5 phases need per-phase feature decomposition to maintain file isolation
 - Sequential tasks with API-level dependencies fail under worktree isolation — orchestrator must merge intermediate results
+- ALWAYS produce a Write Plan (.tasks.md) before dispatch — visible, inspectable task breakdown with complete code, TDD cycles, and no-placeholder rule
+- ALWAYS run two-stage review per task: spec compliance first, then code quality — ordered pipeline, not optional
+- ALWAYS use isolated implementation branches (feature/<slug>/<feature>) with per-task commits — worktree branch stays clean, checkpoint rebases back
 
 ## Implement Workarounds
 
-- ALWAYS verify task state from artifacts rather than trusting tasks.json in long sessions — context compaction drops incremental state
+- ALWAYS verify task state from .tasks.md checkboxes rather than trusting in-memory state in long sessions — context compaction drops incremental state
 - ALWAYS design parallel dispatch for post-hoc reconciliation, not real-time status updates
 - ALWAYS read skill files from worktree path when the feature modifies skill files — plugin cache serves main-branch files
 - Edit/Write tools may refuse certain file modifications — use Bash heredoc as fallback
