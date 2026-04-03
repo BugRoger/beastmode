@@ -11,6 +11,13 @@ Decompose a PRD into independent feature plans. Each feature is a vertical slice
 No EnterPlanMode or ExitPlanMode — this skill manages its own flow.
 </HARD-GATE>
 
+## Guiding Principles
+
+- **Thin vertical slices** — each feature cuts through all relevant layers end-to-end, independently implementable
+- **Features map to user stories** — every feature traces back to at least one PRD user story; no orphan features
+- **Wave number is the sole ordering primitive** — no explicit dependency graph between features, just wave numbers
+- **Architectural, not procedural** — feature plans describe WHAT to build, not step-by-step HOW; /implement discovers file paths and generates code
+
 ## Phase 0: Prime
 
 ### 1. Resolve Feature Name
@@ -94,7 +101,7 @@ For each feature, capture:
 - **Acceptance Criteria:** how to verify this feature is done
 - **Wave:** proposed execution wave (1 = foundation, higher = depends on earlier waves)
 
-### Wave Assignment
+**Wave Assignment**
 
 When multiple features exist, propose wave groupings based on dependency analysis:
 - **Wave 1:** Foundation features — no dependencies on other features
@@ -257,9 +264,11 @@ This skill operates in normal mode and manages its own completion flow via `AskU
 
 If you feel the urge to call either, STOP — follow this skill's instructions instead.
 
-## Feature Plan Format
+## Reference
 
-### Template
+### Feature Plan Format
+
+**Template**
 
 Each feature plan file follows this structure:
 
@@ -291,7 +300,7 @@ wave: <N>
 - [ ] [Criterion N]
 ```
 
-### Guidelines
+**Guidelines**
 
 - **No file paths** — /implement explores the codebase and determines exact files
 - **No code snippets** — /implement generates task-level code during decomposition
@@ -300,7 +309,7 @@ wave: <N>
 - **Linked** — always reference the parent PRD and shared architectural decisions
 - **Wave field** — stamped by validate phase, indicates execution order (1 = foundation, higher = later)
 
-## Task Format Reference
+### Task Format Reference
 
 > **Moved:** Detailed task format (waves, file lists, code steps) is now created by /implement during its Decompose step.
 > See the Task Format section in `/implement`'s SKILL.md for the specification.
