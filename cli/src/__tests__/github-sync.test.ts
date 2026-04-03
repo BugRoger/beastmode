@@ -98,7 +98,7 @@ mock.module("../gh", () => ({
 }));
 
 // NOW import the module under test
-import { syncGitHub, type SyncResult } from "../github-sync";
+import { syncGitHub } from "../github-sync";
 import type { PipelineManifest, ManifestFeature } from "../manifest";
 import type { BeastmodeConfig } from "../config";
 import type { ResolvedGitHub } from "../github-discovery";
@@ -115,6 +115,7 @@ function makeConfig(overrides: Partial<BeastmodeConfig["github"]> = {}): Beastmo
       ...overrides,
     },
     cli: { interval: 60 },
+    hitl: { model: "haiku", timeout: 30 },
   };
 }
 
@@ -153,7 +154,7 @@ function makeManifest(
     features: [],
     artifacts: {},
     lastUpdated: "2026-03-29T00:00:00Z",
-    github: { epic: 10 },
+    github: { epic: 10, repo: "org/repo" },
     ...overrides,
   };
 }
@@ -198,7 +199,7 @@ describe("syncGitHub", () => {
   describe("repo source", () => {
     test("uses resolved.repo for all GitHub operations", async () => {
       const manifest = makeManifest();
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
       const config = makeConfig();
       const resolved = makeResolved({ repo: "custom/repo" });
       mockReturns.ghIssueCreate = 99;
@@ -210,7 +211,7 @@ describe("syncGitHub", () => {
     });
 
     test("manifest does not need github.repo field", async () => {
-      const manifest = makeManifest({ github: { epic: 10 } });
+      const manifest = makeManifest({ github: { epic: 10, repo: "org/repo" } });
       const config = makeConfig();
       const resolved = makeResolved();
 
@@ -228,7 +229,7 @@ describe("syncGitHub", () => {
   describe("epic creation", () => {
     test("creates epic when manifest has no github.epic", async () => {
       const manifest = makeManifest();
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
 
       mockReturns.ghIssueCreate = 99;
       const config = makeConfig();
@@ -275,7 +276,7 @@ describe("syncGitHub", () => {
 
     test("includes correct phase in epic body and labels", async () => {
       const manifest = makeManifest({ phase: "implement" });
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
       mockReturns.ghIssueCreate = 77;
       const config = makeConfig();
       const resolved = makeResolved();
@@ -301,7 +302,7 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({
         features: [makeFeature()],
       });
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
       mockErrors.ghIssueCreate = true;
       const config = makeConfig();
       const resolved = makeResolved();
@@ -983,7 +984,7 @@ describe("syncGitHub", () => {
       const config = makeConfig();
       const resolved = makeResolved();
 
-      const result = await syncGitHub(manifest, config, resolved);
+      await syncGitHub(manifest, config, resolved);
 
       // Both features should have been processed (ghIssueLabels called for each + epic)
       const labelCalls = callsTo("ghIssueLabels");
@@ -1144,7 +1145,7 @@ describe("syncGitHub", () => {
     test("syncs issues and labels even without project metadata", async () => {
       const feature = makeFeature({ slug: "feat-1", status: "pending" });
       const manifest = makeManifest({ features: [feature] });
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
       mockReturns.ghIssueCreate = 100;
       const config = makeConfig();
       // No project fields — only repo
@@ -1216,7 +1217,7 @@ describe("syncGitHub", () => {
     test("updates epic body when hash differs from stored", async () => {
       const manifest = makeManifest({
         phase: "implement",
-        github: { epic: 10, bodyHash: "stale-hash" },
+        github: { epic: 10, repo: "org/repo", bodyHash: "stale-hash" },
       });
       const config = makeConfig();
       const resolved = makeResolved();
@@ -1241,7 +1242,7 @@ describe("syncGitHub", () => {
       const manifest = makeManifest({
         phase: "design",
         features: [],
-        github: { epic: 10 },
+        github: { epic: 10, repo: "org/repo" },
       });
       const config = makeConfig();
       const resolved = makeResolved();
@@ -1254,7 +1255,7 @@ describe("syncGitHub", () => {
       const manifest2 = makeManifest({
         phase: "design",
         features: [],
-        github: { epic: 10, bodyHash: hashMut?.type === "setEpicBodyHash" ? hashMut.bodyHash : "x" },
+        github: { epic: 10, repo: "org/repo", bodyHash: hashMut?.type === "setEpicBodyHash" ? hashMut.bodyHash : "x" },
       });
 
       const result = await syncGitHub(manifest2, config, resolved);
@@ -1273,7 +1274,7 @@ describe("syncGitHub", () => {
 
     test("sets body on epic creation with hash mutation", async () => {
       const manifest = makeManifest();
-      delete (manifest.github as Record<string, unknown>).epic;
+      delete (manifest.github as unknown as Record<string, unknown>).epic;
       mockReturns.ghIssueCreate = 99;
       const config = makeConfig();
       const resolved = makeResolved();
@@ -1295,7 +1296,7 @@ describe("syncGitHub", () => {
     test("warns when epic body update fails", async () => {
       const manifest = makeManifest({
         phase: "implement",
-        github: { epic: 10, bodyHash: "stale-hash" },
+        github: { epic: 10, repo: "org/repo", bodyHash: "stale-hash" },
       });
       mockErrors.ghIssueEdit = true;
       const config = makeConfig();
@@ -1363,7 +1364,7 @@ describe("syncGitHub", () => {
       });
       const manifest2 = makeManifest({ features: [feature2] });
 
-      const result = await syncGitHub(manifest2, config, resolved);
+      await syncGitHub(manifest2, config, resolved);
 
       // No body edit for feature 20
       const editCalls = callsTo("ghIssueEdit");

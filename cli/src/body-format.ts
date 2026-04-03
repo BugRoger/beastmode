@@ -98,7 +98,7 @@ export function formatEpicBody(input: EpicBodyInput): string {
     if (meta.branch) lines.push(`**Branch:** \`${meta.branch}\``);
     if (meta.phaseTags && Object.keys(meta.phaseTags).length > 0) {
       const tagList = Object.entries(meta.phaseTags)
-        .map(([phase, tag]) => `\`${tag}\``)
+        .map(([_phase, tag]) => `\`${tag}\``)
         .join(", ");
       lines.push(`**Tags:** ${tagList}`);
     }

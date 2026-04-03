@@ -6,6 +6,7 @@
  */
 
 import { describe, test, expect, mock, beforeEach } from "bun:test";
+import type { ResolvedGitHub } from "../github-discovery";
 
 // --- Mock state ---
 
@@ -103,6 +104,8 @@ mock.module("../gh", () => ({
   ghIssueEdit: async () => true,
   ghIssueClose: async () => true,
   ghIssueReopen: async () => true,
+  ghIssueComment: async () => true,
+  ghIssueComments: async () => [],
   ghIssueState: async () => "open",
   ghIssueLabels: async () => ["type/epic", "phase/implement"],
   ghProjectItemAdd: async () => "item-123",
@@ -241,7 +244,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: "/fake/root",
       epicSlug: "test-epic",
-      resolved: badResolved as unknown as typeof mockState.discoveryResult,
+      resolved: badResolved as unknown as ResolvedGitHub | undefined,
     });
 
     // Function completed without throwing
