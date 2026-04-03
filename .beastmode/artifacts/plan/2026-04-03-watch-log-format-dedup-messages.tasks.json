@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-watch-log-format-dedup-messages.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Dedup watch.ts dispatching messages", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Dedup post-dispatch.ts messages", "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

@@ -407,19 +407,15 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
 
   loop.on('session-started', ({ epicSlug, featureSlug, phase }) => {
     const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
-    if (featureSlug) {
-      child.log(`dispatching implement ${featureSlug}`);
-    } else {
-      child.log(`dispatching ${phase}`);
-    }
+    child.log("dispatching");
   });
 
   loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs, costUsd }) => {
     const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
     const status = success ? 'completed' : 'failed';
-    child.log(
-      `${status} ($${costUsd.toFixed(2)}, ${(durationMs / 1000).toFixed(0)}s)`,
-    );
+    const dur = `${(durationMs / 1000).toFixed(0)}s`;
+    const detail = costUsd != null ? `$${costUsd.toFixed(2)}, ${dur}` : dur;
+    child.log(`${status} (${detail})`);
   });
 
   loop.on('error', ({ epicSlug, message }) => {
