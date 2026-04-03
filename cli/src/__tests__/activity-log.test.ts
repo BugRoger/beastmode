@@ -43,7 +43,8 @@ describe("ActivityLog format integration", () => {
       const ctx = { phase: "implement", epic: "my-epic", feature: "feat1" };
       const line = stripAnsi(formatLogLine(level, ctx, "implement for my-epic/feat1"));
       expect(line).toContain("INFO");
-      expect(line).toContain("(implement/my-epic/feat1):");
+      expect(line).toContain("implement"); // phase column
+      expect(line).toContain("(my-epic/feat1):");
       expect(line).toContain("implement for my-epic/feat1");
     });
 
@@ -52,7 +53,8 @@ describe("ActivityLog format integration", () => {
       const ctx = { phase: "plan", epic: "my-epic" };
       const line = stripAnsi(formatLogLine(level, ctx, "plan completed for my-epic (12s, $0.45)"));
       expect(line).toContain("INFO");
-      expect(line).toContain("(plan/my-epic):");
+      expect(line).toContain("plan"); // phase column
+      expect(line).toContain("(my-epic):");
       expect(line).toContain("plan completed for my-epic");
     });
 
@@ -61,6 +63,7 @@ describe("ActivityLog format integration", () => {
       const ctx = { epic: "my-epic" };
       const line = stripAnsi(formatLogLine(level, ctx, "my-epic: something failed"));
       expect(line).toContain("ERR");
+      expect(line).toContain("(my-epic):");
       expect(line).toContain("my-epic: something failed");
     });
 
@@ -71,12 +74,12 @@ describe("ActivityLog format integration", () => {
       expect(line).toContain("scanned 3 epics, dispatched 1");
     });
 
-    test("error event with only epic context uses (cli) scope", () => {
+    test("error event with only epic context uses epic as scope", () => {
       const level = eventTypeToLevel("error");
       const ctx = { epic: "broken" };
       const line = stripAnsi(formatLogLine(level, ctx, "crashed"));
-      // No phase means scope falls back to "cli"
-      expect(line).toContain("(cli):");
+      // Epic present means scope is the epic name, not "cli"
+      expect(line).toContain("(broken):");
     });
   });
 });
