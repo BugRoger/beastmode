@@ -1,12 +1,12 @@
 {
   "featurePlan": ".beastmode/artifacts/plan/2026-04-03-dashboard-rework-epics-panel.md",
   "tasks": [
-    {"id": 0, "subject": "Task 0: Create EpicsPanel presentational component", "wave": 1, "status": "pending"},
-    {"id": 1, "subject": "Task 1: Rewrite keyboard hook for flat interaction model", "wave": 1, "status": "pending"},
-    {"id": 2, "subject": "Task 2: Update key hints for flat model", "wave": 1, "status": "pending"},
-    {"id": 3, "subject": "Task 3: Rewrite App.tsx for flat model with EpicsPanel", "wave": 2, "status": "pending"},
-    {"id": 4, "subject": "Task 4: Update hooks/index.ts exports", "wave": 2, "status": "pending"},
-    {"id": 5, "subject": "Task 5: Write tests for EpicsPanel and keyboard", "wave": 3, "status": "pending"}
+    {"id": 0, "subject": "Task 0: Create EpicsPanel presentational component", "wave": 1, "status": "completed"},
+    {"id": 1, "subject": "Task 1: Rewrite keyboard hook for flat interaction model", "wave": 1, "status": "completed"},
+    {"id": 2, "subject": "Task 2: Update key hints for flat model", "wave": 1, "status": "completed"},
+    {"id": 3, "subject": "Task 3: Rewrite App.tsx for flat model with EpicsPanel", "wave": 2, "status": "completed"},
+    {"id": 4, "subject": "Task 4: Update hooks/index.ts exports", "wave": 2, "status": "completed"},
+    {"id": 5, "subject": "Task 5: Write tests for EpicsPanel and keyboard", "wave": 3, "status": "completed"}
   ],
-  "lastUpdated": "2026-04-03T10:15:00Z"
+  "lastUpdated": "2026-04-03T10:30:00Z"
 }
