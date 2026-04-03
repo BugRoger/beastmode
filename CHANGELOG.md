@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.66.1 — Gray Area Sweep Simplify (Apr 2026)
+
+- **Serial gray-area sweep** — Replaced batched multi-select loop with one-at-a-time flow, presenting gray areas in priority order (most ambiguous first)
+- **Reduced interaction overhead** — Removed dedicated "Skip" and "You decide" options; built-in Other field covers both bail-out and delegation
+
+---
+
 ### v0.66.0 — Dashboard Rework (Apr 2026)
 
 - **Three-panel layout** — k9s-style split screen with epics list (top-left), details (top-right), and log (bottom full-width), replacing the old drill-down navigation model
