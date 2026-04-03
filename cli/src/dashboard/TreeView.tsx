@@ -6,7 +6,6 @@
  * Full scrollback — all entries rendered, no truncation.
  */
 
-import React from "react";
 import { Box, Text } from "ink";
 import type { TreeState, EpicNode, PhaseNode, FeatureNode, TreeEntry } from "./tree-types.js";
 import { formatTreeLine } from "./tree-format.js";
