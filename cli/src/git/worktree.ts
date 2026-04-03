@@ -83,6 +83,38 @@ export function implBranchName(slug: string, feature: string): string {
 }
 
 /**
+ * Create an implementation branch for a feature.
+ * Idempotent — skips creation if the branch already exists.
+ * Returns the branch name regardless.
+ *
+ * Creates the branch from the current HEAD (worktree HEAD when called
+ * from a worktree context).
+ */
+export async function createImplBranch(
+  slug: string,
+  feature: string,
+  opts: { cwd?: string } = {},
+): Promise<string> {
+  const cwd = opts.cwd;
+  const branch = implBranchName(slug, feature);
+
+  // Check if the branch already exists
+  const branchExists = await gitCheck(
+    ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`],
+    { cwd },
+  );
+
+  if (branchExists) {
+    return branch;
+  }
+
+  // Create from current HEAD
+  await git(["branch", branch], { cwd });
+
+  return branch;
+}
+
+/**
  * Detect whether cwd is inside a git worktree (not the main checkout).
  *
  * Uses `git rev-parse --git-common-dir`: in the main checkout this returns

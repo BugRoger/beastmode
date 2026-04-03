@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMainBranch, rebase, implBranchName } from "../git/worktree.js";
+import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMainBranch, rebase, implBranchName, createImplBranch } from "../git/worktree.js";
 
 /**
  * Integration tests for the worktree manager.
@@ -435,5 +435,61 @@ describe("implBranchName", () => {
 
   test("handles single-character components", () => {
     expect(implBranchName("a", "b")).toBe("impl/a--b");
+  });
+});
+
+describe("createImplBranch", () => {
+  test("creates impl branch from current HEAD when it does not exist", async () => {
+    const headSha = (await git(["rev-parse", "HEAD"], { cwd: repoDir })).stdout;
+
+    const branchName = await createImplBranch("test-create-impl", "feat-a", { cwd: repoDir });
+
+    expect(branchName).toBe("impl/test-create-impl--feat-a");
+
+    const branchExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", `refs/heads/${branchName}`],
+      { cwd: repoDir },
+    );
+    expect(branchExists).toBe(true);
+
+    const branchSha = (await git(["rev-parse", branchName], { cwd: repoDir })).stdout;
+    expect(branchSha).toBe(headSha);
+
+    // Clean up
+    await git(["branch", "-D", branchName], { cwd: repoDir, allowFailure: true });
+  });
+
+  test("skips creation and returns name when branch already exists", async () => {
+    const branchName = implBranchName("test-idempotent-impl", "feat-b");
+
+    await git(["branch", branchName], { cwd: repoDir });
+
+    const result = await createImplBranch("test-idempotent-impl", "feat-b", { cwd: repoDir });
+    expect(result).toBe(branchName);
+
+    // Clean up
+    await git(["branch", "-D", branchName], { cwd: repoDir, allowFailure: true });
+  });
+
+  test("does not conflict with feature/<slug> worktree branch", async () => {
+    const info = await create("test-no-conflict", { cwd: repoDir });
+
+    const branchName = await createImplBranch("test-no-conflict", "feat-c", { cwd: repoDir });
+    expect(branchName).toBe("impl/test-no-conflict--feat-c");
+
+    const featureExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", "refs/heads/feature/test-no-conflict"],
+      { cwd: repoDir },
+    );
+    const implExists = await gitCheck(
+      ["show-ref", "--verify", "--quiet", `refs/heads/${branchName}`],
+      { cwd: repoDir },
+    );
+    expect(featureExists).toBe(true);
+    expect(implExists).toBe(true);
+
+    // Clean up
+    await git(["branch", "-D", branchName], { cwd: repoDir, allowFailure: true });
+    await remove("test-no-conflict", { cwd: repoDir });
   });
 });
