@@ -142,6 +142,14 @@ export interface WorktreeInfo {
   forkPoint?: string;
 }
 
+/** Outcome of a worktree rebase attempt. */
+export type RebaseOutcome = "success" | "skipped" | "conflict";
+
+export interface RebaseResult {
+  outcome: RebaseOutcome;
+  message: string;
+}
+
 /**
  * Create a worktree at `.claude/worktrees/<slug>` with a `feature/<slug>` branch.
  *
@@ -385,4 +393,40 @@ export async function remove(
   if (opts.deleteBranch !== false) {
     await git(["branch", "-D", branch], { cwd, allowFailure: true });
   }
+}
+
+/**
+ * Rebase the current worktree branch onto local main.
+ *
+ * - Design phase: skips (design creates fresh worktrees from origin/HEAD)
+ * - On success: returns success with one-line log
+ * - On conflict: aborts rebase, logs warning, returns conflict
+ *
+ * No network dependency — targets local main only.
+ */
+export async function rebase(
+  phase: string,
+  opts: { cwd?: string; logger?: { log: (msg: string) => void; warn: (msg: string) => void } } = {},
+): Promise<RebaseResult> {
+  if (phase === "design") {
+    opts.logger?.log("rebase: skipped (design phase)");
+    return { outcome: "skipped", message: "design phase — rebase not applicable" };
+  }
+
+  const cwd = opts.cwd;
+  const mainBranch = await resolveMainBranch({ cwd });
+
+  const result = await git(["rebase", mainBranch], { cwd, allowFailure: true });
+
+  if (result.exitCode !== 0) {
+    // Conflict — abort and warn
+    await git(["rebase", "--abort"], { cwd, allowFailure: true });
+    const msg = `rebase conflict onto ${mainBranch} — proceeding on stale base`;
+    opts.logger?.warn(msg);
+    return { outcome: "conflict", message: msg };
+  }
+
+  const msg = `rebased onto ${mainBranch}`;
+  opts.logger?.log(msg);
+  return { outcome: "success", message: msg };
 }

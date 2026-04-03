@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMainBranch } from "../git/worktree.js";
+import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMainBranch, rebase } from "../git/worktree.js";
 
 /**
  * Integration tests for the worktree manager.
@@ -333,5 +333,93 @@ describe("fork-point tracking", () => {
 
     // Clean up
     await remove("test-forkpoint-orphan", { cwd: repoDir });
+  });
+});
+
+describe("rebase", () => {
+  test("success: rebases onto main when no conflicts", async () => {
+    // Create a worktree
+    const info = await create("test-rebase-success", { cwd: repoDir });
+
+    // Add a commit on main so there's something to rebase onto
+    await Bun.write(join(repoDir, "main-rebase-file.txt"), "main content\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "advance main for rebase test"], { cwd: repoDir });
+
+    // Add a non-conflicting commit in the worktree
+    await Bun.write(join(info.path, "feature-file.txt"), "feature content\n");
+    await git(["add", "."], { cwd: info.path });
+    await git(["commit", "-m", "feature commit"], { cwd: info.path });
+
+    const logs: string[] = [];
+    const warns: string[] = [];
+    const logger = {
+      log: (msg: string) => logs.push(msg),
+      warn: (msg: string) => warns.push(msg),
+    };
+
+    const result = await rebase("plan", { cwd: info.path, logger });
+
+    expect(result.outcome).toBe("success");
+    expect(result.message).toContain("rebased onto");
+    expect(logs.length).toBe(1);
+    expect(warns.length).toBe(0);
+
+    // Clean up
+    await remove("test-rebase-success", { cwd: repoDir });
+  });
+
+  test("conflict: aborts rebase and returns conflict", async () => {
+    // Create a worktree
+    const info = await create("test-rebase-conflict", { cwd: repoDir });
+
+    // Create a conflicting file on main
+    await Bun.write(join(repoDir, "conflict-file.txt"), "main version\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "main conflict commit"], { cwd: repoDir });
+
+    // Create the same file with different content in the worktree
+    await Bun.write(join(info.path, "conflict-file.txt"), "feature version\n");
+    await git(["add", "."], { cwd: info.path });
+    await git(["commit", "-m", "feature conflict commit"], { cwd: info.path });
+
+    const logs: string[] = [];
+    const warns: string[] = [];
+    const logger = {
+      log: (msg: string) => logs.push(msg),
+      warn: (msg: string) => warns.push(msg),
+    };
+
+    const result = await rebase("implement", { cwd: info.path, logger });
+
+    expect(result.outcome).toBe("conflict");
+    expect(result.message).toContain("rebase conflict");
+    expect(result.message).toContain("stale base");
+    expect(warns.length).toBe(1);
+    expect(logs.length).toBe(0);
+
+    // Verify rebase was aborted (not in rebase state)
+    const statusResult = await git(["status", "--porcelain"], { cwd: info.path, allowFailure: true });
+    expect(statusResult.exitCode).toBe(0);
+
+    // Clean up
+    await remove("test-rebase-conflict", { cwd: repoDir });
+  });
+
+  test("design: skips rebase", async () => {
+    const logs: string[] = [];
+    const warns: string[] = [];
+    const logger = {
+      log: (msg: string) => logs.push(msg),
+      warn: (msg: string) => warns.push(msg),
+    };
+
+    // No cwd needed — design phase should skip without touching git
+    const result = await rebase("design", { logger });
+
+    expect(result.outcome).toBe("skipped");
+    expect(result.message).toContain("design phase");
+    expect(logs.length).toBe(1);
+    expect(warns.length).toBe(0);
   });
 });
