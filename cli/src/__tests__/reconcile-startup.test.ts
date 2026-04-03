@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { reconcileStartup, parseSurfaceTitle } from "../reconcile-startup.js";
+import type { ReconcileResult as _ReconcileResult } from "../reconcile-startup.js";
 import type { CmuxClientLike, CmuxWorkspace } from "../cmux-types.js";
 import { DispatchTracker } from "../dispatch-tracker.js";
 

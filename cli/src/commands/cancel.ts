@@ -15,7 +15,7 @@ export async function cancelCommand(
   verbosity: number = 0,
   force: boolean = false,
 ): Promise<void> {
-  const logger = createLogger(verbosity, "beastmode");
+  const logger = createLogger(verbosity, {});
   const slug = args[0];
   if (!slug) {
     logger.error("Usage: beastmode cancel <slug>");

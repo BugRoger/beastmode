@@ -1,0 +1,8 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-structured-logging-logger-api.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Update Logger interface and createLogger with context + child()", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Rewrite logger tests for new API", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T09:20:00Z"
+}

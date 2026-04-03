@@ -1,0 +1,9 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-structured-logging-dashboard-format.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Extend DashboardEvent with context fields", "status": "completed"},
+    {"id": 1, "subject": "Task 1: Rewrite ActivityLog to use formatLogLine()", "status": "completed"},
+    {"id": 2, "subject": "Task 2: Add ActivityLog tests", "status": "completed"}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

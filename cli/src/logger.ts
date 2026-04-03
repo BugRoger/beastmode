@@ -1,3 +1,10 @@
+/** Structured context for scoped logging. */
+export interface LogContext {
+  phase?: string;
+  epic?: string;
+  feature?: string;
+}
+
 /** Logger instance returned by createLogger. */
 export interface Logger {
   /** Level 0 — always shown. Writes to stdout. */
@@ -12,10 +19,28 @@ export interface Logger {
   warn(msg: string): void;
   /** Always shown — writes to stderr. */
   error(msg: string): void;
+  /** Create a child logger with merged context. */
+  child(ctx: Partial<LogContext>): Logger;
 }
 
 function ts(): string {
   return new Date().toISOString().slice(11, 19);
+}
+
+/**
+ * Build a scope string from context fields.
+ *
+ * All three: `phase/epic/feature`
+ * phase + epic: `phase/epic`
+ * phase only: `phase`
+ * No fields: empty string
+ */
+function buildScope(ctx: LogContext): string {
+  const parts: string[] = [];
+  if (ctx.phase) parts.push(ctx.phase);
+  if (ctx.epic) parts.push(ctx.epic);
+  if (ctx.feature) parts.push(ctx.feature);
+  return parts.join("/");
 }
 
 /**
@@ -24,11 +49,15 @@ function ts(): string {
  * Messages at or below the verbosity level are shown.
  * warn() and error() always show regardless of verbosity.
  *
- * Output format: `HH:MM:SS slug: message`
- * stderr format: `HH:MM:SS slug: message`
+ * Output format: `HH:MM:SS scope: message` (when scope is non-empty)
+ * or `HH:MM:SS message` (when scope is empty)
  */
-export function createLogger(verbosity: number, slug: string): Logger {
-  const fmt = (msg: string) => `${ts()} ${slug}: ${msg}`;
+export function createLogger(verbosity: number, context?: LogContext): Logger {
+  const ctx = context ?? {};
+  const scope = buildScope(ctx);
+  const fmt = scope
+    ? (msg: string) => `${ts()} ${scope}: ${msg}`
+    : (msg: string) => `${ts()} ${msg}`;
 
   return {
     log(msg: string) {
@@ -49,11 +78,15 @@ export function createLogger(verbosity: number, slug: string): Logger {
     error(msg: string) {
       process.stderr.write(fmt(msg) + "\n");
     },
+    child(childCtx: Partial<LogContext>): Logger {
+      return createLogger(verbosity, { ...ctx, ...childCtx });
+    },
   };
 }
 
 /** Create a no-op logger that suppresses all output. Useful for tests. */
 export function createNullLogger(): Logger {
   const noop = () => {};
-  return { log: noop, detail: noop, debug: noop, trace: noop, warn: noop, error: noop };
+  const nl: Logger = { log: noop, detail: noop, debug: noop, trace: noop, warn: noop, error: noop, child: () => nl };
+  return nl;
 }

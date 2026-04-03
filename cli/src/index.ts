@@ -69,7 +69,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  const logger = createLogger(0, "beastmode");
+  const logger = createLogger(0, {});
   logger.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

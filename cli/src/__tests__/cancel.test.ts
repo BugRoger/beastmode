@@ -11,13 +11,15 @@ import os from "os";
 // Helpers
 // ---------------------------------------------------------------------------
 
+const noop = () => {};
 const noopLogger: Logger = {
-  log: () => {},
-  detail: () => {},
-  debug: () => {},
-  trace: () => {},
-  warn: () => {},
-  error: () => {},
+  log: noop,
+  detail: noop,
+  debug: noop,
+  trace: noop,
+  warn: noop,
+  error: noop,
+  child: () => noopLogger,
 };
 
 function setupTempProject(slug: string, opts?: { epic?: string; phase?: string; withArtifacts?: boolean }) {

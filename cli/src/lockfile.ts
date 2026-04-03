@@ -46,7 +46,7 @@ export function readLockfile(projectRoot: string): LockfileInfo | null {
  * If an active lockfile exists, returns false.
  */
 export function acquireLock(projectRoot: string, logger?: Logger): boolean {
-  const log = logger ?? createLogger(0, "beastmode");
+  const log = logger ?? createLogger(0, {});
   const existing = readLockfile(projectRoot);
 
   if (existing) {

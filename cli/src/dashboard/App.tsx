@@ -20,6 +20,9 @@ export interface DashboardEvent {
   timestamp: string;
   type: "dispatched" | "completed" | "error" | "scan";
   detail: string;
+  phase?: string;
+  epic?: string;
+  feature?: string;
 }
 
 export interface AppProps {
@@ -77,9 +80,9 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
 
   // --- Helper: push event to front of the log ---
   const pushEvent = useCallback(
-    (type: DashboardEvent["type"], detail: string) => {
+    (type: DashboardEvent["type"], detail: string, ctx?: { phase?: string; epic?: string; feature?: string }) => {
       setEvents((prev) => [
-        { timestamp: ts(), type, detail },
+        { timestamp: ts(), type, detail, ...ctx },
         ...prev.slice(0, MAX_EVENTS - 1),
       ]);
     },
@@ -103,9 +106,9 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         projectRoot,
         tracker: l.getTracker(),
         githubEnabled: config.github.enabled,
-        logger: createLogger(verbosity, "dashboard"),
+        logger: createLogger(verbosity, {}),
       });
-      pushEvent("error", `cancelled ${slug}`);
+      pushEvent("error", `cancelled ${slug}`, { epic: slug });
     },
     [projectRoot, pushEvent],
   );
@@ -227,7 +230,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     const onSessionStarted = (ev: WatchLoopEventMap["session-started"][0]) => {
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
       const target = ev.featureSlug ? `${ev.epicSlug}/${ev.featureSlug}` : ev.epicSlug;
-      pushEvent("dispatched", `${ev.phase} for ${target}`);
+      pushEvent("dispatched", `${ev.phase} for ${target}`, { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug });
     };
 
     const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
@@ -240,9 +243,11 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       const target = ev.featureSlug ? `${ev.epicSlug}/${ev.featureSlug}` : ev.epicSlug;
       const status = ev.success ? "completed" : "failed";
       const dur = `${(ev.durationMs / 1000).toFixed(0)}s`;
+      const cost = `$${ev.costUsd.toFixed(2)}`;
       pushEvent(
         ev.success ? "completed" : "error",
-        `${ev.phase} ${status} for ${target} (${dur})`,
+        `${ev.phase} ${status} for ${target} (${dur}, ${cost})`,
+        { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug },
       );
     };
 
@@ -257,11 +262,11 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
 
     const onError = (ev: WatchLoopEventMap["error"][0]) => {
       const prefix = ev.epicSlug ? `${ev.epicSlug}: ` : "";
-      pushEvent("error", `${prefix}${ev.message}`);
+      pushEvent("error", `${prefix}${ev.message}`, ev.epicSlug ? { epic: ev.epicSlug } : undefined);
     };
 
     const onEpicCancelled = (ev: WatchLoopEventMap["epic-cancelled"][0]) => {
-      pushEvent("error", `${ev.epicSlug} cancelled`);
+      pushEvent("error", `${ev.epicSlug} cancelled`, { epic: ev.epicSlug });
     };
 
     loop.on("started", onStarted);

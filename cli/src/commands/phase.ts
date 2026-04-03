@@ -46,7 +46,7 @@ export async function phaseCommand(
   _config: BeastmodeConfig,
   verbosity: number = 0,
 ): Promise<void> {
-  const logger = createLogger(verbosity, "beastmode");
+  const logger = createLogger(verbosity, { phase });
   const inWorktree = await isInsideWorktree();
   const projectRoot = inWorktree
     ? await resolveMainCheckoutRoot()

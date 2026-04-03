@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-structured-logging-call-site-migration.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Migrate utility/fallback logger call sites", "status": "pending"},
+    {"id": 1, "subject": "Task 1: Migrate command-level call sites with phase context", "status": "pending"},
+    {"id": 2, "subject": "Task 2: Migrate watch-command and watch loop with epic/phase context", "status": "pending"},
+    {"id": 3, "subject": "Task 3: Rewrite attachLoggerSubscriber with child loggers and strip slug prefixes", "status": "pending"}
+  ],
+  "lastUpdated": "2026-04-03T12:00:00Z"
+}

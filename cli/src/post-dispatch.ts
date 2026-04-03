@@ -46,7 +46,7 @@ export interface PostDispatchOptions {
   featureSlug?: string;
   /** Whether the phase succeeded */
   success: boolean;
-  /** Optional logger — defaults to createLogger(0, "post-dispatch") */
+  /** Optional logger — defaults to createLogger(0, { phase, epic }) */
   logger?: Logger;
 }
 
@@ -58,7 +58,7 @@ export interface PostDispatchOptions {
  * failure never blocks the pipeline.
  */
 export async function runPostDispatch(opts: PostDispatchOptions): Promise<void> {
-  const logger = opts.logger ?? createLogger(0, "post-dispatch");
+  const logger = opts.logger ?? createLogger(0, { phase: opts.phase, epic: opts.epicSlug, ...(opts.featureSlug ? { feature: opts.featureSlug } : {}) });
   try {
     // Early exit on failure — no manifest/sync updates.
     // Exception: validate failures must reach the machine so REGRESS

@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.65.0 — Structured Logging (Apr 2026)
+
+- **Shared format function** — `shared/log-format.ts` with Pino-pretty style output: `[HH:MM:SS] LEVEL  (phase/epic/feature):  message`
+- **Logger API** — `createLogger(verbosity, context)` with `.child()` context merging, replacing flat slug strings
+- **Call site migration** — All ~15 call sites migrated from raw console.log to structured logging API
+- **Dashboard format** — ActivityLog uses shared `formatLogLine()` for consistent visual output across CLI and TUI
+- **NO_COLOR support** — Graceful degradation via NO_COLOR/FORCE_COLOR/isatty() detection
+- **Null logger** — `.child()` returns null logger, preserving the null object pattern
+
+---
+
 ### v0.64.0 — GH Error Diagnostics (Apr 2026)
 
 - **Endpoint in error messages** — `gh()` error messages now show `args.slice(0, 2)` instead of just the verb, surfacing the actual API endpoint on failure

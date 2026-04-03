@@ -6,13 +6,15 @@ import type { Logger } from "../logger";
 // cancelEpicAction — integration test with shared cancel-logic module
 // ---------------------------------------------------------------------------
 
+const noop = () => {};
 const noopLogger: Logger = {
-  log: () => {},
-  detail: () => {},
-  debug: () => {},
-  trace: () => {},
-  warn: () => {},
-  error: () => {},
+  log: noop,
+  detail: noop,
+  debug: noop,
+  trace: noop,
+  warn: noop,
+  error: noop,
+  child: () => noopLogger,
 };
 
 describe("cancelEpicAction", () => {

@@ -166,7 +166,7 @@ export async function reconcileStartup(opts: {
   logger?: Logger;
 }): Promise<ReconcileResult> {
   const { client, tracker, knownEpicSlugs, projectRoot } = opts;
-  const logger = opts.logger ?? createLogger(0, "beastmode");
+  const logger = opts.logger ?? createLogger(0, {});
   const knownSlugs = new Set(knownEpicSlugs);
 
   const result: ReconcileResult = {

@@ -29,7 +29,7 @@ export async function dashboardCommand(
   verbosity: number = 0,
 ): Promise<void> {
   const projectRoot = findProjectRoot();
-  const logger = createLogger(verbosity, "dashboard");
+  const logger = createLogger(verbosity, {});
 
   // --- Dashboard always uses SDK dispatch for streaming support ---
   logger.log("Dashboard: forcing SDK dispatch strategy for streaming");

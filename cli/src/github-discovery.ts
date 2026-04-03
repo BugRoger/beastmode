@@ -98,7 +98,7 @@ export async function discoverGitHub(
   projectName?: string,
   logger?: Logger,
 ): Promise<ResolvedGitHub | undefined> {
-  const log = logger ?? createLogger(0, "beastmode");
+  const log = logger ?? createLogger(0, {});
 
   // Cache hit?
   const cached = readCache(projectRoot, projectName);

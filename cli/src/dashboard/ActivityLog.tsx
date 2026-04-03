@@ -1,12 +1,18 @@
 import { Box, Text } from "ink";
 import type { DashboardEvent } from "./App.js";
+import { formatLogLine, type LogLevel } from "../shared/log-format.js";
 
-const EVENT_COLORS: Record<DashboardEvent["type"], string> = {
-  dispatched: "blue",
-  completed: "green",
-  error: "red",
-  scan: "gray",
-};
+/** Map DashboardEvent type to LogLevel. */
+function eventTypeToLevel(type: DashboardEvent["type"]): LogLevel {
+  switch (type) {
+    case "error":
+      return "error";
+    case "dispatched":
+    case "completed":
+    case "scan":
+      return "info";
+  }
+}
 
 export interface ActivityLogProps {
   events: DashboardEvent[];
@@ -23,13 +29,14 @@ export default function ActivityLog({ events, maxLines = 10 }: ActivityLogProps)
 
   return (
     <Box flexDirection="column">
-      {visible.map((event, i) => (
-        <Box key={`${event.timestamp}-${i}`}>
-          <Text dimColor>{event.timestamp} </Text>
-          <Text color={EVENT_COLORS[event.type] as any}>{event.type.padEnd(10)} </Text>
-          <Text>{event.detail}</Text>
-        </Box>
-      ))}
+      {visible.map((event, i) => {
+        const level = eventTypeToLevel(event.type);
+        const ctx = { phase: event.phase, epic: event.epic, feature: event.feature };
+        const line = formatLogLine(level, ctx, event.detail);
+        return (
+          <Text key={`${event.timestamp}-${i}`}>{line}</Text>
+        );
+      })}
     </Box>
   );
 }

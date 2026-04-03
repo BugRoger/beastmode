@@ -41,7 +41,7 @@ export interface WatchDeps {
   scanEpics: (projectRoot: string) => Promise<ScanResult | EnrichedManifest[]>;
   /** Factory for creating phase sessions. */
   sessionFactory: SessionFactory;
-  /** Scoped logger. Falls back to createLogger(0, "watch") if omitted. */
+  /** Scoped logger. Falls back to createLogger(0, {}) if omitted. */
   logger?: Logger;
 }
 
@@ -56,7 +56,7 @@ export class WatchLoop extends EventEmitter {
     super();
     this.config = config;
     this.deps = deps;
-    this.logger = deps.logger ?? createLogger(0, "watch");
+    this.logger = deps.logger ?? createLogger(0, {});
   }
 
   /** Type-safe emit helper. */
@@ -331,6 +331,7 @@ export class WatchLoop extends EventEmitter {
           phase: session.phase,
           success: result.success,
           durationMs: result.durationMs,
+          costUsd: result.costUsd,
         });
 
         // Create phase tag for regression support (mirrors post-dispatch in CLI path)
@@ -405,24 +406,28 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
   });
 
   loop.on('session-started', ({ epicSlug, featureSlug, phase }) => {
+    const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
     if (featureSlug) {
-      logger.log(`${epicSlug}: dispatching implement ${epicSlug} ${featureSlug}`);
+      child.log(`dispatching implement ${featureSlug}`);
     } else {
-      logger.log(`${epicSlug}: dispatching ${phase}`);
+      child.log(`dispatching ${phase}`);
     }
   });
 
-  loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs }) => {
-    const featureLabel = featureSlug ? ` (${featureSlug})` : '';
+  loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs, costUsd }) => {
+    const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
     const status = success ? 'completed' : 'failed';
-    logger.log(
-      `${epicSlug}: ${phase}${featureLabel} ${status} (${(durationMs / 1000).toFixed(0)}s)`,
+    child.log(
+      `${status} ($${costUsd.toFixed(2)}, ${(durationMs / 1000).toFixed(0)}s)`,
     );
   });
 
   loop.on('error', ({ epicSlug, message }) => {
-    const prefix = epicSlug ? `${epicSlug}: ` : '';
-    logger.error(`${prefix}${message}`);
+    if (epicSlug) {
+      logger.child({ epic: epicSlug }).error(message);
+    } else {
+      logger.error(message);
+    }
   });
 
 }

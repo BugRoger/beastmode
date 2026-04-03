@@ -59,6 +59,10 @@
 - ALWAYS use `status-data.ts` for sorting, filtering, snapshot building, and change detection — shared between `beastmode status` and `beastmode dashboard`
 - status.ts retains its ANSI string rendering; dashboard uses Ink components for rendering — data layer shared, presentation layer separate
 
+## Activity Log Format
+- ActivityLog uses the shared `formatLogLine()` from `shared/log-format.ts` for rendering — same visual format as CLI logger output
+- Single source of truth for log line layout across CLI and dashboard — no per-event-type color mapping
+
 ## Coexistence
 - NEVER replace `beastmode watch` — kept as headless fallback for CI/automation
 - NEVER replace `beastmode status` or `status --watch` — kept for quick passive viewing
