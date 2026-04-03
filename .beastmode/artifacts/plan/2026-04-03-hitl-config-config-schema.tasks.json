@@ -1,0 +1,10 @@
+{
+  "featurePlan": ".beastmode/artifacts/plan/2026-04-03-hitl-config-config-schema.md",
+  "tasks": [
+    {"id": 0, "subject": "Task 0: Add HitlConfig type and extend BeastmodeConfig", "status": "pending", "wave": 1},
+    {"id": 1, "subject": "Task 1: Extend loadConfig() to parse hitl section", "status": "pending", "wave": 1},
+    {"id": 2, "subject": "Task 2: Add hitl block to init skeleton config.yaml", "status": "pending", "wave": 1},
+    {"id": 3, "subject": "Task 3: Add tests for HITL config parsing", "status": "pending", "wave": 2}
+  ],
+  "lastUpdated": "2026-04-03T00:00:00Z"
+}

@@ -2,3 +2,12 @@
 
 github:
   project-name: "Beastmode Pipeline"  # Projects V2 board name
+
+hitl:
+  model: haiku
+  timeout: 30
+  design: "always defer to human"
+  plan: "always defer to human"
+  implement: "always defer to human"
+  validate: "always defer to human"
+  release: "always defer to human"
