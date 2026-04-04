@@ -7,6 +7,7 @@
 
 import chalk from "chalk";
 import type { LogLevel } from "../logger.js";
+import { PHASE_COLOR } from "./monokai-palette.js";
 
 /** Depth level in the tree hierarchy. */
 export type TreeDepth =
@@ -16,17 +17,6 @@ export type TreeDepth =
   | "leaf-phase"    // │ ·
   | "leaf-feature"  // │ │ ·
   | "system";       // flat — no prefix
-
-/** Phase-to-color mapping (matches dashboard convention). */
-const PHASE_COLOR: Record<string, string> = {
-  design: "magenta",
-  plan: "blue",
-  implement: "yellow",
-  validate: "cyan",
-  release: "green",
-  done: "green",
-  cancelled: "red",
-};
 
 /** Level labels — fixed 5-char width (matches logger.ts). */
 const LEVEL_LABELS: Record<LogLevel, string> = {
@@ -74,7 +64,7 @@ function colorPrefix(prefix: string, phase: string | undefined): string {
   if (!prefix || !phase) return prefix;
   const color = PHASE_COLOR[phase];
   if (!color) return prefix;
-  return (chalk as any)[color](prefix);
+  return chalk.hex(color)(prefix);
 }
 
 /**
@@ -102,7 +92,7 @@ export function formatTreeLine(
   }
   if (depth === "phase") {
     const color = phase ? PHASE_COLOR[phase] : undefined;
-    const label = color ? (chalk as any)[color](message) : message;
+    const label = color ? chalk.hex(color)(message) : message;
     return `${colorPrefix(prefix, phase)}${label}`;
   }
   if (depth === "feature") {
