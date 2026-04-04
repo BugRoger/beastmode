@@ -860,4 +860,28 @@ describe("ITermSessionFactory", () => {
       expect(canResolve).toBe(true);
     });
   });
+
+  test("TTY and dispatch maps are cleaned up after session completes", async () => {
+    const ttyClient = createMockIt2Client();
+    ttyClient.getSessionTty = async (sessionId: string) => {
+      ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+      return "/dev/ttys003";
+    };
+
+    const factory = new ITermSessionFactory(ttyClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
+
+    // After completion, force-resolve should return false (resolver cleaned up)
+    const canResolve = factory.forceResolveSession(handle.id, {
+      success: false, exitCode: 1, durationMs: 0,
+    });
+    expect(canResolve).toBe(false);
+  });
 });

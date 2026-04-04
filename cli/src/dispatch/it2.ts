@@ -588,6 +588,9 @@ export class ITermSessionFactory implements SessionFactory {
     // Handle abort — close pane
     const onAbort = async () => {
       this.cleanupWatcher(id);
+      this.ttyMap.delete(paneSessionId);
+      this.dispatchToPaneId.delete(id);
+      this.resolvers.delete(id);
       try {
         if (paneSessionId !== tabSessionId) {
           await this.client.closeSession(paneSessionId);
@@ -629,6 +632,9 @@ export class ITermSessionFactory implements SessionFactory {
       }
 
       this.panes.delete(paneKey);
+      // Clean up liveness tracking maps
+      this.ttyMap.delete(paneSessionId);
+      this.dispatchToPaneId.delete(id);
       return result;
     });
 
