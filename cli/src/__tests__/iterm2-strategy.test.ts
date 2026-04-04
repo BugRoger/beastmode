@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { selectStrategy } from "../commands/watch";
 import type { ITerm2AvailabilityResult } from "../dispatch/it2";
 

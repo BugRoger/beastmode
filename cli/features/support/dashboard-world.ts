@@ -32,12 +32,6 @@ export class DashboardWorld extends World {
   nyanColorFn!: (char: string, charIndex: number, tickOffset: number) => string | undefined;
   /** TICK_INTERVAL_MS from NyanBanner */
   tickIntervalMs = 0;
-  /** NYAN_PALETTE length — used for gradient verification */
-  nyanPaletteLength = 0;
-  /** Raw source of EpicsPanel.tsx */
-  epicsPanelSource = "";
-  /** Raw source of tree-format.ts */
-  treeFormatSource = "";
 
   setup(): void {
     this.appSource = readFileSync(resolve(CLI_SRC, "dashboard/App.tsx"), "utf-8");
@@ -46,8 +40,6 @@ export class DashboardWorld extends World {
     this.nyanColorsSource = readFileSync(resolve(CLI_SRC, "dashboard/nyan-colors.ts"), "utf-8");
     this.panelBoxSource = readFileSync(resolve(CLI_SRC, "dashboard/PanelBox.tsx"), "utf-8");
     this.overviewPanelSource = readFileSync(resolve(CLI_SRC, "dashboard/OverviewPanel.tsx"), "utf-8");
-    this.epicsPanelSource = readFileSync(resolve(CLI_SRC, "dashboard/EpicsPanel.tsx"), "utf-8");
-    this.treeFormatSource = readFileSync(resolve(CLI_SRC, "dashboard/tree-format.ts"), "utf-8");
   }
 
   async loadRuntime(): Promise<void> {
@@ -58,7 +50,6 @@ export class DashboardWorld extends World {
     // Extract TICK_INTERVAL_MS from NyanBanner source
     const tickMatch = this.nyanBannerSource.match(/TICK_INTERVAL_MS\s*=\s*(\d+)/);
     this.tickIntervalMs = tickMatch ? parseInt(tickMatch[1], 10) : 0;
-    this.nyanPaletteLength = colors.NYAN_PALETTE.length;
   }
 
   /** Check if App.tsx imports a specific module name */
@@ -103,86 +94,6 @@ export class DashboardWorld extends World {
   /** Check if formatClock produces HH:MM:SS */
   hasHHMMSSFormat(): boolean {
     return this.appSource.includes('padStart(2, "0")') && this.appSource.includes('.join(":")');
-  }
-
-  /** Extract borderColor from PanelBox source */
-  extractPanelBorderColor(): string | null {
-    const match = this.panelBoxSource.match(/borderColor="([^"]+)"/);
-    return match ? match[1] : null;
-  }
-
-  /** Extract title text color from PanelBox source */
-  extractPanelTitleColor(): string | null {
-    const match = this.panelBoxSource.match(/Text\s+color="([^"]+)"[^>]*>\s*\{title/);
-    return match ? match[1] : null;
-  }
-
-  /** Extract PHASE_COLOR map entries from a source file */
-  extractPhaseColors(source: string): Record<string, string> {
-    const result: Record<string, string> = {};
-    const blockMatch = source.match(/PHASE_COLOR[^{]*\{([^}]+)\}/s);
-    if (!blockMatch) return result;
-    const entries = blockMatch[1].matchAll(/(\w+):\s*"([^"]+)"/g);
-    for (const m of entries) {
-      result[m[1]] = m[2];
-    }
-    return result;
-  }
-
-  /** Check if the outer container in ThreePanelLayout has a border */
-  hasOuterChromeBorder(): boolean {
-    const outerPattern = /borderStyle="single"\s+borderColor="cyan"\s+flexDirection="column"\s+flexGrow/;
-    return outerPattern.test(this.threePanelSource);
-  }
-
-  /** Extract backgroundColor from a source pattern */
-  extractBackgroundColor(source: string, contextPattern: string): string | null {
-    const idx = source.indexOf(contextPattern);
-    if (idx === -1) return null;
-    const after = source.slice(Math.max(0, idx - 200), idx + 300);
-    const match = after.match(/backgroundColor[=:]\s*"([^"]+)"/);
-    return match ? match[1] : null;
-  }
-
-  /** Check if banner text contains a specific word */
-  bannerContainsText(text: string): boolean {
-    return this.nyanBannerSource.includes(text);
-  }
-
-  /** Check if banner has trailing dot characters */
-  bannerHasTrailingDots(): boolean {
-    return this.nyanBannerSource.includes("▄");
-  }
-
-  /** Extract the BANNER_LINES text content */
-  extractBannerText(): string {
-    const match = this.nyanBannerSource.match(/BANNER_LINES\s*=\s*\[([\s\S]*?)\];/);
-    return match ? match[1] : "";
-  }
-
-  /** Extract column width from ThreePanelLayout (left/right column pattern) */
-  extractColumnWidth(column: "left" | "right"): string | null {
-    const source = this.threePanelSource;
-    if (column === "left") {
-      const match = source.match(/flexDirection="row"[\s\S]*?<Box[^>]*width="(\d+%)"/);
-      return match ? match[1] : null;
-    }
-    const matches = [...source.matchAll(/width="(\d+%)"/g)];
-    return matches.length >= 2 ? matches[1][1] : null;
-  }
-
-  /** Check if the nyan color engine uses interpolation with N steps */
-  hasInterpolationSteps(expected: number): boolean {
-    const source = this.nyanColorsSource;
-    return source.includes(String(expected)) || this.nyanPaletteLength === expected;
-  }
-
-  /** Check adjacent color similarity for gradient smoothness */
-  adjacentColorsSimilar(tickOffset: number): boolean {
-    if (!this.nyanColorFn) return false;
-    const c0 = this.nyanColorFn("█", 0, tickOffset);
-    const c1 = this.nyanColorFn("█", 1, tickOffset);
-    return c0 !== undefined && c1 !== undefined;
   }
 }
 

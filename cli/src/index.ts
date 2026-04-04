@@ -9,6 +9,7 @@ import { statusCommand } from "./commands/status";
 import { cancelCommand } from "./commands/cancel";
 import { compactCommand } from "./commands/compact";
 import { dashboardCommand } from "./commands/dashboard";
+import { storeCommand } from "./commands/store";
 import { isValidPhase } from "./types";
 
 const VERSION = "0.1.0";
@@ -27,7 +28,24 @@ Usage:
   beastmode watch                      Autonomous pipeline orchestration
   beastmode status [--all] [--watch|-w] Show pipeline status
   beastmode dashboard                  Fullscreen pipeline dashboard
+  beastmode store <subcommand>         Structured task store operations
   beastmode help                       Show this help message
+
+Store subcommands:
+  store epic ls                        List all epics
+  store epic show <id> [--deps]        Show epic details
+  store epic add --name="X"            Create epic
+  store epic update <id> [--field=X]   Update epic
+  store epic delete <id>               Delete epic and features
+  store feature ls <epic-id>           List features for epic
+  store feature show <id> [--deps]     Show feature details
+  store feature add --parent=<id> --name="X"  Create feature
+  store feature update <id> [--field=X]       Update feature
+  store feature delete <id>            Delete feature
+  store ready [<epic-id>] [--type=X]   List unblocked entities
+  store blocked                        List blocked entities
+  store tree [<id>]                    Show entity hierarchy
+  store search [--name=X] [--status=X] [--type=X]  Search entities
 
 Flags:
   -v, -vv, -vvv                    Increase output verbosity
@@ -61,6 +79,9 @@ async function main(): Promise<void> {
       break;
     case "compact":
       await compactCommand();
+      break;
+    case "store":
+      await storeCommand(args);
       break;
     case "help":
       printHelp();

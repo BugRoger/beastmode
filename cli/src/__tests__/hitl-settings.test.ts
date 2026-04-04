@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach } from "vitest";
 import { writeHitlSettings, cleanHitlSettings } from "../hooks/hitl-settings";
 import type { WriteSettingsOptions } from "../hooks/hitl-settings";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync } from "fs";

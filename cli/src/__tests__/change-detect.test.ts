@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { toSnapshots, detectEpicChanges } from "../commands/status";
 import type { EpicSnapshot } from "../commands/status";
 import type { EnrichedManifest } from "../manifest/store";

@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { countTreeLines, trimTreeToTail } from "../dashboard/LogPanel.js";
 import type { TreeState, TreeEntry } from "../dashboard/tree-types.js";
 

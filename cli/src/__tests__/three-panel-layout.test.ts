@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Terminal size logic
@@ -111,37 +111,25 @@ describe("PanelBox title formatting", () => {
 // ---------------------------------------------------------------------------
 
 describe("ThreePanelLayout proportions", () => {
-  test("left column is 35% width", () => {
-    const leftColumnWidth = "35%";
-    expect(leftColumnWidth).toBe("35%");
+  test("top section is 35% height", () => {
+    const topPercent = "35%";
+    expect(topPercent).toBe("35%");
   });
 
-  test("right column is 65% width", () => {
-    const rightColumnWidth = "65%";
-    expect(rightColumnWidth).toBe("65%");
+  test("epics panel is 30% of top width", () => {
+    const epicsWidth = "30%";
+    expect(epicsWidth).toBe("30%");
   });
 
-  test("epics panel is 60% of left column height", () => {
-    const epicsHeight = "60%";
-    expect(epicsHeight).toBe("60%");
+  test("details panel is 70% of top width", () => {
+    const detailsWidth = "70%";
+    expect(detailsWidth).toBe("70%");
   });
 
-  test("overview panel fills remaining left column height", () => {
-    // OVERVIEW uses flexGrow={1} — takes remaining 40%
-    const overviewFlexGrow = 1;
-    expect(overviewFlexGrow).toBe(1);
-  });
-
-  test("log panel fills full right column height", () => {
-    // LOG uses flexGrow={1} — full height of right column
-    const logFlexGrow = 1;
-    expect(logFlexGrow).toBe(1);
-  });
-
-  test("column widths sum correctly", () => {
-    const left = 35;
-    const right = 65;
-    expect(left + right).toBe(100);
+  test("proportions sum correctly", () => {
+    const epics = 30;
+    const details = 70;
+    expect(epics + details).toBe(100);
   });
 });
 
@@ -183,31 +171,5 @@ describe("key hints bar", () => {
     const keyHints = "q quit  ↑↓ navigate";
     const display = isShuttingDown ? "shutting down..." : keyHints;
     expect(display).toBe("q quit  ↑↓ navigate");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Depth hierarchy background tiers
-// ---------------------------------------------------------------------------
-
-describe("depth hierarchy backgrounds", () => {
-  test("chrome tier uses #403E41 for header and hints", () => {
-    const { DEPTH } = require("../dashboard/monokai-palette.js");
-    expect(DEPTH.chrome).toBe("#403E41");
-  });
-
-  test("panel tier uses #353236 for panel interiors", () => {
-    const { DEPTH } = require("../dashboard/monokai-palette.js");
-    expect(DEPTH.panel).toBe("#353236");
-  });
-
-  test("three tiers progress from lightest to darkest", () => {
-    const { DEPTH } = require("../dashboard/monokai-palette.js");
-    // Chrome (#403E41) > Panel (#353236) > Terminal (#2D2A2E)
-    const chromeR = parseInt(DEPTH.chrome.slice(1, 3), 16);
-    const panelR = parseInt(DEPTH.panel.slice(1, 3), 16);
-    const terminalR = parseInt("2D", 16);
-    expect(chromeR).toBeGreaterThan(panelR);
-    expect(panelR).toBeGreaterThan(terminalR);
   });
 });

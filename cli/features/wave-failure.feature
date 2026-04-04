@@ -1,19 +1,19 @@
-Feature: Wave failure in watch loop -- multi-wave dispatch ordering
+Feature: Dependency ordering in watch loop -- feature dispatch respects dependencies
 
   The watch loop drives implement phases as parallel feature dispatches within
-  each wave. Wave ordering is enforced: wave 1 features must complete before
-  wave 2 features are dispatched, even if there are enough parallel slots.
+  each epic. Dependency ordering is enforced: features with no deps must complete before
+  features that depend on them are dispatched, even if there are enough parallel slots.
 
-  This feature exercises the wave ordering logic across a multi-wave epic.
+  This feature exercises the dependency ordering logic across a multi-dependency epic.
 
-  Scenario: Multi-wave implementation respects wave ordering
+  Scenario: Multi-feature implementation respects dependency ordering
 
-    # -- Setup: define epic with multi-wave features --
+    # -- Setup: define epic with dependency-ordered features --
     Given epic "auth-system" with features:
-      | feature        | wave |
-      | auth-provider  | 1    |
-      | login-flow     | 1    |
-      | token-refresh  | 2    |
+      | feature        | depends_on                |
+      | auth-provider  |                           |
+      | login-flow     |                           |
+      | token-refresh  | auth-provider,login-flow  |
     And the watch loop is initialized
 
     # -- Plan phase: dispatch plan --
@@ -23,15 +23,15 @@ Feature: Wave failure in watch loop -- multi-wave dispatch ordering
       | epic        | phase |
       | auth-system | plan  |
 
-    # -- Plan completes → implement fan-out (wave 1) --
+    # -- Plan completes → implement fan-out (independent features) --
     When all active sessions complete successfully
-    Then implement sessions should respect wave ordering:
+    Then implement sessions should respect dependency ordering:
       | epic        | active features          | held features |
       | auth-system | auth-provider,login-flow | token-refresh |
 
-    # -- Wave 1 completes → wave 2 dispatches --
+    # -- Independent features complete → dependent features dispatch --
     When all active sessions complete successfully
-    Then implement sessions should respect wave ordering:
+    Then implement sessions should respect dependency ordering:
       | epic        | active features | held features |
       | auth-system | token-refresh   |               |
 

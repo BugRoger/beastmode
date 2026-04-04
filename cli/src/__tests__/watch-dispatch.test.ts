@@ -1,63 +1,76 @@
-import { describe, it, expect, beforeEach, mock } from "bun:test";
+import { describe, it, expect, beforeEach } from "vitest";
+import { vi } from "vitest";
 
 // ---------- module-level mocks (must precede imports) ----------
 
-const mockWorktreeCreate = mock(async (slug: string) => ({
-  slug,
-  path: `/tmp/test-project/.claude/worktrees/${slug}`,
-  branch: `feature/${slug}`,
-}));
-const mockRebase = mock(async (_phase: string, _opts?: any) => ({
-  outcome: "success" as const,
-  message: "rebased onto main",
+const {
+  mockWorktreeCreate,
+  mockRebase,
+  mockCleanHitlSettings,
+  mockWriteHitlSettings,
+  mockBuildPreToolUseHook,
+  mockGetPhaseHitlProse,
+  mockLoadConfig,
+  mockGetCategoryProse,
+  mockCleanFilePermissionSettings,
+  mockWriteFilePermissionSettings,
+  mockBuildFilePermissionPreToolUseHooks,
+  mockBuildFilePermissionPostToolUseHooks,
+} = vi.hoisted(() => ({
+  mockWorktreeCreate: vi.fn(async (slug: string) => ({
+    slug,
+    path: `/tmp/test-project/.claude/worktrees/${slug}`,
+    branch: `feature/${slug}`,
+  })),
+  mockRebase: vi.fn(async (_phase: string, _opts?: any) => ({
+    outcome: "success" as const,
+    message: "rebased onto main",
+  })),
+  mockCleanHitlSettings: vi.fn((_dir: string) => {}),
+  mockWriteHitlSettings: vi.fn((_opts: any) => {}),
+  mockBuildPreToolUseHook: vi.fn(() => ({ matcher: "AskUserQuestion", hooks: [] })),
+  mockGetPhaseHitlProse: vi.fn(() => "test prose"),
+  mockLoadConfig: vi.fn((_root: string) => ({
+    hitl: {
+      timeout: 30,
+      design: "defer design",
+      plan: "defer plan",
+      implement: "defer implement",
+      validate: "defer validate",
+      release: "defer release",
+    },
+    "file-permissions": {
+      timeout: 30,
+      "claude-settings": "defer to human on claude settings",
+    },
+    github: { enabled: false },
+    cli: {},
+  })),
+  mockGetCategoryProse: vi.fn(() => "defer to human"),
+  mockCleanFilePermissionSettings: vi.fn((_dir: string) => {}),
+  mockWriteFilePermissionSettings: vi.fn((_opts: any) => {}),
+  mockBuildFilePermissionPreToolUseHooks: vi.fn(() => []),
+  mockBuildFilePermissionPostToolUseHooks: vi.fn(() => []),
 }));
 
-mock.module("../git/worktree.js", () => ({
+vi.mock("../git/worktree.js", () => ({
   create: mockWorktreeCreate,
   rebase: mockRebase,
 }));
 
-const mockCleanHitlSettings = mock((_dir: string) => {});
-const mockWriteHitlSettings = mock((_opts: any) => {});
-const mockBuildPreToolUseHook = mock(() => ({ matcher: "AskUserQuestion", hooks: [] }));
-const mockGetPhaseHitlProse = mock(() => "test prose");
-
-mock.module("../hooks/hitl-settings.js", () => ({
+vi.mock("../hooks/hitl-settings.js", () => ({
   cleanHitlSettings: mockCleanHitlSettings,
   writeHitlSettings: mockWriteHitlSettings,
   buildPreToolUseHook: mockBuildPreToolUseHook,
   getPhaseHitlProse: mockGetPhaseHitlProse,
 }));
 
-const mockLoadConfig = mock((_root: string) => ({
-  hitl: {
-    timeout: 30,
-    design: "defer design",
-    plan: "defer plan",
-    implement: "defer implement",
-    validate: "defer validate",
-    release: "defer release",
-  },
-  "file-permissions": {
-    timeout: 30,
-    "claude-settings": "defer to human on claude settings",
-  },
-  github: { enabled: false },
-  cli: {},
-}));
-const mockGetCategoryProse = mock(() => "defer to human");
-
-mock.module("../config.js", () => ({
+vi.mock("../config.js", () => ({
   loadConfig: mockLoadConfig,
   getCategoryProse: mockGetCategoryProse,
 }));
 
-const mockCleanFilePermissionSettings = mock((_dir: string) => {});
-const mockWriteFilePermissionSettings = mock((_opts: any) => {});
-const mockBuildFilePermissionPreToolUseHooks = mock(() => []);
-const mockBuildFilePermissionPostToolUseHooks = mock(() => []);
-
-mock.module("../hooks/file-permission-settings.js", () => ({
+vi.mock("../hooks/file-permission-settings.js", () => ({
   cleanFilePermissionSettings: mockCleanFilePermissionSettings,
   writeFilePermissionSettings: mockWriteFilePermissionSettings,
   buildFilePermissionPreToolUseHooks: mockBuildFilePermissionPreToolUseHooks,
@@ -65,7 +78,7 @@ mock.module("../hooks/file-permission-settings.js", () => ({
 }));
 
 // Mock the SDK import to throw — forces CLI fallback path
-mock.module("@anthropic-ai/claude-agent-sdk", () => {
+vi.mock("@anthropic-ai/claude-agent-sdk", () => {
   throw new Error("SDK not available");
 });
 

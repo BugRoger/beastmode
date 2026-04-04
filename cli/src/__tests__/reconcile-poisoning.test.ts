@@ -9,13 +9,13 @@
  * and only marks the feature completed if the output says so.
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { reconcileFeature } from "../manifest/reconcile";
 import type { PipelineManifest } from "../manifest/pure";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-reconcile");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-reconcile");
 const WORKTREE = resolve(TEST_ROOT, "worktree");
 const EPIC = "my-epic";
 const DATE = new Date().toISOString().slice(0, 10);

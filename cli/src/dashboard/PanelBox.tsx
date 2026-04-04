@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Box, Text } from "ink";
-import { CHROME, DEPTH } from "./monokai-palette.js";
 
 export interface PanelBoxProps {
   /** Title displayed inline in the top border of the panel. */
@@ -32,7 +31,7 @@ export default function PanelBox({
     >
       {/* Custom top border with inline title */}
       <Box>
-        <Text color={CHROME.title}>
+        <Text color="cyan">
           {title ? `┌─ ${title} ` : "┌"}
           {"─".repeat(200)}
         </Text>
@@ -41,11 +40,10 @@ export default function PanelBox({
       {/* Content area with side + bottom borders from Ink */}
       <Box
         borderStyle="single"
-        borderColor={CHROME.border}
+        borderColor="cyan"
         borderTop={false}
         flexDirection="column"
         flexGrow={1}
-        backgroundColor={DEPTH.panel}
       >
         <Box flexDirection="column" flexGrow={1} paddingX={1}>
           {children}

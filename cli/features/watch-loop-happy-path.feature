@@ -2,27 +2,27 @@ Feature: Watch loop happy path -- two epics, parallel phases, serial release
 
   The watch loop drives multiple epics autonomously. Non-release phases
   execute in parallel across epics. Implement features fan out within
-  each epic but respect wave ordering (wave 1 completes before wave 2).
-  Release is serialized -- only one epic releases at a time.
+  each epic but respect dependency ordering (independent features complete before
+  dependent features). Release is serialized -- only one epic releases at a time.
 
   This feature exercises the WatchLoop class with two epics, each having
-  multiple features across two waves. The mock boundary is scanEpics and
+  multiple features with dependencies. The mock boundary is scanEpics and
   SessionFactory -- everything else (tracker, event dispatch, release
   serialization, rescan chaining) runs for real.
 
   Scenario: Two epics from plan through release
 
-    # -- Setup: define two epics with multi-wave features --
+    # -- Setup: define two epics with dependency-ordered features --
     Given epic "auth-system" with features:
-      | feature        | wave |
-      | auth-provider  | 1    |
-      | login-flow     | 1    |
-      | token-refresh  | 2    |
+      | feature        | depends_on                |
+      | auth-provider  |                           |
+      | login-flow     |                           |
+      | token-refresh  | auth-provider,login-flow  |
     And epic "data-pipeline" with features:
-      | feature   | wave |
-      | ingestion | 1    |
-      | transform | 2    |
-      | export    | 2    |
+      | feature   | depends_on |
+      | ingestion |            |
+      | transform | ingestion  |
+      | export    | ingestion  |
     And the watch loop is initialized
 
     # -- Plan phase: both epics dispatch in parallel --
@@ -33,20 +33,20 @@ Feature: Watch loop happy path -- two epics, parallel phases, serial release
       | auth-system   | plan  |
       | data-pipeline | plan  |
 
-    # -- Plan completes → implement fan-out (wave 1 only) --
+    # -- Plan completes → implement fan-out (independent features only) --
     When all active sessions complete successfully
     Then sessions should be active for:
       | epic          | phase     |
       | auth-system   | implement |
       | data-pipeline | implement |
-    And implement sessions should respect wave ordering:
+    And implement sessions should respect dependency ordering:
       | epic          | active features          | held features   |
       | auth-system   | auth-provider,login-flow | token-refresh   |
       | data-pipeline | ingestion                | transform,export |
 
-    # -- Wave 1 completes → wave 2 dispatches --
+    # -- Independent features complete → dependent features dispatch --
     When all active sessions complete successfully
-    Then implement sessions should respect wave ordering:
+    Then implement sessions should respect dependency ordering:
       | epic          | active features  | held features |
       | auth-system   | token-refresh    |               |
       | data-pipeline | transform,export |               |

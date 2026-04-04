@@ -6,7 +6,16 @@ import {
   formatActiveSessions,
   type GitStatus,
 } from "./overview-panel.js";
-import { PHASE_COLOR } from "./monokai-palette.js";
+
+const PHASE_COLOR: Record<string, string> = {
+  design: "magenta",
+  plan: "blue",
+  implement: "yellow",
+  validate: "cyan",
+  release: "green",
+  done: "green",
+  cancelled: "red",
+};
 
 export interface OverviewPanelProps {
   epics: EnrichedManifest[];

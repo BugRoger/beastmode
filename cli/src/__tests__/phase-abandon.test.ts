@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-abandon");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-phase-abandon");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });

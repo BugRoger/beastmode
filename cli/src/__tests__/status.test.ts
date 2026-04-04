@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, buildSnapshot, detectChanges, highlightRow, formatWaveIndicator, buildVerboseWaveRows } from "../commands/status";
 import type { WatchMeta, StatusSnapshot } from "../commands/status";
 import type { EnrichedManifest } from "../manifest/store";
@@ -227,8 +227,8 @@ describe("buildStatusRows", () => {
   test("done phase is colored green+dim", () => {
     const epic = makeEpic({ slug: "finished", phase: "done", nextAction: null });
     const rows = buildStatusRows([epic], { all: true });
-    // Should have 24-bit ANSI green (#A9DC76) and dim (\x1b[2m) codes
-    expect(rows[0].phase).toContain("\x1b[38;2;169;220;118m");
+    // Should have ANSI green (\x1b[32m) and dim (\x1b[2m) codes
+    expect(rows[0].phase).toContain("\x1b[32m");
     expect(rows[0].phase).toContain("\x1b[2m");
     expect(stripAnsi(rows[0].phase)).toBe("done");
   });
@@ -236,8 +236,8 @@ describe("buildStatusRows", () => {
   test("cancelled phase is colored red+dim", () => {
     const epic = makeEpic({ slug: "dead", phase: "cancelled", nextAction: null });
     const rows = buildStatusRows([epic], { all: true });
-    // Should have 24-bit ANSI red (#FF6188) and dim (\x1b[2m) codes
-    expect(rows[0].phase).toContain("\x1b[38;2;255;97;136m");
+    // Should have ANSI red (\x1b[31m) and dim (\x1b[2m) codes
+    expect(rows[0].phase).toContain("\x1b[31m");
     expect(rows[0].phase).toContain("\x1b[2m");
     expect(stripAnsi(rows[0].phase)).toBe("cancelled");
   });
@@ -386,7 +386,7 @@ describe("renderWatchIndicator", () => {
   test("returns 'watch: running' with green ANSI when true", () => {
     const result = renderWatchIndicator(true);
     expect(stripAnsi(result)).toBe("watch: running");
-    expect(result).toContain("\x1b[38;2;169;220;118m");
+    expect(result).toContain("\x1b[32m");
   });
 
   test("returns 'watch: stopped' with dim ANSI when false", () => {

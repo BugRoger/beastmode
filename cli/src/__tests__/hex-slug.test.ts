@@ -1,9 +1,9 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { randomHex, slugify } from "../commands/phase";
 
-const PHASE_TS_PATH = resolve(import.meta.dir, "../commands/phase.ts");
+const PHASE_TS_PATH = resolve(import.meta.dirname, "../commands/phase.ts");
 
 describe("randomHex function", () => {
   test("randomHex is exported", () => {
@@ -43,8 +43,8 @@ describe("deriveWorktreeSlug hex generation (source checks)", () => {
     expect(source).toContain('args[0] || "default"');
   });
 
-  test("epicSlug uses worktreeSlug for design phase", () => {
+  test("epicSlug is assigned from worktreeSlug", () => {
     const source = readFileSync(PHASE_TS_PATH, "utf-8");
-    expect(source).toContain('phase === "design" ? worktreeSlug');
+    expect(source).toContain("const epicSlug = worktreeSlug");
   });
 });

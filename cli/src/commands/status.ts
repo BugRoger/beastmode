@@ -208,14 +208,6 @@ function color(text: string, ...codes: string[]): string {
   return `${codes.join("")}${text}${ANSI.reset}`;
 }
 
-/** Generate 24-bit true-color ANSI escape sequence from hex color. */
-function hexAnsi(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `\x1b[38;2;${r};${g};${b}m`;
-}
-
 // ---------------------------------------------------------------------------
 // Watch indicator
 // ---------------------------------------------------------------------------
@@ -235,7 +227,7 @@ export function isWatchRunning(projectRoot: string): boolean {
 /** Render the watch status line for the dashboard header. */
 export function renderWatchIndicator(running: boolean): string {
   return running
-    ? color("watch: running", hexAnsi("#A9DC76"))
+    ? color("watch: running", ANSI.green)
     : color("watch: stopped", ANSI.dim);
 }
 
@@ -245,13 +237,13 @@ export function renderWatchIndicator(running: boolean): string {
 
 function colorPhase(phase: string): string {
   switch (phase) {
-    case "design": return color(phase, hexAnsi("#AB9DF2"));
-    case "plan": return color(phase, hexAnsi("#78DCE8"));
-    case "implement": return color(phase, hexAnsi("#FFD866"));
-    case "validate": return color(phase, hexAnsi("#A9DC76"));
-    case "release": return color(phase, hexAnsi("#FC9867"));
-    case "done": return color(phase, hexAnsi("#A9DC76"), ANSI.dim);
-    case "cancelled": return color(phase, hexAnsi("#FF6188"), ANSI.dim);
+    case "design": return color(phase, ANSI.magenta);
+    case "plan": return color(phase, ANSI.blue);
+    case "implement": return color(phase, ANSI.yellow);
+    case "validate": return color(phase, ANSI.cyan);
+    case "release": return color(phase, ANSI.green);
+    case "done": return color(phase, ANSI.green, ANSI.dim);
+    case "cancelled": return color(phase, ANSI.red, ANSI.dim);
     default: return phase;
   }
 }

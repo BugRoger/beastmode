@@ -4,17 +4,16 @@ import {
   expect,
   beforeEach,
   afterEach,
-  mock,
-  spyOn,
-} from "bun:test";
+  vi,
+} from "vitest";
 import type { InteractiveRunnerOptions } from "../dispatch/factory";
 
 describe("interactive-runner", () => {
-  let spawnSpy: ReturnType<typeof spyOn>;
+  let spawnSpy: ReturnType<typeof vi.spyOn>;
   let resolveExited: (code: number) => void;
 
   beforeEach(() => {
-    spawnSpy = spyOn(Bun, "spawn").mockImplementation(
+    spawnSpy = vi.spyOn(Bun, "spawn").mockImplementation(
       (_cmd: any, _opts?: any) => {
         let exitResolve: (code: number) => void;
         const exitedPromise = new Promise<number>((resolve) => {
@@ -24,7 +23,7 @@ describe("interactive-runner", () => {
 
         return {
           exited: exitedPromise,
-          kill: mock(() => {}),
+          kill: vi.fn(() => {}),
           pid: 12345,
           stdin: null,
           stdout: null,

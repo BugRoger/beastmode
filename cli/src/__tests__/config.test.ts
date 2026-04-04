@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { loadConfig, DEFAULT_HITL_PROSE, getCategoryProse } from "../config";
 import type { HitlConfig, FilePermissionsConfig } from "../config";
 import { mkdtempSync, writeFileSync, mkdirSync } from "fs";

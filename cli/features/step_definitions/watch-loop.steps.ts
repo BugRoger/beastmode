@@ -15,10 +15,19 @@ import type { WatchLoopWorld } from "../support/watch-world.js";
 Given(
   "epic {string} with features:",
   function (this: WatchLoopWorld, epicSlug: string, table: DataTable) {
-    const features = table.hashes().map((row) => ({
-      slug: row.feature,
-      wave: parseInt(row.wave, 10),
-    }));
+    const features = table.hashes().map((row) => {
+      const feature: any = {
+        slug: row.feature,
+        wave: row.wave ? parseInt(row.wave, 10) : 1,
+      };
+      if (row.depends_on) {
+        feature.depends_on = row.depends_on
+          .split(",")
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+      }
+      return feature;
+    });
     this.epicDefs.set(epicSlug, { slug: epicSlug, features });
   },
 );
@@ -112,6 +121,43 @@ Then(
       }
 
       // No held features should be dispatched
+      for (const feat of expectedHeld) {
+        assert.ok(
+          !activeFeatures.includes(feat),
+          `Feature "${feat}" should be held for ${epicSlug} but is active`,
+        );
+      }
+
+      assert.strictEqual(
+        activeFeatures.length,
+        expectedActive.length,
+        `${epicSlug}: expected ${expectedActive.length} active implement sessions, got ${activeFeatures.length}: [${activeFeatures}]`,
+      );
+    }
+  },
+);
+
+Then(
+  "implement sessions should respect dependency ordering:",
+  function (this: WatchLoopWorld, table: DataTable) {
+    for (const row of table.hashes()) {
+      const epicSlug = row.epic;
+      const expectedActive = row["active features"]
+        ? row["active features"].split(",").map((s: string) => s.trim())
+        : [];
+      const expectedHeld = row["held features"]
+        ? row["held features"].split(",").map((s: string) => s.trim()).filter(Boolean)
+        : [];
+
+      const activeFeatures = this.getActiveFeatureSessions(epicSlug);
+
+      for (const feat of expectedActive) {
+        assert.ok(
+          activeFeatures.includes(feat),
+          `Expected feature "${feat}" to be active for ${epicSlug}, active: [${activeFeatures}]`,
+        );
+      }
+
       for (const feat of expectedHeld) {
         assert.ok(
           !activeFeatures.includes(feat),

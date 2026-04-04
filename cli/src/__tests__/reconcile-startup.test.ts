@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { reconcileStartup, parseSurfaceTitle } from "../pipeline/startup.js";
@@ -6,7 +6,7 @@ import type { ReconcileResult as _ReconcileResult } from "../pipeline/startup.js
 import type { CmuxClientLike, CmuxWorkspace } from "../dispatch/cmux.js";
 import { DispatchTracker } from "../dispatch/tracker.js";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-reconcile-tmp");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-reconcile-tmp");
 
 function setupTestRoot(): void {
   rmSync(TEST_ROOT, { recursive: true, force: true });
@@ -345,7 +345,7 @@ describe("reconcileStartup", () => {
     expect(sessions[0].phase).toBe("implement");
     expect(sessions[0].featureSlug).toBe("feat-a");
     expect(sessions[0].worktreeSlug).toBe("my-epic");
-    expect(sessions[0].id).toStartWith("adopted-");
+    expect(sessions[0].id).toMatch(/^adopted-/);
 
     safeAbortAll(tracker);
   });

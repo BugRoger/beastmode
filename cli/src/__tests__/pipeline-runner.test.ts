@@ -1,48 +1,48 @@
-import { describe, it, expect, beforeEach, afterAll, mock } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { resolve } from "node:path";
 
 // ---------- module-level mocks (must precede runner import) ----------
-// NOTE: mock.module() is process-global in Bun — it replaces the module for
-// ALL subsequent imports in the same test process, not just this file. We call
-// mock.restore() in afterAll to prevent pollution of other test files.
+// NOTE: vi.mock() is hoisted by vitest — it replaces the module at the top of
+// the file before any tests run. We use vi.restoreAllMocks() in afterAll to
+// prevent pollution of other test files.
 
 // Mock git/worktree
-const mockCreate = mock(async (slug: string) => ({
+const mockCreate = vi.hoisted(() => vi.fn(async (slug: string) => ({
   slug,
   path: `/tmp/test-project/.claude/worktrees/${slug}`,
   branch: `feature/${slug}`,
-}));
-const mockRebase = mock(async (_phase: string, _opts?: any) => ({
+})));
+const mockRebase = vi.hoisted(() => vi.fn(async (_phase: string, _opts?: any) => ({
   outcome: "success" as const,
   message: "rebased onto main",
-}));
-const mockArchive = mock(async (_slug: string, _opts?: any) => `archive/test-epic`);
-const mockRemove = mock(async (_slug: string, _opts?: any) => {});
+})));
+const mockArchive = vi.hoisted(() => vi.fn(async (_slug: string, _opts?: any) => `archive/test-epic`));
+const mockRemove = vi.hoisted(() => vi.fn(async (_slug: string, _opts?: any) => {}));
 
-mock.module("../git/worktree.js", () => ({
+vi.mock("../git/worktree.js", () => ({
   create: mockCreate,
   rebase: mockRebase,
   archive: mockArchive,
   remove: mockRemove,
-  createImplBranch: mock((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
+  createImplBranch: vi.fn((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
 }));
 
 // Mock artifacts/reader
-const mockLoadOutput = mock((_wt: string, _phase: string, _slug: string) =>
+const mockLoadOutput = vi.hoisted(() => vi.fn((_wt: string, _phase: string, _slug: string) =>
   ({ status: "completed", artifacts: {} }) as any,
-);
-mock.module("../artifacts/reader.js", () => ({
+));
+vi.mock("../artifacts/reader.js", () => ({
   loadWorktreePhaseOutput: mockLoadOutput,
 }));
 
 // Mock manifest/store
-const mockStoreLoad = mock((_root: string, _slug: string) =>
+const mockStoreLoad = vi.hoisted(() => vi.fn((_root: string, _slug: string) =>
   ({ slug: "test-epic", phase: "plan", features: [], artifacts: {}, lastUpdated: new Date().toISOString() }) as any,
-);
-const mockStoreSave = mock((_root: string, _slug: string, _data: any) => {});
-const mockStoreTransact = mock(async (_root: string, _slug: string, fn: Function) => fn({ slug: "test-epic" }));
-const mockStoreRename = mock(async () => ({ renamed: false, finalSlug: "test-epic", completedSteps: [] }));
-mock.module("../manifest/store.js", () => ({
+));
+const mockStoreSave = vi.hoisted(() => vi.fn((_root: string, _slug: string, _data: any) => {}));
+const mockStoreTransact = vi.hoisted(() => vi.fn(async (_root: string, _slug: string, fn: Function) => fn({ slug: "test-epic" })));
+const mockStoreRename = vi.hoisted(() => vi.fn(async () => ({ renamed: false, finalSlug: "test-epic", completedSteps: [] })));
+vi.mock("../manifest/store.js", () => ({
   load: mockStoreLoad,
   save: mockStoreSave,
   transact: mockStoreTransact,
@@ -50,13 +50,13 @@ mock.module("../manifest/store.js", () => ({
 }));
 
 // Mock manifest/reconcile
-const mockReconcileDesign = mock(async () => ({ phase: "plan", manifest: { slug: "test-epic" } }));
-const mockReconcilePlan = mock(async () => ({ phase: "implement", manifest: { slug: "test-epic" } }));
-const mockReconcileFeature = mock(async () => ({ phase: "implement", manifest: { slug: "test-epic" } }));
-const mockReconcileImplement = mock(async () => ({ phase: "validate", manifest: { slug: "test-epic" } }));
-const mockReconcileValidate = mock(async () => ({ phase: "release", manifest: { slug: "test-epic" } }));
-const mockReconcileRelease = mock(async () => ({ phase: "done", manifest: { slug: "test-epic" } }));
-mock.module("../manifest/reconcile.js", () => ({
+const mockReconcileDesign = vi.hoisted(() => vi.fn(async () => ({ phase: "plan", manifest: { slug: "test-epic" } })));
+const mockReconcilePlan = vi.hoisted(() => vi.fn(async () => ({ phase: "implement", manifest: { slug: "test-epic" } })));
+const mockReconcileFeature = vi.hoisted(() => vi.fn(async () => ({ phase: "implement", manifest: { slug: "test-epic" } })));
+const mockReconcileImplement = vi.hoisted(() => vi.fn(async () => ({ phase: "validate", manifest: { slug: "test-epic" } })));
+const mockReconcileValidate = vi.hoisted(() => vi.fn(async () => ({ phase: "release", manifest: { slug: "test-epic" } })));
+const mockReconcileRelease = vi.hoisted(() => vi.fn(async () => ({ phase: "done", manifest: { slug: "test-epic" } })));
+vi.mock("../manifest/reconcile.js", () => ({
   reconcileDesign: mockReconcileDesign,
   reconcilePlan: mockReconcilePlan,
   reconcileFeature: mockReconcileFeature,
@@ -66,31 +66,31 @@ mock.module("../manifest/reconcile.js", () => ({
 }));
 
 // Mock git/tags
-const mockCreateTag = mock(async () => {});
-mock.module("../git/tags.js", () => ({
+const mockCreateTag = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../git/tags.js", () => ({
   createTag: mockCreateTag,
 }));
 
 // Mock github/sync
-const mockSyncGitHub = mock(async () => ({ mutations: [] }));
-const mockSyncGitHubForEpic = mock(async () => {});
-mock.module("../github/sync.js", () => ({
+const mockSyncGitHub = vi.hoisted(() => vi.fn(async () => ({ mutations: [] })));
+const mockSyncGitHubForEpic = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../github/sync.js", () => ({
   syncGitHub: mockSyncGitHub,
   syncGitHubForEpic: mockSyncGitHubForEpic,
 }));
 
 // Mock github/discovery
-const mockDiscoverGitHub = mock(async () => null);
-mock.module("../github/discovery.js", () => ({
+const mockDiscoverGitHub = vi.hoisted(() => vi.fn(async () => null));
+vi.mock("../github/discovery.js", () => ({
   discoverGitHub: mockDiscoverGitHub,
 }));
 
 // Mock manifest/pure
-mock.module("../manifest/pure.js", () => ({
-  setGitHubEpic: mock((m: any) => m),
-  setFeatureGitHubIssue: mock((m: any) => m),
-  setEpicBodyHash: mock((m: any) => m),
-  setFeatureBodyHash: mock((m: any) => m),
+vi.mock("../manifest/pure.js", () => ({
+  setGitHubEpic: vi.fn((m: any) => m),
+  setFeatureGitHubIssue: vi.fn((m: any) => m),
+  setEpicBodyHash: vi.fn((m: any) => m),
+  setFeatureBodyHash: vi.fn((m: any) => m),
 }));
 
 // Note: hooks/hitl-settings and hooks/file-permission-settings are NOT mocked.
@@ -199,7 +199,7 @@ function resetAllMocks() {
 
 describe("pipeline/runner", () => {
   beforeEach(resetAllMocks);
-  afterAll(() => mock.restore());
+  afterAll(() => vi.restoreAllMocks());
 
   // --- 1. All 9 steps execute in order ---
 
@@ -419,7 +419,7 @@ describe("pipeline/runner", () => {
       mockDiscoverGitHub.mockImplementation(async () => ({
         repo: "test/repo",
         projectNumber: 1,
-      }));
+      }) as any);
 
       await run(makeConfig({
         config: {

@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { buildPreToolUseHook, getPhaseHitlProse } from "../hooks/hitl-settings";
 import type { HitlConfig } from "../config";
 import type { PromptHookEntry } from "../hooks/hitl-settings";

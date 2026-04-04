@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import {
   mkdirSync,
   writeFileSync,
@@ -10,7 +10,7 @@ import { execSync } from "child_process";
 import { rename } from "../manifest/store";
 import { createTag, listTags } from "../git/tags";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-tags-integration");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-phase-tags-integration");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) {

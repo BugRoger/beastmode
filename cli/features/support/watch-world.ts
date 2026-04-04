@@ -17,7 +17,7 @@ import type { SessionCreateOpts } from "../../src/dispatch/factory.js";
 
 interface EpicDef {
   slug: string;
-  features: Array<{ slug: string; wave: number }>;
+  features: Array<{ slug: string; wave: number; depends_on?: string[] }>;
 }
 
 interface SessionResolver {
@@ -139,6 +139,7 @@ export class WatchLoopWorld extends World {
   /**
    * Advance a manifest after a session completes.
    * Mirrors the real reconciler's state transitions.
+   * Computes waves from dependencies if depends_on is present.
    */
   advanceManifest(epicSlug: string, phase: string, featureSlug?: string): void {
     const manifest = this.manifests.get(epicSlug);
@@ -148,11 +149,33 @@ export class WatchLoopWorld extends World {
     if (!epicDef) return;
 
     if (phase === "plan") {
+      // Compute waves from dependencies if present
+      const computeWave = (
+        featureDef: (typeof epicDef.features)[0],
+        visited: Set<string> = new Set(),
+      ): number => {
+        if (featureDef.wave !== undefined && !featureDef.depends_on) {
+          return featureDef.wave;
+        }
+        if (!featureDef.depends_on || featureDef.depends_on.length === 0) {
+          return 1;
+        }
+        if (visited.has(featureDef.slug)) {
+          return 1; // Avoid infinite recursion
+        }
+        visited.add(featureDef.slug);
+        const depWaves = featureDef.depends_on.map((depSlug) => {
+          const dep = epicDef.features.find((f) => f.slug === depSlug);
+          return dep ? computeWave(dep, visited) : 1;
+        });
+        return Math.max(...depWaves) + 1;
+      };
+
       // Transition to implement, populate features, fan-out wave 1
       const features: ManifestFeature[] = epicDef.features.map((f) => ({
         slug: f.slug,
         plan: `${f.slug}.md`,
-        wave: f.wave,
+        wave: computeWave(f),
         status: "pending" as const,
       }));
 

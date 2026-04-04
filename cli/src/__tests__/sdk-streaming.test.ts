@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { RingBuffer, SessionEmitter } from "../dispatch/factory.js";
 import type { LogEntry } from "../dispatch/factory.js";
 

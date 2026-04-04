@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import React from "react";
 import { render } from "ink-testing-library";
 import WatchTreeApp from "../commands/WatchTreeApp.js";

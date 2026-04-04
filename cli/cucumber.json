@@ -145,27 +145,35 @@
     "paths": ["features/dashboard-wiring-fix.feature"],
     "import": [
       "features/step_definitions/dashboard-wiring.steps.ts",
-      "features/step_definitions/dashboard-polish.steps.ts",
       "features/support/dashboard-world.ts",
       "features/support/dashboard-hooks.ts"
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
   },
-  "dashboard-polish": {
+  "store": {
     "paths": [
-      "features/dashboard-polish-banner.feature",
-      "features/dashboard-polish-monokai.feature",
-      "features/dashboard-polish-gradient.feature",
-      "features/dashboard-polish-depth.feature",
-      "features/dashboard-polish-chrome.feature",
-      "features/dashboard-wiring-fix.feature"
+      "features/store/store-ready.feature",
+      "features/store/store-hash-ids.feature",
+      "features/store/store-cross-epic-deps.feature",
+      "features/store/store-tree.feature",
+      "features/store/store-dual-reference.feature",
+      "features/store/store-dependency-ordering.feature",
+      "features/store/store-typed-artifacts.feature",
+      "features/store/store-json-output.feature",
+      "features/store/store-pluggable-backend.feature",
+      "features/store/store-blocked.feature"
     ],
     "import": [
-      "features/step_definitions/dashboard-wiring.steps.ts",
-      "features/step_definitions/dashboard-polish.steps.ts",
-      "features/support/dashboard-world.ts",
-      "features/support/dashboard-hooks.ts"
+      "features/store/step_definitions/store-ready.steps.ts",
+      "features/store/step_definitions/store-entity.steps.ts",
+      "features/store/step_definitions/store-deps.steps.ts",
+      "features/store/step_definitions/store-tree.steps.ts",
+      "features/store/step_definitions/store-cli.steps.ts",
+      "features/store/step_definitions/store-backend.steps.ts",
+      "features/store/step_definitions/store-blocked.steps.ts",
+      "features/store/support/store-world.ts",
+      "features/store/support/store-hooks.ts"
     ],
     "format": ["progress-bar"],
     "publishQuiet": true

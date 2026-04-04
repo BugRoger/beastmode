@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import {
   mkdirSync,
   writeFileSync,
@@ -11,7 +11,7 @@ import { resolve } from "path";
 import { execSync } from "child_process";
 import { rename } from "../manifest/store";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest-rename");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-manifest-rename");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) {

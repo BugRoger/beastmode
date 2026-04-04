@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs";
 import { resolve, join } from "path";
 import {
@@ -9,7 +9,7 @@ import {
   generateAll,
 } from "../hooks/generate-output";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-generate-output");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-generate-output");
 const ARTIFACTS_DIR = join(TEST_ROOT, ".beastmode", "artifacts");
 
 function setup(): void {

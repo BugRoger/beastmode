@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { extractSection, extractSectionFromFile, extractSections } from "../artifacts/reader.js";
 
 // --- extractSection ---

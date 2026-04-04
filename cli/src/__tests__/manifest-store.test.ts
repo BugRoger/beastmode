@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../manifest/store";
 import type { PipelineManifest } from "../manifest/store";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest-store");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-manifest-store");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });

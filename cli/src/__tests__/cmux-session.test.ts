@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import { CmuxSessionFactory } from "../dispatch/cmux";
 import type { ICmuxClient } from "../dispatch/cmux";
 import type { SessionCreateOpts } from "../dispatch/factory";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-cmux-session");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-cmux-session");
 
 /** Mock worktree creation — returns the expected path without running git. */
 const mockCreateWorktree = async (slug: string, opts: { cwd: string }) => ({

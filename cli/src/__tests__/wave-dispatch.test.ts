@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { WatchLoop } from "../commands/watch-loop.js";
@@ -6,7 +6,7 @@ import type { WatchDeps } from "../commands/watch-loop.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import { SdkSessionFactory } from "../dispatch/factory.js";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-wave-dispatch-tmp");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-wave-dispatch-tmp");
 
 function setupTestRoot(): void {
   rmSync(TEST_ROOT, { recursive: true, force: true });

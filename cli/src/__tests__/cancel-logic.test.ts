@@ -4,7 +4,7 @@
  * Strategy: real filesystem for artifacts (step 4) and manifest (step 6),
  * mock.module for git-dependent operations (steps 1-3) and gh CLI (step 5).
  */
-import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 
@@ -12,19 +12,21 @@ import { resolve } from "path";
 // Mock external deps BEFORE importing cancel-logic
 // ---------------------------------------------------------------------------
 
-const mockRemoveWorktree = mock(async () => {});
-const mockGit = mock(async () => ({ stdout: "", stderr: "", exitCode: 0 }));
-const mockDeleteAllTags = mock(async () => {});
-const mockGh = mock(async () => ({ stdout: "", stderr: "", exitCode: 0 }));
+const { mockRemoveWorktree, mockGit, mockDeleteAllTags, mockGh } = vi.hoisted(() => ({
+  mockRemoveWorktree: vi.fn(async () => {}),
+  mockGit: vi.fn(async () => ({ stdout: "", stderr: "", exitCode: 0 })),
+  mockDeleteAllTags: vi.fn(async () => {}),
+  mockGh: vi.fn(async () => ({ stdout: "", stderr: "", exitCode: 0 })),
+}));
 
-mock.module("../git/worktree.js", () => ({
+vi.mock("../git/worktree.js", () => ({
   remove: mockRemoveWorktree,
   git: mockGit,
 }));
-mock.module("../git/tags.js", () => ({
+vi.mock("../git/tags.js", () => ({
   deleteAllTags: mockDeleteAllTags,
 }));
-mock.module("../github/cli.js", () => ({
+vi.mock("../github/cli.js", () => ({
   gh: mockGh,
 }));
 
@@ -38,7 +40,7 @@ import * as store from "../manifest/store.js";
 // Test scaffolding
 // ---------------------------------------------------------------------------
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-cancel-logic");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-cancel-logic");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
@@ -301,7 +303,7 @@ describe("cancelEpic", () => {
     // Actually, store.remove returns false if not found, so we need to
     // cause an actual exception. Let's seed and then make the dir unreadable.
     // Simplest: spyOn store.remove to throw
-    const removeSpy = spyOn(store, "remove").mockImplementation(() => {
+    const removeSpy = vi.spyOn(store, "remove").mockImplementation(() => {
       throw new Error("permission denied");
     });
 
