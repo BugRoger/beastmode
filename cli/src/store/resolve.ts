@@ -10,7 +10,7 @@
  * of different entities.
  */
 
-import type { TaskStore, Entity, Epic } from "./types.js";
+import type { TaskStore, Entity } from "./types.js";
 
 // --- Result Types ---
 
