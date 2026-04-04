@@ -1,24 +1,11 @@
 import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import type { EnrichedManifest } from "../manifest/store.js";
+import { PHASE_COLOR, isDim } from "./monokai-palette.js";
 
 // --- Shared utilities ---
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-
-const PHASE_COLOR: Record<string, string> = {
-  design: "magenta",
-  plan: "blue",
-  implement: "yellow",
-  validate: "cyan",
-  release: "green",
-  done: "green",
-  cancelled: "red",
-};
-
-function isDim(phase: string): boolean {
-  return phase === "done" || phase === "cancelled";
-}
 
 function InlineSpinner() {
   const [frame, setFrame] = useState(0);
