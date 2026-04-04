@@ -25,9 +25,15 @@ import { run as runPipeline } from "../pipeline/runner.js";
 import * as store from "../manifest/store";
 import { createLogger } from "../logger";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
-import { loadConfig } from "../config";
+import { loadConfig, getCategoryProse } from "../config";
 import { cancelEpic } from "./cancel-logic.js";
 import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, getPhaseHitlProse } from "../hooks/hitl-settings";
+import {
+  writeFilePermissionSettings,
+  cleanFilePermissionSettings,
+  buildFilePermissionPreToolUseHooks,
+  buildFilePermissionPostToolUseHooks,
+} from "../hooks/file-permission-settings";
 
 /**
  * Execute a phase command. Called directly from the top-level router.
@@ -69,6 +75,13 @@ export async function phaseCommand(
     const hitlProse = getPhaseHitlProse(_config.hitl, phase);
     const preToolUseHook = buildPreToolUseHook(hitlProse, _config.hitl.timeout);
     writeHitlSettings({ claudeDir, preToolUseHook, phase });
+
+    // File-permission hooks
+    cleanFilePermissionSettings(claudeDir);
+    const fpProse = getCategoryProse(_config["file-permissions"], "claude-settings");
+    const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, _config["file-permissions"].timeout);
+    const fpPostToolUseHooks = buildFilePermissionPostToolUseHooks(phase);
+    writeFilePermissionSettings({ claudeDir, preToolUseHooks: fpPreToolUseHooks, postToolUseHooks: fpPostToolUseHooks });
 
     const result = await runInteractive({ phase, args, cwd });
     logger.log(`${phase} ${result.exit_status} in ${formatDuration(result.duration_ms)}`);
