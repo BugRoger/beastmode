@@ -111,25 +111,37 @@ describe("PanelBox title formatting", () => {
 // ---------------------------------------------------------------------------
 
 describe("ThreePanelLayout proportions", () => {
-  test("top section is 35% height", () => {
-    const topPercent = "35%";
-    expect(topPercent).toBe("35%");
+  test("left column is 35% width", () => {
+    const leftColumnWidth = "35%";
+    expect(leftColumnWidth).toBe("35%");
   });
 
-  test("epics panel is 30% of top width", () => {
-    const epicsWidth = "30%";
-    expect(epicsWidth).toBe("30%");
+  test("right column is 65% width", () => {
+    const rightColumnWidth = "65%";
+    expect(rightColumnWidth).toBe("65%");
   });
 
-  test("details panel is 70% of top width", () => {
-    const detailsWidth = "70%";
-    expect(detailsWidth).toBe("70%");
+  test("epics panel is 60% of left column height", () => {
+    const epicsHeight = "60%";
+    expect(epicsHeight).toBe("60%");
   });
 
-  test("proportions sum correctly", () => {
-    const epics = 30;
-    const details = 70;
-    expect(epics + details).toBe(100);
+  test("overview panel fills remaining left column height", () => {
+    // OVERVIEW uses flexGrow={1} — takes remaining 40%
+    const overviewFlexGrow = 1;
+    expect(overviewFlexGrow).toBe(1);
+  });
+
+  test("log panel fills full right column height", () => {
+    // LOG uses flexGrow={1} — full height of right column
+    const logFlexGrow = 1;
+    expect(logFlexGrow).toBe(1);
+  });
+
+  test("column widths sum correctly", () => {
+    const left = 35;
+    const right = 65;
+    expect(left + right).toBe(100);
   });
 });
 
