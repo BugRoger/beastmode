@@ -1,13 +1,18 @@
-# SDK Dispatch Override
+# Dispatch Strategy (supersedes SDK-forced override)
 
 ## Context
-The dashboard's AgentLog view needs live structured message streams from running agent sessions. The `cli.dispatch-strategy` config allows cmux or SDK dispatch, but cmux sessions are terminal processes with no programmatic stream to tap.
+The dashboard originally forced SDK dispatch at runtime, overriding the operator's configured `cli.dispatch-strategy`, because live message streaming required SDK async generators. The `dashboard-dispatch-fix` epic changed this: the dashboard now respects the configured strategy.
 
 ## Decision
-When the dashboard is running, the dispatch strategy is overridden to SDK regardless of the `cli.dispatch-strategy` config setting. This is a runtime override, not a config change.
+The dashboard calls `selectStrategy(config.cli["dispatch-strategy"])` — the same function the watch command uses. When the configured strategy is SDK, live streaming proceeds as before. When the configured strategy is non-SDK (cmux/iTerm2/auto-resolved to non-SDK), the log panel falls back to WatchLoop lifecycle event entries (dispatching / completed / failed).
 
 ## Rationale
-The dashboard's value proposition (live drill-down into agent output) depends on SDK async generators yielding typed messages. cmux and iTerm2 sessions produce terminal output that cannot be structured. Forcing SDK dispatch is the minimum viable constraint — it preserves the config for headless `beastmode watch` while guaranteeing the dashboard has the data it needs.
+Forcing SDK violated the operator's config and prevented testing non-SDK dispatch paths through the dashboard. The event-log fallback provides meaningful visibility for non-SDK strategies at acceptable cost (lifecycle-only granularity instead of per-message streaming). The unified `selectStrategy()` path eliminates the divergence between dashboard and watch dispatch behavior.
+
+## Dissent / Prior Decision
+The prior design (forced SDK) was justified because non-SDK paths had no structured output to display. The event-log fallback resolves this constraint — it provides a graceful degradation path rather than requiring SDK to be forced. Future designs that add structured output to cmux/iTerm2 sessions could further close the gap.
 
 ## Source
-.beastmode/artifacts/design/2026-04-02-dashboard-drilldown.md
+.beastmode/artifacts/design/2026-04-04-dashboard-dispatch-fix.output.json
+.beastmode/artifacts/plan/2026-04-04-dashboard-dispatch-fix-strategy-dispatch.md
+.beastmode/artifacts/plan/2026-04-04-dashboard-dispatch-fix-event-log-fallback.md

@@ -33,9 +33,23 @@
 - Filter: k9s style — inline prompt replaces key hints, Enter applies, Escape clears
 - Cancel: inline confirmation in key hints bar — `y` executes, `n`/Escape dismisses, blocks all other input
 
-## SDK Dispatch Override
-- ALWAYS force SDK dispatch strategy when dashboard is running — dashboard requires SDK message streams, iTerm2 and cmux sessions have no stream to tap
-- This is a runtime override, not a config change — `cli.dispatch-strategy` setting is ignored while the dashboard is active
+## Dispatch Strategy
+- ALWAYS wire `selectStrategy(config.cli["dispatch-strategy"])` into the dashboard command — same function the watch command uses, identical factory selection path
+- Dashboard honors the operator's configured dispatch strategy (sdk, cmux, iterm2, auto) — no forced SDK override
+- When SDK strategy is selected, live message streaming is available via `SessionHandle.events`; when non-SDK strategy is selected, the log panel falls back to lifecycle event entries
+
+## Event Log Fallback (Non-SDK Dispatch)
+- When `SessionHandle.events` is undefined (non-SDK strategies), the log panel renders lifecycle events from the WatchLoop EventEmitter instead of streaming output
+- `session-started` → "dispatching" status entry; `session-completed` success → "completed" entry; `session-completed` failure or `error` → "failed" entry
+- Fallback entries use the same tree structure as SDK streaming entries — same panel, same format, fewer entries
+- ALWAYS implement fallback via a `FallbackEntryStore` that converts WatchLoop lifecycle events to `LogEntry` objects — separates event conversion from rendering logic
+
+## Verbosity Cycling
+- ALWAYS initialize verbosity state in the root App component from the CLI-provided verbosity arg — single source of truth, propagated down as props
+- `v` key cycles verbosity: info → detail → debug → trace → info (wrap); ignored in filter mode and confirm mode
+- Log entries are filtered at render time by the current verbosity level — entries remain in ring buffers so they reappear immediately when verbosity increases (no data loss)
+- Key hints bar shows current verbosity level: `v verb:info` / `v verb:detail` / `v verb:debug` / `v verb:trace` — updates reactively on keypress
+- Four verbosity levels map to numeric indices (0-3) — cycling uses modular increment
 
 ## Message Mapper
 - Structured message mapper converts SDKMessage types into terminal-friendly log entries (~200 lines)
