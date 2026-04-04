@@ -150,5 +150,32 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "store": {
+    "paths": [
+      "features/store/store-ready.feature",
+      "features/store/store-hash-ids.feature",
+      "features/store/store-cross-epic-deps.feature",
+      "features/store/store-tree.feature",
+      "features/store/store-dual-reference.feature",
+      "features/store/store-dependency-ordering.feature",
+      "features/store/store-typed-artifacts.feature",
+      "features/store/store-json-output.feature",
+      "features/store/store-pluggable-backend.feature",
+      "features/store/store-blocked.feature"
+    ],
+    "import": [
+      "features/store/step_definitions/store-ready.steps.ts",
+      "features/store/step_definitions/store-entity.steps.ts",
+      "features/store/step_definitions/store-deps.steps.ts",
+      "features/store/step_definitions/store-tree.steps.ts",
+      "features/store/step_definitions/store-cli.steps.ts",
+      "features/store/step_definitions/store-backend.steps.ts",
+      "features/store/step_definitions/store-blocked.steps.ts",
+      "features/store/support/store-world.ts",
+      "features/store/support/store-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
