@@ -323,7 +323,7 @@ git commit -m "feat(event-log-fallback): add lifecycle-to-LogEntry converter and
 - Modify: `cli/src/dashboard/hooks/use-dashboard-tree-state.ts`
 - Modify: `cli/src/__tests__/use-dashboard-tree-state.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `cli/src/__tests__/use-dashboard-tree-state.test.ts`:
 
@@ -398,12 +398,12 @@ describe("buildTreeState with fallback entries", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd cli && bun test src/__tests__/use-dashboard-tree-state.test.ts`
 Expected: FAIL — `buildTreeState` doesn't accept third argument; tests with `store` param fail
 
-- [ ] **Step 3: Modify the hook to accept fallback entries**
+- [x] **Step 3: Modify the hook to accept fallback entries**
 
 Modify `cli/src/dashboard/hooks/use-dashboard-tree-state.ts`:
 
@@ -478,12 +478,12 @@ Update the `buildTreeState` call:
   );
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd cli && bun test src/__tests__/use-dashboard-tree-state.test.ts`
 Expected: PASS — all tests green
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add cli/src/dashboard/hooks/use-dashboard-tree-state.ts cli/src/__tests__/use-dashboard-tree-state.test.ts
@@ -500,7 +500,7 @@ git commit -m "feat(event-log-fallback): wire FallbackEntryStore into buildTreeS
 **Files:**
 - Modify: `cli/src/dashboard/App.tsx`
 
-- [ ] **Step 1: Add fallback entry wiring to App.tsx**
+- [x] **Step 1: Add fallback entry wiring to App.tsx**
 
 Add imports:
 ```typescript
@@ -574,12 +574,12 @@ Pass `fallbackEntries` to the hook:
   });
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 Run: `cd cli && bun test`
 Expected: PASS — all existing and new tests green
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/dashboard/App.tsx
