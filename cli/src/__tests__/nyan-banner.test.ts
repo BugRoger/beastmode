@@ -92,10 +92,10 @@ describe("nyanColor", () => {
 
 describe("banner text", () => {
   const BANNER_LINE_1 = "█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀";
-  const BANNER_LINE_2 = "█▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄";
+  const BANNER_LINE_2 = "█▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄";
 
   test("line 2 has 15 trailing dot characters", () => {
-    const dotsSection = BANNER_LINE_2.slice(40); // after the "E" letter + space separator
+    const dotsSection = BANNER_LINE_2.slice(38); // after the text portion (37 chars) + space separator
     const dots = dotsSection.split(" ").filter((c) => c === "▄");
     expect(dots).toHaveLength(15);
   });
