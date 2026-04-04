@@ -50,7 +50,7 @@ describe("nyanColor", () => {
 
   test("handles large tick offsets without error", () => {
     const color = nyanColor("█", 0, 100000);
-    expect(NYAN_PALETTE).toContain(color);
+    expect(NYAN_PALETTE).toContain(color as string);
   });
 });
 
@@ -77,7 +77,6 @@ describe("banner text", () => {
     for (let i = 0; i < BANNER_LINE_1.length; i++) {
       const char1 = BANNER_LINE_1[i];
       const char2 = BANNER_LINE_2[i];
-      // If both are non-space, they should get the same color
       if (char1 !== " " && char2 !== " ") {
         expect(nyanColor(char1, i, tick)).toBe(nyanColor(char2, i, tick));
       }
