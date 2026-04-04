@@ -10,6 +10,7 @@ import DetailsPanel from "./DetailsPanel.js";
 import LogPanel from "./LogPanel.js";
 import { useDashboardTreeState } from "./hooks/use-dashboard-tree-state.js";
 import { useDashboardKeyboard } from "./hooks/use-dashboard-keyboard.js";
+import { useTerminalSize } from "./hooks/use-terminal-size.js";
 import { getKeyHints } from "./key-hints.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { createLogger } from "../logger.js";
@@ -36,6 +37,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("");
+  const { rows } = useTerminalSize();
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
@@ -216,6 +218,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     <ThreePanelLayout
       watchRunning={watchRunning}
       clock={clock}
+      rows={rows}
       epicsSlot={
         <EpicsPanel
           epics={filteredEpics}
