@@ -238,48 +238,18 @@ export async function dispatchPhase(opts: {
         };
       }
     } catch (err: unknown) {
-      // SDK not available — fall back to Bun.spawn of claude CLI
-      events.pushEntry({ timestamp: Date.now(), type: "heartbeat", text: "Falling back to CLI dispatch" });
-
-      const args = [
-        "claude",
-        "--print",
-        `/beastmode:${opts.phase} ${opts.args.join(" ")}`,
-        "--output-format",
-        "json",
-        "--dangerously-skip-permissions",
-      ];
-
-      const proc = Bun.spawn(args, {
-        cwd: wt.path,
-        stdout: "pipe",
-        stderr: "pipe",
-        signal: opts.signal,
-      });
-
-      const [stdout] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-      ]);
-
-      const exitCode = await proc.exited;
-
-      // Try to parse cost from JSON output
-      let costUsd = 0;
-      try {
-        const output = JSON.parse(stdout);
-        costUsd = output.cost_usd ?? 0;
-      } catch {
-        // Non-JSON output — no cost info
-      }
-
-      events.pushEntry({ timestamp: Date.now(), type: "result", text: `Exit ${exitCode}` });
+      // SDK not available — propagate error through session result.
+      // No CLI fallback: the watch loop's error handling will catch this
+      // and retry on the next scan cycle.
+      const message = err instanceof Error ? err.message : String(err);
+      events.pushEntry({ timestamp: Date.now(), type: "result", text: `SDK dispatch failed: ${message}` });
 
       sessionResult = {
-        success: exitCode === 0,
-        exitCode,
-        costUsd,
+        success: false,
+        exitCode: 1,
+        costUsd: 0,
         durationMs: Date.now() - startTime,
+        dispatchError: message,
       };
     }
 

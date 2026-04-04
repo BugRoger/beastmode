@@ -43,6 +43,8 @@ export interface SessionResult {
   costUsd?: number;
   /** Feature progress after reconciliation */
   progress?: { completed: number; total: number };
+  /** Error message from dispatch failure (no fallback) */
+  dispatchError?: string;
 }
 
 /** Watch loop configuration derived from BeastmodeConfig. */
