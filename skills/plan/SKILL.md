@@ -115,7 +115,42 @@ Rules:
 - Assign waves based on dependency analysis
 - Wave number is the sole ordering primitive — no explicit dependency graph between features
 
-### 4. Finalize Features
+### 4. Generate Integration Tests
+
+After feature decomposition, spawn the plan-integration-tester agent to produce behavioral integration specs for the epic.
+
+#### 4a. Spawn Agent
+
+Spawn the `plan-integration-tester` agent as a subagent:
+
+- **Agent:** `plan-integration-tester` (from `.claude/agents/plan-integration-tester.md`)
+- **Input:** Epic name and the numbered user stories extracted from the PRD
+- **Method:** `Agent(subagent_type="general-purpose", prompt=<built prompt>)` — the prompt instructs the agent to follow the plan-integration-tester agent definition
+
+The agent reads the existing test tree, analyzes coverage against the PRD user stories, and produces an integration artifact at `.beastmode/artifacts/plan/YYYY-MM-DD-<epic-name>-integration.md`.
+
+**Handle agent status:**
+
+- **DONE or DONE_WITH_CONCERNS:** proceed to step 4b (generate feature)
+- **NEEDS_CONTEXT or BLOCKED:** print a warning and skip integration test generation entirely. Proceed to step 5 (Finalize Features). This is warn-and-continue — not a hard gate.
+
+#### 4b. Generate Integration-Tests Feature
+
+On agent success, generate a dedicated `integration-tests` feature:
+
+1. **Read the integration artifact** produced by the agent
+2. **Extract scenarios** from the artifact's "New Scenarios" and "Modified Scenarios" sections
+3. **Create the feature** with these properties:
+   - **Name:** `integration-tests`
+   - **User Stories:** same user stories covered by the integration artifact's scenarios
+   - **What to Build:** reference the integration artifact path; the implementer writes `.feature` files, step definitions, and configures the test runner
+   - **Acceptance Criteria:** one criterion per Gherkin scenario in the artifact (e.g., "Scenario X passes as an integration test")
+   - **Wave:** 1 (before all other features)
+4. **Bump wave numbers** — increment all other features' wave numbers by 1 to accommodate the new wave-1 feature
+
+The plan skill does not contain BDD domain knowledge — it delegates entirely to the agent and mechanically transforms the artifact into a feature.
+
+### 5. Finalize Features
 
 - Apply YAGNI — remove unnecessary scope
 - Verify all features have user stories, descriptions, and acceptance criteria
