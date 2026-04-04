@@ -145,6 +145,7 @@
     "paths": ["features/dashboard-wiring-fix.feature"],
     "import": [
       "features/step_definitions/dashboard-wiring.steps.ts",
+      "features/step_definitions/dashboard-polish.steps.ts",
       "features/support/dashboard-world.ts",
       "features/support/dashboard-hooks.ts"
     ],
