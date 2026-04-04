@@ -23,8 +23,7 @@ import {
 } from "../git/worktree";
 import { run as runPipeline } from "../pipeline/runner.js";
 import * as store from "../manifest/store";
-import { JsonFileStore } from "../store/json-file-store.js";
-import { resolveIdentifier } from "../store/resolve.js";
+import { JsonFileStore, resolveIdentifier } from "../store/index.js";
 import { createLogger } from "../logger";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig, getCategoryProse } from "../config";
