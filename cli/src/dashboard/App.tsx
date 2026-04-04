@@ -4,7 +4,7 @@ import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import type { WatchLoopEventMap, DispatchedSession } from "../dispatch/types.js";
 import type { WatchLoop } from "../commands/watch-loop.js";
-import TwoColumnLayout from "./TwoColumnLayout.js";
+import ThreePanelLayout from "./ThreePanelLayout.js";
 import EpicsPanel from "./EpicsPanel.js";
 import OverviewPanel from "./OverviewPanel.js";
 import type { GitStatus } from "./overview-panel.js";
@@ -250,7 +250,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   ) : undefined;
 
   return (
-    <TwoColumnLayout
+    <ThreePanelLayout
       watchRunning={watchRunning}
       clock={clock}
       rows={rows}
