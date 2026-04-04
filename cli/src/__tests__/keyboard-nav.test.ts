@@ -355,7 +355,7 @@ describe("verbosity cycling logic", () => {
 
   test("'V' cycles verbosity 1 -> 2", () => {
     let verbosity = 1;
-    const input = "V";
+    const input: string = "V";
     if (input === "v" || input === "V") verbosity = (verbosity + 1) % 4;
     expect(verbosity).toBe(2);
   });
@@ -369,7 +369,7 @@ describe("verbosity cycling logic", () => {
 
   test("'v' is ignored in filter mode", () => {
     let verbosity = 0;
-    const mode = "filter";
+    const mode: string = "filter";
     const input = "v";
     if (mode === "normal" && (input === "v" || input === "V")) {
       verbosity = (verbosity + 1) % 4;
@@ -379,7 +379,7 @@ describe("verbosity cycling logic", () => {
 
   test("'v' is ignored in confirm mode", () => {
     let verbosity = 0;
-    const mode = "confirm";
+    const mode: string = "confirm";
     const input = "v";
     if (mode === "normal" && (input === "v" || input === "V")) {
       verbosity = (verbosity + 1) % 4;

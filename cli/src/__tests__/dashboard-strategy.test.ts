@@ -56,8 +56,8 @@ class MockInkRender {
   async waitUntilExit() {}
 }
 
-const mockRender = mock((element: any) => new MockInkRender());
-const mockReact = { createElement: mock((comp: any, props: any) => ({})) };
+const mockRender = mock((_element: any) => new MockInkRender());
+const mockReact = { createElement: mock((_comp: any, _props: any) => ({})) };
 const mockApp = { default: () => null };
 const mockListEnriched = mock(async (_root: string) => []);
 const mockDiscoverGitHub = mock(async () => null);
@@ -111,21 +111,19 @@ mock.module("../github/discovery.js", () => ({
   discoverGitHub: mockDiscoverGitHub,
 }));
 
-const mockLoadConfig = mock((root: string) => ({
+const mockLoadConfig = mock((_root: string) => ({
   github: { enabled: false },
   cli: {
     interval: 60,
-    "dispatch-strategy": undefined,
+    "dispatch-strategy": undefined as string | undefined,
   },
 }));
 
-const mockCreateLogger = mock((verbosity: number, opts: any) => ({
+const mockCreateLogger = mock((_verbosity: number, _opts: any) => ({
   log: mock(() => {}),
   warn: mock(() => {}),
   error: mock(() => {}),
 }));
-
-const mockFindProjectRoot = mock(() => "/tmp/test-project");
 const mockExistsSync = mock(() => true);
 const mockResolve = mock((...parts: string[]) => parts.join("/"));
 
