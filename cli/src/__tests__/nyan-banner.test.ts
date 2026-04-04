@@ -91,11 +91,13 @@ describe("nyanColor", () => {
 });
 
 describe("banner text", () => {
-  const BANNER_LINE_1 = "█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▄▀ █▀▀";
-  const BANNER_LINE_2 = "█▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▀▄ ██▄";
+  const BANNER_LINE_1 = "█▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀";
+  const BANNER_LINE_2 = "█▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄";
 
-  test("both banner lines have the same length", () => {
-    expect(BANNER_LINE_1.length).toBe(BANNER_LINE_2.length);
+  test("line 2 has 15 trailing dot characters", () => {
+    const dotsSection = BANNER_LINE_2.slice(40); // after the "E" letter + space separator
+    const dots = dotsSection.split(" ").filter((c) => c === "▄");
+    expect(dots).toHaveLength(15);
   });
 
   test("banner lines contain block characters", () => {
@@ -110,7 +112,8 @@ describe("banner text", () => {
 
   test("vertical coherence: same charIndex gets same color on both lines", () => {
     const tick = 7;
-    for (let i = 0; i < BANNER_LINE_1.length; i++) {
+    const minLen = Math.min(BANNER_LINE_1.length, BANNER_LINE_2.length);
+    for (let i = 0; i < minLen; i++) {
       const char1 = BANNER_LINE_1[i];
       const char2 = BANNER_LINE_2[i];
       if (char1 !== " " && char2 !== " ") {
