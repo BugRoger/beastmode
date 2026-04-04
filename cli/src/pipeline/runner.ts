@@ -113,8 +113,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   let worktreePath: string;
 
   if (config.skipPreDispatch) {
-    // Watch loop path: session factory already handled worktree/rebase/settings.
-    // Only compute the worktree path for post-dispatch steps.
+    // Watch loop path: dispatchPhase() in watch.ts handles worktree creation,
+    // rebase onto main, and HITL settings write before SDK dispatch.
+    // The runner only needs the worktree path for post-dispatch steps (5-9).
     worktreePath = resolve(config.projectRoot, ".claude", "worktrees", epicSlug);
   } else {
     // -- Step 1: git.worktree.prepare -----------------------------------------
