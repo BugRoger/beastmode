@@ -53,6 +53,8 @@ export class WatchLoop extends EventEmitter {
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private logger: Logger;
+  /** Session IDs currently under liveness check — used to emit session-dead before rescanEpic. */
+  private livenessCheckIds = new Set<string>();
   constructor(config: WatchConfig, deps: WatchDeps) {
     super();
     this.config = config;
@@ -137,30 +139,16 @@ export class WatchLoop extends EventEmitter {
   async tick(): Promise<void> {
     // Check liveness of active sessions before scanning
     if (this.deps.sessionFactory.checkLiveness && this.tracker.size > 0) {
-      const beforeIds = new Set(this.tracker.getAll().map((s) => s.id));
-      const beforeSessions = new Map(this.tracker.getAll().map((s) => [s.id, s]));
+      const activeSessions = this.tracker.getAll();
+      for (const s of activeSessions) {
+        this.livenessCheckIds.add(s.id);
+      }
       try {
-        await this.deps.sessionFactory.checkLiveness(this.tracker.getAll());
+        await this.deps.sessionFactory.checkLiveness(activeSessions);
       } catch (err) {
         this.logger.warn(`Liveness check failed: ${err}`);
       }
-      // Give microtasks a chance to process force-resolved promises
-      await new Promise((r) => setTimeout(r, 0));
-      // Detect sessions removed by force-resolution
-      for (const id of beforeIds) {
-        if (!this.tracker.has(id)) {
-          const session = beforeSessions.get(id);
-          if (session) {
-            this.emitTyped('session-dead', {
-              epicSlug: session.epicSlug,
-              phase: session.phase,
-              featureSlug: session.featureSlug,
-              sessionId: session.id,
-              tty: '',
-            });
-          }
-        }
-      }
+      this.livenessCheckIds.clear();
     }
 
     let epics: EnrichedManifest[];
@@ -241,6 +229,7 @@ export class WatchLoop extends EventEmitter {
         promise: handle.promise,
         startedAt: Date.now(),
         events: handle.events,
+        tty: handle.tty,
       };
 
       this.tracker.add(session);
@@ -349,6 +338,7 @@ export class WatchLoop extends EventEmitter {
           promise: handle.promise,
           startedAt: Date.now(),
           events: handle.events,
+          tty: handle.tty,
         };
 
         this.tracker.add(session);
@@ -372,6 +362,18 @@ export class WatchLoop extends EventEmitter {
     session.promise
       .then(async (result) => {
         this.tracker.remove(session.id);
+
+        // Emit session-dead before session-completed for liveness-killed sessions
+        if (this.livenessCheckIds.has(session.id)) {
+          this.emitTyped('session-dead', {
+            epicSlug: session.epicSlug,
+            phase: session.phase,
+            featureSlug: session.featureSlug,
+            sessionId: session.id,
+            tty: session.tty ?? '',
+          });
+          this.livenessCheckIds.delete(session.id);
+        }
 
         this.emitTyped('session-completed', {
           epicSlug: session.epicSlug,

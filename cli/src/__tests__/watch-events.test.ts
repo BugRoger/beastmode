@@ -482,4 +482,55 @@ describe("WatchLoop event emission", () => {
     expect(deadEvents[0].sessionId).toBe("session-dead-test");
     loop.setRunning(false);
   });
+
+  test("session-dead fires before session-completed in event sequence", async () => {
+    const resolvers = new Map<string, (result: import("../dispatch/types").SessionResult) => void>();
+    const eventOrder: string[] = [];
+
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [makeEpic({ slug: "order-epic", nextAction: { phase: "plan", args: ["order-epic"], type: "single" as const } })];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          let resolvePromise!: (result: import("../dispatch/types").SessionResult) => void;
+          const promise = new Promise<import("../dispatch/types").SessionResult>((resolve) => {
+            resolvePromise = resolve;
+          });
+          const id = `session-order-test`;
+          resolvers.set(id, resolvePromise);
+          return { id, worktreeSlug: opts.epicSlug, promise };
+        },
+        async checkLiveness(sessions: import("../dispatch/types").DispatchedSession[]) {
+          for (const session of sessions) {
+            const resolver = resolvers.get(session.id);
+            if (resolver) {
+              resolver({ success: false, exitCode: 1, durationMs: 500 });
+            }
+          }
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    loop.on("session-dead", () => eventOrder.push("session-dead"));
+    loop.on("session-completed", () => eventOrder.push("session-completed"));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(eventOrder[0]).toBe("session-dead");
+    expect(eventOrder[1]).toBe("session-completed");
+    loop.setRunning(false);
+  });
 });

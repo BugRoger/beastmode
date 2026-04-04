@@ -166,6 +166,8 @@ export interface SessionHandle {
   promise: Promise<SessionResult>;
   /** EventEmitter for live SDK message streaming (SDK dispatch only). */
   events?: SessionEmitter;
+  /** TTY device path for terminal-dispatched sessions. */
+  tty?: string;
 }
 
 /**

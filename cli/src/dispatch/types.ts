@@ -29,6 +29,8 @@ export interface DispatchedSession {
   startedAt: number;
   /** EventEmitter for live SDK message streaming (undefined for non-SDK sessions). */
   events?: SessionEmitter;
+  /** TTY device path for terminal-dispatched sessions (undefined for SDK sessions). */
+  tty?: string;
 }
 
 /** Result of a completed SDK session. */

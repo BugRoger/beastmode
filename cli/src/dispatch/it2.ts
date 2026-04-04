@@ -638,7 +638,7 @@ export class ITermSessionFactory implements SessionFactory {
       return result;
     });
 
-    return { id, worktreeSlug, promise: notifiedPromise };
+    return { id, worktreeSlug, promise: notifiedPromise, tty: tty ?? undefined };
   }
 
   /** Classify a failure result for notification filtering. */
