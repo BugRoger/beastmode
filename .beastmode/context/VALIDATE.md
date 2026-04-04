@@ -14,4 +14,11 @@
 ## Known Pre-existing Failures
 - `state-scanner.test.ts` line 109: expects `design -> single` but v0.59.0 changed dispatch to `design -> skip` — not in scope for any current epic, do not triage repeatedly
 - ALWAYS record the pre-existing failure count baseline from main in validation reports — prevents re-triaging known failures across epics
-- Baseline as of 2026-04-04 (post structured-task-store): 73 test files passing, 21 type errors (pre-existing in untouched test files)
+- Baseline as of 2026-04-05 (post dashboard-dispatch-fix): 76 test files passing, 21 type errors (pre-existing in untouched test files)
+
+## Type Error Fixup Patterns
+Common type errors introduced by new test files that require fixup before the type gate passes:
+- Unused parameter names: prefix with `_` (e.g., `element` → `_element`, `world` → `_world`)
+- String literal type narrowing: declare as `const x: string = "value"` instead of `const x = "value"` when the inferred literal type is too narrow for the target parameter
+- Missing `undefined` in mock type: optional config fields need explicit `| undefined` annotation on mock objects
+- ALWAYS fix new type errors during validate — keeping the type gate clean is the acceptance gate, not an implement concern

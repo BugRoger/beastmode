@@ -3,12 +3,15 @@ import type { DispatchedSession } from "../../dispatch/types.js";
 import type { LogEntry, SessionEmitter } from "../../dispatch/factory.js";
 import type { TreeState, EpicNode, TreeEntry } from "../tree-types.js";
 import type { LogLevel } from "../../logger.js";
+import type { FallbackEntryStore } from "../lifecycle-entries.js";
 
 export interface UseDashboardTreeStateOptions {
   /** Active dispatched sessions from the tracker. */
   sessions: DispatchedSession[];
   /** Selected epic slug — undefined means aggregate mode. */
   selectedEpicSlug?: string;
+  /** Fallback entries from non-SDK dispatch strategies. */
+  fallbackEntries?: FallbackEntryStore;
 }
 
 export interface UseDashboardTreeStateResult {
@@ -38,6 +41,7 @@ function toTreeEntry(entry: LogEntry): TreeEntry {
 export function buildTreeState(
   sessions: Array<{ epicSlug: string; phase: string; featureSlug?: string }>,
   getEntries: (session: { epicSlug: string; phase: string; featureSlug?: string }) => LogEntry[],
+  fallbackEntries?: FallbackEntryStore,
 ): TreeState {
   const epicMap = new Map<string, EpicNode>();
 
@@ -56,8 +60,11 @@ export function buildTreeState(
       epic.phases.push(phase);
     }
 
-    // Get entries for this session
-    const rawEntries = getEntries(session);
+    // Get entries for this session — SDK entries if available, fallback if not
+    let rawEntries = getEntries(session);
+    if (rawEntries.length === 0 && fallbackEntries) {
+      rawEntries = fallbackEntries.get(session.epicSlug, session.phase, session.featureSlug);
+    }
     const treeEntries = rawEntries.map(toTreeEntry);
 
     if (session.featureSlug) {
@@ -90,6 +97,7 @@ export function buildTreeState(
 export function useDashboardTreeState({
   sessions,
   selectedEpicSlug,
+  fallbackEntries,
 }: UseDashboardTreeStateOptions): UseDashboardTreeStateResult {
   const [, setRevision] = useState(0);
 
@@ -119,6 +127,16 @@ export function useDashboardTreeState({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredSessions.map((s) => s.id).join(",")]);
 
+  // Subscribe to fallback entry changes for non-SDK sessions
+  const [, setFallbackRevision] = useState(0);
+  useEffect(() => {
+    if (!fallbackEntries) return;
+    const interval = setInterval(() => {
+      setFallbackRevision(fallbackEntries.revision);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [fallbackEntries]);
+
   // Build tree state on each render (revision bump triggers rebuild)
   const state = buildTreeState(
     filteredSessions,
@@ -131,6 +149,7 @@ export function useDashboardTreeState({
       );
       return ds?.events?.getBuffer() ?? [];
     },
+    fallbackEntries,
   );
 
   return { state };

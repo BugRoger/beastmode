@@ -8,9 +8,12 @@ import { listEnriched } from "../manifest/store.js";
 import {
   dispatchPhase,
   ReconcilingFactory,
+  selectStrategy,
 } from "./watch.js";
 import { SdkSessionFactory } from "../dispatch/factory.js";
 import type { SessionFactory } from "../dispatch/factory.js";
+import { CmuxSessionFactory, CmuxClient } from "../dispatch/cmux.js";
+import { ITermSessionFactory, It2Client } from "../dispatch/it2.js";
 import { discoverGitHub } from "../github/discovery.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
@@ -31,9 +34,17 @@ export async function dashboardCommand(
   const projectRoot = findProjectRoot();
   const logger = createLogger(verbosity, {});
 
-  // --- Dashboard always uses SDK dispatch for streaming support ---
-  logger.log("Dashboard: forcing SDK dispatch strategy for streaming");
-  const innerFactory: SessionFactory = new SdkSessionFactory(dispatchPhase);
+  // --- Select dispatch strategy from config (same as watch command) ---
+  const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk", undefined, logger);
+  let innerFactory: SessionFactory;
+
+  if (selected.strategy === "cmux") {
+    innerFactory = new CmuxSessionFactory(new CmuxClient());
+  } else if (selected.strategy === "iterm2") {
+    innerFactory = new ITermSessionFactory(new It2Client());
+  } else {
+    innerFactory = new SdkSessionFactory(dispatchPhase);
+  }
 
   const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot, logger);
 

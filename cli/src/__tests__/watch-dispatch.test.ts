@@ -187,4 +187,22 @@ describe("dispatchPhase — rebase and HITL", () => {
     ac.abort();
     try { await handle.promise; } catch {}
   });
+
+  it("returns failed session result with dispatchError when SDK import fails (no CLI fallback)", async () => {
+    const ac = new AbortController();
+    const handle = await dispatchPhase({
+      epicSlug: "my-epic",
+      phase: "plan",
+      args: ["my-epic"],
+      projectRoot: "/tmp/test-project",
+      signal: ac.signal,
+    });
+
+    // With CLI fallback removed, SDK failure should produce a failed session result
+    const result = await handle.promise;
+    expect(result.success).toBe(false);
+    expect(result.exitCode).toBe(1);
+    expect(result.dispatchError).toBeDefined();
+    expect(result.dispatchError).toContain("SDK not available");
+  });
 });

@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
+
 ### v0.84.0 — Structured Task Store (Apr 2026)
 
 - **Store backend** — `store.json` persistence layer with `JsonFileStore` for CRUD operations, hash-based `bm-xxxx` IDs, cross-epic `depends_on` dependency modeling, and file-level mutex for concurrent access
@@ -11,6 +20,14 @@ All notable changes to beastmode.
 - **ID resolution** — `resolveIdentifier` function with dual-reference support (hash ID or human slug), ambiguity detection, and manifest fallback for coexistence
 - **Phase integration** — Store-based ID resolution wired into phase dispatch pipeline alongside existing manifest system
 - **Integration tests** — Cucumber BDD suite with `InMemoryTaskStore` test double covering 10 user stories: ready queries, hash IDs, cross-epic deps, tree view, dual reference, dependency ordering, typed artifacts, JSON output, backend CRUD, and blocked detection
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -23,11 +40,27 @@ All notable changes to beastmode.
 - **Integration tests** — Cucumber BDD suite covering config parsing, hook generation, decision logging, and lifecycle scenarios
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.82.0 — Dashboard Wiring Fix (Apr 2026)
 
 - **ThreePanelLayout wiring** — Replaced dead TwoColumnLayout with ThreePanelLayout in App.tsx as the primary dashboard layout
 - **Cucumber integration tests** — Added BDD integration test suite for dashboard wiring: Gherkin scenarios, DashboardWorld with source-analysis pattern, step definitions, and cucumber profile
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -38,11 +71,27 @@ All notable changes to beastmode.
 - **Layout polish** — Inline border titles in PanelBox (custom top line, no third-party dependency), fullscreen auto-expansion via `useTerminalSize()` explicit height
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.80.0 — Plan Integration Tester (Apr 2026)
 
 - **Plan-integration-tester agent** — New domain-specialist agent spawned by plan skill post-decomposition to generate BDD integration test features from PRD user stories
 - **Integration test generation step** — Plan skill execute phase now includes an integration test generation step that diffs PRD against existing `.feature` files and produces Gherkin integration artifact at wave 1
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -54,6 +103,14 @@ All notable changes to beastmode.
 - **Icon selection tests** — Added pure function extraction for testable icon selection logic with full test coverage
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.78.0 — Agent Refactor (Apr 2026)
 
@@ -61,6 +118,14 @@ All notable changes to beastmode.
 - **Native dispatch** — Rewired all skill dispatch from `.claude/agents/` YAML to `subagent_type` parameters, eliminating manual prompt assembly
 - **Legacy cleanup** — Deleted `.claude/agents/` directory and `implement-implementer.md`, replaced by plugin agent definitions
 - **Context updates** — Agent naming convention (`<phase>-<role>`) and dispatch pattern captured in L2 context docs
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -73,12 +138,28 @@ All notable changes to beastmode.
 - **Context docs updated** — DESIGN.md Dashboard section rewritten for three-panel model, L3 dashboard records updated
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.76.0 — Watch HITL Fix (Apr 2026)
 
 - **Watch loop HITL injection** — `dispatchPhase()` in `watch.ts` now writes HITL hooks and rebases onto main before SDK dispatch, so AskUserQuestion calls respect the `hitl:` config instead of blocking for human input
 - **skipPreDispatch comment fix** — `runner.ts` comment updated to accurately describe the contract: watch factory owns steps 1-3, runner skips them
 - **Watch dispatch parity rule** — L2 context updated with explicit invariant: when adding new pre-dispatch steps to the runner, also add them to `dispatchPhase()`
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -90,6 +171,14 @@ All notable changes to beastmode.
 - **Pipeline integration** — Impl branch created in both pipeline runner and watch loop before dispatch
 - **Automatic cleanup** — Impl branches deleted on worktree removal
 - **Skill updates** — SKILL.md, agent, and context files updated to reference new convention
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -104,6 +193,14 @@ All notable changes to beastmode.
 - **Report visibility** — Implementation report logs final model tier and escalation count per task
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.73.0 — Tree Log View (Apr 2026)
 
@@ -115,6 +212,14 @@ All notable changes to beastmode.
 - **Tree format functions** — `formatTreeLogLine` simplified output (no phase/scope columns since tree position conveys hierarchy); tree data types with depth-aware prefix rendering
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.72.0 — Implement v3: Write Plan, Agent Review Pipeline, Branch Isolation (Apr 2026)
 
@@ -124,6 +229,14 @@ All notable changes to beastmode.
 - **Subagent Safety** — Agents commit on impl branch only, never on worktree branch; branch verification in Prime ensures correct checkout before dispatch
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.71.0 — CLI Restructure (Apr 2026)
 
@@ -131,6 +244,14 @@ All notable changes to beastmode.
 - **Worktree rebase step** — Feature branches automatically rebase onto local main before each phase dispatch (except design), preventing merge distance accumulation across multi-phase workflows
 - **Domain directory restructure** — CLI source reorganized into seven domain directories (`git/`, `hooks/`, `dispatch/`, `pipeline/`, `settings/`, `artifacts/`, `manifest/`) with uniform CRUD verb naming
 - **Dead code removal** — Unused exports, orphan modules, and stale files cleaned up; net reduction in codebase size
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -145,6 +266,14 @@ All notable changes to beastmode.
 - **Presence-based rendering** — Missing fields produce no output, not empty sections; bodies degrade gracefully
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.69.0 — Watch Log Format (Apr 2026)
 
@@ -155,12 +284,28 @@ All notable changes to beastmode.
 - **Dashboard parity** — Activity log inherits new format automatically via shared `formatLogLine`
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.68.0 — Release Serialization (Apr 2026)
 
 - **Release gate** — Serializes release phase dispatch so only one epic releases at a time, preventing squash-merge conflicts on main; FIFO ordering by manifest creation date
 - **`release:held` event** — New typed WatchLoop EventEmitter event carrying waiting/blocking epic slugs, logged at info level for pipeline observability
 - **Dashboard queue indicator** — "Queued" badge on held epics with blocking epic tooltip, driven by `release:held` events
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -172,11 +317,27 @@ All notable changes to beastmode.
 - **Init template parity** — Includes `model: haiku` and `timeout: 30` matching the init template defaults
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.66.1 — Gray Area Sweep Simplify (Apr 2026)
 
 - **Serial gray-area sweep** — Replaced batched multi-select loop with one-at-a-time flow, presenting gray areas in priority order (most ambiguous first)
 - **Reduced interaction overhead** — Removed dedicated "Skip" and "You decide" options; built-in Other field covers both bail-out and delegation
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -188,6 +349,14 @@ All notable changes to beastmode.
 - **Log panel** — Auto-follow log stream, epic-filtered or aggregate "(all)" mode with ring buffer per session
 - **Old dashboard cleanup** — Removed view stack, push/pop navigation, breadcrumb bar, and activity log components
 - **99 new tests** — Full test coverage across all four new panels
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -202,12 +371,28 @@ All notable changes to beastmode.
 - **Null logger** — `.child()` returns null logger, preserving the null object pattern
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.64.0 — GH Error Diagnostics (Apr 2026)
 
 - **Endpoint in error messages** — `gh()` error messages now show `args.slice(0, 2)` instead of just the verb, surfacing the actual API endpoint on failure
 - **Logger threading** — All 11 `gh*` helper functions in `gh.ts` accept optional `logger?: Logger` for epic-scoped context propagation
 - **Sync layer wiring** — `syncGitHub()` and `syncGitHubForEpic()` thread logger through all GitHub API call sites
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -220,6 +405,14 @@ All notable changes to beastmode.
 - **Retro integration** — Context walker analyzes HITL logs, identifies repetitive human decisions, generates `config.yaml` snippets for automation
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.62.0 — Epic Tab Cleanup (Apr 2026)
 
@@ -227,6 +420,14 @@ All notable changes to beastmode.
 - **Error badge** — Failed releases set a badge on the tab session so users know which lingering tabs need attention
 - **Orphan reconciliation** — Startup reconciliation closes tabs for done-manifest epics instead of adopting them, covering both iTerm2 and cmux strategies
 - **Context promotions** — Documented decorator-forwarding anti-pattern and best-effort visual cleanup convention
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -240,6 +441,14 @@ All notable changes to beastmode.
 - **Gitignore cleanup** — Removed `.beastmode-runs.json` entry
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.61.0 — Exhaustive Gray Area Sweep (Apr 2026)
 
@@ -248,6 +457,14 @@ All notable changes to beastmode.
 - **Session deduplication** — Resolved gray areas tracked per session, never re-surfaced in later batches
 - **Partial batch support** — Presents 1-2 remaining gray areas when fewer than 3 exist
 - **Express path parity** — Existing-document express path inherits the same exhaustive sweep behavior
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -260,6 +477,14 @@ All notable changes to beastmode.
 - **Reference sections** — Templates, formats, and reference material moved to `## Reference` at the end of each skill
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.60.1 — Remove Task Runner (Apr 2026)
 
@@ -267,6 +492,14 @@ All notable changes to beastmode.
 - **Task runner removed** — `skills/task-runner.md` deleted; TodoWrite references removed from all HARD-GATE blocks
 - **Context cleanup** — Task-runner L2/L3 docs removed; 16 stale references to `phases/`, `_shared/`, and `@imports` fixed across context hierarchy
 - **Net reduction** — 1782 added, 1743 removed across 63 files
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -281,6 +514,14 @@ All notable changes to beastmode.
 - **SDK dispatch override** — Dashboard forces SDK dispatch strategy at runtime regardless of config setting
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.59.0 — Remove Gates (Apr 2026)
 
@@ -291,6 +532,14 @@ All notable changes to beastmode.
 - **Context docs updated** — Gate references purged from DESIGN.md, BEASTMODE.md, and 33 L1-L3 context files
 - **Dead code cleanup** — sdk-runner, run-log removed; test dirs consolidated
 - **Net reduction** — 643 added, 1680 removed across 152 files
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -305,6 +554,14 @@ All notable changes to beastmode.
 - **Fix** — Derive output.json filename from worktree name, not artifact name
 
 ---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
+
+---
 
 ### v0.57.1 — Design Abandon Cleanup (Apr 2026)
 
@@ -313,6 +570,14 @@ All notable changes to beastmode.
 - **Idempotent `store.remove()`** — Returns false for missing files, safe to retry
 - **Test coverage** — 16 new tests for design abandon gate (both exit paths), post-dispatch guard, and manifest store remove idempotency
 - **Net code reduction** — 349 added, 609 removed across 23 files
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 
@@ -327,6 +592,14 @@ All notable changes to beastmode.
 - **Confirmation prompt** — Manual CLI prompts before destructive regression; watch loop skips for unattended operation
 - **Feature reset** — All features reset to pending when regressing to or past implement phase
 - **Deletions** — VALIDATE_FAILED event type, constants, and legacy tests fully removed
+
+---
+### v0.85.0 — Dashboard Dispatch Fix (Apr 2026)
+
+- **Strategy dispatch** — Replace broken CLI fallback with proper `selectStrategy()` wired into dashboard command, respecting configured dispatch strategy
+- **Verbosity cycling** — Root-level App state ownership with `v` key handler, render-time filtering in LogPanel, and key hints bar indicator
+- **Event log fallback** — `FallbackEntryStore` with lifecycle-to-LogEntry converter, WatchLoop lifecycle events wired into `useDashboardTreeState` for non-SDK dispatch visibility
+- **Integration tests** — 6 Gherkin feature files with 22 scenarios covering strategy selection, auto-detection, CLI fallback, and error handling via `DashboardDispatchWorld`
 
 ---
 

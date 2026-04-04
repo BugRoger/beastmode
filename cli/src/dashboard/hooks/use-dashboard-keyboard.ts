@@ -13,6 +13,7 @@
  * 6. 'a'/'A' → toggle done/cancelled visibility
  * 7. 'x'/'X' → initiate cancel for selected epic (not on "(all)" row)
  * 8. '/' → enter filter mode
+ * 9. 'v'/'V' → cycle verbosity level
  */
 
 import { useState, useCallback } from "react";
@@ -22,6 +23,7 @@ import { useKeyboardNav } from "./use-keyboard-nav.js";
 import { useCancelFlow } from "./use-cancel-flow.js";
 import { useGracefulShutdown } from "./use-graceful-shutdown.js";
 import { useToggleAll } from "./use-toggle-all.js";
+import { cycleVerbosity } from "../verbosity.js";
 import type { KeyboardNavState } from "./use-keyboard-nav.js";
 import type { CancelFlowResult } from "./use-cancel-flow.js";
 import type { GracefulShutdownState } from "./use-graceful-shutdown.js";
@@ -43,6 +45,8 @@ export interface DashboardKeyboardDeps {
   onFilterApply: (filter: string) => void;
   /** Callback when filter is cleared (Escape) */
   onFilterClear: () => void;
+  /** Initial verbosity level from CLI args (0-3) */
+  initialVerbosity: number;
 }
 
 export interface DashboardKeyboardState {
@@ -58,6 +62,8 @@ export interface DashboardKeyboardState {
   mode: DashboardMode;
   /** Current filter input text (while in filter mode) */
   filterInput: string;
+  /** Current verbosity level (0=info, 1=detail, 2=debug, 3=trace) */
+  verbosity: number;
 }
 
 export function useDashboardKeyboard(
@@ -70,6 +76,7 @@ export function useDashboardKeyboard(
     slugAtIndex,
     onFilterApply,
     onFilterClear,
+    initialVerbosity,
   } = deps;
 
   const nav = useKeyboardNav(itemCount);
@@ -79,6 +86,7 @@ export function useDashboardKeyboard(
 
   const [mode, setMode] = useState<DashboardMode>("normal");
   const [filterInput, setFilterInput] = useState("");
+  const [verbosity, setVerbosity] = useState(initialVerbosity);
 
   const handleInput = useCallback(
     (input: string, key: Key) => {
@@ -161,11 +169,18 @@ export function useDashboardKeyboard(
         setMode("filter");
         return;
       }
+
+      // Priority 9: verbosity cycling
+      if (input === "v" || input === "V") {
+        setVerbosity((prev) => cycleVerbosity(prev));
+        return;
+      }
     },
     [
       shutdown.isShuttingDown,
       mode,
       filterInput,
+      verbosity,
       cancelFlow,
       shutdown,
       nav,
@@ -181,5 +196,5 @@ export function useDashboardKeyboard(
   // Wire up useInput — disabled during shutdown
   useInput(handleInput, { isActive: !shutdown.isShuttingDown });
 
-  return { nav, cancelFlow, shutdown, toggleAll, mode, filterInput };
+  return { nav, cancelFlow, shutdown, toggleAll, mode, filterInput, verbosity };
 }

@@ -1,12 +1,15 @@
 import { Box, Text } from "ink";
 import type { TreeState, EpicNode, PhaseNode } from "./tree-types.js";
 import TreeView from "./TreeView.js";
+import { shouldShowEntry } from "./verbosity.js";
 
 export interface LogPanelProps {
   /** Tree state to render. */
   state: TreeState;
   /** Maximum visible lines to render. Default: 50 */
   maxVisibleLines?: number;
+  /** Current verbosity level (0=info, 1=detail, 2=debug, 3=trace). Default: 0 */
+  verbosity?: number;
 }
 
 /**
@@ -91,6 +94,29 @@ export function trimTreeToTail(state: TreeState, maxLines: number): TreeState {
 }
 
 /**
+ * Filter tree entries by verbosity level.
+ * Entries with level above current verbosity are removed.
+ * System entries are not filtered (always shown).
+ * warn/error entries are always shown regardless of verbosity.
+ */
+export function filterTreeByVerbosity(state: TreeState, verbosity: number): TreeState {
+  return {
+    epics: state.epics.map((epic) => ({
+      ...epic,
+      phases: epic.phases.map((phase) => ({
+        ...phase,
+        entries: phase.entries.filter((e) => shouldShowEntry(e.level, verbosity)),
+        features: phase.features.map((feat) => ({
+          ...feat,
+          entries: feat.entries.filter((e) => shouldShowEntry(e.level, verbosity)),
+        })),
+      })),
+    })),
+    system: state.system,
+  };
+}
+
+/**
  * LogPanel — renders pipeline log entries as a hierarchical tree.
  *
  * Uses the shared TreeView component for consistent rendering between
@@ -100,8 +126,10 @@ export function trimTreeToTail(state: TreeState, maxLines: number): TreeState {
 export default function LogPanel({
   state,
   maxVisibleLines = 50,
+  verbosity = 0,
 }: LogPanelProps) {
-  const hasContent = state.epics.length > 0 || state.system.length > 0;
+  const filtered = filterTreeByVerbosity(state, verbosity);
+  const hasContent = filtered.epics.length > 0 || filtered.system.length > 0;
 
   if (!hasContent) {
     return (
@@ -112,7 +140,7 @@ export default function LogPanel({
   }
 
   // Trim tree to last N lines for auto-follow (show newest entries at bottom)
-  const trimmed = trimTreeToTail(state, maxVisibleLines);
+  const trimmed = trimTreeToTail(filtered, maxVisibleLines);
 
   return (
     <Box flexDirection="column">

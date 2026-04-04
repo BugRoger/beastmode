@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { buildTreeState } from "../dashboard/hooks/use-dashboard-tree-state.js";
 import type { LogEntry } from "../dispatch/factory.js";
+import { FallbackEntryStore } from "../dashboard/lifecycle-entries.js";
 
 describe("useDashboardTreeState — buildTreeState", () => {
   function makeEntry(seq: number, timestamp: number, text: string, type: LogEntry["type"] = "text"): LogEntry {
@@ -108,5 +109,69 @@ describe("useDashboardTreeState — buildTreeState", () => {
     expect(state.epics[0].phases).toHaveLength(2);
     expect(state.epics[0].phases[0].phase).toBe("plan");
     expect(state.epics[0].phases[1].phase).toBe("implement");
+  });
+});
+
+describe("buildTreeState with fallback entries", () => {
+  function makeEntry(seq: number, timestamp: number, text: string, type: LogEntry["type"] = "text"): LogEntry {
+    return { seq, timestamp, type, text };
+  }
+
+  test("session without events uses fallbackEntries when provided", () => {
+    const store = new FallbackEntryStore();
+    store.push("my-epic", "plan", undefined, {
+      type: "text", timestamp: 1000, text: "dispatching",
+    });
+
+    const sessions = [{ epicSlug: "my-epic", phase: "plan" }];
+    const state = buildTreeState(
+      sessions,
+      () => [],
+      store,
+    );
+
+    expect(state.epics[0].phases[0].entries).toHaveLength(1);
+    expect(state.epics[0].phases[0].entries[0].message).toBe("dispatching");
+  });
+
+  test("session with SDK entries ignores fallbackEntries", () => {
+    const store = new FallbackEntryStore();
+    store.push("my-epic", "plan", undefined, {
+      type: "text", timestamp: 1000, text: "dispatching",
+    });
+
+    const sdkEntries = [makeEntry(0, 2000, "streaming message")];
+    const sessions = [{ epicSlug: "my-epic", phase: "plan" }];
+    const state = buildTreeState(
+      sessions,
+      () => sdkEntries,
+      store,
+    );
+
+    expect(state.epics[0].phases[0].entries).toHaveLength(1);
+    expect(state.epics[0].phases[0].entries[0].message).toBe("streaming message");
+  });
+
+  test("fallback entries for feature session appear under feature node", () => {
+    const store = new FallbackEntryStore();
+    store.push("my-epic", "implement", "auth-flow", {
+      type: "text", timestamp: 1000, text: "dispatching",
+    });
+
+    const sessions = [{ epicSlug: "my-epic", phase: "implement", featureSlug: "auth-flow" }];
+    const state = buildTreeState(
+      sessions,
+      () => [],
+      store,
+    );
+
+    expect(state.epics[0].phases[0].features[0].entries).toHaveLength(1);
+    expect(state.epics[0].phases[0].features[0].entries[0].message).toBe("dispatching");
+  });
+
+  test("no fallbackEntries param behaves same as before (backward compat)", () => {
+    const sessions = [{ epicSlug: "e", phase: "plan" }];
+    const state = buildTreeState(sessions, () => []);
+    expect(state.epics[0].phases[0].entries).toHaveLength(0);
   });
 });
