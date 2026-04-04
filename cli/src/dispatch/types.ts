@@ -104,6 +104,15 @@ export interface ReleaseHeldEvent {
   blockingSlug: string;
 }
 
+/** Payload for 'session-dead' event — emitted when a session's process is no longer alive. */
+export interface SessionDeadEvent {
+  epicSlug: string;
+  phase: string;
+  featureSlug?: string;
+  sessionId: string;
+  tty: string;
+}
+
 /** Typed event map for WatchLoop. */
 export interface WatchLoopEventMap {
   'session-started': [SessionStartedEvent];
@@ -117,4 +126,6 @@ export interface WatchLoopEventMap {
   'started': [{ version: string; pid: number; intervalSeconds: number }];
   /** Emitted when the loop stops. */
   'stopped': [];
+  /** Emitted when a dispatched session's process is detected as dead. */
+  'session-dead': [SessionDeadEvent];
 }

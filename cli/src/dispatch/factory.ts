@@ -181,6 +181,9 @@ export interface SessionFactory {
 
   /** Optional badge on the epic-level container (tab/workspace) for error signaling. */
   setBadgeOnContainer?(epicSlug: string, text: string): Promise<void>;
+
+  /** Optional liveness check — detects dead sessions and force-resolves their promises. */
+  checkLiveness?(sessions: import("./types.js").DispatchedSession[]): Promise<void>;
 }
 
 /**
