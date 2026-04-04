@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { BackfillDeps } from "../scripts/backfill-enrichment.js";
 
 describe("backfill-enrichment", () => {
   let mockList: ReturnType<typeof vi.fn>;
@@ -12,12 +13,12 @@ describe("backfill-enrichment", () => {
   });
 
   async function runBackfill(projectRoot: string) {
-    const { backfill } = await import("../../scripts/backfill-enrichment.js");
+    const { backfill } = await import("../scripts/backfill-enrichment.js");
     return backfill(projectRoot, {
       list: mockList,
       syncGitHubForEpic: mockSyncForEpic,
       loadConfig: mockLoadConfig,
-    });
+    } as unknown as BackfillDeps);
   }
 
   it("skips manifests without github.epic", async () => {

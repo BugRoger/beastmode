@@ -2,14 +2,14 @@
  * One-time backfill script — re-syncs all existing manifests with GitHub issues
  * through the enrichment pipeline so bare issues get full PRD content.
  *
- * Usage: bun run scripts/backfill-enrichment.ts [project-root]
+ * Usage: bun run src/scripts/backfill-enrichment.ts [project-root]
  *
  * Delete after migration is complete.
  */
 
-import * as store from "../src/manifest/store.js";
-import { syncGitHubForEpic } from "../src/github/sync.js";
-import { loadConfig } from "../src/config.js";
+import * as store from "../manifest/store.js";
+import { syncGitHubForEpic } from "../github/sync.js";
+import { loadConfig } from "../config.js";
 import { resolve } from "path";
 
 export interface BackfillDeps {
