@@ -148,8 +148,97 @@ export async function epicCommand(store: JsonFileStore, args: string[]): Promise
   }
 }
 
-async function featureCommand(store: JsonFileStore, args: string[]): Promise<void> {
-  jsonError("Not implemented yet");
+export async function featureCommand(store: JsonFileStore, args: string[]): Promise<void> {
+  if (args.length === 0) jsonError("Usage: beastmode store feature <ls|show|add|update|delete>");
+
+  const action = args[0];
+  const actionArgs = args.slice(1);
+
+  switch (action) {
+    case "ls": {
+      const { positional } = parseFlags(actionArgs);
+      if (positional.length === 0) jsonError("Usage: beastmode store feature ls <epic-id-or-slug>");
+      const result = await store.transact(s => {
+        const entity = s.find(positional[0]);
+        if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+        return s.listFeatures(entity.id);
+      });
+      jsonOut(result);
+      break;
+    }
+    case "show": {
+      const { positional, flags } = parseFlags(actionArgs);
+      if (positional.length === 0) jsonError("Usage: beastmode store feature show <id>");
+      const result = await store.transact(s => {
+        const feature = s.getFeature(positional[0]);
+        if (!feature) throw new Error(`Feature not found: ${positional[0]}`);
+        if (flags["deps"] === "true") {
+          return { ...feature, deps: s.dependencyChain(feature.id) };
+        }
+        return feature;
+      });
+      jsonOut(result);
+      break;
+    }
+    case "add": {
+      const { flags } = parseFlags(actionArgs);
+      if (!flags["parent"] || !flags["name"]) {
+        jsonError("Usage: beastmode store feature add --parent=<epic-id> --name=\"X\"");
+      }
+      const result = await store.transact(s => {
+        const parent = s.find(flags["parent"]);
+        if (!parent || parent.type !== "epic") throw new Error(`Parent epic not found: ${flags["parent"]}`);
+        return s.addFeature({
+          parent: parent.id,
+          name: flags["name"],
+          description: flags["description"],
+        });
+      });
+      jsonOut(result);
+      break;
+    }
+    case "update": {
+      const { positional, flags } = parseFlags(actionArgs);
+      if (positional.length === 0) jsonError("Usage: beastmode store feature update <id> [--field=value]");
+      const result = await store.transact(s => {
+        const feature = s.getFeature(positional[0]);
+        if (!feature) throw new Error(`Feature not found: ${positional[0]}`);
+
+        const patch: Record<string, unknown> = {};
+        if (flags["name"]) patch.name = flags["name"];
+        if (flags["description"]) patch.description = flags["description"];
+        if (flags["status"]) patch.status = flags["status"];
+        if (flags["plan"]) patch.plan = flags["plan"];
+        if (flags["implement"]) patch.implement = flags["implement"];
+
+        if (flags["add-dep"]) {
+          const deps = [...feature.depends_on];
+          if (!deps.includes(flags["add-dep"])) deps.push(flags["add-dep"]);
+          patch.depends_on = deps;
+        }
+        if (flags["rm-dep"]) {
+          patch.depends_on = feature.depends_on.filter((d: string) => d !== flags["rm-dep"]);
+        }
+
+        return s.updateFeature(feature.id, patch as any);
+      });
+      jsonOut(result);
+      break;
+    }
+    case "delete": {
+      const { positional } = parseFlags(actionArgs);
+      if (positional.length === 0) jsonError("Usage: beastmode store feature delete <id>");
+      await store.transact(s => {
+        const feature = s.getFeature(positional[0]);
+        if (!feature) throw new Error(`Feature not found: ${positional[0]}`);
+        s.deleteFeature(feature.id);
+      });
+      jsonOut({ deleted: true });
+      break;
+    }
+    default:
+      jsonError(`Unknown feature action: ${action}`);
+  }
 }
 
 async function readyCommand(store: JsonFileStore, args: string[]): Promise<void> {
@@ -220,5 +309,67 @@ export async function epicDeleteTestable(store: JsonFileStore, args: string[]): 
     const entity = s.find(positional[0]);
     if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
     s.deleteEpic(entity.id);
+  });
+}
+
+// --- Feature testable helpers ---
+
+export async function featureAddTestable(store: JsonFileStore, args: string[]): Promise<any> {
+  const { flags } = parseFlags(args);
+  return store.transact(s => {
+    const parent = s.find(flags["parent"]);
+    if (!parent || parent.type !== "epic") throw new Error(`Parent epic not found: ${flags["parent"]}`);
+    return s.addFeature({ parent: parent.id, name: flags["name"], description: flags["description"] });
+  });
+}
+
+export async function featureLsTestable(store: JsonFileStore, args: string[]): Promise<any> {
+  return store.transact(s => {
+    const entity = s.find(args[0]);
+    if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${args[0]}`);
+    return s.listFeatures(entity.id);
+  });
+}
+
+export async function featureShowTestable(store: JsonFileStore, args: string[]): Promise<any> {
+  const { positional, flags } = parseFlags(args);
+  return store.transact(s => {
+    const feature = s.getFeature(positional[0]);
+    if (!feature) throw new Error(`Feature not found: ${positional[0]}`);
+    if (flags["deps"] === "true") {
+      return { ...feature, deps: s.dependencyChain(feature.id) };
+    }
+    return feature;
+  });
+}
+
+export async function featureUpdateTestable(store: JsonFileStore, args: string[]): Promise<any> {
+  const { positional, flags } = parseFlags(args);
+  return store.transact(s => {
+    const feature = s.getFeature(positional[0]);
+    if (!feature) throw new Error(`Feature not found: ${positional[0]}`);
+    const patch: Record<string, unknown> = {};
+    if (flags["name"]) patch.name = flags["name"];
+    if (flags["description"]) patch.description = flags["description"];
+    if (flags["status"]) patch.status = flags["status"];
+    if (flags["plan"]) patch.plan = flags["plan"];
+    if (flags["implement"]) patch.implement = flags["implement"];
+    if (flags["add-dep"]) {
+      const deps = [...feature.depends_on];
+      if (!deps.includes(flags["add-dep"])) deps.push(flags["add-dep"]);
+      patch.depends_on = deps;
+    }
+    if (flags["rm-dep"]) {
+      patch.depends_on = feature.depends_on.filter((d: string) => d !== flags["rm-dep"]);
+    }
+    return s.updateFeature(feature.id, patch as any);
+  });
+}
+
+export async function featureDeleteTestable(store: JsonFileStore, args: string[]): Promise<any> {
+  return store.transact(s => {
+    const feature = s.getFeature(args[0]);
+    if (!feature) throw new Error(`Feature not found: ${args[0]}`);
+    s.deleteFeature(feature.id);
   });
 }
