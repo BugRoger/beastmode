@@ -14,6 +14,7 @@ import { useDashboardKeyboard } from "./hooks/use-dashboard-keyboard.js";
 import { useTerminalSize } from "./hooks/use-terminal-size.js";
 import { getKeyHints } from "./key-hints.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
+import { FallbackEntryStore, lifecycleToLogEntry } from "./lifecycle-entries.js";
 import { createLogger } from "../logger.js";
 
 export interface AppProps {
@@ -42,6 +43,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const { rows } = useTerminalSize();
   const loopRef = useRef(loop);
   loopRef.current = loop;
+  const fallbackStoreRef = useRef(new FallbackEntryStore());
 
   // --- Visible epics (filtered by active filter and toggle-all) ---
   const slugAtIndex = useCallback(
@@ -118,6 +120,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const { state: treeState } = useDashboardTreeState({
     sessions: trackerSessions,
     selectedEpicSlug,
+    fallbackEntries: fallbackStoreRef.current,
   });
 
   // --- Clock tick every 1s ---
@@ -173,6 +176,12 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     const onSessionStarted = (ev: WatchLoopEventMap["session-started"][0]) => {
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
       refreshSessions();
+      fallbackStoreRef.current.push(
+        ev.epicSlug,
+        ev.phase,
+        ev.featureSlug,
+        lifecycleToLogEntry("session-started", ev),
+      );
     };
 
     const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
@@ -182,6 +191,12 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         return next;
       });
       refreshSessions();
+      fallbackStoreRef.current.push(
+        ev.epicSlug,
+        ev.phase,
+        ev.featureSlug,
+        lifecycleToLogEntry("session-completed", ev),
+      );
     };
 
     const onScanComplete = (_ev: WatchLoopEventMap["scan-complete"][0]) => {
@@ -190,11 +205,23 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       refreshSessions();
     };
 
+    const onError = (ev: WatchLoopEventMap["error"][0]) => {
+      if (ev.epicSlug) {
+        fallbackStoreRef.current.push(
+          ev.epicSlug,
+          "unknown",
+          undefined,
+          lifecycleToLogEntry("error", ev),
+        );
+      }
+    };
+
     loop.on("started", onStarted);
     loop.on("stopped", onStopped);
     loop.on("session-started", onSessionStarted);
     loop.on("session-completed", onSessionCompleted);
     loop.on("scan-complete", onScanComplete);
+    loop.on("error", onError);
 
     return () => {
       loop.off("started", onStarted);
@@ -202,6 +229,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       loop.off("session-started", onSessionStarted);
       loop.off("session-completed", onSessionCompleted);
       loop.off("scan-complete", onScanComplete);
+      loop.off("error", onError);
     };
   }, [loop]);
 
