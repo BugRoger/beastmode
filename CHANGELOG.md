@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.76.0 — Watch HITL Fix (Apr 2026)
+
+- **Watch loop HITL injection** — `dispatchPhase()` in `watch.ts` now writes HITL hooks and rebases onto main before SDK dispatch, so AskUserQuestion calls respect the `hitl:` config instead of blocking for human input
+- **skipPreDispatch comment fix** — `runner.ts` comment updated to accurately describe the contract: watch factory owns steps 1-3, runner skips them
+- **Watch dispatch parity rule** — L2 context updated with explicit invariant: when adding new pre-dispatch steps to the runner, also add them to `dispatchPhase()`
+
+---
+
 ### v0.75.0 — Impl Branch Naming (Apr 2026)
 
 - **Isolated implementation branches** — Parallel worktree agents use `impl/<slug>--<feature>` branches instead of `feature/<slug>/<feature>`, eliminating git ref namespace collisions

@@ -20,6 +20,13 @@ import { ITermSessionFactory } from "../dispatch/it2.js";
 import { It2Client } from "../dispatch/it2.js";
 import { iterm2Available, IT2_SETUP_INSTRUCTIONS } from "../dispatch/it2.js";
 import * as worktree from "../git/worktree.js";
+import { rebase } from "../git/worktree.js";
+import {
+  cleanHitlSettings,
+  getPhaseHitlProse,
+  buildPreToolUseHook,
+  writeHitlSettings,
+} from "../hooks/hitl-settings.js";
 import { listEnriched } from "../manifest/store.js";
 import type { Phase } from "../types.js";
 import { run as runPipeline } from "../pipeline/runner.js";
@@ -129,6 +136,17 @@ export async function dispatchPhase(opts: {
 
   // Create worktree
   const wt = await worktree.create(worktreeSlug, { cwd: opts.projectRoot });
+
+  // -- Rebase worktree onto main (matches runner.ts step 2) ----------------
+  await rebase(opts.phase, { cwd: wt.path });
+
+  // -- Write HITL settings (matches runner.ts step 3) ----------------------
+  const config = loadConfig(opts.projectRoot);
+  const claudeDir = resolve(wt.path, ".claude");
+  cleanHitlSettings(claudeDir);
+  const hitlProse = getPhaseHitlProse(config.hitl, opts.phase);
+  const preToolUseHook = buildPreToolUseHook(hitlProse, config.hitl.model, config.hitl.timeout);
+  writeHitlSettings({ claudeDir, preToolUseHook, phase: opts.phase });
 
   const id = `${worktreeSlug}-${Date.now()}`;
   const startTime = Date.now();
