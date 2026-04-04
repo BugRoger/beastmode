@@ -89,11 +89,11 @@ describe("PanelBox title formatting", () => {
   });
 
   test("different titles produce correct formatting", () => {
-    const titles = ["EPICS", "DETAILS", "LOG"];
+    const titles = ["EPICS", "OVERVIEW", "LOG"];
     const formatted = titles.map((t) => `─── ${t} ───`);
     expect(formatted).toEqual([
       "─── EPICS ───",
-      "─── DETAILS ───",
+      "─── OVERVIEW ───",
       "─── LOG ───",
     ]);
   });
