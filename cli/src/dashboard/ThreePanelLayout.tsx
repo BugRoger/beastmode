@@ -3,6 +3,7 @@ import { Box, Text } from "ink";
 import MinSizeGate from "./MinSizeGate.js";
 import PanelBox from "./PanelBox.js";
 import NyanBanner from "./NyanBanner.js";
+import { CHROME } from "./monokai-palette.js";
 
 export interface ThreePanelLayoutProps {
   /** Watch loop running state. */
@@ -43,7 +44,7 @@ export default function ThreePanelLayout({
         {/* Outer chrome — header line with title, watch status, and clock */}
         <Box
           borderStyle="single"
-          borderColor="cyan"
+          borderColor={CHROME.border}
           flexDirection="column"
           flexGrow={1}
         >
@@ -52,11 +53,11 @@ export default function ThreePanelLayout({
             <NyanBanner />
             <Box flexDirection="column" alignItems="flex-end" justifyContent="flex-start">
               <Box>
-                <Text color={watchRunning ? "green" : "red"}>
+                <Text color={watchRunning ? CHROME.watchRunning : CHROME.watchStopped}>
                   {watchRunning ? "watch: running" : "watch: stopped"}
                 </Text>
                 <Text> </Text>
-                <Text dimColor>{clock}</Text>
+                <Text color={CHROME.muted}>{clock}</Text>
               </Box>
             </Box>
           </Box>
@@ -85,7 +86,7 @@ export default function ThreePanelLayout({
           {isShuttingDown ? (
             <Text color="yellow">shutting down...</Text>
           ) : (
-            <Text dimColor>{keyHints}</Text>
+            <Text color={CHROME.muted}>{keyHints}</Text>
           )}
         </Box>
       </Box>
