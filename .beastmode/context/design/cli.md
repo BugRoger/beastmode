@@ -68,7 +68,8 @@
 - PostToolUse command hook for `AskUserQuestion` is written alongside the PreToolUse hook — logs auto/human decisions to `artifacts/<phase>/hitl-log.md`
 - `cleanHitlSettings()` runs before `writeHitlSettings()` at each dispatch — prevents stale hooks from previous phases
 - `settings.local.json` is gitignored — generated per-dispatch, no version control noise
-- All dispatch paths (manual `beastmode <phase>` and watch loop) go through `phase.ts` which calls the HITL settings functions — uniform hook injection
+- Manual `beastmode <phase>` dispatch goes through `phase.ts` for HITL settings injection. Watch loop dispatch goes through `dispatchPhase()` in `watch.ts`, which calls the same rebase + HITL sequence (rebase, cleanHitlSettings, getPhaseHitlProse, buildPreToolUseHook, writeHitlSettings) directly — uniform hook injection across both paths
+- ALWAYS verify the watch dispatch path (`dispatchPhase()` in `watch.ts`) performs the same pre-dispatch steps as the manual runner path when `skipPreDispatch: true` is set — the flag means "runner skips steps 1-3", not "steps 1-3 were already done". When adding new pre-dispatch steps to `runner.ts`, also add them to `dispatchPhase()`
 
 ## Phase Output Contract
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
