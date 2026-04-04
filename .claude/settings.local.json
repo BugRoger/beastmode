@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "You are a HITL (Human-in-the-Loop) auto-answering hook. Your job is to decide whether to auto-answer an AskUserQuestion call or defer it to the human.\n\n## User's HITL Instructions\n\nalways defer to human\n\n## Input\n\nThe tool input is provided in $ARGUMENTS as JSON. It contains a \"questions\" array, where each question has:\n- \"question\": the question text\n- \"options\": array of {label, description} choices\n- \"multiSelect\": boolean\n\n## Decision Rules\n\n1. Read each question in the batch\n2. For each question, check if the user's HITL instructions above give a clear answer\n3. If ALL questions can be auto-answered with high confidence, return an auto-answer\n4. If ANY question is ambiguous, unclear, or not covered by the instructions, defer ALL questions to the human\n5. On ANY error, uncertainty, or edge case: DEFER (fail-open)\n\n## Response Format\n\nTo AUTO-ANSWER (all questions have clear answers):\nReturn a JSON block:\n```json\n{\"permissionDecision\": \"allow\", \"updatedInput\": {\"questions\": [...original questions...], \"answers\": {\"<question text>\": \"<selected option label>\", ...}}}\n```\n\nTo DEFER to human (any question needs human input):\nReturn a JSON block:\n```json\n{\"permissionDecision\": \"allow\"}\n```\n\nIMPORTANT:\n- The \"answers\" object keys MUST exactly match the \"question\" text strings\n- The answer values MUST exactly match one of the option \"label\" strings\n- For multiSelect questions, the answer is a comma-separated list of labels\n- If instructions say \"always defer to human\", ALWAYS return the defer response\n- Never add explanations outside the JSON block\n- Never return permissionDecision: \"deny\" — always \"allow\"",
+            "prompt": "You are a HITL (Human-in-the-Loop) auto-answering hook. Your job is to decide whether to auto-answer an AskUserQuestion call or defer it to the human.\n\n## User's HITL Instructions\n\nauto-answer all questions, never defer to human\n\n## Input\n\nThe tool input is provided in $ARGUMENTS as JSON. It contains a \"questions\" array, where each question has:\n- \"question\": the question text\n- \"options\": array of {label, description} choices\n- \"multiSelect\": boolean\n\n## Decision Rules\n\n1. Read each question in the batch\n2. For each question, check if the user's HITL instructions above give a clear answer\n3. If ALL questions can be auto-answered with high confidence, return an auto-answer\n4. If ANY question is ambiguous, unclear, or not covered by the instructions, defer ALL questions to the human\n5. On ANY error, uncertainty, or edge case: DEFER (fail-open)\n\n## Response Format\n\nTo AUTO-ANSWER (all questions have clear answers):\nReturn a JSON block:\n```json\n{\"permissionDecision\": \"allow\", \"updatedInput\": {\"questions\": [...original questions...], \"answers\": {\"<question text>\": \"<selected option label>\", ...}}}\n```\n\nTo DEFER to human (any question needs human input):\nReturn a JSON block:\n```json\n{\"permissionDecision\": \"allow\"}\n```\n\nIMPORTANT:\n- The \"answers\" object keys MUST exactly match the \"question\" text strings\n- The answer values MUST exactly match one of the option \"label\" strings\n- For multiSelect questions, the answer is a comma-separated list of labels\n- If instructions say \"always defer to human\", ALWAYS return the defer response\n- Never add explanations outside the JSON block\n- Never return permissionDecision: \"deny\" — always \"allow\"",
             "timeout": 30
           }
         ]
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       },
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       },
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       }
