@@ -9,6 +9,7 @@ import { statusCommand } from "./commands/status";
 import { cancelCommand } from "./commands/cancel";
 import { compactCommand } from "./commands/compact";
 import { dashboardCommand } from "./commands/dashboard";
+import { storeCommand } from "./commands/store";
 import { isValidPhase } from "./types";
 
 const VERSION = "0.1.0";
@@ -61,6 +62,9 @@ async function main(): Promise<void> {
       break;
     case "compact":
       await compactCommand();
+      break;
+    case "store":
+      await storeCommand(args);
       break;
     case "help":
       printHelp();

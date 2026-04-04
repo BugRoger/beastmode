@@ -6,7 +6,7 @@
 export type Phase = "design" | "plan" | "implement" | "validate" | "release" | "done" | "cancelled";
 
 /** Valid top-level CLI commands: phases + utilities */
-export type Command = Phase | "watch" | "status" | "cancel" | "compact" | "dashboard" | "help";
+export type Command = Phase | "watch" | "status" | "cancel" | "compact" | "dashboard" | "store" | "help";
 
 /** Result from a phase execution */
 export interface PhaseResult {
