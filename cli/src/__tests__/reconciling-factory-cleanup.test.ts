@@ -101,10 +101,19 @@ mock.module("../hooks/hitl-settings.js", () => ({
 mock.module("../config.js", () => ({
   loadConfig: mock(() => ({
     hitl: { model: "test", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+    "file-permissions": { timeout: 30, "claude-settings": "defer to human" },
     github: { enabled: false, "project-name": "" },
     cli: {},
   })),
   findProjectRoot: mock(() => "/tmp/test-project"),
+  getCategoryProse: mock(() => "defer to human"),
+}));
+
+mock.module("../hooks/file-permission-settings.js", () => ({
+  cleanFilePermissionSettings: mock(() => {}),
+  writeFilePermissionSettings: mock(() => {}),
+  buildFilePermissionPreToolUseHooks: mock(() => []),
+  buildFilePermissionPostToolUseHooks: mock(() => []),
 }));
 
 // Import AFTER mocking

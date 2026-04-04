@@ -38,12 +38,30 @@ const mockLoadConfig = mock((_root: string) => ({
     validate: "defer validate",
     release: "defer release",
   },
+  "file-permissions": {
+    timeout: 30,
+    "claude-settings": "defer to human on claude settings",
+  },
   github: { enabled: false },
   cli: {},
 }));
+const mockGetCategoryProse = mock(() => "defer to human");
 
 mock.module("../config.js", () => ({
   loadConfig: mockLoadConfig,
+  getCategoryProse: mockGetCategoryProse,
+}));
+
+const mockCleanFilePermissionSettings = mock((_dir: string) => {});
+const mockWriteFilePermissionSettings = mock((_opts: any) => {});
+const mockBuildFilePermissionPreToolUseHooks = mock(() => []);
+const mockBuildFilePermissionPostToolUseHooks = mock(() => []);
+
+mock.module("../hooks/file-permission-settings.js", () => ({
+  cleanFilePermissionSettings: mockCleanFilePermissionSettings,
+  writeFilePermissionSettings: mockWriteFilePermissionSettings,
+  buildFilePermissionPreToolUseHooks: mockBuildFilePermissionPreToolUseHooks,
+  buildFilePermissionPostToolUseHooks: mockBuildFilePermissionPostToolUseHooks,
 }));
 
 // Mock the SDK import to throw — forces CLI fallback path
