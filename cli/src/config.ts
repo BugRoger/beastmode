@@ -22,10 +22,16 @@ export interface HitlConfig {
   timeout: number;
 }
 
+export interface FilePermissionsConfig {
+  timeout: number;
+  "claude-settings"?: string;
+}
+
 export interface BeastmodeConfig {
   github: GitHubConfig;
   cli: CliConfig;
   hitl: HitlConfig;
+  "file-permissions": FilePermissionsConfig;
 }
 
 export const DEFAULT_HITL_PROSE = "always defer to human";
@@ -40,6 +46,10 @@ const DEFAULT_CONFIG: BeastmodeConfig = {
     validate: DEFAULT_HITL_PROSE,
     release: DEFAULT_HITL_PROSE,
     timeout: 30,
+  },
+  "file-permissions": {
+    timeout: 30,
+    "claude-settings": DEFAULT_HITL_PROSE,
   },
 };
 
@@ -123,7 +133,13 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
     timeout: (rawHitl.timeout as number) ?? DEFAULT_CONFIG.hitl.timeout,
   } satisfies HitlConfig;
 
-  return { github, cli, hitl };
+  const rawFilePerms = (raw["file-permissions"] ?? {}) as Record<string, unknown>;
+  const filePermissions: FilePermissionsConfig = {
+    timeout: (rawFilePerms.timeout as number) ?? DEFAULT_CONFIG["file-permissions"].timeout,
+    "claude-settings": (rawFilePerms["claude-settings"] as string) ?? DEFAULT_CONFIG["file-permissions"]["claude-settings"],
+  };
+
+  return { github, cli, hitl, "file-permissions": filePermissions };
 }
 
 /** Discover the project root (walks up to find .beastmode/). */

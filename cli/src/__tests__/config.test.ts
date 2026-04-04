@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { loadConfig, DEFAULT_HITL_PROSE } from "../config";
-import type { HitlConfig } from "../config";
+import type { HitlConfig, FilePermissionsConfig } from "../config";
 import { mkdtempSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -145,5 +145,24 @@ github:
       timeout: 30,
     };
     expect(stub.timeout).toBe(30);
+  });
+});
+
+describe("FilePermissionsConfig", () => {
+  test("type is usable as annotation", () => {
+    const stub: FilePermissionsConfig = {
+      timeout: 30,
+      "claude-settings": "always defer to human",
+    };
+    expect(stub.timeout).toBe(30);
+    expect(stub["claude-settings"]).toBe("always defer to human");
+  });
+
+  test("default config includes file-permissions with defaults", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "beastmode-test-"));
+    const config = loadConfig(tempDir);
+    expect(config["file-permissions"]).toBeDefined();
+    expect(config["file-permissions"].timeout).toBe(30);
+    expect(config["file-permissions"]["claude-settings"]).toBe("always defer to human");
   });
 });
