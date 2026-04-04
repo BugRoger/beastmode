@@ -39,7 +39,7 @@ Centralize all dashboard color definitions into a single Monokai Pro palette mod
 - Create: `cli/src/dashboard/monokai-palette.ts`
 - Create: `cli/src/__tests__/monokai-palette.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // cli/src/__tests__/monokai-palette.test.ts
@@ -95,12 +95,12 @@ describe("monokai-palette", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd cli && bun test src/__tests__/monokai-palette.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```typescript
 // cli/src/dashboard/monokai-palette.ts
@@ -138,12 +138,12 @@ export function isDim(phase: string): boolean {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd cli && bun test src/__tests__/monokai-palette.test.ts`
 Expected: PASS — all assertions match
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add cli/src/dashboard/monokai-palette.ts cli/src/__tests__/monokai-palette.test.ts
@@ -160,7 +160,7 @@ git commit -m "feat(monokai-palette): add centralized Monokai Pro color module"
 **Files:**
 - Modify: `cli/src/dashboard/EpicsPanel.tsx`
 
-- [ ] **Step 1: Replace local PHASE_COLOR and isDim with imports**
+- [x] **Step 1: Replace local PHASE_COLOR and isDim with imports**
 
 In `cli/src/dashboard/EpicsPanel.tsx`:
 
@@ -170,12 +170,12 @@ In `cli/src/dashboard/EpicsPanel.tsx`:
 
 The rest of the file stays the same — it already references `PHASE_COLOR[phase]` and `isDim(phase)`.
 
-- [ ] **Step 2: Run tests to verify nothing breaks**
+- [x] **Step 2: Run tests to verify nothing breaks**
 
 Run: `cd cli && bun test src/__tests__/epics-panel.test.ts`
 Expected: PASS (test file has its own local PHASE_COLOR for assertions — will be updated in Task 6)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/dashboard/EpicsPanel.tsx
@@ -192,19 +192,19 @@ git commit -m "refactor(monokai-palette): EpicsPanel imports shared palette"
 **Files:**
 - Modify: `cli/src/dashboard/OverviewPanel.tsx`
 
-- [ ] **Step 1: Replace local PHASE_COLOR with import**
+- [x] **Step 1: Replace local PHASE_COLOR with import**
 
 In `cli/src/dashboard/OverviewPanel.tsx`:
 
 1. Add import: `import { PHASE_COLOR } from "./monokai-palette.js";`
 2. Remove the local `PHASE_COLOR` constant (lines 10-18)
 
-- [ ] **Step 2: Run tests to verify nothing breaks**
+- [x] **Step 2: Run tests to verify nothing breaks**
 
 Run: `cd cli && bun test`
 Expected: No new failures
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/dashboard/OverviewPanel.tsx
@@ -221,7 +221,7 @@ git commit -m "refactor(monokai-palette): OverviewPanel imports shared palette"
 **Files:**
 - Modify: `cli/src/dashboard/tree-format.ts`
 
-- [ ] **Step 1: Replace local PHASE_COLOR with import**
+- [x] **Step 1: Replace local PHASE_COLOR with import**
 
 In `cli/src/dashboard/tree-format.ts`:
 
@@ -245,12 +245,12 @@ function colorPrefix(prefix: string, phase: string | undefined): string {
     const label = color ? chalk.hex(color)(message) : message;
 ```
 
-- [ ] **Step 2: Run tests to verify nothing breaks**
+- [x] **Step 2: Run tests to verify nothing breaks**
 
 Run: `cd cli && bun test`
 Expected: No new failures
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/dashboard/tree-format.ts
@@ -268,7 +268,7 @@ git commit -m "refactor(monokai-palette): tree-format imports shared palette wit
 - Modify: `cli/src/dashboard/PanelBox.tsx`
 - Modify: `cli/src/dashboard/ThreePanelLayout.tsx`
 
-- [ ] **Step 1: Update PanelBox border and title colors**
+- [x] **Step 1: Update PanelBox border and title colors**
 
 In `cli/src/dashboard/PanelBox.tsx`:
 
@@ -276,7 +276,7 @@ In `cli/src/dashboard/PanelBox.tsx`:
 2. Change line 34 from `<Text color="cyan">` to `<Text color={CHROME.title}>`
 3. Change line 43 from `borderColor="cyan"` to `borderColor={CHROME.border}`
 
-- [ ] **Step 2: Update ThreePanelLayout watch status, clock, and hints**
+- [x] **Step 2: Update ThreePanelLayout watch status, clock, and hints**
 
 In `cli/src/dashboard/ThreePanelLayout.tsx`:
 
@@ -286,12 +286,12 @@ In `cli/src/dashboard/ThreePanelLayout.tsx`:
 4. Change line 59 from `<Text dimColor>{clock}</Text>` to `<Text color={CHROME.muted}>{clock}</Text>`
 5. Change line 88 from `<Text dimColor>{keyHints}</Text>` to `<Text color={CHROME.muted}>{keyHints}</Text>`
 
-- [ ] **Step 3: Run tests to verify nothing breaks**
+- [x] **Step 3: Run tests to verify nothing breaks**
 
 Run: `cd cli && bun test`
 Expected: No new failures
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add cli/src/dashboard/PanelBox.tsx cli/src/dashboard/ThreePanelLayout.tsx
@@ -308,7 +308,7 @@ git commit -m "refactor(monokai-palette): PanelBox and ThreePanelLayout use Mono
 **Files:**
 - Modify: `cli/src/__tests__/epics-panel.test.ts`
 
-- [ ] **Step 1: Update PHASE_COLOR assertions in epics-panel.test.ts**
+- [x] **Step 1: Update PHASE_COLOR assertions in epics-panel.test.ts**
 
 In `cli/src/__tests__/epics-panel.test.ts`:
 
@@ -351,12 +351,12 @@ In `cli/src/__tests__/epics-panel.test.ts`:
      expect(PHASE_COLOR["cancelled"]).toBe("#FF6188");
      ```
 
-- [ ] **Step 2: Run tests to verify all pass**
+- [x] **Step 2: Run tests to verify all pass**
 
 Run: `cd cli && bun test src/__tests__/epics-panel.test.ts`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/__tests__/epics-panel.test.ts
@@ -373,7 +373,7 @@ git commit -m "test(monokai-palette): update epics-panel tests for Monokai hex v
 **Files:**
 - Modify: `cli/src/commands/status.ts`
 
-- [ ] **Step 1: Update colorPhase to use 24-bit ANSI from Monokai hex**
+- [x] **Step 1: Update colorPhase to use 24-bit ANSI from Monokai hex**
 
 In `cli/src/commands/status.ts`, the `colorPhase` function (lines 238-249) and the `renderWatchIndicator` function (lines 228-231) use ANSI escape codes. Update them to use 24-bit true-color ANSI sequences that match the Monokai Pro palette.
 
@@ -414,12 +414,12 @@ export function renderWatchIndicator(running: boolean): string {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify no new failures**
+- [x] **Step 2: Run tests to verify no new failures**
 
 Run: `cd cli && bun test`
 Expected: No new test failures (status.test.ts tests may need updating if they assert exact ANSI codes)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add cli/src/commands/status.ts
