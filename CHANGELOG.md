@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.81.0 — Flashy Dashboard (Apr 2026)
+
+- **NyanBanner** — Animated 2-line ASCII block art header with continuously cycling 6-stripe rainbow colors (80ms tick, pure color engine in `nyan-colors.ts`)
+- **OverviewPanel** — Static pipeline summary replacing dynamic DetailsPanel: phase distribution, active sessions count, git branch status
+- **Layout polish** — Inline border titles in PanelBox (custom top line, no third-party dependency), fullscreen auto-expansion via `useTerminalSize()` explicit height
+
+---
+
 ### v0.80.0 — Plan Integration Tester (Apr 2026)
 
 - **Plan-integration-tester agent** — New domain-specialist agent spawned by plan skill post-decomposition to generate BDD integration test features from PRD user stories

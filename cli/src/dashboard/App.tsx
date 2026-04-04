@@ -6,10 +6,12 @@ import type { WatchLoopEventMap, DispatchedSession } from "../dispatch/types.js"
 import type { WatchLoop } from "../commands/watch-loop.js";
 import TwoColumnLayout from "./TwoColumnLayout.js";
 import EpicsPanel from "./EpicsPanel.js";
-import DetailsPanel from "./DetailsPanel.js";
+import OverviewPanel from "./OverviewPanel.js";
+import type { GitStatus } from "./overview-panel.js";
 import LogPanel from "./LogPanel.js";
 import { useDashboardTreeState } from "./hooks/use-dashboard-tree-state.js";
 import { useDashboardKeyboard } from "./hooks/use-dashboard-keyboard.js";
+import { useTerminalSize } from "./hooks/use-terminal-size.js";
 import { getKeyHints } from "./key-hints.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { createLogger } from "../logger.js";
@@ -36,6 +38,8 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("");
+  const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+  const { rows } = useTerminalSize();
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
@@ -120,6 +124,39 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     const timer = setInterval(() => setClock(formatClock()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // --- Git status refresh ---
+  useEffect(() => {
+    const fetchGitStatus = async () => {
+      try {
+        const proc = Bun.spawn(["git", "rev-parse", "--abbrev-ref", "HEAD"], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        const branch = (await new Response(proc.stdout).text()).trim();
+
+        const diffProc = Bun.spawn(["git", "diff", "--quiet", "HEAD"], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        await diffProc.exited;
+        const dirty = diffProc.exitCode !== 0;
+
+        setGitStatus({ branch, dirty });
+      } catch {
+        // Non-fatal — will retry on next scan
+      }
+    };
+
+    fetchGitStatus();
+
+    if (loop) {
+      loop.on("scan-complete", fetchGitStatus);
+      return () => {
+        loop.off("scan-complete", fetchGitStatus);
+      };
+    }
+  }, [loop]);
 
   // --- WatchLoop event subscriptions ---
   useEffect(() => {
@@ -216,6 +253,7 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     <TwoColumnLayout
       watchRunning={watchRunning}
       clock={clock}
+      rows={rows}
       epicsSlot={
         <EpicsPanel
           epics={filteredEpics}
@@ -225,10 +263,10 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         />
       }
       detailsSlot={
-        <DetailsPanel
+        <OverviewPanel
           epics={filteredEpics}
-          selectedIndex={keyboard.nav.selectedIndex}
           activeSessions={activeSessions}
+          gitStatus={gitStatus}
         />
       }
       logSlot={<LogPanel state={treeState} />}

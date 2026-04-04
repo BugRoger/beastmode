@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Box, Text } from "ink";
 
 export interface PanelBoxProps {
-  /** Title displayed at the top of the panel. */
+  /** Title displayed inline in the top border of the panel. */
   title?: string;
   /** Children rendered inside the panel. */
   children?: ReactNode;
@@ -12,39 +12,42 @@ export interface PanelBoxProps {
   height?: string | number;
   /** Flex grow factor. */
   flexGrow?: number;
-  /** Background color for panel interior. */
-  backgroundColor?: string;
 }
 
-/** Bordered panel with optional inset title. Uses cyan single-line borders. */
+/** Bordered panel with title embedded in the top border line. Uses cyan single-line borders. */
 export default function PanelBox({
   title,
   children,
   width,
   height,
   flexGrow,
-  backgroundColor,
 }: PanelBoxProps) {
   return (
     <Box
-      borderStyle="single"
-      borderColor="cyan"
       flexDirection="column"
       width={width}
       height={height}
       flexGrow={flexGrow}
     >
-      {title && (
-        <Box paddingX={1}>
-          <Text color="cyan" bold>
-            {"─── "}
-            {title}
-            {" ───"}
-          </Text>
+      {/* Custom top border with inline title */}
+      <Box>
+        <Text color="cyan">
+          {title ? `┌─ ${title} ` : "┌"}
+          {"─".repeat(200)}
+        </Text>
+      </Box>
+
+      {/* Content area with side + bottom borders from Ink */}
+      <Box
+        borderStyle="single"
+        borderColor="cyan"
+        borderTop={false}
+        flexDirection="column"
+        flexGrow={1}
+      >
+        <Box flexDirection="column" flexGrow={1} paddingX={1}>
+          {children}
         </Box>
-      )}
-      <Box flexDirection="column" flexGrow={1} paddingX={1} backgroundColor={backgroundColor}>
-        {children}
       </Box>
     </Box>
   );

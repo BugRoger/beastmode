@@ -7,11 +7,19 @@
 - Color scheme follows existing phase convention: magenta (design), blue (plan), yellow (implement), cyan (validate), green (release), dim green (done), red (blocked), dim red (cancelled)
 
 ## Layout
-- Two-column full-height layout via TwoColumnLayout component with EpicsPanel, DetailsPanel, LogPanel as slot children: left column (40% width) stacks epics panel (60% height) above details panel (40% height), right column (60% width) shows full-height tree view
-- No outer chrome border — header is a plain Box row with "beastmode" left, watch status + clock right
-- Each panel wrapped in PanelBox with cyan single-line borders, inset titles, and dark charcoal (#2d2d2d) interior backgrounds
-- Key hints bar at bottom, below the columns
+- Three-panel split screen via ThreePanelLayout component with EpicsPanel, OverviewPanel, LogPanel as slot children: epics list (top-left ~30%), overview (top-right ~70%), log (bottom ~65% full-width)
+- k9s-style cyan chrome with single-line box-drawing characters and panel titles inset in top borders (custom top line: disable Ink borderTop, emit `┌─ TITLE ─...─┐` manually — no third-party library)
+- Outer Box receives explicit `height={rows}` from `useTerminalSize()` hook passed through App.tsx for fullscreen auto-expansion — does not rely on `height="100%"` alone
+- Watch status and clock rendered in top-right corner of NyanBanner header row
+- Key hints bar at bottom, outside the bordered area
 - Minimum terminal size enforced at 80x24 — friendly message below that threshold
+
+## Header / NyanBanner
+- Dashboard header replaced by NyanBanner component — 2-line ASCII block art rendered with continuously cycling nyan cat rainbow colors
+- Color cycling: 6-stripe palette (Red #FF0000, Orange #FF9008, Yellow #F6FF00, Green #7CFF27, Cyan #5FFBFF, Purple #6400FF), each non-space character gets color `(charIndex + tickOffset) % 6`, spaces pass through uncolored
+- Animation tick: 80ms interval via `useEffect` — matches existing spinner tick rate, both banner lines share same offset for vertical stripe coherence
+- Color engine is a pure function in `nyan-colors.ts` — stateless, independently testable
+- Watch status and clock remain right-aligned on banner row 1
 
 ## Interaction Model
 - Epics panel is the sole interactive panel — details and log are passive displays reacting to epic selection
