@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import type { EnrichedManifest } from "../manifest/store.js";
 
-// --- Shared utilities (from EpicTable.tsx) ---
+// --- Shared utilities ---
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
