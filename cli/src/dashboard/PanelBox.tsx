@@ -12,6 +12,8 @@ export interface PanelBoxProps {
   height?: string | number;
   /** Flex grow factor. */
   flexGrow?: number;
+  /** Background color for panel interior. */
+  backgroundColor?: string;
 }
 
 /** Bordered panel with optional inset title. Uses cyan single-line borders. */
@@ -21,6 +23,7 @@ export default function PanelBox({
   width,
   height,
   flexGrow,
+  backgroundColor,
 }: PanelBoxProps) {
   return (
     <Box
@@ -40,7 +43,7 @@ export default function PanelBox({
           </Text>
         </Box>
       )}
-      <Box flexDirection="column" flexGrow={1} paddingX={1}>
+      <Box flexDirection="column" flexGrow={1} paddingX={1} backgroundColor={backgroundColor}>
         {children}
       </Box>
     </Box>

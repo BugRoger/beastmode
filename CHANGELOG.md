@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.79.0 — Dashboard Full-Height Redesign (Apr 2026)
+
+- **Two-column layout** — Replaced ThreePanelLayout with full-height TwoColumnLayout (40/60 split), stacking epics and details panels in the left column with a full-height tree view on the right
+- **Panel styling** — Added backgroundColor prop to PanelBox for dark charcoal (#2d2d2d) interior backgrounds, removed outer chrome border
+- **Epic list icons** — Replaced row layout with status-aware icons (selected arrow, running spinner, phase-colored idle dot, dimmed done dot) and compact slug + phase badge format
+- **Icon selection tests** — Added pure function extraction for testable icon selection logic with full test coverage
+
+---
+
 ### v0.78.0 — Agent Refactor (Apr 2026)
 
 - **Specialized agents** — Replaced monolithic implement-implementer with three focused agents: implement-dev (TDD execution), implement-qa (verification), implement-auditor (spec compliance)

@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { getKeyHints } from "../dashboard/key-hints.js";
+import { getEpicIcon } from "../dashboard/EpicsPanel.js";
 
 
 // ---------------------------------------------------------------------------
@@ -71,17 +72,11 @@ describe("EpicsPanel logic", () => {
     expect(totalRows).toBe(1); // just (all)
   });
 
-  // Test: progress bar computation
-  test("progress bar counts completed features", () => {
-    const features = [
-      { status: "completed" },
-      { status: "pending" },
-      { status: "completed" },
-      { status: "in-progress" },
-    ];
-    const completed = features.filter((f) => f.status === "completed").length;
-    expect(completed).toBe(2);
-    expect(features.length).toBe(4);
+  // Test: no progress bars in epic rows
+  test("epic rows do not include progress bars", () => {
+    // ProgressBar component removed from EpicsPanel — rows show icon + slug + phase badge
+    const icon = getEpicIcon(false, false, "implement");
+    expect(icon).not.toHaveProperty("progress");
   });
 
   // Test: slugWidth computation
@@ -95,6 +90,111 @@ describe("EpicsPanel logic", () => {
     const epics = [{ slug: "very-long-epic-slug-name" }];
     const slugWidth = Math.max(12, ...epics.map((e) => e.slug.length)) + 2;
     expect(slugWidth).toBe(26); // 24 + 2
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 6: Epic row icon selection
+// ---------------------------------------------------------------------------
+
+describe("epic row icon selection", () => {
+  const PHASE_COLOR: Record<string, string> = {
+    design: "magenta",
+    plan: "blue",
+    implement: "yellow",
+    validate: "cyan",
+    release: "green",
+    done: "green",
+    cancelled: "red",
+  };
+
+  function isDim(phase: string): boolean {
+    return phase === "done" || phase === "cancelled";
+  }
+
+  interface IconResult {
+    char: string;
+    color: string | undefined;
+    dim: boolean;
+    spinner: boolean;
+  }
+
+  function getEpicIcon(
+    isSelected: boolean,
+    isActive: boolean,
+    phase: string,
+  ): IconResult {
+    if (isSelected) {
+      return { char: ">", color: "cyan", dim: false, spinner: false };
+    }
+    if (isActive) {
+      return { char: "", color: "yellow", dim: false, spinner: true };
+    }
+    if (isDim(phase)) {
+      return { char: "\u00b7", color: undefined, dim: true, spinner: false };
+    }
+    return {
+      char: "\u00b7",
+      color: PHASE_COLOR[phase],
+      dim: false,
+      spinner: false,
+    };
+  }
+
+  test("selected epic gets > in cyan", () => {
+    const icon = getEpicIcon(true, false, "implement");
+    expect(icon.char).toBe(">");
+    expect(icon.color).toBe("cyan");
+    expect(icon.spinner).toBe(false);
+  });
+
+  test("selected overrides running state", () => {
+    const icon = getEpicIcon(true, true, "implement");
+    expect(icon.char).toBe(">");
+    expect(icon.color).toBe("cyan");
+    expect(icon.spinner).toBe(false);
+  });
+
+  test("running non-selected epic gets spinner in yellow", () => {
+    const icon = getEpicIcon(false, true, "implement");
+    expect(icon.spinner).toBe(true);
+    expect(icon.color).toBe("yellow");
+  });
+
+  test("idle epic gets dot colored by phase", () => {
+    const icon = getEpicIcon(false, false, "implement");
+    expect(icon.char).toBe("\u00b7");
+    expect(icon.color).toBe("yellow");
+    expect(icon.spinner).toBe(false);
+  });
+
+  test("idle design epic gets magenta dot", () => {
+    const icon = getEpicIcon(false, false, "design");
+    expect(icon.char).toBe("\u00b7");
+    expect(icon.color).toBe("magenta");
+  });
+
+  test("done epic gets dimmed dot", () => {
+    const icon = getEpicIcon(false, false, "done");
+    expect(icon.char).toBe("\u00b7");
+    expect(icon.dim).toBe(true);
+    expect(icon.color).toBeUndefined();
+  });
+
+  test("cancelled epic gets dimmed dot", () => {
+    const icon = getEpicIcon(false, false, "cancelled");
+    expect(icon.char).toBe("\u00b7");
+    expect(icon.dim).toBe(true);
+  });
+
+  test("phase badge uses correct color from PHASE_COLOR map", () => {
+    expect(PHASE_COLOR["implement"]).toBe("yellow");
+    expect(PHASE_COLOR["validate"]).toBe("cyan");
+    expect(PHASE_COLOR["release"]).toBe("green");
+    expect(PHASE_COLOR["design"]).toBe("magenta");
+    expect(PHASE_COLOR["plan"]).toBe("blue");
+    expect(PHASE_COLOR["done"]).toBe("green");
+    expect(PHASE_COLOR["cancelled"]).toBe("red");
   });
 });
 

@@ -31,28 +31,35 @@ function InlineSpinner() {
   return <Text color="yellow">{SPINNER_FRAMES[frame]}</Text>;
 }
 
-function ProgressBar({
-  completed,
-  total,
-  width = 20,
-}: {
-  completed: number;
-  total: number;
-  width?: number;
-}) {
-  if (total === 0) return <Text dimColor>-</Text>;
-  const filled = Math.round((completed / total) * width);
-  const empty = width - filled;
-  return (
-    <Text>
-      <Text color="green">{"█".repeat(filled)}</Text>
-      <Text dimColor>{"░".repeat(empty)}</Text>
-      <Text>
-        {" "}
-        {completed}/{total}
-      </Text>
-    </Text>
-  );
+// --- Icon logic ---
+
+export interface IconResult {
+  char: string;
+  color: string | undefined;
+  dim: boolean;
+  spinner: boolean;
+}
+
+export function getEpicIcon(
+  isSelected: boolean,
+  isActive: boolean,
+  phase: string,
+): IconResult {
+  if (isSelected) {
+    return { char: ">", color: "cyan", dim: false, spinner: false };
+  }
+  if (isActive) {
+    return { char: "", color: "yellow", dim: false, spinner: true };
+  }
+  if (isDim(phase)) {
+    return { char: "\u00b7", color: undefined, dim: true, spinner: false };
+  }
+  return {
+    char: "\u00b7",
+    color: PHASE_COLOR[phase],
+    dim: false,
+    spinner: false,
+  };
 }
 
 // --- Props ---
@@ -101,48 +108,42 @@ export default function EpicsPanel({
         epics.map((epic, i) => {
           const rowIndex = i + 1;
           const isSelected = rowIndex === selectedIndex;
-          const completed = epic.features.filter(
-            (f) => f.status === "completed",
-          ).length;
-          const total = epic.features.length;
           const isActive = activeSessions.has(epic.slug);
           const isConfirming = cancelConfirmingSlug === epic.slug;
           const dim = isDim(epic.phase);
+          const icon = getEpicIcon(isSelected, isActive, epic.phase);
 
           return (
             <Box key={epic.slug}>
               <Box width={2}>
-                <Text color="cyan">{isSelected ? ">" : " "}</Text>
+                {icon.spinner ? (
+                  <InlineSpinner />
+                ) : (
+                  <Text
+                    color={icon.color as Parameters<typeof Text>[0]["color"]}
+                    dimColor={icon.dim}
+                  >
+                    {icon.char}
+                  </Text>
+                )}
               </Box>
               <Box width={slugWidth}>
                 <Text inverse={isSelected} dimColor={dim}>
                   {epic.slug}
                 </Text>
               </Box>
-              <Box width={12}>
-                <Text
-                  color={PHASE_COLOR[epic.phase] as Parameters<typeof Text>[0]["color"]}
-                  dimColor={dim}
-                  inverse={isSelected}
-                >
-                  {epic.phase}
-                </Text>
-              </Box>
-              <Box width={30}>
-                <ProgressBar completed={completed} total={total} />
-              </Box>
               <Box>
                 {isConfirming ? (
                   <Text color="red" bold>
                     Cancel {epic.slug}? y/n
                   </Text>
-                ) : isActive ? (
-                  <>
-                    <InlineSpinner />
-                    <Text> running</Text>
-                  </>
                 ) : (
-                  <Text dimColor>{epic.phase}</Text>
+                  <Text
+                    color={PHASE_COLOR[epic.phase] as Parameters<typeof Text>[0]["color"]}
+                    dimColor={dim}
+                  >
+                    {epic.phase}
+                  </Text>
                 )}
               </Box>
             </Box>

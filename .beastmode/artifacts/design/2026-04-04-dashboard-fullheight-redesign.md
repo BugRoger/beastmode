@@ -1,0 +1,66 @@
+---
+phase: design
+slug: dashboard-fullheight-redesign
+epic: dashboard-fullheight-redesign
+---
+
+## Problem Statement
+
+The beastmode dashboard wastes most of the terminal's vertical space, rendering as a compact widget at the top of the screen instead of filling the available area like a proper full-screen TUI application. The three-panel layout (epics + details top, log bottom) splits attention across too many regions and does not match the visual density of reference tools like k9s or lazygit.
+
+## Solution
+
+Restructure the dashboard from a three-panel layout into a two-column full-height layout. Left column (40%) stacks the epics list (60%) above a details panel (40%). Right column (60%) shows the full pipeline tree view. Both columns fill the entire terminal height. Visual styling is updated to dark charcoal backgrounds with per-panel borders and inset titles, matching the reference aesthetic. The outer chrome wrapper is removed.
+
+## User Stories
+
+1. As a user, I want the dashboard to fill the entire terminal vertically, so that I can see more information at once without wasted whitespace.
+2. As a user, I want a left panel with the epic list and context-sensitive details stacked vertically, so that I can see epic state and drill-down information in one column.
+3. As a user, I want a right panel showing the full hierarchical tree view (same as `beastmode watch`), so that I can monitor live pipeline activity alongside the epic list.
+4. As a user, I want selecting a specific epic in the left panel to filter the tree view to that epic's entries only, so that I can focus on one epic's activity without noise from others.
+5. As a user, I want the "(all)" selection to show the full unfiltered tree, so that I can see the complete pipeline activity when not focused on a specific epic.
+6. As a user, I want each panel to have its own border with inset title and dark charcoal background styling, so that the dashboard looks like a polished full-screen application.
+7. As a user, I want status-aware icons in the epic list (spinner for running, arrow for selected, dot for idle, dim for done/cancelled) with hex slug and phase badge, so that I can quickly scan epic state.
+
+## Implementation Decisions
+
+- **Layout**: Replace `ThreePanelLayout` with a `TwoColumnLayout` component. Left column 40% width, right column 60% width. Both `flexGrow={1}` to fill terminal height.
+- **Left column internal split**: Epics panel gets 60% of left column height, details panel gets 40%. Both rendered inside their own bordered `PanelBox` with inset titles.
+- **Right column**: Full-height `PanelBox` containing `LogPanel` with `TreeView`. The existing `trimTreeToTail` behavior is preserved for auto-follow.
+- **Tree filtering**: When `selectedEpicSlug` is defined (not "(all)"), filter the `TreeState` to only include the selected epic's nodes before passing to `TreeView`. When undefined, pass the full tree.
+- **Outer chrome removal**: Remove the outer `borderStyle="single"` wrapper from the layout. The header line ("beastmode" + watch status + clock) becomes a plain `<Box>` row above the columns with no border.
+- **Panel borders**: Each panel (`PanelBox`) keeps its own `borderStyle="single"` with inset title in the top border. Border color stays cyan.
+- **Background colors**: Use ANSI 256 color codes for dark charcoal backgrounds. Terminal background as base, slightly lighter charcoal (#2d2d2d / color 236) for panel interiors. Applied via Ink's `backgroundColor` prop on panel content boxes.
+- **Header styling**: Simple `<Box>` row with `paddingX={1}`, no border. "beastmode" bold cyan left, "watch: running/stopped" + clock right.
+- **Footer**: Key hints bar below the panels, dimmed, single line. Same context-sensitive behavior as today.
+- **Epic list icons**: Replace current `>` / blank prefix with status-aware icons. Selected: `>` cyan. Running (not selected): braille spinner yellow. Idle: `·` phase-colored. Done/cancelled: dim `·`. Each row shows: icon + hex slug + phase badge (colored text).
+- **Progress bar removal from epic list**: The epic rows become compact (icon + slug + phase) to fit the reference style. Progress info moves to the details panel below.
+- **Details panel**: No changes to `DetailsPanel` content — `PipelineOverview`, `SingleSessionDetail`, and `ImplementDetail` sub-views remain as-is. Just re-parented into the left column.
+- **MinSizeGate**: Keep 80x24 minimum.
+- **Alternate screen buffer**: No change — dashboard continues to use alternate screen buffer for clean entry/exit.
+
+## Testing Decisions
+
+- Snapshot tests for the new `TwoColumnLayout` component verifying correct flex proportions and slot rendering
+- Visual smoke test: run `beastmode dashboard` in an 80x24 terminal and a 200x50 terminal to verify full-height fill at both extremes
+- Tree filtering test: verify that selecting an epic filters tree state correctly, and "(all)" shows full tree
+- Existing keyboard navigation tests should pass unchanged — the interaction model is not changing
+
+## Out of Scope
+
+- Scrollable tree panel (auto-follow tail is preserved)
+- New keyboard shortcuts or navigation modes
+- Changes to `beastmode watch` or `beastmode status --watch` — this is dashboard-only
+- Epic name display (staying with hex slug)
+- Changes to the WatchLoop, dispatch, or session infrastructure
+
+## Further Notes
+
+The reference application in the screenshot appears to be a custom Ink-based TUI (possibly ralph-tui). The visual language — inset panel titles, dark charcoal backgrounds, status-aware list icons, full-height columns — is common across k9s, lazygit, and similar terminal tools. This redesign brings the beastmode dashboard in line with that aesthetic without changing any underlying functionality.
+
+## Deferred Ideas
+
+- Scrollable/navigable tree panel with vim-style keybindings
+- Panel resize with keyboard shortcuts
+- Epic name display alongside or instead of hex slug
+- Color theme configuration
