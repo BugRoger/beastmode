@@ -159,6 +159,45 @@ export function formatFilePermissionLogEntry(
   return lines.join("\n");
 }
 
+// --- Routing ---
+
+/**
+ * Route raw TOOL_INPUT/TOOL_OUTPUT to the correct formatter.
+ * Returns formatted log entry string, or null if input is unrecognized.
+ */
+export function routeAndFormat(rawInput: string, rawOutput: string): string | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawInput);
+  } catch {
+    return null;
+  }
+
+  if (parsed === null || typeof parsed !== "object") return null;
+
+  // File permission path (Write/Edit)
+  if (isFilePermissionInput(parsed)) {
+    const toolName = inferToolName(parsed);
+    const tag = detectFilePermissionTag(rawOutput);
+    return formatFilePermissionLogEntry(toolName, parsed.file_path, tag);
+  }
+
+  // AskUserQuestion path
+  const input = parsed as ToolInput;
+  if (input.questions && input.questions.length > 0) {
+    let output: ToolOutput;
+    try {
+      output = JSON.parse(rawOutput);
+    } catch {
+      return null;
+    }
+    const tag = detectTag(input);
+    return formatLogEntry(input, output, tag);
+  }
+
+  return null;
+}
+
 // --- CLI entry point ---
 
 if (import.meta.main) {
@@ -174,15 +213,10 @@ if (import.meta.main) {
       process.exit(0);
     }
 
-    const input: ToolInput = JSON.parse(rawInput);
-    const output: ToolOutput = JSON.parse(rawOutput);
-
-    if (!input.questions || input.questions.length === 0) {
+    const entry = routeAndFormat(rawInput, rawOutput);
+    if (!entry) {
       process.exit(0);
     }
-
-    const tag = detectTag(input);
-    const entry = formatLogEntry(input, output, tag);
 
     // Resolve log path relative to git repo root
     const repoRoot = execSync("git rev-parse --show-toplevel", {

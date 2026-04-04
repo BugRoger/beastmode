@@ -6,6 +6,7 @@ import {
   detectFilePermissionTag,
   inferToolName,
   formatFilePermissionLogEntry,
+  routeAndFormat,
 } from "../hooks/hitl-log";
 import type { ToolInput, ToolOutput } from "../hooks/hitl-log";
 
@@ -241,5 +242,47 @@ describe("formatFilePermissionLogEntry", () => {
     expect(entry).not.toContain("### Q:");
     expect(entry).not.toContain("**Options:**");
     expect(entry).not.toContain("**Answer:**");
+  });
+});
+
+// --- CLI routing logic ---
+
+describe("routeAndFormat", () => {
+  test("routes AskUserQuestion input to HITL formatter", () => {
+    const input = { questions: [{ question: "Which DB?", options: [{ label: "PG" }] }] };
+    const output = { answers: { "Which DB?": "PG" } };
+    const result = routeAndFormat(JSON.stringify(input), JSON.stringify(output));
+    expect(result).not.toBeNull();
+    expect(result).toContain("### Q: Which DB?");
+    expect(result).toContain("**Tag:** human");
+  });
+
+  test("routes Write input to file permission formatter", () => {
+    const input = { file_path: ".claude/settings.json", content: "{}" };
+    const output = "File written successfully";
+    const result = routeAndFormat(JSON.stringify(input), output);
+    expect(result).not.toBeNull();
+    expect(result).toContain("**Tool:** Write");
+    expect(result).toContain("**File:** .claude/settings.json");
+    expect(result).toContain("**Tag:** auto-allow");
+  });
+
+  test("routes Edit input to file permission formatter", () => {
+    const input = { file_path: ".claude/settings.json", old_string: "a", new_string: "b" };
+    const output = "Edit applied";
+    const result = routeAndFormat(JSON.stringify(input), output);
+    expect(result).not.toBeNull();
+    expect(result).toContain("**Tool:** Edit");
+    expect(result).toContain("**Tag:** auto-allow");
+  });
+
+  test("returns null for unparseable input", () => {
+    const result = routeAndFormat("not json{{{", "output");
+    expect(result).toBeNull();
+  });
+
+  test("returns null for unknown input shape", () => {
+    const result = routeAndFormat(JSON.stringify({ random: "data" }), "output");
+    expect(result).toBeNull();
   });
 });
