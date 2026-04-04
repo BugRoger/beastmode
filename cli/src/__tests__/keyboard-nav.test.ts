@@ -344,3 +344,46 @@ describe("toggle all logic", () => {
     expect(showAll).toBe(false);
   });
 });
+
+describe("verbosity cycling logic", () => {
+  test("'v' cycles verbosity 0 -> 1", () => {
+    let verbosity = 0;
+    const input = "v";
+    if (input === "v" || input === "V") verbosity = (verbosity + 1) % 4;
+    expect(verbosity).toBe(1);
+  });
+
+  test("'V' cycles verbosity 1 -> 2", () => {
+    let verbosity = 1;
+    const input = "V";
+    if (input === "v" || input === "V") verbosity = (verbosity + 1) % 4;
+    expect(verbosity).toBe(2);
+  });
+
+  test("'v' wraps verbosity 3 -> 0", () => {
+    let verbosity = 3;
+    const input = "v";
+    if (input === "v" || input === "V") verbosity = (verbosity + 1) % 4;
+    expect(verbosity).toBe(0);
+  });
+
+  test("'v' is ignored in filter mode", () => {
+    let verbosity = 0;
+    const mode = "filter";
+    const input = "v";
+    if (mode === "normal" && (input === "v" || input === "V")) {
+      verbosity = (verbosity + 1) % 4;
+    }
+    expect(verbosity).toBe(0);
+  });
+
+  test("'v' is ignored in confirm mode", () => {
+    let verbosity = 0;
+    const mode = "confirm";
+    const input = "v";
+    if (mode === "normal" && (input === "v" || input === "V")) {
+      verbosity = (verbosity + 1) % 4;
+    }
+    expect(verbosity).toBe(0);
+  });
+});
