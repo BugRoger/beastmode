@@ -5,7 +5,7 @@
 - ALWAYS verify worktree context before modifying files
 - NEVER guess file paths — verify they exist first
 - Agents commit per task on the impl branch (`impl/<slug>--<feature-name>`) — never on the worktree branch
-- Three agent roles: implementer (TDD execution), spec-reviewer (trust-nothing verification), quality-reviewer (self-contained quality checklist)
+- Three agent roles: implement-dev (TDD execution), implement-qa (trust-nothing verification), implement-auditor (self-contained quality checklist)
 - ALWAYS add new worktree functions to all mock objects in tests — mock gaps cause test failures discovered only after implementation is complete
 - Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
 
@@ -61,7 +61,7 @@
 context/implement/write-plan.md
 
 ## Agent Review Pipeline
-- Three dedicated agent files: implementer.md (TDD), spec-reviewer.md (trust-nothing verification), quality-reviewer.md (self-contained checklist)
+- Three dedicated plugin agent files: implement-dev.md (TDD), implement-qa.md (trust-nothing verification), implement-auditor.md (self-contained checklist)
 - Four-status model replaces three-tier deviations: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED
 - Two-stage ordered review: spec compliance must pass before quality review runs
 - Review retry loop: max 2 attempts before marking task as blocked and escalating to user
