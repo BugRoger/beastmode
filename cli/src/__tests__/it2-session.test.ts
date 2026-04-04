@@ -636,4 +636,28 @@ describe("ITermSessionFactory", () => {
     );
     expect(createTabCalls).toHaveLength(0);
   });
+
+  test("stores TTY for pane session at dispatch time", async () => {
+    // Mock client that returns a TTY for the created pane
+    const ttyClient = createMockIt2Client();
+    ttyClient.getSessionTty = async (sessionId: string) => {
+      ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+      if (sessionId === "tab-1") return "/dev/ttys003";
+      return null;
+    };
+
+    const factory = new ITermSessionFactory(ttyClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
+
+    // Verify getSessionTty was called for the pane
+    const ttyCalls = ttyClient.calls.filter((c) => c.method === "getSessionTty");
+    expect(ttyCalls).toHaveLength(1);
+  });
 });

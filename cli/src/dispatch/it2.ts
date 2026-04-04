@@ -448,15 +448,18 @@ export class ITermSessionFactory implements SessionFactory {
   private watchers = new Map<string, FSWatcher>(); // session id -> fs watcher
   private watchTimeoutMs: number;
   private reconciled = false;
+  private ttyMap = new Map<string, string>(); // pane session ID -> TTY device path
+  private spawnFn: SpawnFn;
 
   constructor(
     client: IIt2Client,
-    opts?: { watchTimeoutMs?: number; createWorktree?: CreateWorktreeFn },
+    opts?: { watchTimeoutMs?: number; createWorktree?: CreateWorktreeFn; spawn?: SpawnFn },
   ) {
     this.client = client;
     this.createWorktree =
       opts?.createWorktree ?? ((slug, o) => worktree.create(slug, o));
     this.watchTimeoutMs = opts?.watchTimeoutMs ?? 3_600_000; // 60 min default
+    this.spawnFn = opts?.spawn ?? ((cmd, spawnOpts) => Bun.spawn(cmd, spawnOpts));
   }
 
   /**
@@ -550,6 +553,12 @@ export class ITermSessionFactory implements SessionFactory {
 
     // Store pane ID
     this.panes.set(paneKey, paneSessionId);
+
+    // Acquire TTY for liveness checks
+    const tty = await this.client.getSessionTty(paneSessionId);
+    if (tty) {
+      this.ttyMap.set(paneSessionId, tty);
+    }
 
     // cd into the worktree, then run the beastmode command
     const command = `cd ${wt.path} && beastmode ${phase} ${args.join(" ")}`;
