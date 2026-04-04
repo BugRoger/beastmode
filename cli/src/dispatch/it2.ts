@@ -450,6 +450,7 @@ export class ITermSessionFactory implements SessionFactory {
   private reconciled = false;
   private ttyMap = new Map<string, string>(); // pane session ID -> TTY device path
   private spawnFn: SpawnFn;
+  private resolvers = new Map<string, (result: SessionResult) => void>(); // dispatch session ID -> resolve fn
 
   constructor(
     client: IIt2Client,
@@ -663,6 +664,14 @@ export class ITermSessionFactory implements SessionFactory {
     await this.client.setBadge(tabSessionId, text);
   }
 
+  /** Force-resolve a session's watchForMarker promise. Returns true if resolved, false if session not found. */
+  forceResolveSession(sessionId: string, result: SessionResult): boolean {
+    const resolver = this.resolvers.get(sessionId);
+    if (!resolver) return false;
+    resolver(result);
+    return true;
+  }
+
   // -------------------------------------------------------------------------
   // Private methods — shared artifact-watching logic
   // -------------------------------------------------------------------------
@@ -678,12 +687,20 @@ export class ITermSessionFactory implements SessionFactory {
     broadMatch: boolean,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
+      // Store resolver for external resolution (dead-man switch)
+      this.resolvers.set(sessionId, (result: SessionResult) => {
+        this.resolvers.delete(sessionId);
+        this.cleanupWatcher(sessionId);
+        resolvePromise(result);
+      });
+
       // Check if an output.json already exists that is newer than dispatch time.
       const existing = this.findOutputJson(artifactDir, startTime, outputSuffix)
         ?? (broadMatch ? this.findOutputJsonBroad(artifactDir, epicSlug, startTime) : null);
       if (existing) {
         const result = this.readOutputJson(existing, startTime);
         if (result) {
+          this.resolvers.delete(sessionId);
           resolvePromise(result);
           return;
         }
@@ -713,6 +730,7 @@ export class ITermSessionFactory implements SessionFactory {
           const result = this.readOutputJson(filePath, startTime);
           if (result) {
             cleanup();
+            this.resolvers.delete(sessionId);
             resolvePromise(result);
           }
         });
@@ -726,6 +744,7 @@ export class ITermSessionFactory implements SessionFactory {
             clearInterval(pollInterval);
             clearTimeout(timeout);
             const result = this.readOutputJson(found, startTime);
+            this.resolvers.delete(sessionId);
             resolvePromise(
               result ?? {
                 success: false,
@@ -742,8 +761,13 @@ export class ITermSessionFactory implements SessionFactory {
           const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
           if (broadMatch) {
             const result = this.readOutputJson(broadMatch, startTime);
-            if (result) { resolvePromise(result); return; }
+            if (result) {
+              this.resolvers.delete(sessionId);
+              resolvePromise(result);
+              return;
+            }
           }
+          this.resolvers.delete(sessionId);
           resolvePromise({
             success: false,
             exitCode: 1,
@@ -771,8 +795,13 @@ export class ITermSessionFactory implements SessionFactory {
         const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
         if (broadMatch) {
           const result = this.readOutputJson(broadMatch, startTime);
-          if (result) { resolvePromise(result); return; }
+          if (result) {
+            this.resolvers.delete(sessionId);
+            resolvePromise(result);
+            return;
+          }
         }
+        this.resolvers.delete(sessionId);
         resolvePromise({
           success: false,
           exitCode: 1,

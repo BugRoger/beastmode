@@ -660,4 +660,39 @@ describe("ITermSessionFactory", () => {
     const ttyCalls = ttyClient.calls.filter((c) => c.method === "getSessionTty");
     expect(ttyCalls).toHaveLength(1);
   });
+
+  test("external promise resolution completes watchForMarker as failed", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 10000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+
+    // Force-resolve the session externally
+    const resolved = factory.forceResolveSession(handle.id, {
+      success: false,
+      exitCode: 1,
+      durationMs: 100,
+    });
+    expect(resolved).toBe(true);
+
+    const result = await handle.promise;
+    expect(result.success).toBe(false);
+    expect(result.exitCode).toBe(1);
+  });
+
+  test("forceResolveSession returns false for unknown session", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const resolved = factory.forceResolveSession("nonexistent-id", {
+      success: false,
+      exitCode: 1,
+      durationMs: 0,
+    });
+    expect(resolved).toBe(false);
+  });
 });
