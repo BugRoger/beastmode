@@ -84,13 +84,35 @@
     "format": ["progress-bar"],
     "publishQuiet": true
   },
+  "file-permissions": {
+    "paths": [
+      "features/file-permissions-config.feature",
+      "features/file-permissions-hooks.feature",
+      "features/file-permissions-logging.feature",
+      "features/file-permissions-lifecycle.feature"
+    ],
+    "import": [
+      "features/step_definitions/pipeline.steps.ts",
+      "features/step_definitions/hitl.steps.ts",
+      "features/step_definitions/error-resilience.steps.ts",
+      "features/step_definitions/file-permissions.steps.ts",
+      "features/support/world.ts",
+      "features/support/hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
   "pipeline-all": {
     "paths": [
       "features/pipeline-happy-path.feature",
       "features/regression-loop.feature",
       "features/design-slug-rename.feature",
       "features/pipeline-error-resilience.feature",
-      "features/hitl-hook-lifecycle.feature"
+      "features/hitl-hook-lifecycle.feature",
+      "features/file-permissions-config.feature",
+      "features/file-permissions-hooks.feature",
+      "features/file-permissions-logging.feature",
+      "features/file-permissions-lifecycle.feature"
     ],
     "import": [
       "features/step_definitions/pipeline.steps.ts",
@@ -98,6 +120,7 @@
       "features/step_definitions/slug-rename.steps.ts",
       "features/step_definitions/error-resilience.steps.ts",
       "features/step_definitions/hitl.steps.ts",
+      "features/step_definitions/file-permissions.steps.ts",
       "features/support/world.ts",
       "features/support/hooks.ts"
     ],
