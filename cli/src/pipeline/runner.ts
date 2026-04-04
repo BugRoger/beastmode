@@ -27,6 +27,7 @@ import { syncGitHub } from "../github/sync.js";
 import { syncGitHubForEpic } from "../github/sync.js";
 import { discoverGitHub } from "../github/discovery.js";
 import type { ResolvedGitHub } from "../github/discovery.js";
+import { ensureEarlyIssues } from "../github/early-issues.js";
 import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "../manifest/pure.js";
 import { createTag } from "../git/tags.js";
 import {
@@ -162,6 +163,25 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       logger.warn(`impl branch creation failed: ${message}`);
+    }
+  }
+
+  // -- Step 3.5: github.early-issues -----------------------------------------
+  // Create stub GitHub issues before dispatch so issue numbers are available
+  // for commit references from the first commit.
+  if (!config.skipPreDispatch) {
+    try {
+      await ensureEarlyIssues({
+        phase: config.phase,
+        epicSlug,
+        projectRoot: config.projectRoot,
+        config: config.config,
+        resolved: config.resolved,
+        logger,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn(`early issue creation failed (non-blocking): ${message}`);
     }
   }
 
