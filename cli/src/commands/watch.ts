@@ -7,7 +7,7 @@
 
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
-import { loadConfig } from "../config.js";
+import { loadConfig, getCategoryProse } from "../config.js";
 import { createLogger } from "../logger.js";
 import type { Logger } from "../logger.js";
 import { WatchLoop, attachLoggerSubscriber } from "./watch-loop.js";
@@ -27,6 +27,12 @@ import {
   buildPreToolUseHook,
   writeHitlSettings,
 } from "../hooks/hitl-settings.js";
+import {
+  writeFilePermissionSettings,
+  cleanFilePermissionSettings,
+  buildFilePermissionPreToolUseHooks,
+  buildFilePermissionPostToolUseHooks,
+} from "../hooks/file-permission-settings.js";
 import { listEnriched } from "../manifest/store.js";
 import type { Phase } from "../types.js";
 import { run as runPipeline } from "../pipeline/runner.js";
@@ -147,6 +153,13 @@ export async function dispatchPhase(opts: {
   const hitlProse = getPhaseHitlProse(config.hitl, opts.phase);
   const preToolUseHook = buildPreToolUseHook(hitlProse, config.hitl.timeout);
   writeHitlSettings({ claudeDir, preToolUseHook, phase: opts.phase });
+
+  // File-permission hooks
+  cleanFilePermissionSettings(claudeDir);
+  const fpProse = getCategoryProse(config["file-permissions"], "claude-settings");
+  const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, config["file-permissions"].timeout);
+  const fpPostToolUseHooks = buildFilePermissionPostToolUseHooks(opts.phase);
+  writeFilePermissionSettings({ claudeDir, preToolUseHooks: fpPreToolUseHooks, postToolUseHooks: fpPostToolUseHooks });
 
   const id = `${worktreeSlug}-${Date.now()}`;
   const startTime = Date.now();
