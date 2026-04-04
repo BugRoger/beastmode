@@ -6,7 +6,7 @@
  * flow through the ring buffer.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { WatchLoop } from "../commands/watch-loop.js";
 import type { WatchDeps } from "../commands/watch-loop.js";
 import type { EnrichedManifest } from "../manifest/store.js";

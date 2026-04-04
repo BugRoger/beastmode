@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, afterEach, it } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, it } from "vitest";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { resolve } from "path";
 import { list } from "../manifest/store.js";
 
-const PHASE_TS_PATH = resolve(import.meta.dir, "../commands/phase.ts");
+const PHASE_TS_PATH = resolve(import.meta.dirname, "../commands/phase.ts");
 const phaseSource = readFileSync(PHASE_TS_PATH, "utf-8");
 
 describe("uniform dispatch — all phases use interactive runner", () => {
@@ -80,7 +80,7 @@ describe("release teardown simplified", () => {
 
 describe("SDK runner removed", () => {
   test("sdk-runner.ts is deleted", () => {
-    const sdkRunnerPath = resolve(import.meta.dir, "../runners/sdk-runner.ts");
+    const sdkRunnerPath = resolve(import.meta.dirname, "../runners/sdk-runner.ts");
     expect(existsSync(sdkRunnerPath)).toBe(false);
   });
 
@@ -123,7 +123,7 @@ describe("phase command is simplified", () => {
 });
 
 describe("manifest list() FIFO ordering", () => {
-  const FIFO_ROOT = resolve(import.meta.dir, "../../.test-fifo-tmp");
+  const FIFO_ROOT = resolve(import.meta.dirname, "../../.test-fifo-tmp");
 
   beforeEach(() => {
     rmSync(FIFO_ROOT, { recursive: true, force: true });

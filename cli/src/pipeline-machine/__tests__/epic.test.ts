@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { createActor } from "xstate";
 import { epicMachine } from "../epic";
 import type { EpicContext } from "../types";

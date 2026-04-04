@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { createActor } from "xstate";
 import { epicMachine } from "../pipeline-machine/epic.js";
 import type { EpicContext } from "../pipeline-machine/types.js";

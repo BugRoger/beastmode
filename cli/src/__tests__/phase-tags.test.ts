@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import { execSync } from "child_process";
@@ -11,7 +11,7 @@ import {
   listTags,
 } from "../git/tags";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-tags");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-phase-tags");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) {

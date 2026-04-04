@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { existsSync, rmSync, mkdirSync, writeFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 import {
@@ -15,7 +15,7 @@ import {
   getPendingFeatures,
 } from "../manifest/pure";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-manifest");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-manifest");
 
 function cleanup(): void {
   if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });

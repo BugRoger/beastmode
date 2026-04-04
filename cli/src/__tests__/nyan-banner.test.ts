@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { NYAN_PALETTE, nyanColor } from "../dashboard/nyan-colors.js";
 
 describe("NYAN_PALETTE", () => {

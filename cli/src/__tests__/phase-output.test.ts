@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import {
@@ -12,7 +12,7 @@ import {
   filenameMatchesEpic,
 } from "../artifacts/reader";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-phase-output");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-phase-output");
 
 function setupTestRoot(): void {
   if (existsSync(TEST_ROOT)) {
@@ -380,7 +380,7 @@ describe("filenameMatchesEpic", () => {
 });
 
 describe("findWorktreeOutputFile with epicSlug filter", () => {
-  const WT_ROOT = resolve(import.meta.dir, "../../.test-worktree-output");
+  const WT_ROOT = resolve(import.meta.dirname, "../../.test-worktree-output");
 
   function writeArtifact(phase: string, filename: string, content: string): void {
     writeFileSync(resolve(WT_ROOT, ".beastmode", "artifacts", phase, filename), content);
@@ -430,7 +430,7 @@ describe("findWorktreeOutputFile with epicSlug filter", () => {
 });
 
 describe("loadWorktreePhaseOutput with epicSlug filter", () => {
-  const WT_ROOT = resolve(import.meta.dir, "../../.test-worktree-load");
+  const WT_ROOT = resolve(import.meta.dirname, "../../.test-worktree-load");
 
   function writeArtifact(phase: string, filename: string, content: string): void {
     writeFileSync(resolve(WT_ROOT, ".beastmode", "artifacts", phase, filename), content);

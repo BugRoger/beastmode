@@ -5,7 +5,7 @@
  * so no real GitHub CLI calls or filesystem access occurs.
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach } from "vitest";
 import type { ResolvedGitHub } from "../github/discovery";
 
 // --- Mock state ---
@@ -51,7 +51,7 @@ function callsTo(fn: string): { fn: string; args: unknown[] }[] {
 }
 
 // Mock all dependencies BEFORE importing the module under test
-mock.module("../config", () => ({
+vi.mock("../config", () => ({
   loadConfig: (...args: unknown[]) => {
     trackCall("loadConfig", ...args);
     return {
@@ -62,14 +62,14 @@ mock.module("../config", () => ({
   },
 }));
 
-mock.module("../github/discovery", () => ({
+vi.mock("../github/discovery", () => ({
   discoverGitHub: async (...args: unknown[]) => {
     trackCall("discoverGitHub", ...args);
     return mockState.discoveryResult;
   },
 }));
 
-mock.module("../manifest/store", () => ({
+vi.mock("../manifest/store", () => ({
   load: (...args: unknown[]) => {
     trackCall("store.load", ...args);
     return mockState.manifest ? JSON.parse(JSON.stringify(mockState.manifest)) : undefined;
@@ -87,7 +87,7 @@ mock.module("../manifest/store", () => ({
   },
 }));
 
-mock.module("../manifest/pure", () => ({
+vi.mock("../manifest/pure", () => ({
   setGitHubEpic: (manifest: unknown, epicNumber: unknown, repo: unknown) => {
     trackCall("setGitHubEpic", manifest, epicNumber, repo);
     return { ...(manifest as Record<string, unknown>), github: { epic: epicNumber, repo } };
@@ -99,7 +99,7 @@ mock.module("../manifest/pure", () => ({
 }));
 
 // Mock the gh module to prevent real CLI calls
-mock.module("../github/cli", () => ({
+vi.mock("../github/cli", () => ({
   ghIssueCreate: async () => 42,
   ghIssueEdit: async () => true,
   ghIssueClose: async () => true,

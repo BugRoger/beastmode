@@ -1,4 +1,4 @@
-import { describe, test, expect, spyOn } from "bun:test";
+import { describe, test, expect, vi } from "vitest";
 import {
   CmuxClient,
   CmuxError,
@@ -459,7 +459,7 @@ describe("CmuxClient", () => {
 
 describe("cmuxAvailable", () => {
   test("returns true when ping succeeds", async () => {
-    const spy = spyOn(Bun, "spawn").mockReturnValue(
+    const spy = vi.spyOn(Bun, "spawn").mockReturnValue(
       mockProc("PONG\n", "", 0) as any,
     );
     try {
@@ -470,7 +470,7 @@ describe("cmuxAvailable", () => {
   });
 
   test("returns false when ping fails", async () => {
-    const spy = spyOn(Bun, "spawn").mockImplementation(() => {
+    const spy = vi.spyOn(Bun, "spawn").mockImplementation(() => {
       throw new Error("spawn failed");
     });
     try {

@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { getKeyHints } from "../dashboard/key-hints.js";
 import { getEpicIcon } from "../dashboard/EpicsPanel.js";
 

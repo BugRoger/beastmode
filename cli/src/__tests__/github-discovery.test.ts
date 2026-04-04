@@ -5,7 +5,7 @@
  * temporary directory for cache file operations.
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -20,7 +20,7 @@ let mockFieldDiscover:
   | ((projectId: string, fieldName: string) => Promise<{ fieldId: string; options: Record<string, string> } | undefined>)
   | undefined;
 
-mock.module("../github/cli", () => ({
+vi.mock("../github/cli", () => ({
   ghRepoDiscover: async (...args: unknown[]) => {
     return mockRepoDiscover ? mockRepoDiscover() : undefined;
   },

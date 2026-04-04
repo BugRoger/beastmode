@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { buildStatusRows, formatTable, formatFeatures, formatStatus, renderStatusTable, formatWatchHeader, renderStatusScreen, renderWatchIndicator, buildSnapshot, detectChanges, highlightRow, formatWaveIndicator, buildVerboseWaveRows } from "../commands/status";
 import type { WatchMeta, StatusSnapshot } from "../commands/status";
 import type { EnrichedManifest } from "../manifest/store";

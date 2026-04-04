@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { toFlatTreeState } from "../tree-view/adapter.js";
 import { createTreeState, addEntry, openPhase } from "../tree-view/tree-state.js";
 

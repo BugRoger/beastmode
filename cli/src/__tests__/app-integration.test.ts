@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import type { EnrichedManifest, ManifestFeature } from "../manifest/store.js";
 
 import { buildTreeState } from "../dashboard/hooks/use-dashboard-tree-state.js";

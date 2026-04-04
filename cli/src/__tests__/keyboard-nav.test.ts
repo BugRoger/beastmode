@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { cancelEpicAction } from "../dashboard/actions/cancel-epic";
 import type { Logger } from "../logger";
 

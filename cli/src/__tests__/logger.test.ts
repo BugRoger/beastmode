@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { createLogger, createNullLogger } from "../logger";
 import type { Logger, LogContext } from "../logger";
 

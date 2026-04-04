@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { buildTreeState } from "../dashboard/hooks/use-dashboard-tree-state.js";
 import type { LogEntry } from "../dispatch/factory.js";
 

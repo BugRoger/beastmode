@@ -1,9 +1,9 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const PHASE_TS = readFileSync(resolve(import.meta.dir, "../commands/phase.ts"), "utf-8");
-const RUNNER_TS = readFileSync(resolve(import.meta.dir, "../pipeline/runner.ts"), "utf-8");
+const PHASE_TS = readFileSync(resolve(import.meta.dirname, "../commands/phase.ts"), "utf-8");
+const RUNNER_TS = readFileSync(resolve(import.meta.dirname, "../pipeline/runner.ts"), "utf-8");
 
 describe("design abandon guard — primary gate in phase.ts", () => {
   test("imports loadWorktreePhaseOutput from artifacts/reader", () => {

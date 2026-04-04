@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "bun run src/index.ts",
-    "test": "bash scripts/test.sh",
+    "test": "bun --bun vitest run",
+    "test:watch": "bun --bun vitest",
     "cucumber": "bun --bun node_modules/.bin/cucumber-js",
     "test:integration": "bun --bun node_modules/.bin/cucumber-js",
     "typecheck": "bun x tsc --noEmit"
@@ -24,6 +25,7 @@
     "@types/bun": "latest",
     "@types/react": "^19.0.0",
     "ink-testing-library": "^4.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.2"
   }
 }

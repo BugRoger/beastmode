@@ -7,7 +7,7 @@
  * Also tests that attachLoggerSubscriber routes events to the logger.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { WatchLoop, attachLoggerSubscriber } from "../commands/watch-loop";
 import type { WatchDeps } from "../commands/watch-loop";
 import type { EnrichedManifest } from "../manifest/store";

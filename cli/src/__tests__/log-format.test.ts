@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import chalk from "chalk";
 import { formatLogLine } from "../logger";
 import type { LogLevel, LogContext } from "../logger";

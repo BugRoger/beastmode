@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { WatchLoop } from "../commands/watch-loop.js";
@@ -9,7 +9,7 @@ import { SdkSessionFactory } from "../dispatch/factory.js";
 import { DispatchTracker } from "../dispatch/tracker.js";
 import { acquireLock, releaseLock, readLockfile } from "../lockfile.js";
 
-const TEST_ROOT = resolve(import.meta.dir, "../../.test-watch-tmp");
+const TEST_ROOT = resolve(import.meta.dirname, "../../.test-watch-tmp");
 
 function setupTestRoot(): void {
   rmSync(TEST_ROOT, { recursive: true, force: true });

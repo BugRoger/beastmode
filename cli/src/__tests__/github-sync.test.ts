@@ -6,7 +6,7 @@
  * blast-replace, feature lifecycle, and warn-and-continue behavior.
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach } from "vitest";
 
 // --- Mock infrastructure ---
 
@@ -34,7 +34,7 @@ function callsTo(fn: string): { fn: string; args: unknown[] }[] {
 }
 
 // Mock the gh module BEFORE importing github-sync
-mock.module("../github/cli", () => ({
+vi.mock("../github/cli", () => ({
   ghIssueCreate: async (...args: unknown[]) => {
     trackCall("ghIssueCreate", ...args);
     if (mockErrors.ghIssueCreate) return undefined;
@@ -115,7 +115,8 @@ function makeConfig(overrides: Partial<BeastmodeConfig["github"]> = {}): Beastmo
       ...overrides,
     },
     cli: { interval: 60 },
-    hitl: { model: "haiku", timeout: 30 },
+    hitl: { timeout: 30 },
+    "file-permissions": { timeout: 60, "claude-settings": "" },
   };
 }
 

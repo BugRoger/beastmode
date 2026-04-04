@@ -1,9 +1,9 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { randomHex, slugify } from "../commands/phase";
 
-const PHASE_TS_PATH = resolve(import.meta.dir, "../commands/phase.ts");
+const PHASE_TS_PATH = resolve(import.meta.dirname, "../commands/phase.ts");
 
 describe("randomHex function", () => {
   test("randomHex is exported", () => {

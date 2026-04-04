@@ -10,7 +10,7 @@
  * double-dispatch even when rescans interleave at await points.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { WatchLoop } from "../commands/watch-loop";
 import type { WatchDeps } from "../commands/watch-loop";
 import type { EnrichedManifest } from "../manifest/store";

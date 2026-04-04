@@ -1,4 +1,4 @@
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach, type Mock } from "vitest";
 
 /**
  * Unit tests for the gh CLI helper.
@@ -71,11 +71,11 @@ describe("gh() base function", () => {
 // ghJson() — mock gh() to control stdout
 // ---------------------------------------------------------------------------
 describe("ghJson()", () => {
-  let mockGh: ReturnType<typeof mock>;
+  let mockGh: Mock;
 
   beforeEach(() => {
-    mockGh = mock();
-    mock.module("../github/cli", () => ({
+    mockGh = vi.fn();
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghJson: async <T = unknown>(
         args: string[],
@@ -153,11 +153,11 @@ describe("ghJson()", () => {
 // ghGraphQL() — argument construction and .data extraction
 // ---------------------------------------------------------------------------
 describe("ghGraphQL()", () => {
-  let mockGh: ReturnType<typeof mock>;
+  let mockGh: Mock;
 
   beforeEach(() => {
-    mockGh = mock();
-    mock.module("../github/cli", () => ({
+    mockGh = vi.fn();
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghGraphQL: async <T = unknown>(
         query: string,
@@ -301,11 +301,11 @@ describe("ghIssueCreate() URL parsing", () => {
 // ghIssueCreate() — full mock test
 // ---------------------------------------------------------------------------
 describe("ghIssueCreate()", () => {
-  let mockGh: ReturnType<typeof mock>;
+  let mockGh: Mock;
 
   beforeEach(() => {
-    mockGh = mock();
-    mock.module("../github/cli", () => ({
+    mockGh = vi.fn();
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghIssueCreate: async (
         repo: string,
@@ -471,11 +471,11 @@ describe("ghIssueEdit() body parameter", () => {
 // ghIssueClose() — mock test
 // ---------------------------------------------------------------------------
 describe("ghIssueClose()", () => {
-  let mockGh: ReturnType<typeof mock>;
+  let mockGh: Mock;
 
   beforeEach(() => {
-    mockGh = mock();
-    mock.module("../github/cli", () => ({
+    mockGh = vi.fn();
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghIssueClose: async (
         repo: string,
@@ -704,16 +704,16 @@ describe("ghFieldDiscover() parsing", () => {
 // Warn-and-continue guarantee — no function ever throws
 // ---------------------------------------------------------------------------
 describe("warn-and-continue: no function throws", () => {
-  let mockGh: ReturnType<typeof mock>;
+  let mockGh: Mock;
 
   beforeEach(() => {
     // Mock gh to simulate various failure modes
-    mockGh = mock();
+    mockGh = vi.fn();
   });
 
   test("ghJson does not throw on rejection", async () => {
-    mockGh.mockReturnValue(Promise.reject(new Error("spawn failed")));
-    mock.module("../github/cli", () => ({
+    mockGh.mockRejectedValue(new Error("spawn failed"));
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghJson: async <T = unknown>(
         args: string[],
@@ -740,8 +740,8 @@ describe("warn-and-continue: no function throws", () => {
   });
 
   test("ghGraphQL does not throw on rejection", async () => {
-    mockGh.mockReturnValue(Promise.reject(new Error("network error")));
-    mock.module("../github/cli", () => ({
+    mockGh.mockRejectedValue(new Error("network error"));
+    vi.doMock("../github/cli", () => ({
       gh: mockGh,
       ghGraphQL: async <T = unknown>(
         query: string,

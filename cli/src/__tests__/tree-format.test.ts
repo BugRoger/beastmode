@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import chalk from "chalk";
 import { formatTreeLogLine } from "../tree-view/format.js";
 import type { LogLevel } from "../logger.js";

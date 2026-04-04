@@ -1,4 +1,5 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect } from "vitest";
+import { vi } from "vitest";
 import type { SessionFactory, SessionCreateOpts, SessionHandle } from "../dispatch/factory.js";
 import type { SessionResult } from "../dispatch/types.js";
 
@@ -6,114 +7,114 @@ import type { SessionResult } from "../dispatch/types.js";
 // Mock external deps BEFORE importing commands/watch
 // ---------------------------------------------------------------------------
 
-mock.module("../git/worktree.js", () => ({
-  archive: mock(() => Promise.resolve("archive/v1.0.0")),
-  remove: mock(() => Promise.resolve()),
-  create: mock(() => Promise.resolve({ path: "/tmp/test-worktree" })),
-  rebase: mock(() => Promise.resolve({ outcome: "success", message: "rebased" })),
-  isInsideWorktree: mock(() => Promise.resolve(false)),
-  resolveMainCheckoutRoot: mock(() => Promise.resolve("/tmp/test-project")),
-  resolveMainBranch: mock(() => Promise.resolve("main")),
-  exists: mock(() => Promise.resolve(false)),
-  ensureWorktree: mock(() => Promise.resolve({ path: "/tmp/test-worktree" })),
-  enter: mock(() => {}),
-  merge: mock(() => Promise.resolve()),
-  cleanArtifactOutputs: mock(() => {}),
-  implBranchName: mock((slug: string, feature: string) => `impl/${slug}--${feature}`),
-  createImplBranch: mock((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
+vi.mock("../git/worktree.js", () => ({
+  archive: vi.fn(() => Promise.resolve("archive/v1.0.0")),
+  remove: vi.fn(() => Promise.resolve()),
+  create: vi.fn(() => Promise.resolve({ path: "/tmp/test-worktree" })),
+  rebase: vi.fn(() => Promise.resolve({ outcome: "success", message: "rebased" })),
+  isInsideWorktree: vi.fn(() => Promise.resolve(false)),
+  resolveMainCheckoutRoot: vi.fn(() => Promise.resolve("/tmp/test-project")),
+  resolveMainBranch: vi.fn(() => Promise.resolve("main")),
+  exists: vi.fn(() => Promise.resolve(false)),
+  ensureWorktree: vi.fn(() => Promise.resolve({ path: "/tmp/test-worktree" })),
+  enter: vi.fn(() => {}),
+  merge: vi.fn(() => Promise.resolve()),
+  cleanArtifactOutputs: vi.fn(() => {}),
+  implBranchName: vi.fn((slug: string, feature: string) => `impl/${slug}--${feature}`),
+  createImplBranch: vi.fn((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
 }));
 
-mock.module("../manifest/store.js", () => ({
-  load: mock(() => ({ slug: "test-epic", phase: "release", lastUpdated: "2026-01-01" })),
-  save: mock(() => {}),
-  listEnriched: mock(() => ({ epics: [], blocked: [] })),
-  list: mock(() => []),
-  get: mock(() => ({})),
-  create: mock(() => ({})),
-  find: mock(() => undefined),
-  manifestPath: mock(() => ""),
-  manifestExists: mock(() => false),
-  isValidSlug: mock(() => true),
-  slugify: mock((s: string) => s),
-  validate: mock(() => true),
-  remove: mock(() => false),
-  slugFromDesign: mock(() => ""),
-  slugFromManifest: mock(() => ""),
-  rename: mock(() => Promise.resolve()),
-  transact: mock(() => Promise.resolve()),
-  findLegacyManifestPath: mock(() => undefined),
-  readLegacyManifest: mock(() => ({})),
+vi.mock("../manifest/store.js", () => ({
+  load: vi.fn(() => ({ slug: "test-epic", phase: "release", lastUpdated: "2026-01-01" })),
+  save: vi.fn(() => {}),
+  listEnriched: vi.fn(() => ({ epics: [], blocked: [] })),
+  list: vi.fn(() => []),
+  get: vi.fn(() => ({})),
+  create: vi.fn(() => ({})),
+  find: vi.fn(() => undefined),
+  manifestPath: vi.fn(() => ""),
+  manifestExists: vi.fn(() => false),
+  isValidSlug: vi.fn(() => true),
+  slugify: vi.fn((s: string) => s),
+  validate: vi.fn(() => true),
+  remove: vi.fn(() => false),
+  slugFromDesign: vi.fn(() => ""),
+  slugFromManifest: vi.fn(() => ""),
+  rename: vi.fn(() => Promise.resolve()),
+  transact: vi.fn(() => Promise.resolve()),
+  findLegacyManifestPath: vi.fn(() => undefined),
+  readLegacyManifest: vi.fn(() => ({})),
 }));
 
-mock.module("../manifest/reconcile.js", () => ({
-  reconcileDesign: mock(() => Promise.resolve(undefined)),
-  reconcilePlan: mock(() => Promise.resolve(undefined)),
-  reconcileFeature: mock(() => Promise.resolve(undefined)),
-  reconcileImplement: mock(() => Promise.resolve(undefined)),
-  reconcileValidate: mock(() => Promise.resolve(undefined)),
-  reconcileRelease: mock(() => Promise.resolve(undefined)),
-  reconcileAll: mock(() => Promise.resolve()),
+vi.mock("../manifest/reconcile.js", () => ({
+  reconcileDesign: vi.fn(() => Promise.resolve(undefined)),
+  reconcilePlan: vi.fn(() => Promise.resolve(undefined)),
+  reconcileFeature: vi.fn(() => Promise.resolve(undefined)),
+  reconcileImplement: vi.fn(() => Promise.resolve(undefined)),
+  reconcileValidate: vi.fn(() => Promise.resolve(undefined)),
+  reconcileRelease: vi.fn(() => Promise.resolve(undefined)),
+  reconcileAll: vi.fn(() => Promise.resolve()),
 }));
 
-mock.module("../github/sync.js", () => ({
-  syncGitHubForEpic: mock(() => Promise.resolve()),
-  syncGitHub: mock(() => Promise.resolve()),
+vi.mock("../github/sync.js", () => ({
+  syncGitHubForEpic: vi.fn(() => Promise.resolve()),
+  syncGitHub: vi.fn(() => Promise.resolve()),
 }));
 
-mock.module("../github/discovery.js", () => ({
-  discoverGitHub: mock(() => Promise.resolve(undefined)),
+vi.mock("../github/discovery.js", () => ({
+  discoverGitHub: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 // Additional mocks needed by pipeline/runner.ts (called via ReconcilingFactory)
-mock.module("../artifacts/reader.js", () => ({
-  loadWorktreePhaseOutput: mock(() => ({ status: "completed", artifacts: {} })),
-  filenameMatchesEpic: mock(() => true),
-  findPhaseOutputFile: mock(() => undefined),
-  loadPhaseOutput: mock(() => undefined),
-  readArtifact: mock(() => undefined),
-  resolveArtifact: mock(() => undefined),
-  splitSections: mock(() => new Map()),
-  extractSection: mock(() => undefined),
-  extractSections: mock(() => new Map()),
+vi.mock("../artifacts/reader.js", () => ({
+  loadWorktreePhaseOutput: vi.fn(() => ({ status: "completed", artifacts: {} })),
+  filenameMatchesEpic: vi.fn(() => true),
+  findPhaseOutputFile: vi.fn(() => undefined),
+  loadPhaseOutput: vi.fn(() => undefined),
+  readArtifact: vi.fn(() => undefined),
+  resolveArtifact: vi.fn(() => undefined),
+  splitSections: vi.fn(() => new Map()),
+  extractSection: vi.fn(() => undefined),
+  extractSections: vi.fn(() => new Map()),
 }));
 
-mock.module("../git/tags.js", () => ({
-  createTag: mock(() => Promise.resolve()),
+vi.mock("../git/tags.js", () => ({
+  createTag: vi.fn(() => Promise.resolve()),
 }));
 
-mock.module("../manifest/pure.js", () => ({
-  setGitHubEpic: mock((m: any) => m),
-  setFeatureGitHubIssue: mock((m: any) => m),
-  setEpicBodyHash: mock((m: any) => m),
-  setFeatureBodyHash: mock((m: any) => m),
-  enrichManifest: mock((m: any) => m),
-  regressManifest: mock((m: any) => m),
-  deriveNextPhase: mock(() => "done"),
+vi.mock("../manifest/pure.js", () => ({
+  setGitHubEpic: vi.fn((m: any) => m),
+  setFeatureGitHubIssue: vi.fn((m: any) => m),
+  setEpicBodyHash: vi.fn((m: any) => m),
+  setFeatureBodyHash: vi.fn((m: any) => m),
+  enrichManifest: vi.fn((m: any) => m),
+  regressManifest: vi.fn((m: any) => m),
+  deriveNextPhase: vi.fn(() => "done"),
 }));
 
-mock.module("../hooks/hitl-settings.js", () => ({
-  writeHitlSettings: mock(() => {}),
-  cleanHitlSettings: mock(() => {}),
-  buildPreToolUseHook: mock(() => ({})),
-  getPhaseHitlProse: mock(() => ""),
+vi.mock("../hooks/hitl-settings.js", () => ({
+  writeHitlSettings: vi.fn(() => {}),
+  cleanHitlSettings: vi.fn(() => {}),
+  buildPreToolUseHook: vi.fn(() => ({})),
+  getPhaseHitlProse: vi.fn(() => ""),
 }));
 
-mock.module("../config.js", () => ({
-  loadConfig: mock(() => ({
+vi.mock("../config.js", () => ({
+  loadConfig: vi.fn(() => ({
     hitl: { model: "test", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
     "file-permissions": { timeout: 30, "claude-settings": "defer to human" },
     github: { enabled: false, "project-name": "" },
     cli: {},
   })),
-  findProjectRoot: mock(() => "/tmp/test-project"),
-  getCategoryProse: mock(() => "defer to human"),
+  findProjectRoot: vi.fn(() => "/tmp/test-project"),
+  getCategoryProse: vi.fn(() => "defer to human"),
 }));
 
-mock.module("../hooks/file-permission-settings.js", () => ({
-  cleanFilePermissionSettings: mock(() => {}),
-  writeFilePermissionSettings: mock(() => {}),
-  buildFilePermissionPreToolUseHooks: mock(() => []),
-  buildFilePermissionPostToolUseHooks: mock(() => []),
+vi.mock("../hooks/file-permission-settings.js", () => ({
+  cleanFilePermissionSettings: vi.fn(() => {}),
+  writeFilePermissionSettings: vi.fn(() => {}),
+  buildFilePermissionPreToolUseHooks: vi.fn(() => []),
+  buildFilePermissionPostToolUseHooks: vi.fn(() => []),
 }));
 
 // Import AFTER mocking
@@ -141,17 +142,17 @@ function makeInnerFactory(
   setBadgeOnContainerFn?: (slug: string, text: string) => Promise<void>,
 ): SessionFactory {
   const factory: SessionFactory = {
-    create: mock(async (opts: SessionCreateOpts): Promise<SessionHandle> => ({
+    create: vi.fn(async (opts: SessionCreateOpts): Promise<SessionHandle> => ({
       id: `inner-${Date.now()}`,
       worktreeSlug: opts.epicSlug,
       promise: Promise.resolve(result),
     })),
   };
   if (cleanupFn) {
-    factory.cleanup = mock(cleanupFn);
+    factory.cleanup = vi.fn(cleanupFn);
   }
   if (setBadgeOnContainerFn) {
-    factory.setBadgeOnContainer = mock(setBadgeOnContainerFn);
+    factory.setBadgeOnContainer = vi.fn(setBadgeOnContainerFn);
   }
   return factory;
 }
@@ -164,7 +165,7 @@ const logger = createLogger(0, {});
 
 describe("ReconcilingFactory cleanup on release", () => {
   it("calls inner factory cleanup after successful release", async () => {
-    const cleanupMock = mock(() => Promise.resolve());
+    const cleanupMock = vi.fn(() => Promise.resolve());
     const inner = makeInnerFactory(
       { success: true, exitCode: 0, costUsd: 0, durationMs: 100 },
       cleanupMock,
@@ -178,7 +179,7 @@ describe("ReconcilingFactory cleanup on release", () => {
   });
 
   it("does NOT call cleanup on failed release", async () => {
-    const cleanupMock = mock(() => Promise.resolve());
+    const cleanupMock = vi.fn(() => Promise.resolve());
     const inner = makeInnerFactory(
       { success: false, exitCode: 1, costUsd: 0, durationMs: 100 },
       cleanupMock,
@@ -191,7 +192,7 @@ describe("ReconcilingFactory cleanup on release", () => {
   });
 
   it("cleanup failure does not block release teardown", async () => {
-    const cleanupMock = mock(() => Promise.reject(new Error("tab close failed")));
+    const cleanupMock = vi.fn(() => Promise.reject(new Error("tab close failed")));
     const inner = makeInnerFactory(
       { success: true, exitCode: 0, costUsd: 0, durationMs: 100 },
       cleanupMock,
@@ -207,7 +208,7 @@ describe("ReconcilingFactory cleanup on release", () => {
   });
 
   it("does NOT call cleanup for non-release phases", async () => {
-    const cleanupMock = mock(() => Promise.resolve());
+    const cleanupMock = vi.fn(() => Promise.resolve());
     const inner = makeInnerFactory(
       { success: true, exitCode: 0, costUsd: 0, durationMs: 100 },
       cleanupMock,
@@ -235,7 +236,7 @@ describe("ReconcilingFactory cleanup on release", () => {
 
 describe("ReconcilingFactory release badge", () => {
   it("calls setBadgeOnContainer on failed release", async () => {
-    const badgeMock = mock(() => Promise.resolve());
+    const badgeMock = vi.fn(() => Promise.resolve());
     const inner = makeInnerFactory(
       { success: false, exitCode: 1, costUsd: 0, durationMs: 100 },
       undefined,
@@ -250,7 +251,7 @@ describe("ReconcilingFactory release badge", () => {
   });
 
   it("does NOT call setBadgeOnContainer on successful release", async () => {
-    const badgeMock = mock(() => Promise.resolve());
+    const badgeMock = vi.fn(() => Promise.resolve());
     const inner = makeInnerFactory(
       { success: true, exitCode: 0, costUsd: 0, durationMs: 100 },
       undefined,
@@ -264,7 +265,7 @@ describe("ReconcilingFactory release badge", () => {
   });
 
   it("badge failure is best-effort — does not throw", async () => {
-    const badgeMock = mock(() => Promise.reject(new Error("badge failed")));
+    const badgeMock = vi.fn(() => Promise.reject(new Error("badge failed")));
     const inner = makeInnerFactory(
       { success: false, exitCode: 1, costUsd: 0, durationMs: 100 },
       undefined,
