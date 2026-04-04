@@ -480,4 +480,10 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     logger.child({ epic: waitingSlug }).log(`release held: ${waitingSlug} blocked by ${blockingSlug}`);
   });
 
+  loop.on('session-dead', ({ epicSlug, phase, featureSlug, sessionId, tty }) => {
+    const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
+    const ttyInfo = tty ? ` (tty: ${tty})` : '';
+    child.warn(`DEAD session ${sessionId}${ttyInfo} — will re-dispatch on next scan`);
+  });
+
 }
