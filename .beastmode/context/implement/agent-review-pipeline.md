@@ -1,7 +1,7 @@
 # Agent Review Pipeline
 
 ## Agent Architecture
-- Three dedicated Claude Code agent files in `.claude/agents/`: implementer.md, spec-reviewer.md, quality-reviewer.md
+- Three dedicated plugin agent files in `agents/`: implement-dev.md, implement-qa.md, implement-auditor.md
 - Agents are self-contained markdown definitions with no external template dependencies
 - Each agent receives structured input: task text, context, file contents (implementer) or task requirements + report (reviewers)
 

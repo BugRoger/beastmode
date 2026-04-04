@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.78.0 — Agent Refactor (Apr 2026)
+
+- **Specialized agents** — Replaced monolithic implement-implementer with three focused agents: implement-dev (TDD execution), implement-qa (verification), implement-auditor (spec compliance)
+- **Native dispatch** — Rewired all skill dispatch from `.claude/agents/` YAML to `subagent_type` parameters, eliminating manual prompt assembly
+- **Legacy cleanup** — Deleted `.claude/agents/` directory and `implement-implementer.md`, replaced by plugin agent definitions
+- **Context updates** — Agent naming convention (`<phase>-<role>`) and dispatch pattern captured in L2 context docs
+
+---
+
 ### v0.77.0 — Dashboard Wiring (Apr 2026)
 
 - **Three-panel layout** — App.tsx rewritten to use ThreePanelLayout with EpicsPanel, DetailsPanel, LogPanel as slot children, replacing the legacy drill-down navigation model

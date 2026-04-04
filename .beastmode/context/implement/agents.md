@@ -18,3 +18,8 @@
 - Report results per-agent after completion — never merge silently
 - Same-wave tasks can run simultaneously if no shared files — wave-based parallelism
 - ALWAYS verify current file state before implementing a wave task — a parallel task may have already implemented shared prerequisites, reducing the remaining scope
+
+## Agent Definitions
+- ALWAYS use `<phase>-<role>` naming for agent files — no stuttering (implement-dev not implement-implementer)
+- ALWAYS dispatch agents via `subagent_type="beastmode:<agent-name>"` — not manual prompt assembly with general-purpose
+- ALWAYS put agent role/persona in the agent definition file — prompts passed at dispatch contain only task context (requirements, file contents, conventions)

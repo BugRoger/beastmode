@@ -164,11 +164,10 @@ For each wave (ascending order):
    #### B. Dispatch Implementer
 
    1. Build the implementer prompt:
-      - Reference: `.claude/agents/implementer.md` agent role
       - Append: full task text (all steps, files, verification)
       - Append: pre-read file contents
       - Append: project conventions from `.beastmode/context/IMPLEMENT.md`
-   2. Spawn: `Agent(subagent_type="general-purpose", model=<current tier from escalation state>, prompt=<built prompt>)`
+   2. Spawn: `Agent(subagent_type="beastmode:implement-dev", model=<current tier from escalation state>, prompt=<built prompt>)`
    3. Collect the agent's status report
 
    #### C. Handle Implementer Status
@@ -192,11 +191,10 @@ For each wave (ascending order):
    After implementer reports DONE (or DONE_WITH_CONCERNS with observation-only concerns):
 
    1. Build the spec-reviewer prompt:
-      - Reference: `.claude/agents/spec-reviewer.md` agent role
       - Append: the task requirements (from .tasks.md)
       - Append: the implementer's status report
       - Append: the task's file list
-   2. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+   2. Spawn: `Agent(subagent_type="beastmode:implement-qa", prompt=<built prompt>)`
    3. Collect the reviewer's verdict
 
    **If PASS**: proceed to quality review (step E)
@@ -211,11 +209,10 @@ For each wave (ascending order):
    After spec compliance passes:
 
    1. Build the quality-reviewer prompt:
-      - Reference: `.claude/agents/quality-reviewer.md` agent role
       - Append: the task requirements (for context)
       - Append: the implementer's status report
       - Append: the task's file list
-   2. Spawn: `Agent(subagent_type="general-purpose", prompt=<built prompt>)`
+   2. Spawn: `Agent(subagent_type="beastmode:implement-auditor", prompt=<built prompt>)`
    3. Collect the reviewer's verdict
 
    **If APPROVED**: mark task as complete, proceed to next task
@@ -510,8 +507,8 @@ Never force retry without changes.
 
 Two-stage ordered review after each task:
 
-1. **Spec compliance** (`.claude/agents/spec-reviewer.md`) — verifies implementation matches requirements by reading actual code
-2. **Code quality** (`.claude/agents/quality-reviewer.md`) — evaluates code quality after spec compliance confirmed
+1. **Spec compliance** (`beastmode:implement-qa`) — verifies implementation matches requirements by reading actual code
+2. **Code quality** (`beastmode:implement-auditor`) — evaluates code quality after spec compliance confirmed
 
 Review retry loop:
 - Reviewer finds issues → implementer fixes → reviewer re-reviews
