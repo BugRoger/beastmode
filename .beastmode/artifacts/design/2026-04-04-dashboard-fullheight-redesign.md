@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: a5020d
+slug: dashboard-fullheight-redesign
 epic: dashboard-fullheight-redesign
 ---
 
