@@ -7,10 +7,10 @@
 - Color scheme follows existing phase convention: magenta (design), blue (plan), yellow (implement), cyan (validate), green (release), dim green (done), red (blocked), dim red (cancelled)
 
 ## Layout
-- Three-panel split screen via ThreePanelLayout component with EpicsPanel, DetailsPanel, LogPanel as slot children: epics list (top-left ~30%), details (top-right ~70%), log (bottom ~65% full-width)
-- k9s-style cyan chrome with single-line box-drawing characters and panel titles inset in top borders
-- Watch status and clock rendered in top-right corner of outer border — no dedicated header row
-- Key hints bar at bottom, outside the bordered area
+- Two-column full-height layout via TwoColumnLayout component with EpicsPanel, DetailsPanel, LogPanel as slot children: left column (40% width) stacks epics panel (60% height) above details panel (40% height), right column (60% width) shows full-height tree view
+- No outer chrome border — header is a plain Box row with "beastmode" left, watch status + clock right
+- Each panel wrapped in PanelBox with cyan single-line borders, inset titles, and dark charcoal (#2d2d2d) interior backgrounds
+- Key hints bar at bottom, below the columns
 - Minimum terminal size enforced at 80x24 — friendly message below that threshold
 
 ## Interaction Model
