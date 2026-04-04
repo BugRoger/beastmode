@@ -117,5 +117,15 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "dashboard": {
+    "paths": ["features/dashboard-wiring-fix.feature"],
+    "import": [
+      "features/step_definitions/dashboard-wiring.steps.ts",
+      "features/support/dashboard-world.ts",
+      "features/support/dashboard-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
