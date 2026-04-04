@@ -92,7 +92,6 @@ github:
     expect(config.hitl.implement).toBe("always defer to human");
     expect(config.hitl.validate).toBe("always defer to human");
     expect(config.hitl.release).toBe("always defer to human");
-    expect(config.hitl.model).toBe("haiku");
     expect(config.hitl.timeout).toBe(30);
   });
 
@@ -102,7 +101,6 @@ github:
     writeFileSync(
       join(tempDir, ".beastmode", "config.yaml"),
       `hitl:
-  model: sonnet
   timeout: 60
   design: "auto-approve all section structure questions"
   plan: "auto-approve wave ordering"
@@ -113,7 +111,6 @@ github:
     );
 
     const config = loadConfig(tempDir);
-    expect(config.hitl.model).toBe("sonnet");
     expect(config.hitl.timeout).toBe(60);
     expect(config.hitl.design).toBe("auto-approve all section structure questions");
     expect(config.hitl.plan).toBe("auto-approve wave ordering");
@@ -127,12 +124,11 @@ github:
     mkdirSync(join(tempDir, ".beastmode"), { recursive: true });
     writeFileSync(
       join(tempDir, ".beastmode", "config.yaml"),
-      `hitl:\n  design: "auto-approve all"\n  model: sonnet\n`,
+      `hitl:\n  design: "auto-approve all"\n`,
     );
 
     const config = loadConfig(tempDir);
     expect(config.hitl.design).toBe("auto-approve all");
-    expect(config.hitl.model).toBe("sonnet");
     expect(config.hitl.plan).toBe("always defer to human");
     expect(config.hitl.timeout).toBe(30);
   });
@@ -146,9 +142,8 @@ github:
       implement: "test",
       validate: "test",
       release: "test",
-      model: "haiku",
       timeout: 30,
     };
-    expect(stub.model).toBe("haiku");
+    expect(stub.timeout).toBe(30);
   });
 });

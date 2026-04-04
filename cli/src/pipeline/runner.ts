@@ -136,7 +136,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
     const hitlProse = getPhaseHitlProse(config.config.hitl, config.phase);
-    const preToolUseHook = buildPreToolUseHook(hitlProse, config.config.hitl.model, config.config.hitl.timeout);
+    const preToolUseHook = buildPreToolUseHook(hitlProse, config.config.hitl.timeout);
     writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase });
   }
 

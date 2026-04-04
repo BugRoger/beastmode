@@ -145,7 +145,7 @@ export async function dispatchPhase(opts: {
   const claudeDir = resolve(wt.path, ".claude");
   cleanHitlSettings(claudeDir);
   const hitlProse = getPhaseHitlProse(config.hitl, opts.phase);
-  const preToolUseHook = buildPreToolUseHook(hitlProse, config.hitl.model, config.hitl.timeout);
+  const preToolUseHook = buildPreToolUseHook(hitlProse, config.hitl.timeout);
   writeHitlSettings({ claudeDir, preToolUseHook, phase: opts.phase });
 
   const id = `${worktreeSlug}-${Date.now()}`;

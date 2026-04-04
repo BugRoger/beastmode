@@ -67,7 +67,7 @@ export async function phaseCommand(
     const claudeDir = resolve(cwd, ".claude");
     cleanHitlSettings(claudeDir);
     const hitlProse = getPhaseHitlProse(_config.hitl, phase);
-    const preToolUseHook = buildPreToolUseHook(hitlProse, _config.hitl.model, _config.hitl.timeout);
+    const preToolUseHook = buildPreToolUseHook(hitlProse, _config.hitl.timeout);
     writeHitlSettings({ claudeDir, preToolUseHook, phase });
 
     const result = await runInteractive({ phase, args, cwd });

@@ -31,7 +31,6 @@ mock.module("../hooks/hitl-settings.js", () => ({
 
 const mockLoadConfig = mock((_root: string) => ({
   hitl: {
-    model: "haiku",
     timeout: 30,
     design: "defer design",
     plan: "defer plan",
@@ -116,12 +115,10 @@ describe("dispatchPhase — rebase and HITL", () => {
 
     // getPhaseHitlProse called with hitl config and phase
     expect(mockGetPhaseHitlProse).toHaveBeenCalledTimes(1);
-    const hitlArg = (mockGetPhaseHitlProse.mock.calls as any[][])[0]?.[0];
-    expect(hitlArg?.model).toBe("haiku");
 
-    // buildPreToolUseHook called with prose, model, timeout
+    // buildPreToolUseHook called with prose and timeout
     expect(mockBuildPreToolUseHook).toHaveBeenCalledTimes(1);
-    expect(mockBuildPreToolUseHook).toHaveBeenCalledWith("test prose", "haiku", 30);
+    expect(mockBuildPreToolUseHook).toHaveBeenCalledWith("test prose", 30);
 
     // writeHitlSettings called with claudeDir, hook, and phase
     expect(mockWriteHitlSettings).toHaveBeenCalledTimes(1);

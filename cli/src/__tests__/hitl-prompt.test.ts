@@ -17,19 +17,13 @@ describe("buildPreToolUseHook", () => {
     expect(entry.hooks[0].prompt).toContain(prose);
   });
 
-  test("uses provided model", () => {
-    const entry = buildPreToolUseHook("defer", "sonnet");
-    expect(entry.hooks[0].model).toBe("sonnet");
-  });
-
   test("uses provided timeout", () => {
-    const entry = buildPreToolUseHook("defer", "haiku", 60);
+    const entry = buildPreToolUseHook("defer", 60);
     expect(entry.hooks[0].timeout).toBe(60);
   });
 
-  test("defaults to haiku model and 30s timeout", () => {
+  test("defaults to 30s timeout", () => {
     const entry = buildPreToolUseHook("defer");
-    expect(entry.hooks[0].model).toBe("haiku");
     expect(entry.hooks[0].timeout).toBe(30);
   });
 
@@ -68,7 +62,6 @@ describe("getPhaseHitlProse", () => {
     implement: "approve all architectural decisions",
     validate: undefined,
     release: "",
-    model: "haiku",
     timeout: 30,
   };
 

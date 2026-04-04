@@ -54,7 +54,6 @@ export interface PromptHookEntry {
   hooks: Array<{
     type: "prompt";
     prompt: string;
-    model?: string;
     timeout?: number;
   }>;
 }
@@ -188,13 +187,11 @@ function buildPostToolUseHook(phase: string): HookEntry {
  * Build the PreToolUse prompt hook entry for AskUserQuestion.
  *
  * @param prose — The user's HITL instructions for this phase (from config.yaml)
- * @param model — LLM model to run the hook (default: "haiku")
  * @param timeout — Hook timeout in seconds (default: 30)
  * @returns A single hook entry targeting AskUserQuestion
  */
 export function buildPreToolUseHook(
   prose: string,
-  model: string = "haiku",
   timeout: number = 30,
 ): PromptHookEntry {
   const prompt = buildPrompt(prose);
@@ -204,7 +201,6 @@ export function buildPreToolUseHook(
       {
         type: "prompt",
         prompt,
-        model,
         timeout,
       },
     ],
@@ -273,6 +269,6 @@ export function getPhaseHitlProse(
   hitlConfig: HitlConfig,
   phase: string,
 ): string {
-  const prose = hitlConfig[phase as keyof Omit<HitlConfig, "model" | "timeout">];
+  const prose = hitlConfig[phase as keyof Omit<HitlConfig, "timeout">];
   return (typeof prose === "string" && prose.length > 0) ? prose : "always defer to human";
 }

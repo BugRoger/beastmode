@@ -19,7 +19,6 @@ export interface HitlConfig {
   implement?: string;
   validate?: string;
   release?: string;
-  model: string;
   timeout: number;
 }
 
@@ -40,7 +39,6 @@ const DEFAULT_CONFIG: BeastmodeConfig = {
     implement: DEFAULT_HITL_PROSE,
     validate: DEFAULT_HITL_PROSE,
     release: DEFAULT_HITL_PROSE,
-    model: "haiku",
     timeout: 30,
   },
 };
@@ -122,7 +120,6 @@ export function loadConfig(projectRoot: string): BeastmodeConfig {
     implement: (rawHitl.implement as string) ?? DEFAULT_CONFIG.hitl.implement,
     validate: (rawHitl.validate as string) ?? DEFAULT_CONFIG.hitl.validate,
     release: (rawHitl.release as string) ?? DEFAULT_CONFIG.hitl.release,
-    model: (rawHitl.model as string) ?? DEFAULT_CONFIG.hitl.model,
     timeout: (rawHitl.timeout as number) ?? DEFAULT_CONFIG.hitl.timeout,
   } satisfies HitlConfig;
 
