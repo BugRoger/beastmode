@@ -100,4 +100,90 @@ describe("JsonFileStore", () => {
       expect(existsSync(nestedPath)).toBe(true);
     });
   });
+
+  describe("Epic CRUD", () => {
+    it("should add epic with auto-generated ID", () => {
+      const epic = store.addEpic({ name: "Test Epic" });
+      expect(epic.id).toMatch(/^bm-[0-9a-f]{4}$/);
+      expect(epic.name).toBe("Test Epic");
+      expect(epic.slug).toBe("test-epic");
+      expect(epic.status).toBe("design");
+      expect(epic.type).toBe("epic");
+      expect(epic.depends_on).toEqual([]);
+    });
+
+    it("should get, update, delete epic", () => {
+      const epic = store.addEpic({ name: "Epic" });
+      expect(store.getEpic(epic.id)).toBeDefined();
+
+      const updated = store.updateEpic(epic.id, { status: "plan" });
+      expect(updated.status).toBe("plan");
+
+      store.deleteEpic(epic.id);
+      expect(store.getEpic(epic.id)).toBeUndefined();
+    });
+
+    it("should list all epics", () => {
+      store.addEpic({ name: "Epic 1" });
+      store.addEpic({ name: "Epic 2" });
+      expect(store.listEpics()).toHaveLength(2);
+    });
+
+    it("should delete child features when deleting epic", () => {
+      const epic = store.addEpic({ name: "Epic" });
+      const feat = store.addFeature({ parent: epic.id, name: "Feat" });
+      store.deleteEpic(epic.id);
+      expect(store.getFeature(feat.id)).toBeUndefined();
+    });
+  });
+
+  describe("Feature CRUD", () => {
+    it("should add feature with hierarchical ID", () => {
+      const epic = store.addEpic({ name: "Epic" });
+      const f1 = store.addFeature({ parent: epic.id, name: "Feature 1" });
+      const f2 = store.addFeature({ parent: epic.id, name: "Feature 2" });
+      expect(f1.id).toBe(`${epic.id}.1`);
+      expect(f2.id).toBe(`${epic.id}.2`);
+      expect(f1.type).toBe("feature");
+      expect(f1.parent).toBe(epic.id);
+      expect(f1.status).toBe("pending");
+    });
+
+    it("should get, update, delete feature", () => {
+      const epic = store.addEpic({ name: "Epic" });
+      const feat = store.addFeature({ parent: epic.id, name: "Feat" });
+      expect(store.getFeature(feat.id)).toBeDefined();
+
+      const updated = store.updateFeature(feat.id, { status: "in-progress" });
+      expect(updated.status).toBe("in-progress");
+
+      store.deleteFeature(feat.id);
+      expect(store.getFeature(feat.id)).toBeUndefined();
+    });
+
+    it("should list features for a specific epic", () => {
+      const e1 = store.addEpic({ name: "E1" });
+      const e2 = store.addEpic({ name: "E2" });
+      store.addFeature({ parent: e1.id, name: "F1" });
+      store.addFeature({ parent: e2.id, name: "F2" });
+      expect(store.listFeatures(e1.id)).toHaveLength(1);
+      expect(store.listFeatures(e2.id)).toHaveLength(1);
+    });
+
+    it("should throw when adding feature to non-existent epic", () => {
+      expect(() => store.addFeature({ parent: "bm-0000", name: "X" })).toThrow();
+    });
+
+    it("should continue sequential IDs after load", () => {
+      const epic = store.addEpic({ name: "Epic" });
+      store.addFeature({ parent: epic.id, name: "F1" });
+      store.addFeature({ parent: epic.id, name: "F2" });
+      store.save();
+
+      const store2 = new JsonFileStore(storePath);
+      store2.load();
+      const f3 = store2.addFeature({ parent: epic.id, name: "F3" });
+      expect(f3.id).toBe(`${epic.id}.3`);
+    });
+  });
 });
