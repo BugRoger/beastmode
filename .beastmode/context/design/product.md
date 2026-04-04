@@ -26,6 +26,7 @@
 - Fullscreen TUI dashboard via `beastmode dashboard` — Ink v6 + React three-zone layout (header, epic table, activity log) with embedded watch loop, keyboard navigation (arrows, q, x, a), inline epic cancellation with session abort, alternate screen buffer, shared data module with `beastmode status`
 - Optional cmux terminal multiplexer integration — live pipeline visibility with workspace-per-epic surface model, desktop notifications on errors/blocks, automatic cleanup on release, zero-regression fallback to SDK dispatch
 - Context tree compaction — retro value-add gate prevents redundant L3 creation at source, on-demand compaction agent removes stale L3s, folds restatements, and detects cross-phase duplicates for L0 promotion; runs via `beastmode compact`
+- BDD integration test generation via plan-integration-tester agent — plan skill spawns domain-specialist subagent post-decomposition to diff PRD user stories against existing `.feature` files and produce Gherkin integration artifact; warn-and-continue on agent failure
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval

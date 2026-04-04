@@ -5,7 +5,7 @@
 - ALWAYS verify worktree context before modifying files
 - NEVER guess file paths — verify they exist first
 - Agents commit per task on the impl branch (`impl/<slug>--<feature-name>`) — never on the worktree branch
-- Three agent roles: implementer (TDD execution), spec-reviewer (trust-nothing verification), quality-reviewer (self-contained quality checklist)
+- Agent roles: implementer (TDD execution), spec-reviewer (trust-nothing verification), quality-reviewer (self-contained quality checklist), plan-integration-tester (BDD specialist, spawned by plan skill) — all peers in `.claude/agents/`, all use four-status protocol
 - ALWAYS add new worktree functions to all mock objects in tests — mock gaps cause test failures discovered only after implementation is complete
 - Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
 

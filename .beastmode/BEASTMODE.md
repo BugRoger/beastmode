@@ -55,6 +55,7 @@
 - ALWAYS include a final verification task that checks the full output tree
 - ALWAYS decompose multi-feature epics into a manifest JSON plus N independent feature plans
 - ALWAYS verify deletion targets have no active consumers before specifying file deletion in plans — grep for imports before listing files to delete
+- ALWAYS use wave injection (assign wave 1, bump all others +1) when inserting prerequisite features after decomposition — preserves dependency ordering
 
 ## Implement Process
 

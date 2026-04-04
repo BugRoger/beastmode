@@ -55,6 +55,14 @@ CLI-owned GitHub sync system. The CLI invokes a stateless `syncGitHub(manifest, 
 
 context/plan/github-integration.md
 
+## Specialist Agents
+Plan skill may spawn domain-specialist subagents to produce planning artifacts the skill lacks domain knowledge to write. Agent failure (NEEDS_CONTEXT or BLOCKED) is always warn-and-continue — never a hard gate on plan progression.
+
+- ALWAYS delegate domain-specialist artifact production to a subagent — plan skill invokes, not implements
+- ALWAYS make specialist subagent steps warn-and-continue — skip on failure, proceed to finalize
+- ALWAYS use the four-status protocol (DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED) for plan-phase specialist agents — same contract as implement agents
+- ALWAYS use wave injection (assign wave 1, bump all others +1) when inserting prerequisite features after decomposition — preserves dependency ordering
+
 ## File Collapse
 - ALWAYS audit exported symbol names across all source files being collapsed into a single target — name collisions from file merges are predictable and should be resolved in the plan, not auto-fixed during implementation
 - ALWAYS run full reverse-dependency analysis (grep for all import paths being changed) when planning file moves — enumerate every consumer, including transitive importers in unrelated domains (dashboard, lockfile, etc.)
