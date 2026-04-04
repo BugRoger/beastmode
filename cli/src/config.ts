@@ -151,3 +151,15 @@ export function findProjectRoot(from: string = process.cwd()): string {
   }
   throw new Error("Not inside a beastmode project (no .beastmode/ found)");
 }
+
+/**
+ * Extract the file-permissions prose for a given category.
+ * Falls back to "always defer to human" if no prose is configured.
+ */
+export function getCategoryProse(
+  filePermissionsConfig: FilePermissionsConfig,
+  category: string,
+): string {
+  const prose = filePermissionsConfig[category as keyof Omit<FilePermissionsConfig, "timeout">];
+  return (typeof prose === "string" && prose.length > 0) ? prose : DEFAULT_HITL_PROSE;
+}

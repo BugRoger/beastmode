@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { loadConfig, DEFAULT_HITL_PROSE } from "../config";
+import { loadConfig, DEFAULT_HITL_PROSE, getCategoryProse } from "../config";
 import type { HitlConfig, FilePermissionsConfig } from "../config";
 import { mkdtempSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
@@ -210,5 +210,38 @@ describe("FilePermissionsConfig", () => {
     const config = loadConfig(tempDir);
     expect(config["file-permissions"].timeout).toBe(30);
     expect(config["file-permissions"]["claude-settings"]).toBe("always defer to human");
+  });
+});
+
+describe("getCategoryProse", () => {
+  test("returns configured prose for known category", () => {
+    const config: FilePermissionsConfig = {
+      timeout: 30,
+      "claude-settings": "auto-allow all .claude file writes",
+    };
+    expect(getCategoryProse(config, "claude-settings")).toBe("auto-allow all .claude file writes");
+  });
+
+  test("returns default prose for undefined category", () => {
+    const config: FilePermissionsConfig = {
+      timeout: 30,
+    };
+    expect(getCategoryProse(config, "claude-settings")).toBe("always defer to human");
+  });
+
+  test("returns default prose for empty string category value", () => {
+    const config: FilePermissionsConfig = {
+      timeout: 30,
+      "claude-settings": "",
+    };
+    expect(getCategoryProse(config, "claude-settings")).toBe("always defer to human");
+  });
+
+  test("returns default prose for unknown category", () => {
+    const config: FilePermissionsConfig = {
+      timeout: 30,
+      "claude-settings": "some prose",
+    };
+    expect(getCategoryProse(config, "nonexistent")).toBe("always defer to human");
   });
 });
