@@ -26,6 +26,16 @@ export const CHROME = {
   muted: "#727072",
 } as const;
 
+/** Background colors for depth hierarchy (darkest → lightest). */
+export const BG = {
+  /** Terminal default — deepest layer (#2D2A2E). Not applied; serves as reference. */
+  base: "#2D2A2E",
+  /** Panel interiors — middle depth. */
+  panel: "#353236",
+  /** Header and hints bar — surface layer. */
+  surface: "#403E41",
+} as const;
+
 /** Returns true for phases that should render dimmed. */
 export function isDim(phase: string): boolean {
   return phase === "done" || phase === "cancelled";
