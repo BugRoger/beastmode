@@ -1,37 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Box, Text, useApp } from "ink";
+import { Text, useApp } from "ink";
 import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedManifest } from "../manifest/store.js";
 import type { WatchLoopEventMap, DispatchedSession } from "../dispatch/types.js";
 import type { WatchLoop } from "../commands/watch-loop.js";
-import EpicTable from "./EpicTable.js";
-import ActivityLog from "./ActivityLog.js";
-import CrumbBar from "./CrumbBar.js";
-import FeatureList from "./FeatureList.js";
+import ThreePanelLayout from "./ThreePanelLayout.js";
+import EpicsPanel from "./EpicsPanel.js";
+import DetailsPanel from "./DetailsPanel.js";
 import LogPanel from "./LogPanel.js";
 import { useDashboardTreeState } from "./hooks/use-dashboard-tree-state.js";
+import { useDashboardKeyboard } from "./hooks/use-dashboard-keyboard.js";
 import { getKeyHints } from "./key-hints.js";
-import * as VS from "./view-stack.js";
-import { useKeyboardController, useKeyboardNav } from "./hooks/index.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { createLogger } from "../logger.js";
-
-/** Activity log event for the dashboard. */
-export interface DashboardEvent {
-  timestamp: string;
-  type: "dispatched" | "completed" | "error" | "scan";
-  detail: string;
-  phase?: string;
-  epic?: string;
-  feature?: string;
-}
 
 export interface AppProps {
   config: BeastmodeConfig;
   verbosity: number;
-  /** Injected WatchLoop instance (created by the dashboard command). */
   loop?: WatchLoop;
-  /** Project root for manifest operations. */
   projectRoot?: string;
 }
 
@@ -42,61 +28,25 @@ function formatClock(): string {
     .join(":");
 }
 
-function ts(): string {
-  return formatClock();
-}
-
-/** Max events kept in the activity log buffer. */
-const MAX_EVENTS = 100;
-
 export default function App({ config, verbosity, loop, projectRoot }: AppProps) {
   const { exit } = useApp();
   const [clock, setClock] = useState(formatClock());
   const [epics, setEpics] = useState<EnrichedManifest[]>([]);
-  const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [watchRunning, setWatchRunning] = useState(false);
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>("");
   const loopRef = useRef(loop);
   loopRef.current = loop;
 
-  // --- View stack for drill-down navigation ---
-  const [viewStack, setViewStack] = useState<VS.ViewStack>(VS.createStack);
-  const activeView = VS.peek(viewStack);
-
-  // --- Feature-level navigation ---
-  const featureNav = useKeyboardNav(0);
-
-  // --- Follow mode for agent log ---
-  const [followMode, setFollowMode] = useState(true);
-
-  // --- Refs to break circular dep between drillDown and keyboard ---
-  const epicSelectedRef = useRef(0);
-  const featureSelectedRef = useRef(0);
-  const viewStackRef = useRef(viewStack);
-  viewStackRef.current = viewStack;
-  const epicsRef = useRef(epics);
-  epicsRef.current = epics;
-  const activeSessionsRef = useRef(activeSessions);
-  activeSessionsRef.current = activeSessions;
-
-  // --- Helper: push event to front of the log ---
-  const pushEvent = useCallback(
-    (type: DashboardEvent["type"], detail: string, ctx?: { phase?: string; epic?: string; feature?: string }) => {
-      setEvents((prev) => [
-        { timestamp: ts(), type, detail, ...ctx },
-        ...prev.slice(0, MAX_EVENTS - 1),
-      ]);
-    },
-    [],
-  );
-
-  // --- Compute visible epics for the table ---
-  const visibleEpics = epics;
-
+  // --- Visible epics (filtered by active filter and toggle-all) ---
   const slugAtIndex = useCallback(
-    (index: number): string | undefined => visibleEpics[index]?.slug,
-    [visibleEpics],
+    (index: number): string | undefined => {
+      // index 0 = "(all)" row, returns undefined
+      if (index === 0) return undefined;
+      return epics[index - 1]?.slug;
+    },
+    [epics],
   );
 
   const handleCancelEpic = useCallback(
@@ -110,9 +60,8 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
         githubEnabled: config.github.enabled,
         logger: createLogger(verbosity, {}),
       });
-      pushEvent("error", `cancelled ${slug}`, { epic: slug });
     },
-    [projectRoot, pushEvent],
+    [projectRoot, config.github.enabled, verbosity],
   );
 
   const handleShutdown = useCallback(async () => {
@@ -122,101 +71,49 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     exit();
   }, [exit]);
 
-  // --- Drill-down callbacks (use refs to break circular dep with keyboard) ---
-  const handleDrillDown = useCallback(() => {
-    setViewStack((prev) => {
-      const top = VS.peek(prev);
-      if (top.type === "epic-list") {
-        const epic = epicsRef.current[epicSelectedRef.current];
-        if (!epic) return prev;
-        return VS.push(prev, { type: "feature-list", epicSlug: epic.slug });
-      }
-      if (top.type === "feature-list") {
-        const epic = epicsRef.current.find((e) => e.slug === top.epicSlug);
-        const feat = epic?.features[featureSelectedRef.current];
-        if (!feat) return prev;
-        const isActive =
-          feat.status === "in-progress" ||
-          activeSessionsRef.current.has(feat.slug);
-        if (!isActive) return prev;
-        return VS.push(prev, {
-          type: "agent-log",
-          epicSlug: top.epicSlug,
-          featureSlug: feat.slug,
-        });
-      }
-      return prev;
-    });
+  const handleFilterApply = useCallback((filter: string) => {
+    setActiveFilter(filter);
   }, []);
 
-  const handleDrillUp = useCallback(() => {
-    setViewStack((prev) => VS.pop(prev));
+  const handleFilterClear = useCallback(() => {
+    setActiveFilter("");
   }, []);
 
-  const handleToggleFollow = useCallback(() => {
-    setFollowMode((prev) => !prev);
-  }, []);
-
-  const keyboard = useKeyboardController({
-    itemCount: visibleEpics.length,
+  // --- Keyboard hook (flat model — no view stack) ---
+  const keyboard = useDashboardKeyboard({
+    itemCount: epics.length + 1, // +1 for "(all)" row
     onCancelEpic: handleCancelEpic,
     onShutdown: handleShutdown,
     slugAtIndex,
-    activeViewType: activeView.type,
-    onDrillDown: handleDrillDown,
-    onDrillUp: handleDrillUp,
-    onToggleFollow: handleToggleFollow,
+    onFilterApply: handleFilterApply,
+    onFilterClear: handleFilterClear,
   });
 
-  // --- Tree state for log panel (agent-log view) ---
-  const { state: treeState } = useDashboardTreeState({
-    sessions: trackerSessions,
-    selectedEpicSlug: activeView.type === "agent-log"
-      ? (activeView as VS.AgentLogView).epicSlug
-      : undefined,
+  // --- Filter + toggle-all ---
+  const filteredEpics = epics.filter((e) => {
+    if (!keyboard.toggleAll.showAll && (e.phase === "done" || e.phase === "cancelled")) {
+      return false;
+    }
+    if (activeFilter && !e.slug.includes(activeFilter)) {
+      return false;
+    }
+    return true;
   });
 
-  // --- Keep refs in sync with navigation state ---
+  // Clamp nav when list changes
   useEffect(() => {
-    epicSelectedRef.current = keyboard.nav.selectedIndex;
-  }, [keyboard.nav.selectedIndex]);
-
-  useEffect(() => {
-    featureSelectedRef.current = featureNav.selectedIndex;
-  }, [featureNav.selectedIndex]);
-
-  // --- Filter + clamp ---
-  const filteredEpics = keyboard.toggleAll.showAll
-    ? visibleEpics
-    : visibleEpics.filter((e) => e.phase !== "done" && e.phase !== "cancelled");
-
-  useEffect(() => {
-    keyboard.nav.clampToRange(filteredEpics.length);
+    keyboard.nav.clampToRange(filteredEpics.length + 1); // +1 for "(all)"
   }, [filteredEpics.length]);
 
-  // --- Clamp feature nav when drilling into an epic ---
-  useEffect(() => {
-    if (activeView.type === "feature-list") {
-      const epic = epics.find((e) => e.slug === activeView.epicSlug);
-      const featCount = epic?.features.length ?? 0;
-      featureNav.clampToRange(featCount);
-    }
-  }, [activeView, epics]);
+  // --- Tree state for log panel ---
+  const selectedEpicSlug = keyboard.nav.selectedIndex === 0
+    ? undefined
+    : filteredEpics[keyboard.nav.selectedIndex - 1]?.slug;
 
-  // --- Reset feature selection on new feature list; reset follow on agent log ---
-  useEffect(() => {
-    if (activeView.type === "feature-list") {
-      featureNav.setSelectedIndex(0);
-    }
-    if (activeView.type === "agent-log") {
-      setFollowMode(true);
-    }
-  }, [
-    activeView.type,
-    activeView.type === "feature-list"
-      ? (activeView as VS.FeatureList).epicSlug
-      : null,
-  ]);
+  const { state: treeState } = useDashboardTreeState({
+    sessions: trackerSessions,
+    selectedEpicSlug,
+  });
 
   // --- Clock tick every 1s ---
   useEffect(() => {
@@ -232,58 +129,27 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       setTrackerSessions(loop.getTracker().getAll());
     };
 
-    const onStarted = () => {
-      setWatchRunning(true);
-      pushEvent("scan", "watch loop started");
-    };
-
-    const onStopped = () => {
-      setWatchRunning(false);
-    };
+    const onStarted = () => setWatchRunning(true);
+    const onStopped = () => setWatchRunning(false);
 
     const onSessionStarted = (ev: WatchLoopEventMap["session-started"][0]) => {
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
-      const target = ev.featureSlug ? `${ev.epicSlug}/${ev.featureSlug}` : ev.epicSlug;
-      pushEvent("dispatched", `${ev.phase} for ${target}`, { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug });
       refreshSessions();
     };
 
     const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
-      // Remove from active set — scan-complete will re-derive the full set
       setActiveSessions((prev) => {
         const next = new Set(prev);
         next.delete(ev.epicSlug);
         return next;
       });
-      const target = ev.featureSlug ? `${ev.epicSlug}/${ev.featureSlug}` : ev.epicSlug;
-      const status = ev.success ? "completed" : "failed";
-      const dur = `${(ev.durationMs / 1000).toFixed(0)}s`;
-      const detail = ev.costUsd != null ? `${dur}, $${ev.costUsd.toFixed(2)}` : dur;
-      pushEvent(
-        ev.success ? "completed" : "error",
-        `${ev.phase} ${status} for ${target} (${detail})`,
-        { phase: ev.phase, epic: ev.epicSlug, feature: ev.featureSlug },
-      );
       refreshSessions();
     };
 
-    const onScanComplete = (ev: WatchLoopEventMap["scan-complete"][0]) => {
-      // Refresh active sessions from tracker
+    const onScanComplete = (_ev: WatchLoopEventMap["scan-complete"][0]) => {
       const activeEpicSlugs = new Set(loop.getTracker().getAll().map((s) => s.epicSlug));
       setActiveSessions(activeEpicSlugs);
       refreshSessions();
-      if (ev.dispatched > 0) {
-        pushEvent("scan", `scanned ${ev.epicsScanned} epics, dispatched ${ev.dispatched}`);
-      }
-    };
-
-    const onError = (ev: WatchLoopEventMap["error"][0]) => {
-      const prefix = ev.epicSlug ? `${ev.epicSlug}: ` : "";
-      pushEvent("error", `${prefix}${ev.message}`, ev.epicSlug ? { epic: ev.epicSlug } : undefined);
-    };
-
-    const onEpicCancelled = (ev: WatchLoopEventMap["epic-cancelled"][0]) => {
-      pushEvent("error", `${ev.epicSlug} cancelled`, { epic: ev.epicSlug });
     };
 
     loop.on("started", onStarted);
@@ -291,8 +157,6 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
     loop.on("session-started", onSessionStarted);
     loop.on("session-completed", onSessionCompleted);
     loop.on("scan-complete", onScanComplete);
-    loop.on("error", onError);
-    loop.on("epic-cancelled", onEpicCancelled);
 
     return () => {
       loop.off("started", onStarted);
@@ -300,12 +164,10 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       loop.off("session-started", onSessionStarted);
       loop.off("session-completed", onSessionCompleted);
       loop.off("scan-complete", onScanComplete);
-      loop.off("error", onError);
-      loop.off("epic-cancelled", onEpicCancelled);
     };
-  }, [loop, pushEvent]);
+  }, [loop]);
 
-  // --- Refresh epics from state scanner ---
+  // --- Refresh epics from manifest store ---
   useEffect(() => {
     if (!loop || !projectRoot) return;
 
@@ -320,10 +182,8 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       }
     };
 
-    // Initial load
     refreshEpics();
 
-    // Re-scan on relevant events
     loop.on("scan-complete", refreshEpics);
     loop.on("session-completed", refreshEpics);
     loop.on("epic-cancelled", refreshEpics);
@@ -341,96 +201,40 @@ export default function App({ config, verbosity, loop, projectRoot }: AppProps) 
       ? keyboard.cancelFlow.state.slug
       : undefined;
 
-  // --- Derive breadcrumbs and key hints for active view ---
-  const crumbs = VS.crumbBar(viewStack);
-  const keyHintText = getKeyHints(activeView.type);
+  // --- Key hints ---
+  const keyHintText = getKeyHints(keyboard.mode, {
+    slug: cancelConfirmingSlug,
+    filterInput: keyboard.filterInput,
+  });
 
-  // --- Render the active view content ---
-  function renderContent() {
-    switch (activeView.type) {
-      case "epic-list":
-        return (
-          <EpicTable
-            epics={filteredEpics}
-            activeSessions={activeSessions}
-            selectedIndex={keyboard.nav.selectedIndex}
-            cancelConfirmingSlug={cancelConfirmingSlug}
-          />
-        );
-      case "feature-list": {
-        const epic = epics.find((e) => e.slug === activeView.epicSlug);
-        return (
-          <FeatureList
-            epicSlug={activeView.epicSlug}
-            features={epic?.features ?? []}
-            selectedIndex={featureNav.selectedIndex}
-            activeSessions={activeSessions}
-          />
-        );
-      }
-      case "agent-log":
-        return (
-          <LogPanel
-            state={treeState}
-            maxVisibleLines={followMode ? 30 : undefined}
-          />
-        );
-    }
-  }
+  // --- Cancel prompt ---
+  const cancelPrompt = cancelConfirmingSlug ? (
+    <Text color="yellow">Cancel {cancelConfirmingSlug}? (y/n)</Text>
+  ) : undefined;
 
   return (
-    <Box flexDirection="column" width="100%">
-      {/* Header zone */}
-      <Box flexDirection="row" justifyContent="space-between" paddingX={1}>
-        <Text bold color="green">
-          beastmode dashboard
-        </Text>
-        <Box>
-          <Text dimColor={!watchRunning} color={watchRunning ? "green" : undefined}>
-            {watchRunning ? "watch: running" : "watch: stopped"}
-          </Text>
-          <Text> </Text>
-          <Text dimColor>{clock}</Text>
-        </Box>
-      </Box>
-
-      {/* Crumb bar — only show when drilled in */}
-      {activeView.type !== "epic-list" && <CrumbBar crumbs={crumbs} />}
-
-      <Box paddingX={1}>
-        <Text dimColor>{"─".repeat(78)}</Text>
-      </Box>
-
-      {/* Content area — view switcher */}
-      <Box flexDirection="column" flexGrow={1} paddingX={1}>
-        {renderContent()}
-      </Box>
-
-      {/* Cancel confirmation */}
-      {cancelConfirmingSlug && (
-        <Box paddingX={1}>
-          <Text color="yellow">Cancel {cancelConfirmingSlug}? (y/n)</Text>
-        </Box>
-      )}
-
-      {/* Separator */}
-      <Box paddingX={1}>
-        <Text dimColor>{"─".repeat(78)}</Text>
-      </Box>
-
-      {/* Activity log zone */}
-      <Box flexDirection="column" paddingX={1}>
-        <ActivityLog events={events} />
-      </Box>
-
-      {/* Footer — context-sensitive key hints */}
-      <Box paddingX={1}>
-        {keyboard.shutdown.isShuttingDown ? (
-          <Text color="yellow">shutting down...</Text>
-        ) : (
-          <Text dimColor>{keyHintText}</Text>
-        )}
-      </Box>
-    </Box>
+    <ThreePanelLayout
+      watchRunning={watchRunning}
+      clock={clock}
+      epicsSlot={
+        <EpicsPanel
+          epics={filteredEpics}
+          activeSessions={activeSessions}
+          selectedIndex={keyboard.nav.selectedIndex}
+          cancelConfirmingSlug={cancelConfirmingSlug}
+        />
+      }
+      detailsSlot={
+        <DetailsPanel
+          epics={filteredEpics}
+          selectedIndex={keyboard.nav.selectedIndex}
+          activeSessions={activeSessions}
+        />
+      }
+      logSlot={<LogPanel state={treeState} />}
+      keyHints={keyHintText}
+      isShuttingDown={keyboard.shutdown.isShuttingDown}
+      cancelPrompt={cancelPrompt}
+    />
   );
 }
