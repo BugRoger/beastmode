@@ -127,14 +127,37 @@
     "format": ["progress-bar"],
     "publishQuiet": true
   },
+  "dead-man-switch": {
+    "paths": [
+      "features/dead-man-switch-detection.feature",
+      "features/dead-man-switch-redispatch.feature",
+      "features/dead-man-switch-isolation.feature",
+      "features/dead-man-switch-events.feature",
+      "features/dead-man-switch-liveness.feature"
+    ],
+    "import": [
+      "features/step_definitions/dead-man-switch.steps.ts",
+      "features/step_definitions/watch-loop.steps.ts",
+      "features/support/watch-world.ts",
+      "features/support/watch-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
   "watch-all": {
     "paths": [
       "features/watch-loop-happy-path.feature",
-      "features/wave-failure.feature"
+      "features/wave-failure.feature",
+      "features/dead-man-switch-detection.feature",
+      "features/dead-man-switch-redispatch.feature",
+      "features/dead-man-switch-isolation.feature",
+      "features/dead-man-switch-events.feature",
+      "features/dead-man-switch-liveness.feature"
     ],
     "import": [
       "features/step_definitions/watch-loop.steps.ts",
       "features/step_definitions/wave-failure.steps.ts",
+      "features/step_definitions/dead-man-switch.steps.ts",
       "features/support/watch-world.ts",
       "features/support/watch-hooks.ts"
     ],
