@@ -215,20 +215,20 @@ Then("the epic remains in its current phase", function (this: DashboardDispatchW
 });
 
 Then("the error message identifies the failed strategy", function (this: DashboardDispatchWorld) {
-  assert.ok(this.dashboardStrategyError, "An error should be set");
-  const message = this.dashboardStrategyError?.message || "";
+  const err = this.dispatchError ?? this.dashboardStrategyError;
+  assert.ok(err, "An error should be set");
   assert.ok(
-    message.length > 0,
+    err!.message.length > 0,
     "Error message should describe which strategy failed",
   );
 });
 
 Then("the error message describes the failure reason", function (this: DashboardDispatchWorld) {
-  assert.ok(this.dashboardStrategyError, "An error should be set");
-  const message = this.dashboardStrategyError?.message || "";
+  const err = this.dispatchError ?? this.dashboardStrategyError;
+  assert.ok(err, "An error should be set");
   assert.ok(
-    message.length > 0,
-    "Error message should describe the failure reason",
+    err!.message.includes("fail"),
+    `Error message should describe the failure reason: "${err!.message}"`,
   );
 });
 
