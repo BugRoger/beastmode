@@ -210,55 +210,47 @@ export function buildPreToolUseHook(
 /**
  * Build the full prompt string that the PreToolUse hook will execute.
  *
- * The prompt instructs the model to:
- * 1. Read the AskUserQuestion input from $ARGUMENTS
- * 2. Evaluate each question against the user's HITL prose
- * 3. Return auto-answer OR defer (all-or-nothing for multi-question)
- * 4. Fail-open on any uncertainty
+ * The hook is a dumb relay — it either defers to the human or passes the
+ * standing instructions through as a freeform "Other" answer. The main
+ * agent (which is intelligent) interprets the prose in context.
+ *
+ * This avoids the old design where the hook model tried to pick from
+ * options it couldn't evaluate, hitting the ambiguity escape hatch.
  */
 function buildPrompt(prose: string): string {
-  return `You are a HITL (Human-in-the-Loop) auto-answering hook. Your job is to decide whether to auto-answer an AskUserQuestion call or defer it to the human.
+  return `You are a HITL (Human-in-the-Loop) relay hook. You either defer an AskUserQuestion to the human, or relay standing instructions as a freeform answer. You do NOT evaluate the questions.
 
-## User's HITL Instructions
+## Standing Instructions
 
 ${prose}
 
+## Decision
+
+- If the standing instructions say "always defer to human": DEFER.
+- Otherwise: RELAY the standing instructions as a freeform answer for every question.
+
 ## Input
 
-The tool input is provided in $ARGUMENTS as JSON. It contains a "questions" array, where each question has:
-- "question": the question text
-- "options": array of {label, description} choices
-- "multiSelect": boolean
-
-## Decision Rules
-
-1. Read each question in the batch
-2. For each question, check if the user's HITL instructions above give a clear answer
-3. If ALL questions can be auto-answered with high confidence, return an auto-answer
-4. If ANY question is ambiguous, unclear, or not covered by the instructions, defer ALL questions to the human
-5. On ANY error, uncertainty, or edge case: DEFER (fail-open)
+The tool input is in $ARGUMENTS as JSON with a "questions" array. Each question has a "question" field with the question text.
 
 ## Response Format
 
-To AUTO-ANSWER (all questions have clear answers):
-Return a JSON block:
+To RELAY (pass instructions through as freeform answer):
 \`\`\`json
-{"permissionDecision": "allow", "updatedInput": {"questions": [...original questions...], "answers": {"<question text>": "<selected option label>", ...}}}
+{"permissionDecision": "allow", "updatedInput": {"questions": [...copy questions array from input...], "answers": {"<question text>": "${prose}"}}}
 \`\`\`
 
-To DEFER to human (any question needs human input):
-Return a JSON block:
+To DEFER (let the human answer):
 \`\`\`json
 {"permissionDecision": "allow"}
 \`\`\`
 
 IMPORTANT:
-- The "answers" object keys MUST exactly match the "question" text strings
-- The answer values MUST exactly match one of the option "label" strings
-- For multiSelect questions, the answer is a comma-separated list of labels
-- If instructions say "always defer to human", ALWAYS return the defer response
-- Never add explanations outside the JSON block
-- Never return permissionDecision: "deny" — always "allow"`;
+- The "answers" keys MUST exactly match the "question" text from the input
+- The answer value is ALWAYS the standing instructions text above, verbatim
+- For multiple questions, use the same text for every answer
+- Never add text outside the JSON block
+- Never return permissionDecision: "deny"`;
 }
 
 /**

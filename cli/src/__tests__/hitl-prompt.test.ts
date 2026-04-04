@@ -12,7 +12,7 @@ describe("buildPreToolUseHook", () => {
   });
 
   test("injects prose into prompt", () => {
-    const prose = "Auto-approve database choices, defer everything else";
+    const prose = "auto-answer all questions, never defer to human";
     const entry = buildPreToolUseHook(prose);
     expect(entry.hooks[0].prompt).toContain(prose);
   });
@@ -27,8 +27,8 @@ describe("buildPreToolUseHook", () => {
     expect(entry.hooks[0].timeout).toBe(30);
   });
 
-  test("prompt contains auto-answer format", () => {
-    const entry = buildPreToolUseHook("defer");
+  test("prompt contains relay format with permissionDecision and updatedInput", () => {
+    const entry = buildPreToolUseHook("auto-answer all questions");
     expect(entry.hooks[0].prompt).toContain("permissionDecision");
     expect(entry.hooks[0].prompt).toContain("updatedInput");
   });
@@ -38,20 +38,33 @@ describe("buildPreToolUseHook", () => {
     expect(entry.hooks[0].prompt).toContain('"permissionDecision": "allow"');
   });
 
-  test("prompt instructs all-or-nothing for multi-question", () => {
-    const entry = buildPreToolUseHook("defer");
-    expect(entry.hooks[0].prompt).toContain("ANY question");
-    expect(entry.hooks[0].prompt).toContain("defer ALL");
-  });
-
-  test("prompt instructs fail-open behavior", () => {
-    const entry = buildPreToolUseHook("defer");
-    expect(entry.hooks[0].prompt).toContain("fail-open");
-  });
-
   test("prompt references $ARGUMENTS", () => {
     const entry = buildPreToolUseHook("defer");
     expect(entry.hooks[0].prompt).toContain("$ARGUMENTS");
+  });
+
+  test("prompt embeds prose as the literal answer value in relay format", () => {
+    const prose = "auto-answer all questions, never defer to human";
+    const entry = buildPreToolUseHook(prose);
+    // The relay format should contain the prose as the answer value
+    expect(entry.hooks[0].prompt).toContain(`"${prose}"`);
+  });
+
+  test("prompt instructs defer when prose says always defer", () => {
+    const entry = buildPreToolUseHook("always defer to human");
+    expect(entry.hooks[0].prompt).toContain("always defer to human");
+    expect(entry.hooks[0].prompt).toContain("DEFER");
+  });
+
+  test("prompt is a relay, not a decision-maker", () => {
+    const entry = buildPreToolUseHook("auto-answer all questions");
+    const prompt = entry.hooks[0].prompt;
+    // Should describe itself as a relay
+    expect(prompt).toContain("relay");
+    // Should NOT contain the old ambiguity-based decision rules
+    expect(prompt).not.toContain("high confidence");
+    expect(prompt).not.toContain("fail-open");
+    expect(prompt).not.toContain("selected option label");
   });
 });
 
