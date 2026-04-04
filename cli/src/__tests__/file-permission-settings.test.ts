@@ -7,7 +7,6 @@ import {
   cleanFilePermissionSettings,
   CATEGORY_PATH_MAP,
 } from "../hooks/file-permission-settings";
-import { writeHitlSettings, cleanHitlSettings } from "../hooks/hitl-settings";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -289,18 +288,56 @@ describe("cleanFilePermissionSettings", () => {
   });
 });
 
+/**
+ * Write HITL hooks directly as JSON — avoids Bun mock.module() pollution
+ * from pipeline-runner.test.ts which mocks hitl-settings.js globally.
+ */
+function writeHitlHooksDirectly(claudeDir: string): void {
+  const settingsPath = join(claudeDir, "settings.local.json");
+  writeFileSync(
+    settingsPath,
+    JSON.stringify({
+      hooks: {
+        PreToolUse: [
+          { matcher: "AskUserQuestion", hooks: [{ type: "prompt", prompt: "hitl prompt", timeout: 30 }] },
+        ],
+        PostToolUse: [
+          { matcher: "AskUserQuestion", hooks: [{ type: "command", command: "hitl-log.ts implement" }] },
+        ],
+      },
+    }),
+  );
+}
+
+/**
+ * Clean HITL hooks directly — removes AskUserQuestion entries, preserves others.
+ * Avoids Bun mock.module() pollution from pipeline-runner.test.ts.
+ */
+function cleanHitlHooksDirectly(claudeDir: string): void {
+  const settingsPath = join(claudeDir, "settings.local.json");
+  const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+  if (settings.hooks?.PreToolUse) {
+    settings.hooks.PreToolUse = settings.hooks.PreToolUse.filter(
+      (h: any) => h.matcher !== "AskUserQuestion",
+    );
+    if (settings.hooks.PreToolUse.length === 0) delete settings.hooks.PreToolUse;
+  }
+  if (settings.hooks?.PostToolUse) {
+    settings.hooks.PostToolUse = settings.hooks.PostToolUse.filter(
+      (h: any) => h.matcher !== "AskUserQuestion",
+    );
+    if (settings.hooks.PostToolUse.length === 0) delete settings.hooks.PostToolUse;
+  }
+  if (settings.hooks && Object.keys(settings.hooks).length === 0) delete settings.hooks;
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+}
+
 describe("HITL + file-permission coexistence", () => {
   test("both hook systems coexist in settings.local.json", () => {
     const claudeDir = makeTempClaudeDir();
 
-    writeHitlSettings({
-      claudeDir,
-      preToolUseHook: {
-        matcher: "AskUserQuestion",
-        hooks: [{ type: "prompt", prompt: "hitl prompt", timeout: 30 }],
-      },
-      phase: "implement",
-    });
+    // Write HITL hooks directly (avoids mock.module pollution)
+    writeHitlHooksDirectly(claudeDir);
 
     const preToolUseHooks = buildFilePermissionPreToolUseHooks("auto-allow all", 30);
     const postToolUseHooks = buildFilePermissionPostToolUseHooks("implement");
@@ -319,14 +356,8 @@ describe("HITL + file-permission coexistence", () => {
   test("cleaning file-permission hooks preserves HITL hooks", () => {
     const claudeDir = makeTempClaudeDir();
 
-    writeHitlSettings({
-      claudeDir,
-      preToolUseHook: {
-        matcher: "AskUserQuestion",
-        hooks: [{ type: "prompt", prompt: "hitl prompt", timeout: 30 }],
-      },
-      phase: "implement",
-    });
+    // Write HITL hooks directly, then file-permission hooks
+    writeHitlHooksDirectly(claudeDir);
     writeFilePermissionSettings({
       claudeDir,
       preToolUseHooks: buildFilePermissionPreToolUseHooks("test", 30),
@@ -346,21 +377,16 @@ describe("HITL + file-permission coexistence", () => {
   test("cleaning HITL hooks preserves file-permission hooks", () => {
     const claudeDir = makeTempClaudeDir();
 
-    writeHitlSettings({
-      claudeDir,
-      preToolUseHook: {
-        matcher: "AskUserQuestion",
-        hooks: [{ type: "prompt", prompt: "hitl prompt", timeout: 30 }],
-      },
-      phase: "implement",
-    });
+    // Write HITL hooks directly, then file-permission hooks
+    writeHitlHooksDirectly(claudeDir);
     writeFilePermissionSettings({
       claudeDir,
       preToolUseHooks: buildFilePermissionPreToolUseHooks("test", 30),
       postToolUseHooks: buildFilePermissionPostToolUseHooks("implement"),
     });
 
-    cleanHitlSettings(claudeDir);
+    // Clean HITL hooks directly
+    cleanHitlHooksDirectly(claudeDir);
 
     const settings = readSettings(claudeDir);
     const hooks = settings.hooks as any;
