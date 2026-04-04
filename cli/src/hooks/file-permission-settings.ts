@@ -173,7 +173,7 @@ export function writeFilePermissionSettings(options: WriteFilePermissionSettings
   let preToolUse = (settings.hooks.PreToolUse ?? []).filter(
     (h) => !FILE_PERMISSION_MATCHERS.includes(h.matcher),
   );
-  preToolUse.push(...(preToolUseHooks as any[]));
+  preToolUse.push(...preToolUseHooks);
   settings.hooks.PreToolUse = preToolUse;
 
   // Replace Write/Edit PostToolUse hooks
@@ -228,5 +228,8 @@ export function cleanFilePermissionSettings(claudeDir: string): void {
     delete settings.hooks;
   }
 
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+  // Atomic write
+  const tmpPath = settingsPath + ".tmp";
+  writeFileSync(tmpPath, JSON.stringify(settings, null, 2) + "\n");
+  renameSync(tmpPath, settingsPath);
 }

@@ -46,9 +46,9 @@ describe("buildFilePermissionPreToolUseHooks", () => {
     const editHook = hooks.find((h) => h.matcher === "Edit")!;
 
     expect(writeHook.hooks[0]).toHaveProperty("if");
-    expect((writeHook.hooks[0] as any).if).toBe("Write(.claude/**)");
+    expect(writeHook.hooks[0]["if"]).toBe("Write(.claude/**)");
     expect(editHook.hooks[0]).toHaveProperty("if");
-    expect((editHook.hooks[0] as any).if).toBe("Edit(.claude/**)");
+    expect(editHook.hooks[0]["if"]).toBe("Edit(.claude/**)");
   });
 
   test("each hook is a prompt type with timeout", () => {
