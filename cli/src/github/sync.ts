@@ -71,6 +71,8 @@ export interface EpicBodyInput {
     phaseTags?: Record<string, string>;  // phase -> tag name
     version?: string;
     mergeCommit?: { sha: string; url: string };
+    /** Compare URL for viewing the full diff — branch-based or archive-based. */
+    compareUrl?: string;
   };
   /** GitHub repo in "owner/repo" format — needed for permalink construction. */
   repo?: string;
@@ -134,6 +136,11 @@ export function formatEpicBody(input: EpicBodyInput): string {
     const meta = input.gitMetadata;
     const lines: string[] = [];
     if (meta.branch) lines.push(`**Branch:** \`${meta.branch}\``);
+    if (meta.compareUrl) {
+      // Extract the range label from the URL path: everything after /compare/
+      const rangeLabel = meta.compareUrl.split("/compare/").pop() ?? meta.compareUrl;
+      lines.push(`**Compare:** [${rangeLabel}](${meta.compareUrl})`);
+    }
     if (meta.phaseTags && Object.keys(meta.phaseTags).length > 0) {
       const tagList = Object.entries(meta.phaseTags)
         .map(([_phase, tag]) => `\`${tag}\``)

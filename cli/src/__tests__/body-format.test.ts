@@ -338,6 +338,73 @@ describe("formatEpicBody", () => {
     expect(body).toContain("**Branch:** `main`");
     expect(body).not.toContain("**Tags:**");
   });
+
+  test("renders compare URL as clickable link in git section", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/my-epic",
+        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
+      },
+    });
+    expect(body).toContain("## Git");
+    expect(body).toContain(
+      "**Compare:** [main...feature/my-epic](https://github.com/org/repo/compare/main...feature/my-epic)",
+    );
+  });
+
+  test("renders archive compare URL after release", () => {
+    const body = formatEpicBody({
+      ...makeManifest({ phase: "done" }),
+      gitMetadata: {
+        version: "1.2.0",
+        compareUrl: "https://github.com/org/repo/compare/v1.2.0...archive/my-epic",
+      },
+    });
+    expect(body).toContain(
+      "**Compare:** [v1.2.0...archive/my-epic](https://github.com/org/repo/compare/v1.2.0...archive/my-epic)",
+    );
+  });
+
+  test("omits compare line when compareUrl absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: { branch: "feature/my-epic" },
+    });
+    expect(body).not.toContain("**Compare:**");
+  });
+
+  test("compare URL appears after branch line in git section", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/my-epic",
+        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
+      },
+    });
+    const branchIdx = body.indexOf("**Branch:**");
+    const compareIdx = body.indexOf("**Compare:**");
+    expect(branchIdx).toBeGreaterThan(-1);
+    expect(compareIdx).toBeGreaterThan(branchIdx);
+  });
+
+  test("full git section includes compare URL alongside other fields", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/epic-branch",
+        phaseTags: { design: "beastmode/epic/design" },
+        version: "2.0.0",
+        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
+        compareUrl: "https://github.com/org/repo/compare/main...feature/epic-branch",
+      },
+    });
+    expect(body).toContain("**Branch:** `feature/epic-branch`");
+    expect(body).toContain("**Compare:** [main...feature/epic-branch](https://github.com/org/repo/compare/main...feature/epic-branch)");
+    expect(body).toContain("**Tags:** `beastmode/epic/design`");
+    expect(body).toContain("**Version:** 2.0.0");
+    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
+  });
 });
 
 // --- formatFeatureBody ---
