@@ -327,6 +327,50 @@ describe("It2Client", () => {
   });
 
   // -----------------------------------------------------------------------
+  // getSessionTty
+  // -----------------------------------------------------------------------
+
+  describe("getSessionTty", () => {
+    test("returns tty for matching session ID", async () => {
+      const json = JSON.stringify([
+        { id: "sess-1", name: "Tab 1", tab_id: "w0t0", tty: "/dev/ttys003" },
+        { id: "sess-2", name: "Tab 2", tab_id: "w0t1", tty: "/dev/ttys004" },
+      ]);
+      const { client } = clientOk(json);
+
+      const result = await client.getSessionTty("sess-1");
+      expect(result).toBe("/dev/ttys003");
+    });
+
+    test("returns null when session ID not found", async () => {
+      const json = JSON.stringify([
+        { id: "sess-1", name: "Tab 1", tab_id: "w0t0", tty: "/dev/ttys003" },
+      ]);
+      const { client } = clientOk(json);
+
+      const result = await client.getSessionTty("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    test("returns null when tty field is missing", async () => {
+      const json = JSON.stringify([
+        { id: "sess-1", name: "Tab 1", tab_id: "w0t0" },
+      ]);
+      const { client } = clientOk(json);
+
+      const result = await client.getSessionTty("sess-1");
+      expect(result).toBeNull();
+    });
+
+    test("returns null on connection failure", async () => {
+      const { client } = clientFail("connection refused");
+
+      const result = await client.getSessionTty("sess-1");
+      expect(result).toBeNull();
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // error handling
   // -----------------------------------------------------------------------
 

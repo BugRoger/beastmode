@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.87.0 — Dead Man Switch (Apr 2026)
+
+- **Liveness engine** — External process liveness detection via iTerm2 TTY process tree inspection; `checkLiveness` on `SessionFactory` interface (optional) probes `ps -t <tty>` for `beastmode` in args
+- **Session death detection** — Dead sessions force-resolved and re-dispatched via existing rescan path; `session-dead` event emitted for observability
+- **TTY management** — TTY device paths captured at dispatch time via `It2Client.getSessionTty()`; dual-ID mapping bridges dispatch session IDs to iTerm2 pane session IDs
+- **Map lifecycle** — Cleanup for ttyMap, resolvers, and dispatchToPaneId in all completion and abort paths
+- **Integration tests** — Cucumber scenarios for crashed session detection, dead session re-dispatch, session isolation, session-dead event logging, and instrumentation-free liveness
+
+---
+
 ### v0.86.0 — Dashboard Polish (Apr 2026)
 
 - **Monokai Pro palette** — Centralized color module with hex/ANSI constants replacing scattered hardcoded values across all dashboard components

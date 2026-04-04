@@ -362,4 +362,325 @@ describe("WatchLoop event emission", () => {
     expect(held[0].blockingSlug).toBe("epic-a");
     loop.setRunning(false);
   });
+
+  test("tick calls checkLiveness before epic scan when factory supports it", async () => {
+    const callOrder: string[] = [];
+    let scanCount = 0;
+
+    const deps = makeDeps({
+      scanEpics: async () => {
+        callOrder.push("scan");
+        scanCount++;
+        // First scan dispatches one session, second scan (rescan after completion) returns empty
+        if (scanCount === 1) {
+          return [makeEpic({ slug: "test-epic", nextAction: { phase: "design", args: ["test-epic"], type: "single" as const } })];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-${Date.now()}`,
+            worktreeSlug: opts.epicSlug,
+            promise: new Promise(() => {}), // Never resolves
+          };
+        },
+        async checkLiveness(_sessions: import("../dispatch/types").DispatchedSession[]) {
+          callOrder.push("checkLiveness");
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    // First tick: dispatch the session
+    await loop.tick();
+    expect(callOrder).toEqual(["scan"]); // No liveness check on first tick (tracker empty)
+
+    // Second tick: liveness check should run first
+    callOrder.length = 0;
+    await loop.tick();
+
+    expect(callOrder).toEqual(["checkLiveness", "scan"]);
+    loop.setRunning(false);
+  });
+
+  test("tick skips checkLiveness when factory does not support it", async () => {
+    const deps = makeDeps({
+      scanEpics: async () => [],
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-${Date.now()}`,
+            worktreeSlug: opts.epicSlug,
+            promise: new Promise(() => {}),
+          };
+        },
+        // No checkLiveness method
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    // Should not throw
+    await loop.tick();
+    loop.setRunning(false);
+  });
+
+  test("emits session-dead when liveness check detects dead session", async () => {
+    const resolvers = new Map<string, (result: import("../dispatch/types").SessionResult) => void>();
+
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [makeEpic({ slug: "dead-epic", nextAction: { phase: "plan", args: ["dead-epic"], type: "single" as const } })];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          let resolvePromise!: (result: import("../dispatch/types").SessionResult) => void;
+          const promise = new Promise<import("../dispatch/types").SessionResult>((resolve) => {
+            resolvePromise = resolve;
+          });
+          const id = `session-dead-test`;
+          resolvers.set(id, resolvePromise);
+          return { id, worktreeSlug: opts.epicSlug, promise };
+        },
+        async checkLiveness(sessions: import("../dispatch/types").DispatchedSession[]) {
+          for (const session of sessions) {
+            const resolver = resolvers.get(session.id);
+            if (resolver) {
+              resolver({ success: false, exitCode: 1, durationMs: 1000 });
+            }
+          }
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const deadEvents: Array<{ epicSlug: string; phase: string; sessionId: string }> = [];
+    loop.on("session-dead", (payload) => deadEvents.push(payload));
+
+    // First tick dispatches the session
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Second tick triggers liveness check — which force-resolves the dead session
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(deadEvents.length).toBe(1);
+    expect(deadEvents[0].epicSlug).toBe("dead-epic");
+    expect(deadEvents[0].phase).toBe("plan");
+    expect(deadEvents[0].sessionId).toBe("session-dead-test");
+    loop.setRunning(false);
+  });
+
+  test("session-dead fires before session-completed in event sequence", async () => {
+    const resolvers = new Map<string, (result: import("../dispatch/types").SessionResult) => void>();
+    const eventOrder: string[] = [];
+
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [makeEpic({ slug: "order-epic", nextAction: { phase: "plan", args: ["order-epic"], type: "single" as const } })];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          let resolvePromise!: (result: import("../dispatch/types").SessionResult) => void;
+          const promise = new Promise<import("../dispatch/types").SessionResult>((resolve) => {
+            resolvePromise = resolve;
+          });
+          const id = `session-order-test`;
+          resolvers.set(id, resolvePromise);
+          return { id, worktreeSlug: opts.epicSlug, promise };
+        },
+        async checkLiveness(sessions: import("../dispatch/types").DispatchedSession[]) {
+          for (const session of sessions) {
+            const resolver = resolvers.get(session.id);
+            if (resolver) {
+              resolver({ success: false, exitCode: 1, durationMs: 500 });
+            }
+          }
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    loop.on("session-dead", () => eventOrder.push("session-dead"));
+    loop.on("session-completed", () => eventOrder.push("session-completed"));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(eventOrder[0]).toBe("session-dead");
+    expect(eventOrder[1]).toBe("session-completed");
+    loop.setRunning(false);
+  });
+
+  test("attachLoggerSubscriber formats session-dead events distinctly", () => {
+    const deps = makeDeps();
+    const loop = new WatchLoop(makeConfig(), deps);
+
+    const warnings: string[] = [];
+
+    const mockLogger: Logger = {
+      log: () => {},
+      detail: () => {},
+      debug: () => {},
+      trace: () => {},
+      warn: (msg: string) => warnings.push(msg),
+      error: () => {},
+      child: () => mockLogger,
+    };
+
+    attachLoggerSubscriber(loop, mockLogger);
+
+    loop.emit("session-dead", {
+      epicSlug: "my-epic",
+      phase: "plan",
+      sessionId: "sess-dead-1",
+      tty: "/dev/ttys003",
+    });
+
+    expect(warnings.some((m) => m.includes("DEAD"))).toBe(true);
+    expect(warnings.some((m) => m.includes("sess-dead-1"))).toBe(true);
+    expect(warnings.some((m) => m.includes("/dev/ttys003"))).toBe(true);
+    expect(warnings.some((m) => m.includes("re-dispatch"))).toBe(true);
+  });
+
+  test("parallel sessions for other epics are unaffected when one session dies", async () => {
+    const resolvers = new Map<string, (result: import("../dispatch/types").SessionResult) => void>();
+
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [
+            makeEpic({ slug: "alive-epic", nextAction: { phase: "design", args: ["alive-epic"], type: "single" as const } }),
+            makeEpic({ slug: "dead-epic", nextAction: { phase: "plan", args: ["dead-epic"], type: "single" as const } }),
+          ];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          let resolvePromise!: (result: import("../dispatch/types").SessionResult) => void;
+          const promise = new Promise<import("../dispatch/types").SessionResult>((resolve) => {
+            resolvePromise = resolve;
+          });
+          const id = `session-${opts.epicSlug}`;
+          resolvers.set(id, resolvePromise);
+          return { id, worktreeSlug: opts.epicSlug, promise };
+        },
+        async checkLiveness(sessions: import("../dispatch/types").DispatchedSession[]) {
+          const deadSession = sessions.find((s) => s.epicSlug === "dead-epic");
+          if (deadSession) {
+            const resolver = resolvers.get(deadSession.id);
+            if (resolver) {
+              resolver({ success: false, exitCode: 1, durationMs: 500 });
+            }
+          }
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const completedEvents: Array<{ epicSlug: string; success: boolean }> = [];
+    loop.on("session-completed", (payload) => completedEvents.push({ epicSlug: payload.epicSlug, success: payload.success }));
+
+    const deadEvents: Array<{ epicSlug: string }> = [];
+    loop.on("session-dead", (payload) => deadEvents.push({ epicSlug: payload.epicSlug }));
+
+    // First tick dispatches both sessions
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(loop.getTracker().size).toBe(2);
+
+    // Second tick runs liveness — kills dead-epic only
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(deadEvents.length).toBe(1);
+    expect(deadEvents[0].epicSlug).toBe("dead-epic");
+    expect(loop.getTracker().size).toBe(1);
+    expect(completedEvents.some((e) => e.epicSlug === "dead-epic" && !e.success)).toBe(true);
+    expect(completedEvents.some((e) => e.epicSlug === "alive-epic")).toBe(false);
+
+    loop.setRunning(false);
+  });
+
+  test("multiple simultaneous dead sessions are each handled independently", async () => {
+    const resolvers = new Map<string, (result: import("../dispatch/types").SessionResult) => void>();
+
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [
+            makeEpic({ slug: "dead-a", nextAction: { phase: "design", args: ["dead-a"], type: "single" as const } }),
+            makeEpic({ slug: "dead-b", nextAction: { phase: "plan", args: ["dead-b"], type: "single" as const } }),
+          ];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          let resolvePromise!: (result: import("../dispatch/types").SessionResult) => void;
+          const promise = new Promise<import("../dispatch/types").SessionResult>((resolve) => {
+            resolvePromise = resolve;
+          });
+          const id = `session-${opts.epicSlug}`;
+          resolvers.set(id, resolvePromise);
+          return { id, worktreeSlug: opts.epicSlug, promise };
+        },
+        async checkLiveness(sessions: import("../dispatch/types").DispatchedSession[]) {
+          for (const session of sessions) {
+            const resolver = resolvers.get(session.id);
+            if (resolver) {
+              resolver({ success: false, exitCode: 1, durationMs: 300 });
+            }
+          }
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const deadEvents: Array<{ epicSlug: string; sessionId: string }> = [];
+    loop.on("session-dead", (payload) => deadEvents.push({ epicSlug: payload.epicSlug, sessionId: payload.sessionId }));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    await loop.tick();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(deadEvents.length).toBe(2);
+    const slugs = deadEvents.map((e) => e.epicSlug).sort();
+    expect(slugs).toEqual(["dead-a", "dead-b"]);
+
+    loop.setRunning(false);
+  });
 });

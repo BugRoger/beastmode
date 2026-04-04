@@ -33,6 +33,14 @@ export interface DispatchEntry {
   featureSlug?: string;
 }
 
+export interface SessionDeadEvent {
+  epicSlug: string;
+  phase: string;
+  featureSlug?: string;
+  sessionId: string;
+  tty: string;
+}
+
 const NEXT_PHASE: Record<string, string> = {
   plan: "implement",
   implement: "validate",
@@ -47,6 +55,7 @@ export class WatchLoopWorld extends World {
   dispatchLog: DispatchEntry[] = [];
   heldReleases: ReleaseHeldEvent[] = [];
   completedSessions: SessionCompletedEvent[] = [];
+  sessionDeadEvents: SessionDeadEvent[] = [];
   loop!: WatchLoop;
   private nextId = 0;
   private testRoot = "/tmp/beastmode-watch-cucumber-noop";
@@ -58,6 +67,7 @@ export class WatchLoopWorld extends World {
     this.dispatchLog = [];
     this.heldReleases = [];
     this.completedSessions = [];
+    this.sessionDeadEvents = [];
     this.nextId = 0;
   }
 
@@ -114,6 +124,9 @@ export class WatchLoopWorld extends World {
     this.loop.on("session-completed", (evt: SessionCompletedEvent) => {
       this.completedSessions.push(evt);
     });
+    this.loop.on("session-dead" as any, (evt: SessionDeadEvent) => {
+      this.sessionDeadEvents.push(evt);
+    });
   }
 
   /** Seed both epics at a given phase with a specific nextAction phase. */
@@ -134,6 +147,44 @@ export class WatchLoopWorld extends World {
       };
       this.manifests.set(slug, manifest);
     }
+  }
+
+  /**
+   * Seed a single epic at a given phase with a specific nextAction.
+   * Unlike seedEpics() which seeds all epicDefs, this targets one epic.
+   */
+  seedEpic(epicSlug: string, currentPhase: string, nextActionPhase: string, nextActionType: "single" | "fan-out" = "single"): void {
+    const def = this.epicDefs.get(epicSlug);
+    const features = def
+      ? def.features.map((f) => ({
+          slug: f.slug,
+          plan: `${f.slug}.md`,
+          wave: f.wave,
+          status: "pending" as const,
+        }))
+      : [];
+
+    const manifest: EnrichedManifest = {
+      slug: epicSlug,
+      phase: currentPhase as any,
+      features: nextActionType === "fan-out" ? features : [],
+      artifacts: {},
+      lastUpdated: new Date().toISOString(),
+      manifestPath: `state/${epicSlug}.manifest.json`,
+      nextAction: nextActionType === "fan-out"
+        ? {
+            phase: nextActionPhase,
+            args: [epicSlug],
+            type: "fan-out",
+            features: def ? def.features.filter((f) => f.wave === 1).map((f) => f.slug) : [],
+          }
+        : {
+            phase: nextActionPhase,
+            args: [epicSlug],
+            type: "single",
+          },
+    };
+    this.manifests.set(epicSlug, manifest);
   }
 
   /**
@@ -316,6 +367,17 @@ export class WatchLoopWorld extends World {
   }
 
   /**
+   * Check if a specific epic (or feature within an epic) has an active session.
+   */
+  hasActiveSession(epicSlug: string, featureSlug?: string): boolean {
+    const tracker = this.loop.getTracker();
+    return tracker.getAll().some((s) =>
+      s.epicSlug === epicSlug &&
+      (featureSlug ? s.featureSlug === featureSlug : true),
+    );
+  }
+
+  /**
    * Fail a specific session (feature within an epic) without advancing manifest.
    * Does NOT call advanceManifest, so the feature stays pending for re-dispatch.
    */
@@ -329,6 +391,43 @@ export class WatchLoopWorld extends World {
       }
     }
     throw new Error(`No session found for ${epicSlug}/${featureSlug}`);
+  }
+
+  /**
+   * Kill a session to simulate terminal process death.
+   * Resolves the promise as failed WITHOUT advancing manifest,
+   * so the epic remains at the same phase for re-dispatch.
+   */
+  killSession(epicSlug: string, featureSlug?: string): void {
+    for (const [id, resolver] of this.sessionResolvers) {
+      const matches = featureSlug
+        ? resolver.epicSlug === epicSlug && resolver.featureSlug === featureSlug
+        : resolver.epicSlug === epicSlug && !resolver.featureSlug;
+      if (matches) {
+        this.sessionResolvers.delete(id);
+        resolver.resolve({ success: false, exitCode: 1, durationMs: 100 });
+        return;
+      }
+    }
+    throw new Error(
+      `No session found for ${epicSlug}${featureSlug ? `/${featureSlug}` : ""}`,
+    );
+  }
+
+  /**
+   * Kill all sessions for an epic (simulates all terminal processes dying).
+   */
+  killAllSessionsForEpic(epicSlug: string): void {
+    const toKill: Array<[string, SessionResolver]> = [];
+    for (const [id, resolver] of this.sessionResolvers) {
+      if (resolver.epicSlug === epicSlug) {
+        toKill.push([id, resolver]);
+      }
+    }
+    for (const [id, resolver] of toKill) {
+      this.sessionResolvers.delete(id);
+      resolver.resolve({ success: false, exitCode: 1, durationMs: 100 });
+    }
   }
 
   /**

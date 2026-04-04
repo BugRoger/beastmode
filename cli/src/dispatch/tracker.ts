@@ -25,6 +25,11 @@ export class DispatchTracker {
     this.sessions.delete(id);
   }
 
+  /** Check if a session with the given ID exists. */
+  has(id: string): boolean {
+    return this.sessions.has(id);
+  }
+
   /**
    * Reserve a dispatch slot synchronously before the async session create.
    * Prevents concurrent rescans from dispatching the same feature/phase.

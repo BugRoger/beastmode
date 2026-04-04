@@ -52,6 +52,11 @@
 7. Persist action accumulates state in memory only — no disk writes during machine transitions, single `store.save()` at end of dispatch
 8. REGRESS event replaces VALIDATE_FAILED — generic regression from any non-terminal state to any earlier phase except design, with full feature reset when regressing to or past implement
 
+## Per-Session Map Lifecycle
+- ALWAYS add cleanup for new per-session Maps in all completion AND abort paths -- leaked Map entries accumulate across the watch loop's lifetime
+- ALWAYS use an explicit bridging Map when external APIs (iTerm2 pane IDs) and internal APIs (dispatch session IDs) use different ID namespaces -- ambiguous keying causes silent lookup failures
+- ALWAYS use snapshot-diff pattern (capture IDs before, compare after) when detecting side effects of a black-box call on a mutable collection
+
 ## Write Plan
 - Write Plan replaces the implicit Decompose step — produces `.tasks.md` with header, file structure, and TDD task definitions before dispatch begins
 - `.tasks.md` uses checkbox tracking (`- [ ]`/`- [x]`) for cross-session resume — no separate .tasks.json

@@ -166,6 +166,8 @@ export interface SessionHandle {
   promise: Promise<SessionResult>;
   /** EventEmitter for live SDK message streaming (SDK dispatch only). */
   events?: SessionEmitter;
+  /** TTY device path for terminal-dispatched sessions. */
+  tty?: string;
 }
 
 /**
@@ -181,6 +183,9 @@ export interface SessionFactory {
 
   /** Optional badge on the epic-level container (tab/workspace) for error signaling. */
   setBadgeOnContainer?(epicSlug: string, text: string): Promise<void>;
+
+  /** Optional liveness check — detects dead sessions and force-resolves their promises. */
+  checkLiveness?(sessions: import("./types.js").DispatchedSession[]): Promise<void>;
 }
 
 /**

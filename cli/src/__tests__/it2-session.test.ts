@@ -2,8 +2,9 @@ import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import { ITermSessionFactory } from "../dispatch/it2";
-import type { IIt2Client, It2Session } from "../dispatch/it2";
+import type { IIt2Client, It2Session, SpawnFn } from "../dispatch/it2";
 import type { SessionCreateOpts } from "../dispatch/factory";
+import type { DispatchedSession } from "../dispatch/types";
 
 const TEST_ROOT = resolve(import.meta.dirname, "../../.test-it2-session");
 
@@ -66,6 +67,10 @@ function createMockIt2Client(opts?: {
       calls.push({ method: "getSessionProperty", args: [sessionId, property] });
       return "";
     },
+    async getSessionTty(sessionId: string) {
+      calls.push({ method: "getSessionTty", args: [sessionId] });
+      return null;
+    },
   };
 }
 
@@ -118,6 +123,33 @@ describe("ITermSessionFactory", () => {
   afterEach(() => {
     if (existsSync(TEST_ROOT)) rmSync(TEST_ROOT, { recursive: true });
   });
+
+  function makeMockSpawn(stdout: string, exitCode: number = 0): SpawnFn {
+    return (_cmd, _opts) => ({
+      stdout: new ReadableStream({
+        start(c) {
+          c.enqueue(new TextEncoder().encode(stdout));
+          c.close();
+        },
+      }),
+      stderr: new ReadableStream({ start(c) { c.close(); } }),
+      exited: Promise.resolve(exitCode),
+    });
+  }
+
+  function makeDispatchedSession(overrides?: Partial<DispatchedSession>): DispatchedSession {
+    const ac = new AbortController();
+    return {
+      id: "test-session-id",
+      epicSlug: "my-epic",
+      phase: "plan",
+      worktreeSlug: "my-epic",
+      abortController: ac,
+      promise: new Promise(() => {}),
+      startedAt: Date.now(),
+      ...overrides,
+    };
+  }
 
   test("creates tab and sets title to bm-{epicSlug}", async () => {
     const factory = new ITermSessionFactory(mockClient, {
@@ -631,5 +663,225 @@ describe("ITermSessionFactory", () => {
       (c) => c.method === "createTab",
     );
     expect(createTabCalls).toHaveLength(0);
+  });
+
+  test("stores TTY for pane session at dispatch time", async () => {
+    // Mock client that returns a TTY for the created pane
+    const ttyClient = createMockIt2Client();
+    ttyClient.getSessionTty = async (sessionId: string) => {
+      ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+      if (sessionId === "tab-1") return "/dev/ttys003";
+      return null;
+    };
+
+    const factory = new ITermSessionFactory(ttyClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
+
+    // Verify getSessionTty was called for the pane
+    const ttyCalls = ttyClient.calls.filter((c) => c.method === "getSessionTty");
+    expect(ttyCalls).toHaveLength(1);
+  });
+
+  test("external promise resolution completes watchForMarker as failed", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 10000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+
+    // Force-resolve the session externally
+    const resolved = factory.forceResolveSession(handle.id, {
+      success: false,
+      exitCode: 1,
+      durationMs: 100,
+    });
+    expect(resolved).toBe(true);
+
+    const result = await handle.promise;
+    expect(result.success).toBe(false);
+    expect(result.exitCode).toBe(1);
+  });
+
+  test("forceResolveSession returns false for unknown session", async () => {
+    const factory = new ITermSessionFactory(mockClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const resolved = factory.forceResolveSession("nonexistent-id", {
+      success: false,
+      exitCode: 1,
+      durationMs: 0,
+    });
+    expect(resolved).toBe(false);
+  });
+
+  describe("checkLiveness", () => {
+    test("alive session — beastmode process on TTY — no force resolution", async () => {
+      const psOutput = "/opt/homebrew/bin/bun /path/to/beastmode plan my-epic\nfish -l\n";
+      const ttyClient = createMockIt2Client();
+      ttyClient.getSessionTty = async (sessionId: string) => {
+        ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+        return "/dev/ttys003";
+      };
+
+      const factory = new ITermSessionFactory(ttyClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+        spawn: makeMockSpawn(psOutput),
+      });
+
+      const handle = await factory.create(makeOpts());
+      const session = makeDispatchedSession({ id: handle.id });
+
+      await factory.checkLiveness([session]);
+
+      // Session is alive — resolver should still exist
+      const canResolve = factory.forceResolveSession(handle.id, {
+        success: false, exitCode: 1, durationMs: 0,
+      });
+      expect(canResolve).toBe(true);
+    });
+
+    test("dead session — no beastmode process on TTY — force resolves as failed", async () => {
+      const psOutput = "fish -l\nlogin -fp user\n";
+      const ttyClient = createMockIt2Client();
+      ttyClient.getSessionTty = async (sessionId: string) => {
+        ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+        return "/dev/ttys003";
+      };
+
+      const factory = new ITermSessionFactory(ttyClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+        spawn: makeMockSpawn(psOutput),
+      });
+
+      const handle = await factory.create(makeOpts());
+      const session = makeDispatchedSession({ id: handle.id });
+
+      await factory.checkLiveness([session]);
+
+      // Promise should have been force-resolved as failed
+      const result = await handle.promise;
+      expect(result.success).toBe(false);
+      expect(result.exitCode).toBe(1);
+    });
+
+    test("TTY lookup failure — session not force-resolved", async () => {
+      // Default mockClient.getSessionTty returns null — no TTY stored
+      const factory = new ITermSessionFactory(mockClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+        spawn: makeMockSpawn(""),
+      });
+
+      const handle = await factory.create(makeOpts());
+      const session = makeDispatchedSession({ id: handle.id });
+
+      await factory.checkLiveness([session]);
+
+      // No TTY — session should still be pending
+      const canResolve = factory.forceResolveSession(handle.id, {
+        success: false, exitCode: 1, durationMs: 0,
+      });
+      expect(canResolve).toBe(true);
+    });
+
+    test("ps command failure — session not force-resolved", async () => {
+      const ttyClient = createMockIt2Client();
+      ttyClient.getSessionTty = async (sessionId: string) => {
+        ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+        return "/dev/ttys003";
+      };
+
+      const factory = new ITermSessionFactory(ttyClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+        spawn: makeMockSpawn("", 1), // ps fails with exit code 1
+      });
+
+      const handle = await factory.create(makeOpts());
+      const session = makeDispatchedSession({ id: handle.id });
+
+      await factory.checkLiveness([session]);
+
+      // ps failed — don't assume dead
+      const canResolve = factory.forceResolveSession(handle.id, {
+        success: false, exitCode: 1, durationMs: 0,
+      });
+      expect(canResolve).toBe(true);
+    });
+
+    test("session without resolver is skipped gracefully", async () => {
+      const factory = new ITermSessionFactory(mockClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+      });
+
+      // Session that was never created through this factory
+      const session = makeDispatchedSession({ id: "unknown-session" });
+
+      // Should not throw
+      await factory.checkLiveness([session]);
+    });
+
+    test("detects claude process with beastmode in args as alive", async () => {
+      const psOutput = "claude --dangerously-skip-permissions -- /beastmode:plan my-epic\n";
+      const ttyClient = createMockIt2Client();
+      ttyClient.getSessionTty = async (sessionId: string) => {
+        ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+        return "/dev/ttys003";
+      };
+
+      const factory = new ITermSessionFactory(ttyClient, {
+        watchTimeoutMs: 10000,
+        createWorktree: mockCreateWorktree,
+        spawn: makeMockSpawn(psOutput),
+      });
+
+      const handle = await factory.create(makeOpts());
+      const session = makeDispatchedSession({ id: handle.id });
+
+      await factory.checkLiveness([session]);
+
+      // beastmode in args — session is alive
+      const canResolve = factory.forceResolveSession(handle.id, {
+        success: false, exitCode: 1, durationMs: 0,
+      });
+      expect(canResolve).toBe(true);
+    });
+  });
+
+  test("TTY and dispatch maps are cleaned up after session completes", async () => {
+    const ttyClient = createMockIt2Client();
+    ttyClient.getSessionTty = async (sessionId: string) => {
+      ttyClient.calls.push({ method: "getSessionTty", args: [sessionId] });
+      return "/dev/ttys003";
+    };
+
+    const factory = new ITermSessionFactory(ttyClient, {
+      watchTimeoutMs: 2000,
+      createWorktree: mockCreateWorktree,
+    });
+
+    const handle = await factory.create(makeOpts());
+    await tick();
+    writeOutputJson("my-epic", "plan", { status: "completed", artifacts: {} });
+    await handle.promise;
+
+    // After completion, force-resolve should return false (resolver cleaned up)
+    const canResolve = factory.forceResolveSession(handle.id, {
+      success: false, exitCode: 1, durationMs: 0,
+    });
+    expect(canResolve).toBe(false);
   });
 });

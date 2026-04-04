@@ -1,7 +1,4 @@
 {
-  "enabledPlugins": {
-    "commons@overrides": true,
-  },
   "hooks": {
     "PreToolUse": [
       {

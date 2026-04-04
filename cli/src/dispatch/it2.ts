@@ -73,6 +73,7 @@ export interface IIt2Client {
   setBadge(sessionId: string, text: string): Promise<void>;
   setTabTitle(sessionId: string, title: string): Promise<void>;
   getSessionProperty(sessionId: string, property: string): Promise<string>;
+  getSessionTty(sessionId: string): Promise<string | null>;
 }
 
 /**
@@ -245,6 +246,22 @@ export class It2Client implements IIt2Client {
       property,
     ]);
     return stdout.trim();
+  }
+
+  async getSessionTty(sessionId: string): Promise<string | null> {
+    try {
+      const stdout = await this.exec(["session", "list", "--json"]);
+      const parsed = JSON.parse(stdout);
+      if (!Array.isArray(parsed)) return null;
+      const session = parsed.find(
+        (s: Record<string, unknown>) => String(s.id ?? "") === sessionId,
+      );
+      if (!session) return null;
+      const tty = session.tty;
+      return typeof tty === "string" && tty.length > 0 ? tty : null;
+    } catch {
+      return null;
+    }
   }
 
   private async exec(args: string[]): Promise<string> {
@@ -431,15 +448,20 @@ export class ITermSessionFactory implements SessionFactory {
   private watchers = new Map<string, FSWatcher>(); // session id -> fs watcher
   private watchTimeoutMs: number;
   private reconciled = false;
+  private ttyMap = new Map<string, string>(); // pane session ID -> TTY device path
+  private spawnFn: SpawnFn;
+  private resolvers = new Map<string, (result: SessionResult) => void>(); // dispatch session ID -> resolve fn
+  private dispatchToPaneId = new Map<string, string>(); // dispatch session ID -> pane session ID
 
   constructor(
     client: IIt2Client,
-    opts?: { watchTimeoutMs?: number; createWorktree?: CreateWorktreeFn },
+    opts?: { watchTimeoutMs?: number; createWorktree?: CreateWorktreeFn; spawn?: SpawnFn },
   ) {
     this.client = client;
     this.createWorktree =
       opts?.createWorktree ?? ((slug, o) => worktree.create(slug, o));
     this.watchTimeoutMs = opts?.watchTimeoutMs ?? 3_600_000; // 60 min default
+    this.spawnFn = opts?.spawn ?? ((cmd, spawnOpts) => Bun.spawn(cmd, spawnOpts));
   }
 
   /**
@@ -534,6 +556,15 @@ export class ITermSessionFactory implements SessionFactory {
     // Store pane ID
     this.panes.set(paneKey, paneSessionId);
 
+    // Acquire TTY for liveness checks
+    const tty = await this.client.getSessionTty(paneSessionId);
+    if (tty) {
+      this.ttyMap.set(paneSessionId, tty);
+    }
+
+    // Map dispatch ID to pane ID for liveness checks
+    this.dispatchToPaneId.set(id, paneSessionId);
+
     // cd into the worktree, then run the beastmode command
     const command = `cd ${wt.path} && beastmode ${phase} ${args.join(" ")}`;
     await this.client.sendText(paneSessionId, command);
@@ -557,6 +588,9 @@ export class ITermSessionFactory implements SessionFactory {
     // Handle abort — close pane
     const onAbort = async () => {
       this.cleanupWatcher(id);
+      this.ttyMap.delete(paneSessionId);
+      this.dispatchToPaneId.delete(id);
+      this.resolvers.delete(id);
       try {
         if (paneSessionId !== tabSessionId) {
           await this.client.closeSession(paneSessionId);
@@ -598,10 +632,13 @@ export class ITermSessionFactory implements SessionFactory {
       }
 
       this.panes.delete(paneKey);
+      // Clean up liveness tracking maps
+      this.ttyMap.delete(paneSessionId);
+      this.dispatchToPaneId.delete(id);
       return result;
     });
 
-    return { id, worktreeSlug, promise: notifiedPromise };
+    return { id, worktreeSlug, promise: notifiedPromise, tty: tty ?? undefined };
   }
 
   /** Classify a failure result for notification filtering. */
@@ -637,6 +674,57 @@ export class ITermSessionFactory implements SessionFactory {
     await this.client.setBadge(tabSessionId, text);
   }
 
+  /** Force-resolve a session's watchForMarker promise. Returns true if resolved, false if session not found. */
+  forceResolveSession(sessionId: string, result: SessionResult): boolean {
+    const resolver = this.resolvers.get(sessionId);
+    if (!resolver) return false;
+    resolver(result);
+    return true;
+  }
+
+  /** Check if dispatched sessions are still alive via process liveness. */
+  async checkLiveness(sessions: import("./types.js").DispatchedSession[]): Promise<void> {
+    for (const session of sessions) {
+      const paneId = this.dispatchToPaneId.get(session.id);
+      if (!paneId) continue;
+
+      const tty = this.ttyMap.get(paneId);
+      if (!tty) continue;
+
+      try {
+        const proc = this.spawnFn(["ps", "-t", tty, "-o", "args="], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+
+        const stdout = proc.stdout
+          ? await new Response(proc.stdout as ReadableStream).text()
+          : "";
+        const exitCode = await proc.exited;
+
+        // ps failure (e.g., TTY gone) — don't assume dead
+        if (exitCode !== 0) continue;
+
+        // Check if any process has "beastmode" in its args
+        const hasBeastmode = stdout
+          .split("\n")
+          .some((line) => line.includes("beastmode"));
+
+        if (!hasBeastmode) {
+          // Dead session — force-resolve as failed
+          this.forceResolveSession(session.id, {
+            success: false,
+            exitCode: 1,
+            durationMs: Date.now() - session.startedAt,
+          });
+        }
+      } catch {
+        // ps spawn failure — don't assume dead
+        continue;
+      }
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Private methods — shared artifact-watching logic
   // -------------------------------------------------------------------------
@@ -652,12 +740,20 @@ export class ITermSessionFactory implements SessionFactory {
     broadMatch: boolean,
   ): Promise<SessionResult> {
     return new Promise<SessionResult>((resolvePromise, rejectPromise) => {
+      // Store resolver for external resolution (dead-man switch)
+      this.resolvers.set(sessionId, (result: SessionResult) => {
+        this.resolvers.delete(sessionId);
+        this.cleanupWatcher(sessionId);
+        resolvePromise(result);
+      });
+
       // Check if an output.json already exists that is newer than dispatch time.
       const existing = this.findOutputJson(artifactDir, startTime, outputSuffix)
         ?? (broadMatch ? this.findOutputJsonBroad(artifactDir, epicSlug, startTime) : null);
       if (existing) {
         const result = this.readOutputJson(existing, startTime);
         if (result) {
+          this.resolvers.delete(sessionId);
           resolvePromise(result);
           return;
         }
@@ -687,6 +783,7 @@ export class ITermSessionFactory implements SessionFactory {
           const result = this.readOutputJson(filePath, startTime);
           if (result) {
             cleanup();
+            this.resolvers.delete(sessionId);
             resolvePromise(result);
           }
         });
@@ -700,6 +797,7 @@ export class ITermSessionFactory implements SessionFactory {
             clearInterval(pollInterval);
             clearTimeout(timeout);
             const result = this.readOutputJson(found, startTime);
+            this.resolvers.delete(sessionId);
             resolvePromise(
               result ?? {
                 success: false,
@@ -716,8 +814,13 @@ export class ITermSessionFactory implements SessionFactory {
           const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
           if (broadMatch) {
             const result = this.readOutputJson(broadMatch, startTime);
-            if (result) { resolvePromise(result); return; }
+            if (result) {
+              this.resolvers.delete(sessionId);
+              resolvePromise(result);
+              return;
+            }
           }
+          this.resolvers.delete(sessionId);
           resolvePromise({
             success: false,
             exitCode: 1,
@@ -745,8 +848,13 @@ export class ITermSessionFactory implements SessionFactory {
         const broadMatch = this.findOutputJsonBroad(artifactDir, epicSlug, startTime);
         if (broadMatch) {
           const result = this.readOutputJson(broadMatch, startTime);
-          if (result) { resolvePromise(result); return; }
+          if (result) {
+            this.resolvers.delete(sessionId);
+            resolvePromise(result);
+            return;
+          }
         }
+        this.resolvers.delete(sessionId);
         resolvePromise({
           success: false,
           exitCode: 1,
