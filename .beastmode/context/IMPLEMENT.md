@@ -7,6 +7,8 @@
 - Agents commit per task on the impl branch (`impl/<slug>--<feature-name>`) — never on the worktree branch
 - Three agent roles: implement-dev (TDD execution), implement-qa (trust-nothing verification), implement-auditor (self-contained quality checklist)
 - ALWAYS add new worktree functions to all mock objects in tests — mock gaps cause test failures discovered only after implementation is complete
+- NEVER use Bun `mock.module()` for modules shared across test files — it pollutes the module registry globally within a test run; use dependency injection or per-file mock objects instead
+- ALWAYS grep for all mock sites of a module when adding new exports — mocks in unrelated test files break silently until the full suite runs
 - Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
 
 ## Testing

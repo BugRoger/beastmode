@@ -26,6 +26,13 @@
 - Retro context walker section "HITL Pattern Analysis" parses `hitl-log.md`, groups by question text, identifies repetitive human decisions (2+ same answer), and generates copy-paste `config.yaml` snippets — organic feedback loop from manual toward automated
 - NEVER require the user to learn the config format — retro produces ready-to-paste snippets
 
+## File Permission Hooks
+- ALWAYS use `PreToolUse` prompt hooks targeting `Write` and `Edit` for file permission decisions — category-based prose from `file-permissions:` config, not phase-based
+- ALWAYS include `if`-field conditions on file-permission hooks to restrict firing to category-specific paths (e.g., `.claude/**` for `claude-settings` category)
+- ALWAYS write file-permission hooks alongside HITL hooks at dispatch time — same lifecycle (clean-then-write), same target (`settings.local.json`)
+- ALWAYS log file-permission decisions via `PostToolUse` command hooks to the same HITL log file — unified audit trail for retro analysis
+- ALWAYS use "always defer to human" as the default file-permission prose when no config is provided — same fail-safe default as HITL
+
 ## Subagent Scoping
 - HITL applies to top-level phase sessions only — subagents do not inherit hooks from `settings.local.json`
 - Subagents that need human input should be redesigned to not need it — HITL is not a subagent concern
