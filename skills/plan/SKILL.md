@@ -330,6 +330,10 @@ wave: <N>
 
 [Architectural description of what needs to happen. Describe modules, interfaces, and interactions. Do NOT include specific file paths or code — /implement will discover those via codebase exploration.]
 
+## Integration Test Scenarios
+
+[Optional. Gherkin scenarios distributed from the plan-integration-tester agent. If present, contains one or more tagged Gherkin feature blocks. If no scenarios were produced, contains a comment noting the absence.]
+
 ## Acceptance Criteria
 
 - [ ] [Criterion 1]
