@@ -25,6 +25,10 @@ export class DashboardWorld extends World {
   panelBoxSource = "";
   /** Raw source of OverviewPanel.tsx */
   overviewPanelSource = "";
+  /** Raw source of monokai-palette.ts */
+  monokaiPaletteSource = "";
+  /** Last regex match result for When/Then handoff */
+  lastMatch: string | null = null;
 
   /** NYAN_PALETTE imported at runtime */
   nyanPalette: string[] = [];
@@ -40,6 +44,7 @@ export class DashboardWorld extends World {
     this.nyanColorsSource = readFileSync(resolve(CLI_SRC, "dashboard/nyan-colors.ts"), "utf-8");
     this.panelBoxSource = readFileSync(resolve(CLI_SRC, "dashboard/PanelBox.tsx"), "utf-8");
     this.overviewPanelSource = readFileSync(resolve(CLI_SRC, "dashboard/OverviewPanel.tsx"), "utf-8");
+    this.monokaiPaletteSource = readFileSync(resolve(CLI_SRC, "dashboard/monokai-palette.ts"), "utf-8");
   }
 
   async loadRuntime(): Promise<void> {

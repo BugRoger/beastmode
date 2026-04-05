@@ -225,7 +225,7 @@ describe("filterTreeByVerbosity", () => {
     expect(filtered.epics[0].features[0].entries).toHaveLength(2);
   });
 
-  test("CLI entries are not filtered", () => {
+  test("CLI entries are filtered by verbosity", () => {
     const state: TreeState = {
       cli: { entries: [
         { timestamp: 1000, level: "debug", message: "sys debug", seq: 1 },
@@ -233,7 +233,7 @@ describe("filterTreeByVerbosity", () => {
       epics: [],
     };
     const filtered = filterTreeByVerbosity(state, 0);
-    expect(filtered.cli.entries).toHaveLength(1);
+    expect(filtered.cli.entries).toHaveLength(0);
   });
 
   test("verbosity 3 shows all levels", () => {

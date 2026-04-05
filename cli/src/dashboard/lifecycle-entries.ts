@@ -64,8 +64,10 @@ export function lifecycleToLogEntry(
   const timestamp = Date.now();
 
   switch (kind) {
-    case "session-started":
-      return { type: "text", timestamp, text: "dispatching" };
+    case "session-started": {
+      const p = payload as SessionStartedEvent;
+      return { type: "text", timestamp, text: `dispatching (session: ${p.sessionId})`, level: "debug" };
+    }
 
     case "session-completed": {
       const p = payload as SessionCompletedEvent;
@@ -76,34 +78,35 @@ export function lifecycleToLogEntry(
         type: p.success ? "text" : "result",
         timestamp,
         text: `${status} (${detail})`,
+        level: p.success ? "debug" : "error",
       };
     }
 
     case "session-dead": {
       const p = payload as SessionDeadEvent;
-      return { type: "result", timestamp, text: `session dead (tty: ${p.tty})` };
+      return { type: "result", timestamp, text: `session dead (tty: ${p.tty})`, level: "warn" };
     }
 
     case "error": {
       const p = payload as WatchErrorEvent;
-      return { type: "result", timestamp, text: `error: ${p.message}` };
+      return { type: "result", timestamp, text: `error: ${p.message}`, level: "error" };
     }
 
     case "epic-blocked": {
       const p = payload as { epicSlug: string; gate: string; reason: string };
-      return { type: "text", timestamp, text: `blocked at ${p.gate}: ${p.reason}` };
+      return { type: "text", timestamp, text: `blocked at ${p.gate}: ${p.reason}`, level: "warn" };
     }
 
     case "release:held": {
       const p = payload as ReleaseHeldEvent;
-      return { type: "text", timestamp, text: `release held: blocked by ${p.blockingSlug}` };
+      return { type: "text", timestamp, text: `release held: blocked by ${p.blockingSlug}`, level: "warn" };
     }
 
     case "epic-cancelled":
-      return { type: "text", timestamp, text: "cancelled" };
+      return { type: "text", timestamp, text: "cancelled", level: "info" };
 
     default:
-      return { type: "text", timestamp, text: `unknown event: ${kind}` };
+      return { type: "text", timestamp, text: `unknown event: ${kind}`, level: "info" };
   }
 }
 

@@ -91,12 +91,13 @@ export function trimTreeToTail(state: TreeState, maxLines: number): TreeState {
 /**
  * Filter tree entries by verbosity level.
  * Entries with level above current verbosity are removed.
- * CLI entries are not filtered (always shown).
  * warn/error entries are always shown regardless of verbosity.
  */
 export function filterTreeByVerbosity(state: TreeState, verbosity: number): TreeState {
   return {
-    cli: state.cli, // CLI entries always shown
+    cli: {
+      entries: state.cli.entries.filter((e) => shouldShowEntry(e.level, verbosity)),
+    },
     epics: state.epics.map((epic) => ({
       ...epic,
       entries: epic.entries.filter((e) => shouldShowEntry(e.level, verbosity)),

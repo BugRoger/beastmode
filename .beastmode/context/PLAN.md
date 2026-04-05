@@ -78,5 +78,6 @@ context/plan/file-collapse.md
 - If a feature has no matching scenarios, inject an empty `## Integration Test Scenarios` section with a comment noting the absence
 - Integration artifact (`.beastmode/artifacts/plan/YYYY-MM-DD-<epic>-integration.md`) is still written as an audit trail — plan reads it and distributes, does not replace it
 - ALWAYS consult the "Modified Scenarios" and "Deleted Scenarios" sections of the integration artifact before implementing — conflicting existing scenarios must be updated or deleted before BDD verification runs, or they will cause false failures on pre-existing tests
+- ALWAYS enumerate existing unit tests that encode the prior behavior when a feature reverses an existing contract — integration artifact's "Modified Scenarios" section covers `.feature` files; a parallel "Test Inversions" note in the feature plan covers unit tests that must flip, not delete
 - Agent failure (NEEDS_CONTEXT, BLOCKED) is warn-and-continue — skip integration test distribution entirely, proceed to feature finalization
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it

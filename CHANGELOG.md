@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.98.0 — Dashboard Log Fixes (Apr 2026)
+
+- **CLI verbosity filter** — CLI root entries now pass through `shouldShowEntry` so they respect the dashboard verbosity toggle instead of always rendering
+- **Event routing and levels** — Add optional `level` field to `LogEntry`; lifecycle events route to the correct log with proper severity (debug for heartbeats, warn for dead sessions, error for failures); remove dual-write pattern
+- **Version display** — Capture plugin version from the `started` lifecycle event and render it below the clock in the NyanBanner header
+
+---
+
 ### v0.97.0 — Epic Sort by Date (Apr 2026)
 
 - **compareEpics comparator** — Sort epics by most recent commit timestamp (descending), with slug-based tiebreaker for deterministic ordering

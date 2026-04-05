@@ -12,6 +12,8 @@ export interface ThreePanelLayoutProps {
   watchRunning: boolean;
   /** Current clock string (HH:MM:SS). */
   clock: string;
+  /** Current version string (e.g., "v0.96.0 (a1b2c3d)"). */
+  version?: string;
   /** Terminal row count for full-height rendering. */
   rows?: number;
   /** Content for the epics panel (top-left). */
@@ -36,6 +38,7 @@ export interface ThreePanelLayoutProps {
 export default function ThreePanelLayout({
   watchRunning,
   clock,
+  version,
   rows,
   epicsSlot,
   detailsSlot,
@@ -64,6 +67,9 @@ export default function ThreePanelLayout({
               <Text> </Text>
               <Text color={CHROME.muted}>{clock}</Text>
             </Box>
+            {version && (
+              <Text color={CHROME.muted}>{version}</Text>
+            )}
           </Box>
         </Box>
 

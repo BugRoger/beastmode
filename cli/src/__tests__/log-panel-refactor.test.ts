@@ -145,13 +145,13 @@ describe("filterTreeByVerbosity — flat structure", () => {
     expect(filtered.epics[0].entries).toHaveLength(2);
   });
 
-  test("CLI entries not filtered", () => {
+  test("CLI entries filtered by verbosity", () => {
     const state = makeState({
       cli: { entries: [
         { timestamp: 1000, level: "debug", message: "sys debug", seq: 0 },
       ] },
     });
     const filtered = filterTreeByVerbosity(state, 0);
-    expect(filtered.cli.entries).toHaveLength(1);
+    expect(filtered.cli.entries).toHaveLength(0);
   });
 });

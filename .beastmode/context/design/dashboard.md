@@ -60,6 +60,7 @@
 - `session-started` → "dispatching" status entry; `session-completed` success → "completed" entry; `session-completed` failure or `error` → "failed" entry
 - Entries use the same tree structure as other log entries — same panel, same format
 - ALWAYS implement via `FallbackEntryStore` that converts WatchLoop lifecycle events to `LogEntry` objects — separates event conversion from rendering logic
+- `LogEntry` carries an optional `level` field — when present, `entryTypeToLevel()` prefers it over the type-based mapping; set this field in `lifecycleToLogEntry()` for events where the correct level differs from the `"text"` type default (debug for heartbeats, warn for abnormal conditions)
 
 ## Verbosity Cycling
 - ALWAYS initialize verbosity state in the root App component from the CLI-provided verbosity arg — single source of truth, propagated down as props

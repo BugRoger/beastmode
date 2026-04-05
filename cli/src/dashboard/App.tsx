@@ -47,6 +47,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const [clock, setClock] = useState(formatClock());
   const [epics, setEpics] = useState<EnrichedEpic[]>([]);
   const [watchRunning, setWatchRunning] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("");
@@ -261,19 +262,19 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
       });
     };
 
-    const onStarted = () => {
+    const onStarted = (ev: WatchLoopEventMap["started"][0]) => {
+      setVersion(ev.version);
       setWatchRunning(true);
       pushSystemEntry("watch loop started");
     };
     const onStopped = () => {
       setWatchRunning(false);
-      pushSystemEntry("watch loop stopped");
+      pushSystemEntry("watch loop stopped", "debug");
     };
 
     const onSessionStarted = (ev: WatchLoopEventMap["session-started"][0]) => {
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
       refreshSessions();
-      pushSystemEntry(`session started: ${ev.epicSlug} [${ev.phase}]`);
       fallbackStoreRef.current.push(
         ev.epicSlug,
         ev.phase,
@@ -289,8 +290,6 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
         return next;
       });
       refreshSessions();
-      const status = ev.success ? "completed" : "failed";
-      pushSystemEntry(`session ${status}: ${ev.epicSlug} [${ev.phase}]`, ev.success ? "info" : "error");
       fallbackStoreRef.current.push(
         ev.epicSlug,
         ev.phase,
@@ -303,11 +302,10 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
       const activeEpicSlugs = new Set(loop.getTracker().getAll().map((s) => s.epicSlug));
       setActiveSessions(activeEpicSlugs);
       refreshSessions();
-      pushSystemEntry(`scan complete — ${activeEpicSlugs.size} active session(s)`);
+      pushSystemEntry(`scan complete — ${activeEpicSlugs.size} active session(s)`, "debug");
     };
 
     const onError = (ev: WatchLoopEventMap["error"][0]) => {
-      pushSystemEntry(`error: ${ev.message}`, "error");
       if (ev.epicSlug) {
         fallbackStoreRef.current.push(
           ev.epicSlug,
@@ -315,11 +313,12 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           undefined,
           lifecycleToLogEntry("error", ev),
         );
+      } else {
+        pushSystemEntry(`error: ${ev.message}`, "error");
       }
     };
 
     const onEpicBlocked = (ev: WatchLoopEventMap["epic-blocked"][0]) => {
-      pushSystemEntry(`blocked: ${ev.epicSlug} at ${ev.gate} — ${ev.reason}`);
       fallbackStoreRef.current.push(
         ev.epicSlug,
         "unknown",
@@ -329,7 +328,6 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     };
 
     const onReleaseHeld = (ev: WatchLoopEventMap["release:held"][0]) => {
-      pushSystemEntry(`release held: ${ev.waitingSlug} blocked by ${ev.blockingSlug}`);
       fallbackStoreRef.current.push(
         ev.waitingSlug,
         "release",
@@ -339,7 +337,6 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     };
 
     const onSessionDead = (ev: WatchLoopEventMap["session-dead"][0]) => {
-      pushSystemEntry(`session dead: ${ev.epicSlug} [${ev.phase}]`, "error");
       fallbackStoreRef.current.push(
         ev.epicSlug,
         ev.phase,
@@ -349,7 +346,6 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     };
 
     const onEpicCancelled = (ev: WatchLoopEventMap["epic-cancelled"][0]) => {
-      pushSystemEntry(`cancelled: ${ev.epicSlug}`);
       fallbackStoreRef.current.push(
         ev.epicSlug,
         "unknown",
@@ -440,6 +436,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     <ThreePanelLayout
       watchRunning={watchRunning}
       clock={clock}
+      version={version ?? undefined}
       rows={rows}
       focusedPanel={keyboard.focusedPanel}
       nyanTick={tick}

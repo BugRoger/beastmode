@@ -18,6 +18,8 @@ export interface LogEntry {
   type: "text" | "tool-start" | "tool-result" | "heartbeat" | "result";
   /** Display text — ready to render */
   text: string;
+  /** Optional explicit log level — overrides type-based inference when present */
+  level?: "info" | "debug" | "warn" | "error";
 }
 
 /** Options for creating a new session. */
