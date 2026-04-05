@@ -139,7 +139,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
 
     // -- Step 2: git.worktree.rebase ------------------------------------------
     const rebaseResult = await rebase(config.phase, { cwd: worktreePath, logger });
-    logger.detail?.(`rebase: ${rebaseResult.outcome}`);
+    logger.debug(`rebase: ${rebaseResult.outcome}`);
     if (rebaseResult.outcome === "stale") {
       logger.warn(`worktree is stale — agent may encounter missing dependencies`);
     }
@@ -320,7 +320,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
             logger.info("GitHub sync complete");
           }
         } else {
-          logger.detail?.("GitHub discovery failed -- skipping sync");
+          logger.debug("GitHub discovery failed -- skipping sync");
         }
       }
     }
@@ -337,7 +337,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     if (manifest) {
       const amendResult = await amendCommitWithIssueRef(manifest, { cwd: worktreePath });
       if (amendResult.amended) {
-        logger.detail?.(`commit ref: (#${amendResult.issueNumber})`);
+        logger.debug(`commit ref: (#${amendResult.issueNumber})`);
       }
     }
   } catch (err: unknown) {
