@@ -8,7 +8,7 @@
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { loadConfig, getCategoryProse } from "../config.js";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import type { Logger } from "../logger.js";
 import { WatchLoop, attachLoggerSubscriber } from "./watch-loop.js";
 import type { WatchDeps } from "./watch-loop.js";
@@ -281,7 +281,7 @@ export async function selectStrategy(
     checkIterm2: typeof iterm2Available;
     checkCmux: typeof cmuxAvailable;
   } = { checkIterm2: iterm2Available, checkCmux: cmuxAvailable },
-  logger: Logger = createLogger(0, {}),
+  logger: Logger = createLogger(createStdioSink(0), {}),
 ): Promise<StrategySelection> {
   if (configured === "iterm2") {
     const result = await deps.checkIterm2();
@@ -336,7 +336,7 @@ export async function watchCommand(args: string[], verbosity: number = 0): Promi
 
   const projectRoot = findProjectRoot();
   const config = loadConfig(projectRoot);
-  const logger = createLogger(verbosity, {});
+  const logger = createLogger(createStdioSink(verbosity), {});
 
   const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk", undefined, logger);
   let innerFactory: SessionFactory;

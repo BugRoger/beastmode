@@ -11,7 +11,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import type { CmuxClientLike, CmuxWorkspace } from "../dispatch/cmux.js";
 import type { DispatchedSession, SessionResult } from "../dispatch/types.js";
 import { DispatchTracker } from "../dispatch/tracker.js";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import type { Logger } from "../logger.js";
 import * as store from "../manifest/store.js";
 
@@ -166,7 +166,7 @@ export async function reconcileStartup(opts: {
   logger?: Logger;
 }): Promise<ReconcileResult> {
   const { client, tracker, knownEpicSlugs, projectRoot } = opts;
-  const logger = opts.logger ?? createLogger(0, {});
+  const logger = opts.logger ?? createLogger(createStdioSink(0), {});
   const knownSlugs = new Set(knownEpicSlugs);
 
   const result: ReconcileResult = {

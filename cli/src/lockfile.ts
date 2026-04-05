@@ -7,7 +7,7 @@
 
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
-import { createLogger } from "./logger.js";
+import { createLogger, createStdioSink } from "./logger.js";
 import type { Logger } from "./logger.js";
 import type { LockfileInfo } from "./dispatch/types.js";
 
@@ -46,7 +46,7 @@ export function readLockfile(projectRoot: string): LockfileInfo | null {
  * If an active lockfile exists, returns false.
  */
 export function acquireLock(projectRoot: string, logger?: Logger): boolean {
-  const log = logger ?? createLogger(0, {});
+  const log = logger ?? createLogger(createStdioSink(0), {});
   const existing = readLockfile(projectRoot);
 
   if (existing) {

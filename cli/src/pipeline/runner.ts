@@ -18,7 +18,7 @@
 import { resolve } from "node:path";
 import type { Phase, PhaseResult } from "../types.js";
 import type { Logger } from "../logger.js";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import * as worktree from "../git/worktree.js";
 import { rebase, createImplBranch } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
@@ -117,7 +117,7 @@ export interface PipelineResult {
  * failure never blocks the pipeline.
  */
 export async function run(config: PipelineConfig): Promise<PipelineResult> {
-  const logger = config.logger ?? createLogger(0, { phase: config.phase, epic: config.epicSlug });
+  const logger = config.logger ?? createLogger(createStdioSink(0), { phase: config.phase, epic: config.epicSlug });
   let epicSlug = config.epicSlug;
   let worktreePath: string;
 

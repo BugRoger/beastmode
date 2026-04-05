@@ -6,7 +6,7 @@
  */
 
 import type { BeastmodeConfig } from "../config";
-import { createLogger } from "../logger";
+import { createLogger, createStdioSink } from "../logger";
 import { cancelEpic } from "./cancel-logic.js";
 
 export async function cancelCommand(
@@ -15,7 +15,7 @@ export async function cancelCommand(
   verbosity: number = 0,
   force: boolean = false,
 ): Promise<void> {
-  const logger = createLogger(verbosity, {});
+  const logger = createLogger(createStdioSink(verbosity), {});
   const slug = args[0];
   if (!slug) {
     logger.error("Usage: beastmode cancel <slug>");

@@ -27,7 +27,7 @@ import { renameTags } from "../git/tags.js";
 import { basename } from "path";
 import { deriveNextAction } from "./pure.js";
 import type { NextAction } from "./pure.js";
-import { createLogger } from "../logger";
+import { createLogger, createStdioSink } from "../logger";
 
 // Re-export for consumers that previously imported from state-scanner
 export type { NextAction } from "./pure.js";
@@ -352,7 +352,7 @@ export async function rename(
         error: `Both "${targetSlug}" and "${finalSlug}" collide with existing resources`,
       };
     }
-    createLogger(0, { phase: "rename" }).warn(
+    createLogger(createStdioSink(0), { phase: "rename" }).warn(
       `Slug "${targetSlug}" collides, using "${finalSlug}" instead`,
     );
   }

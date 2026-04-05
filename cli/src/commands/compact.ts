@@ -8,7 +8,7 @@
 
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { createLogger } from "../logger";
+import { createLogger, createStdioSink } from "../logger";
 
 export async function compactCommand(): Promise<void> {
   const projectRoot = process.cwd();
@@ -19,7 +19,7 @@ export async function compactCommand(): Promise<void> {
     process.exit(1);
   }
 
-  const logger = createLogger(0, { phase: "compact" });
+  const logger = createLogger(createStdioSink(0), { phase: "compact" });
   logger.log("Dispatching compaction agent...");
 
   const proc = Bun.spawn(
