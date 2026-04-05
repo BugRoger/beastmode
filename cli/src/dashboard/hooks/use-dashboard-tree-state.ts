@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { DispatchedSession } from "../../dispatch/types.js";
-import type { LogEntry, SessionEmitter } from "../../dispatch/factory.js";
+import type { LogEntry } from "../../dispatch/factory.js";
 import type { TreeState, EpicNode, TreeEntry, SystemEntry } from "../tree-types.js";
 import type { LogLevel } from "../../logger.js";
 import type { FallbackEntryStore } from "../lifecycle-entries.js";
@@ -116,33 +116,11 @@ export function useDashboardTreeState({
   fallbackEntries,
   systemEntries,
 }: UseDashboardTreeStateOptions): UseDashboardTreeStateResult {
-  const [, setRevision] = useState(0);
-
   // Filter sessions by selected epic
   const filteredSessions =
     selectedEpicSlug === undefined
       ? sessions
       : sessions.filter((s) => s.epicSlug === selectedEpicSlug);
-
-  // Subscribe to 'entry' events on each session's emitter for live updates
-  useEffect(() => {
-    const emitters: SessionEmitter[] = [];
-    const handler = () => setRevision((r) => r + 1);
-
-    for (const session of filteredSessions) {
-      if (session.events) {
-        session.events.on("entry", handler);
-        emitters.push(session.events);
-      }
-    }
-
-    return () => {
-      for (const emitter of emitters) {
-        emitter.off("entry", handler);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredSessions.map((s) => s.id).join(",")]);
 
   // Subscribe to fallback entry changes for non-SDK sessions
   const [, setFallbackRevision] = useState(0);
@@ -160,13 +138,10 @@ export function useDashboardTreeState({
   const state = buildTreeState(
     filteredSessions,
     (session) => {
-      const ds = filteredSessions.find(
-        (s) =>
-          s.epicSlug === session.epicSlug &&
-          s.phase === session.phase &&
-          s.featureSlug === session.featureSlug,
-      );
-      return ds?.events?.getBuffer() ?? [];
+      if (fallbackEntries) {
+        return fallbackEntries.get(session.epicSlug, session.phase, session.featureSlug);
+      }
+      return [];
     },
     fallbackEntries,
     visibleSystemEntries,
