@@ -45,16 +45,15 @@
 - Filter: k9s style — inline prompt replaces key hints, Enter applies, Escape clears
 - Cancel: inline confirmation in key hints bar — `y` executes, `n`/Escape dismisses, blocks all other input
 
-## Dispatch Strategy
-- ALWAYS wire `selectStrategy(config.cli["dispatch-strategy"])` into the dashboard command — same function the watch command uses, identical factory selection path
-- Dashboard honors the operator's configured dispatch strategy (sdk, cmux, iterm2, auto) — no forced SDK override
-- When SDK strategy is selected, live message streaming is available via `SessionHandle.events`; when non-SDK strategy is selected, the log panel falls back to lifecycle event entries
+## Dispatch
+- Dashboard uses ITermSessionFactory directly — the sole implementation of SessionFactory
+- Log panel renders lifecycle event entries (dispatching / completed / failed) via FallbackEntryStore
 
-## Event Log Fallback (Non-SDK Dispatch)
-- When `SessionHandle.events` is undefined (non-SDK strategies), the log panel renders lifecycle events from the WatchLoop EventEmitter instead of streaming output
+## Lifecycle Log Entries
+- WatchLoop lifecycle events are converted to `LogEntry` objects by `FallbackEntryStore`
 - `session-started` → "dispatching" status entry; `session-completed` success → "completed" entry; `session-completed` failure or `error` → "failed" entry
-- Fallback entries use the same tree structure as SDK streaming entries — same panel, same format, fewer entries
-- ALWAYS implement fallback via a `FallbackEntryStore` that converts WatchLoop lifecycle events to `LogEntry` objects — separates event conversion from rendering logic
+- Entries use the same tree structure as other log entries — same panel, same format
+- ALWAYS implement via `FallbackEntryStore` that converts WatchLoop lifecycle events to `LogEntry` objects — separates event conversion from rendering logic
 
 ## Verbosity Cycling
 - ALWAYS initialize verbosity state in the root App component from the CLI-provided verbosity arg — single source of truth, propagated down as props
@@ -62,17 +61,6 @@
 - Log entries are filtered at render time by the current verbosity level — entries remain in ring buffers so they reappear immediately when verbosity increases (no data loss)
 - Key hints bar shows current verbosity level: `v verb:info` / `v verb:detail` / `v verb:debug` / `v verb:trace` — updates reactively on keypress
 - Four verbosity levels map to numeric indices (0-3) — cycling uses modular increment
-
-## Message Mapper
-- Structured message mapper converts SDKMessage types into terminal-friendly log entries (~200 lines)
-- Text deltas stream inline; tool calls render as one-liners: `[Read] file.ts`, `[Edit] file.ts:45-60`, `[Bash] bun test`
-- Tool results show brief output (e.g., `> 3 tests passed`)
-
-## Ring Buffer
-- ALWAYS allocate a ring buffer per dispatched SDK session (~100 recent log entries)
-- Buffers collect continuously even when the user is viewing a different session — no subscribe-on-demand gaps
-- Merge on render for aggregate views — no pre-merged buffers
-- Ring buffer entries feed into the TreeView component via `useDashboardTreeState` adapter — adapter transforms flat entries + session events into tree state
 
 ## Log Panel Tree View
 - ALWAYS use shared `<TreeView />` component for log panel rendering — same component used by `beastmode watch`

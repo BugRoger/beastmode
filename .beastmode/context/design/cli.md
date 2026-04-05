@@ -1,20 +1,16 @@
 # CLI Architecture
 
 ## Command Structure
-- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `watch`, `dashboard`, `status`, and `compact`
+- CLI name: `beastmode` with phase commands as direct arguments: `<phase> <slug>`, plus `dashboard` and `compact`
 - `beastmode <phase> <slug>` executes a single phase in a CLI-owned worktree with streaming output — `run` subcommand is dropped. Phase detection matrix compares requested phase against manifest.phase: regression (requested < current) and same-phase rerun (requested == current with prior commits) reset the git branch to the predecessor phase's tag and regress the XState machine via REGRESS event; forward-jump (requested > current) is blocked with error. Manual CLI prompts for confirmation before destructive reset; watch loop skips prompt. CLI-managed git tags (`beastmode/<slug>/<phase>`) are created at phase checkpoint, deleted on regression, and renamed during slug rename
-- `beastmode watch` runs the autonomous pipeline loop as a foreground process
-- `beastmode status` shows compact table (Epic | Phase | Features | Status) without running Claude — `--verbose` flag shows skipped/malformed manifests and validation errors; `--watch`/`-w` flag enables live dashboard mode with 2-second polling, full-screen ANSI redraw, one-cycle change highlighting, blocked gate details, and watch loop running indicator via lockfile detection — no --verbose in watch mode, Ctrl+C for clean exit, no new dependencies
-- `beastmode dashboard` runs fullscreen Ink v6 + React TUI with embedded watch loop and k9s-style push/pop drill-down — five-zone chrome (header, breadcrumb bar, content area, activity log, key hints), three view types (EpicList, FeatureList, AgentLog) as a view stack, SDK dispatch forced at runtime for live message streaming via async generators, structured message mapper for terminal-friendly log entries, ring buffer per session (~100 entries), context-sensitive key hints per view, keyboard navigation (↵ drill, ⎋ back, ↑↓ navigate, x cancel, f follow, q quit), alternate screen buffer mode, 1-second UI refresh tick, same lockfile as `beastmode watch` for mutual exclusion; uses shared `status-data.ts` for data logic, WatchLoop EventEmitter typed events for state updates
+- `beastmode dashboard` runs fullscreen Ink v6 + React TUI with embedded watch loop — three-panel layout (EpicsPanel, OverviewPanel, LogPanel), iTerm2 terminal dispatch via ITermSessionFactory, lifecycle log entries for session visibility, context-sensitive key hints per view, keyboard navigation, alternate screen buffer mode, 1-second UI refresh tick; uses shared `status-data.ts` for data logic, WatchLoop EventEmitter typed events for state updates
 - `beastmode cancel <slug>` performs full cleanup via shared cancel module: removes worktree and branch, deletes archive tags, phase tags, artifacts (excluding research), closes GitHub issue as not_planned, deletes manifest — ordered steps with warn-and-continue per step, idempotent; `--force` flag skips confirmation prompt for automated pipelines; confirmation defaults to No (only y/Y accepted)
 - `beastmode compact` dispatches the compaction agent via existing session dispatch pattern — operates on the shared context tree without a worktree, always runs regardless of 5-release counter, produces stdout summary plus full artifact at `artifacts/compact/YYYY-MM-DD-compaction.md`
 - Design phase exception: `beastmode design <topic>` spawns interactive Claude via `Bun.spawn` with inherited stdio — not the SDK
 
 ## Dispatch Abstraction
-- ALWAYS use `SessionStrategy` interface for phase dispatch — `dispatch()`, `isComplete()`, `cleanup()` methods decouple dispatch mechanism from orchestration logic
-- `SdkStrategy`: uses `@anthropic-ai/claude-agent-sdk` with `query()` invocation, `settingSources: ['project']`, `permissionMode: 'bypassPermissions'` — typed session management, streaming; reads output.json after query() iterator completes. With `includePartialMessages: true`, the `query()` async generator yields `SDKPartialAssistantMessage` (streaming text/tool deltas), `SDKAssistantMessage` (complete turns), `SDKToolProgressMessage` (heartbeats), and `SDKResultMessage` (completion). Dashboard subscribes via `SessionHandle.events` EventEmitter fed from the generator loop
-- `CmuxStrategy`: creates cmux terminal surface via `cmux` CLI with `--json` flag, sends `beastmode <phase> <slug>` via `cmux send-surface` — CLI-in-surface execution, agents get full interactive terminal capability; detects completion via `fs.watch` on `artifacts/<phase>/` for `*.output.json`
-- `SessionFactory` reads `cli.dispatch-strategy` config (sdk | cmux | auto) + runtime state (cmux availability) to return the right strategy
+- ALWAYS use `SessionFactory` interface for phase dispatch — `create()`, optional `cleanup()`, `setBadgeOnContainer()`, `checkLiveness()` methods decouple dispatch mechanism from orchestration logic
+- `ITermSessionFactory` is the sole implementation — creates iTerm2 terminal tabs via AppleScript, runs `beastmode <phase> <slug>` in each tab; detects completion via `fs.watch` on `artifacts/<phase>/` for `*.output.json`
 - AbortController for cancellation — clean shutdown on Ctrl+C
 - Design phase exception: `beastmode design <topic>` always spawns interactive Claude via `Bun.spawn` with inherited stdio — not dispatched through `SessionFactory`
 
@@ -28,7 +24,6 @@
 ## Configuration
 - ALWAYS reuse `.beastmode/config.yaml` with `cli:` section — no separate config file
 - `cli.interval` controls poll interval (default 60 seconds)
-- `cli.dispatch-strategy` controls dispatch mechanism (sdk | cmux | auto) — `auto` uses cmux if available, falls back to SDK
 - `hitl:` section added with per-phase prose fields (`design:`, `plan:`, `implement:`, `validate:`, `release:`) plus `model` (default: haiku) and `timeout` (default: 30s)
 - No per-notification or per-cleanup config knobs — notifications fixed at errors+blocks, cleanup fixed at on-release
 - Gates and other config sections are unchanged
@@ -71,8 +66,7 @@
 - PostToolUse command hook for `AskUserQuestion` is written alongside the PreToolUse hook — logs auto/human decisions to `artifacts/<phase>/hitl-log.md`
 - `cleanHitlSettings()` runs before `writeHitlSettings()` at each dispatch — prevents stale hooks from previous phases
 - `settings.local.json` is gitignored — generated per-dispatch, no version control noise
-- Manual `beastmode <phase>` dispatch goes through `phase.ts` for HITL settings injection. Watch loop dispatch goes through `dispatchPhase()` in `watch.ts`, which calls the same rebase + HITL sequence (rebase, cleanHitlSettings, getPhaseHitlProse, buildPreToolUseHook, writeHitlSettings) directly — uniform hook injection across both paths
-- ALWAYS verify the watch dispatch path (`dispatchPhase()` in `watch.ts`) performs the same pre-dispatch steps as the manual runner path when `skipPreDispatch: true` is set — the flag means "runner skips steps 1-3", not "steps 1-3 were already done". When adding new pre-dispatch steps to `runner.ts`, also add them to `dispatchPhase()`
+- Manual `beastmode <phase>` dispatch goes through `phase.ts` for HITL settings injection. Dashboard dispatch goes through the pipeline runner which calls the same rebase + HITL sequence (rebase, cleanHitlSettings, getPhaseHitlProse, buildPreToolUseHook, writeHitlSettings) — uniform hook injection across both paths
 
 ## Phase Output Contract
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests

@@ -5,7 +5,7 @@ Dispatched terminal sessions (iTerm2) that crash or exit without producing outpu
 External process liveness detection via TTY process tree inspection. At each watch loop scan cycle, `checkLiveness` runs `ps -t <tty> -o args=` for each dispatched session's stored TTY device path and checks for `beastmode` in process args. If absent, the session's `watchForMarker` promise is force-resolved as failed. The existing rescan-and-redispatch path handles recovery naturally.
 
 ## Rationale
-External observation (process tree check) over internal instrumentation (heartbeats). No session-side changes required -- skills and agents run unmodified. TTY device path is captured once at dispatch time via `It2Client.getSessionTty()`. The `SessionFactory` interface uses an optional `checkLiveness` method so non-iTerm2 factories (SDK, cmux) are unaffected.
+External observation (process tree check) over internal instrumentation (heartbeats). No session-side changes required -- skills and agents run unmodified. TTY device path is captured once at dispatch time via `It2Client.getSessionTty()`. The `SessionFactory` interface uses an optional `checkLiveness` method — factories that don't support liveness detection simply omit the method.
 
 ## Key Implementation Details
 - Dual-ID mapping: `dispatchToPaneId` bridges dispatch session IDs to iTerm2 pane session IDs since the two namespaces differ

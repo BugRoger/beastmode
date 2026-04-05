@@ -1,7 +1,7 @@
 # Decorator Forwarding
 
 ## Context
-ReconcilingFactory wraps an inner SessionFactory but never called the inner factory's `cleanup()` method on the release success path. Both concrete implementations (ITermSessionFactory, CmuxSessionFactory) implemented cleanup correctly. The bug was purely that the decorator didn't forward the call.
+ReconcilingFactory wraps an inner SessionFactory but never called the inner factory's `cleanup()` method on the release success path. ITermSessionFactory implemented cleanup correctly. The bug was purely that the decorator didn't forward the call.
 
 ## Decision
 ALWAYS forward optional interface methods through decorator/proxy factories — when an inner factory gains a new optional method, the wrapping factory must either forward it or explicitly document why it does not.

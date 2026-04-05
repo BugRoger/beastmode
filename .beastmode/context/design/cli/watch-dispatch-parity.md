@@ -1,14 +1,13 @@
 # Watch Dispatch Parity
 
 ## Context
-`dispatchPhase()` in `watch.ts` creates a worktree and dispatches an SDK session via `skipPreDispatch: true` in the runner config. The flag tells the runner to skip steps 1-3 (worktree prepare, rebase, HITL settings write). The original implementation left both rebase and HITL settings unwritten — neither `dispatchPhase()` nor the runner did the work.
+The pipeline runner has a pre-dispatch sequence (worktree prepare, rebase, HITL settings write) that must run before every dispatch. Both manual CLI and dashboard dispatch paths must execute the same sequence.
 
 ## Decision
-ALWAYS keep `dispatchPhase()` in `watch.ts` in sync with `runner.ts` steps 1-3 when `skipPreDispatch: true`. The watch factory owns steps 1-3; the runner skips them. When a new pre-dispatch step is added to the runner, add it to `dispatchPhase()` in the same commit.
+ALWAYS ensure all dispatch paths execute the full pre-dispatch sequence. The pipeline runner handles steps 1-3 (worktree prepare, rebase, HITL settings write) before dispatch. When a new pre-dispatch step is added to the runner, both dispatch paths get it automatically.
 
 ## Rationale
-The `skipPreDispatch` flag is a parity contract, not a free bypass. Silent divergence is the failure mode: the flag suppresses the runner steps, and if the factory doesn't cover them, the session runs without the setup. The bug survived because the comment in `runner.ts` claimed the factory "already handled" the setup — the comment was aspirational. Fix: make the code true, then make the comment match.
+Silent divergence between dispatch paths is the failure mode. If one path skips setup steps, sessions run without the expected configuration. The unified runner path eliminates this class of bug.
 
 ## Source
-`cli/src/commands/watch.ts` `dispatchPhase()` — rebase + HITL sequence added in watch-hitl-fix (2026-04-04).
-`cli/src/pipeline/runner.ts` `skipPreDispatch` comment updated to describe the actual contract.
+`cli/src/pipeline/runner.ts` — unified pre-dispatch sequence.
