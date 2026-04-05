@@ -1,21 +1,20 @@
 # HITL System
 
 ## Config Schema
-- ALWAYS define HITL config under `hitl:` key in `config.yaml` with per-phase prose fields (`design:`, `plan:`, `implement:`, `validate:`, `release:`) — prose is interpreted as a prompt, not a DSL
+- ALWAYS define HITL config under `hitl:` key in `config.yaml` with per-phase prose fields (`design:`, `plan:`, `implement:`, `validate:`, `release:`) — prose is literal answer text, not an LLM prompt
 - ALWAYS seed default HITL config with "always defer to human" for all phases at init — nothing automated until explicit opt-in
-- ALWAYS support `hitl.model` (default: haiku) and `hitl.timeout` (default: 30s) top-level config — model and timeout are not per-phase
 
 ## Hook Composition
 - ALWAYS keep committed hooks in `settings.json` (Stop hook) and generated hooks in `settings.local.json` (HITL PreToolUse/PostToolUse) — different events, no conflict
 - ALWAYS gitignore `settings.local.json` — generated at dispatch time, no git noise
 - ALWAYS clean HITL settings before writing new ones at each dispatch — `cleanHitlSettings()` before `writeHitlSettings()` prevents stale state between phases
-- ALWAYS template the phase-specific HITL prose directly into the hook at dispatch time — no BEASTMODE_PHASE env var needed
+- ALWAYS pass phase name as the sole argument to `buildPreToolUseHook(phase)` — prose is read at runtime by the script from config.yaml, not templated into the hook entry
 
-## Prompt Hook
-- ALWAYS use `PreToolUse` prompt hook targeting `AskUserQuestion` for HITL decisions — LLM evaluates the question against user's prose instructions
-- ALWAYS return `permissionDecision: "allow"` with `updatedInput` for auto-answer, or `permissionDecision: "allow"` without `updatedInput` for defer-to-human — silent pass-through, no meta-explanation
-- ALWAYS use all-or-nothing for multi-question batches — if any question needs human input, the entire batch passes through
-- ALWAYS fail-open — hook errors (timeout, malformed response) pass the question through to the human
+## AskUserQuestion Hook
+- ALWAYS use `PreToolUse` command hook (`type: "command"`) targeting `AskUserQuestion` — static `hitl-auto.ts` script reads config prose at runtime and makes a binary defer-vs-auto-answer decision without LLM inference
+- ALWAYS defer (produce no output) when prose is "always defer to human" or empty — silent pass-through, question reaches the human unchanged
+- ALWAYS auto-answer with `permissionDecision: "allow"` + `updatedInput` when prose is any other value — sets `answer="Other"` and prose text in `annotations[questionText].notes` for every question in the batch
+- ALWAYS fail-open — script catches all errors in a top-level try/catch and calls `process.exit(0)` unconditionally; missing env vars and config parse failures silently defer to human
 
 ## Decision Logging
 - ALWAYS log all decisions (auto and human) to `.beastmode/artifacts/<phase>/hitl-log.md` via `PostToolUse` command hook on `AskUserQuestion`
