@@ -120,7 +120,7 @@ describe("branch-link", () => {
 
       const gitCalls = mockGit.mock.calls;
       const deleteCall = gitCalls.find(
-        ([args]: [string[]]) => args[0] === "push" && args.includes("--delete"),
+        (call: any) => call[0][0] === "push" && call[0].includes("--delete"),
       );
       expect(deleteCall).toBeDefined();
     });
