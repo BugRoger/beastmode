@@ -32,20 +32,12 @@ export class TreeLogger implements Logger {
     this.notify?.();
   }
 
-  log(msg: string): void {
+  info(msg: string): void {
     if (this.verbosity >= 0) this.emit("info", msg);
   }
 
-  detail(msg: string): void {
-    if (this.verbosity >= 1) this.emit("detail", msg);
-  }
-
   debug(msg: string): void {
-    if (this.verbosity >= 2) this.emit("debug", msg);
-  }
-
-  trace(msg: string): void {
-    if (this.verbosity >= 3) this.emit("trace", msg);
+    if (this.verbosity >= 1) this.emit("debug", msg);
   }
 
   warn(msg: string): void {
