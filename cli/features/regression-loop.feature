@@ -61,25 +61,21 @@ Feature: Regression loop -- validate failure triggers reset and re-implement
     And feature "token-cache" should have status "completed"
     And the manifest phase should be "validate"
 
-    # -- Phase 4a: Validate with FAILURE --
-    When the dispatch will write a validate artifact with status "failed"
+    # -- Phase 4a: Validate with FAILURE (token-cache fails) --
+    When the dispatch will write a validate artifact with failures:
+      | feature      | result |
+      | oauth-server | passed |
+      | client-lib   | passed |
+      | token-cache  | failed |
     And the pipeline runs the "validate" phase
     Then the pipeline result should be successful
     And the pipeline result should indicate regression
     And the manifest phase should be "implement"
-    And all features should have status "pending"
-
-    # -- Phase 3c: Re-implement after regression --
-    When the dispatch will write an implement artifact for feature "oauth-server"
-    And the pipeline runs the "implement" phase for feature "oauth-server"
-    Then the pipeline result should be successful
     And feature "oauth-server" should have status "completed"
-
-    When the dispatch will write an implement artifact for feature "client-lib"
-    And the pipeline runs the "implement" phase for feature "client-lib"
-    Then the pipeline result should be successful
     And feature "client-lib" should have status "completed"
+    And feature "token-cache" should have status "pending"
 
+    # -- Phase 3c: Re-implement only token-cache after regression --
     When the dispatch will write an implement artifact for feature "token-cache"
     And the pipeline runs the "implement" phase for feature "token-cache"
     Then the pipeline result should be successful

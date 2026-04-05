@@ -79,7 +79,12 @@ Feature: Pipeline error resilience -- transient failures don't abort remaining s
     And the manifest phase should be "validate"
 
     # Validate with failure status triggers regression
-    When the dispatch will write a validate artifact with status "failed"
+    When the dispatch will write a validate artifact with failures:
+      | feature | result |
+      | feat-a  | passed |
+      | feat-b  | failed |
     And the pipeline runs the "validate" phase
     Then the pipeline result should be successful
     And the manifest phase should be "implement"
+    And feature "feat-a" should have status "completed"
+    And feature "feat-b" should have status "pending"
