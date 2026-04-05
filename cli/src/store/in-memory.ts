@@ -283,9 +283,16 @@ export class InMemoryTaskStore implements TaskStore {
     const byId = this.entities.get(idOrSlug);
     if (byId) return byId;
 
-    // For epics, try lookup by slug
+    // Try epic slug match first (epic slugs take priority)
     for (const entity of this.entities.values()) {
       if (entity.type === "epic" && entity.slug === idOrSlug) {
+        return entity;
+      }
+    }
+
+    // Try feature slug match
+    for (const entity of this.entities.values()) {
+      if (entity.type === "feature" && entity.slug === idOrSlug) {
         return entity;
       }
     }

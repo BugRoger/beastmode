@@ -34,6 +34,7 @@ export interface ResolveOptions {
  * Priority:
  * 1. Exact ID match (bm-xxxx or bm-xxxx.N)
  * 2. Epic slug match
+ * 3. Feature slug match
  *
  * If an identifier matches both an ID and a slug of different entities,
  * returns an ambiguous result.
@@ -61,6 +62,19 @@ export function resolveIdentifier(
   for (const epic of epics) {
     if (epic.slug === identifier && epic.id !== identifier) {
       matches.push(epic);
+    }
+  }
+
+  // Step 3: Try as feature slug — scan features for slug match
+  // Only check if no epic slug matched (epic slugs take priority)
+  if (matches.length === 0 || (matches.length === 1 && matches[0] === byId)) {
+    for (const epic of epics) {
+      const features = store.listFeatures(epic.id);
+      for (const feature of features) {
+        if (feature.slug === identifier && feature.id !== identifier) {
+          matches.push(feature);
+        }
+      }
     }
   }
 

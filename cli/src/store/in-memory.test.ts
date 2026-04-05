@@ -380,6 +380,32 @@ describe("InMemoryTaskStore", () => {
     });
   });
 
+  describe("find by feature slug", () => {
+    it("should find feature by slug", () => {
+      const epic = store.addEpic({ name: "Test Epic" });
+      const feature = store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
+      const found = store.find("login-flow");
+      expect(found).toBeDefined();
+      expect(found!.id).toBe(feature.id);
+    });
+
+    it("should prefer epic slug over feature slug", () => {
+      const epic = store.addEpic({ name: "Auth", slug: "auth" });
+      store.addFeature({ parent: epic.id, name: "Auth Feature", slug: "auth" });
+      const found = store.find("auth");
+      expect(found).toBeDefined();
+      expect(found!.type).toBe("epic");
+    });
+
+    it("should find feature slug when no epic slug matches", () => {
+      const epic = store.addEpic({ name: "My Epic", slug: "my-epic" });
+      store.addFeature({ parent: epic.id, name: "Auth Feature", slug: "auth-feature" });
+      const found = store.find("auth-feature");
+      expect(found).toBeDefined();
+      expect(found!.type).toBe("feature");
+    });
+  });
+
   describe("dependencyChain()", () => {
     it("should return single entity with no dependencies", () => {
       const epic = store.addEpic({ name: "Epic" });

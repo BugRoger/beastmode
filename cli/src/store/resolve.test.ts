@@ -94,4 +94,36 @@ describe("resolveIdentifier", () => {
       expect(result).toEqual({ kind: "found", entity: feature });
     });
   });
+
+  describe("feature slug resolution", () => {
+    it("should resolve feature by slug", () => {
+      const epic = store.addEpic({ name: "Epic", slug: "epic" });
+      const feature = store.addFeature({ parent: epic.id, name: "Login", slug: "login-flow" });
+      const result = resolveIdentifier(store, "login-flow");
+      expect(result.kind).toBe("found");
+      if (result.kind === "found") {
+        expect(result.entity.id).toBe(feature.id);
+      }
+    });
+
+    it("should prefer epic slug over feature slug", () => {
+      const epic = store.addEpic({ name: "Auth", slug: "auth" });
+      store.addFeature({ parent: epic.id, name: "Auth Feature", slug: "auth" });
+      const result = resolveIdentifier(store, "auth");
+      expect(result.kind).toBe("found");
+      if (result.kind === "found") {
+        expect(result.entity.type).toBe("epic");
+      }
+    });
+
+    it("should resolve feature slug to parent epic when resolveToEpic is true", () => {
+      const epic = store.addEpic({ name: "Epic", slug: "epic" });
+      store.addFeature({ parent: epic.id, name: "Login", slug: "login-flow" });
+      const result = resolveIdentifier(store, "login-flow", { resolveToEpic: true });
+      expect(result.kind).toBe("found");
+      if (result.kind === "found") {
+        expect(result.entity.id).toBe(epic.id);
+      }
+    });
+  });
 });
