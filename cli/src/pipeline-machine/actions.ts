@@ -1,4 +1,4 @@
-import type { EpicContext, EpicEvent, MachineFeature } from "./types";
+import type { EpicContext, EpicEvent } from "./types";
 import type { EpicStatus } from "../store/types";
 
 /**

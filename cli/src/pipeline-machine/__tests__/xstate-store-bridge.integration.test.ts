@@ -2,7 +2,7 @@ import { describe, test, expect } from "vitest";
 import { createActor } from "xstate";
 import { epicMachine } from "../epic";
 import { InMemoryTaskStore } from "../../store/in-memory";
-import type { Epic, Feature } from "../../store/types";
+import type { Epic } from "../../store/types";
 import type { EpicContext } from "../types";
 
 // Helper: create a minimal store with an epic
@@ -33,13 +33,11 @@ function epicToContext(epic: Epic): Partial<EpicContext> {
     release: epic.release,
     // Legacy machine fields (mapped from store)
     slug: epic.slug,
-    phase: epic.status as any,
     summary: epic.summary,
     worktree: epic.worktree,
     // Machine-specific fields
     features: [],
     artifacts: {},
-    lastUpdated: epic.updated_at,
   };
 }
 

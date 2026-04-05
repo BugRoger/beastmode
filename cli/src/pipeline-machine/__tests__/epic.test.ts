@@ -476,7 +476,7 @@ describe("REGRESS guard conditions", () => {
 // ── 7. Terminal states reject all events ─────────────────────────
 
 describe("terminal states reject all events", () => {
-  const allEvents: EpicContext["phase"] extends string ? Array<{ type: string; [k: string]: unknown }> : never = [
+  const allEvents: EpicContext["status"] extends string ? Array<{ type: string; [k: string]: unknown }> : never = [
     { type: "DESIGN_COMPLETED" },
     { type: "PLAN_COMPLETED", features: twoFeatures },
     { type: "FEATURE_COMPLETED", featureSlug: "feat-a" },
