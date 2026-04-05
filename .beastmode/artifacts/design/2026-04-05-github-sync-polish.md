@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: b44f8d
+slug: github-sync-polish
 epic: github-sync-polish
 ---
 
