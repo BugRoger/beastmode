@@ -7,7 +7,7 @@ import { filterTreeByVerbosity } from "../dashboard/LogPanel.js";
 
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
-function makeEntry(msg: string, seq: number, level: "info" | "detail" | "debug" | "trace" | "warn" | "error" = "info"): TreeEntry {
+function makeEntry(msg: string, seq: number, level: "info" | "debug" | "warn" | "error" = "info"): TreeEntry {
   return { timestamp: 1000, level, message: msg, seq };
 }
 
@@ -163,7 +163,7 @@ describe("TreeView", () => {
 });
 
 describe("filterTreeByVerbosity", () => {
-  test("hides detail entries at verbosity 0", () => {
+  test("hides debug entries at verbosity 0", () => {
     const state: TreeState = {
       epics: [{
         slug: "e1",
@@ -172,7 +172,7 @@ describe("filterTreeByVerbosity", () => {
           features: [],
           entries: [
             makeEntry("visible", 1, "info"),
-            makeEntry("hidden", 2, "detail"),
+            makeEntry("hidden", 2, "debug"),
           ],
         }],
       }],
@@ -183,7 +183,7 @@ describe("filterTreeByVerbosity", () => {
     expect(filtered.epics[0].phases[0].entries[0].message).toBe("visible");
   });
 
-  test("shows detail entries at verbosity 1", () => {
+  test("shows debug entries at verbosity 1", () => {
     const state: TreeState = {
       epics: [{
         slug: "e1",
@@ -192,7 +192,7 @@ describe("filterTreeByVerbosity", () => {
           features: [],
           entries: [
             makeEntry("visible", 1, "info"),
-            makeEntry("also visible", 2, "detail"),
+            makeEntry("also visible", 2, "debug"),
           ],
         }],
       }],
@@ -244,7 +244,7 @@ describe("filterTreeByVerbosity", () => {
             slug: "feat-1",
             entries: [
               makeEntry("visible", 1, "info"),
-              makeEntry("hidden at 1", 2, "debug"),
+              makeEntry("also visible", 2, "debug"),
             ],
           }],
           entries: [],
@@ -253,15 +253,14 @@ describe("filterTreeByVerbosity", () => {
       system: [],
     };
     const filtered = filterTreeByVerbosity(state, 1);
-    expect(filtered.epics[0].phases[0].features[0].entries).toHaveLength(1);
-    expect(filtered.epics[0].phases[0].features[0].entries[0].message).toBe("visible");
+    expect(filtered.epics[0].phases[0].features[0].entries).toHaveLength(2);
   });
 
   test("system entries are not filtered", () => {
     const state: TreeState = {
       epics: [],
       system: [
-        { timestamp: 1000, level: "detail", message: "sys detail", seq: 1 },
+        { timestamp: 1000, level: "debug", message: "sys debug", seq: 1 },
       ],
     };
     const filtered = filterTreeByVerbosity(state, 0);
@@ -277,9 +276,9 @@ describe("filterTreeByVerbosity", () => {
           features: [],
           entries: [
             makeEntry("a", 1, "info"),
-            makeEntry("b", 2, "detail"),
+            makeEntry("b", 2, "debug"),
             makeEntry("c", 3, "debug"),
-            makeEntry("d", 4, "trace"),
+            makeEntry("d", 4, "debug"),
           ],
         }],
       }],

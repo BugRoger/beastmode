@@ -13,10 +13,8 @@ import os from "os";
 
 const noop = () => {};
 const noopLogger: Logger = {
-  log: noop,
-  detail: noop,
+  info: noop,
   debug: noop,
-  trace: noop,
   warn: noop,
   error: noop,
   child: () => noopLogger,

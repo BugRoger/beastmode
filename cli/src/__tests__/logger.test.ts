@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { createLogger, createNullLogger, createStdioSink } from "../logger";
-import type { Logger, LogContext, LogEntry, LogSink } from "../logger";
+import type { LogContext, LogEntry, LogSink } from "../logger";
 
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
