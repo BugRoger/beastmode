@@ -400,73 +400,6 @@ function resolveArtifactLinks(
   return Object.keys(links).length > 0 ? links : undefined;
 }
 
-/**
- * Resolve git metadata for traceability.
- * Branch from manifest, phase tags from git, version from manifest/plugin.
- * Only resolves tags when a worktree branch is present — tags without branch
- * context are not meaningful traceability metadata.
- */
-function resolveGitMetadata(
-  manifest: PipelineManifest,
-  repo?: string,
-): EpicBodyInput["gitMetadata"] | undefined {
-  const meta: NonNullable<EpicBodyInput["gitMetadata"]> = {};
-
-  // Branch from worktree — gate all git lookups on worktree presence
-  if (manifest.worktree?.branch) {
-    meta.branch = manifest.worktree.branch;
-
-    // Phase tags from git
-    const tagPrefix = `beastmode/${manifest.slug}/`;
-    try {
-      const tagResult = Bun.spawnSync(["git", "tag", "-l", `${tagPrefix}*`]);
-      if (tagResult.exitCode === 0) {
-        const tags = tagResult.stdout.toString().trim().split("\n").filter(Boolean);
-        if (tags.length > 0) {
-          const phaseTags: Record<string, string> = {};
-          for (const tag of tags) {
-            const phase = tag.replace(tagPrefix, "");
-            if (phase) phaseTags[phase] = tag;
-          }
-          if (Object.keys(phaseTags).length > 0) {
-            meta.phaseTags = phaseTags;
-          }
-        }
-      }
-    } catch {
-      // Git not available — skip tags
-    }
-
-  }
-
-  // Compare URL — pure computation from available metadata
-  if (repo) {
-    // Check for archive tag
-    let hasArchiveTag = false;
-    try {
-      const archiveCheck = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/archive/${manifest.slug}`]);
-      hasArchiveTag = archiveCheck.exitCode === 0;
-    } catch {
-      // Git not available — skip
-    }
-
-    // Read version tag if available
-    const versionTag = readVersionTag(manifest.slug);
-
-    const compareUrl = buildCompareUrl({
-      repo,
-      branch: manifest.worktree?.branch,
-      phase: manifest.phase,
-      slug: manifest.slug,
-      versionTag,
-      hasArchiveTag,
-    });
-    if (compareUrl) meta.compareUrl = compareUrl;
-  }
-
-  return Object.keys(meta).length > 0 ? meta : undefined;
-}
-
 /** Read version from plugin.json — returns undefined if unavailable. */
 function readVersionFromPlugin(projectRoot?: string): string | undefined {
   if (!projectRoot) return undefined;
@@ -486,25 +419,6 @@ function readReleaseTag(slug: string): string | undefined {
     const tagName = `beastmode/${slug}/release`;
     const result = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/${tagName}`]);
     return result.exitCode === 0 ? tagName : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Read the version tag for this epic — returns undefined if no tag exists. */
-function readVersionTag(slug: string): string | undefined {
-  try {
-    // Look for version tags like v1.2.0 that point to the same commit as the release tag
-    const releaseTagName = `beastmode/${slug}/release`;
-    const releaseRef = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/${releaseTagName}`]);
-    if (releaseRef.exitCode !== 0) return undefined;
-    const releaseSha = releaseRef.stdout.toString().trim();
-
-    // Find version tags (vX.Y.Z) pointing to the same commit
-    const tagsResult = Bun.spawnSync(["git", "tag", "-l", "v*", "--points-at", releaseSha]);
-    if (tagsResult.exitCode !== 0) return undefined;
-    const tags = tagsResult.stdout.toString().trim().split("\n").filter(Boolean);
-    return tags[0] || undefined;
   } catch {
     return undefined;
   }
