@@ -63,17 +63,11 @@ export function createDashboardLogger(opts: DashboardLoggerOptions): Logger {
   }
 
   return {
-    log(msg: string) {
-      if (verbosity >= 0) route("info", msg);
-    },
-    detail(msg: string) {
-      if (verbosity >= 1) route("detail", msg);
+    info(msg: string) {
+      route("info", msg);
     },
     debug(msg: string) {
-      if (verbosity >= 2) route("debug", msg);
-    },
-    trace(msg: string) {
-      if (verbosity >= 3) route("trace", msg);
+      if (verbosity >= 1) route("debug", msg);
     },
     warn(msg: string) {
       route("warn", msg);
