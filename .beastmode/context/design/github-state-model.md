@@ -3,8 +3,11 @@
 ## Issue Hierarchy
 - ALWAYS use two-level hierarchy: Epic (capability) > Feature (work unit) -- keeps automation simple while matching design/plan decomposition
 - ALWAYS use labels for type, phase, and status -- universal across all GitHub plans, no org-level setup required
-- ALWAYS enrich epic bodies progressively with artifact content — PRD sections (problem, solution, user stories, decisions) extracted from design artifact at sync time, artifact permalink table, git metadata (branch, tags, version, merge commit)
-- ALWAYS enrich feature bodies with user stories extracted from feature plan artifacts at sync time
+- ALWAYS use `manifest.epic` (human-readable name) for epic issue titles -- not hex slugs
+- ALWAYS prefix feature issue titles with the epic name -- format: `{epic}: {feature}`
+- ALWAYS enrich epic bodies with all six PRD sections: Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope -- extracted from design artifact at sync time
+- ALWAYS enrich feature bodies with four plan sections: description, User Stories, What to Build, Acceptance Criteria -- extracted from feature plan artifacts at sync time
+- NEVER include Git section (Branch, Compare URL, Tags) in epic bodies -- redundant with native GitHub features now that branches and tags are pushed upstream
 - ALWAYS use presence-based rendering for issue body sections — present field = render section, absent field = omit, no phase-conditional logic in body-format.ts
 - ALWAYS extract artifact content at sync time via section-extractor — never store extracted PRD/plan content in the manifest; manifest stays lean, artifact files are the content source
 - ALWAYS use hash-compare before writing issue bodies — `github.bodyHash` in the manifest github block stores the last-written hash, sync skips the API call if content unchanged
@@ -14,8 +17,9 @@
 - ALWAYS produce fallback body format when summary fields are missing — phase badge and feature checklist render regardless, richer than a stub
 - ALWAYS post a closing comment on epic issues when phase transitions to done — includes version, release tag, and merge commit link
 - ALWAYS prevent duplicate closing comments via content scanning — check existing comments for the version string before posting
-- ALWAYS include a compare URL in the git metadata section of epic bodies — active development uses `main...feature/{slug}` branch range, post-release uses `{version-tag}...archive/feature/{slug}` archive tag range, fallback to branch range if no archive tag exists
-- ALWAYS amend commit messages with issue references post-checkpoint — trailing `(#N)` format on the subject line; phase checkpoint and release commits get the epic issue ref, impl branch commits get the feature issue ref
+- ALWAYS amend commit messages with issue references via range-based rebase of all commits since last phase tag — trailing `(#N)` format on the subject line; phase checkpoint commits get the epic issue ref, impl branch commits get the feature issue ref; amend runs before push so no force-push needed from CLI
+- ALWAYS push branches and tags upstream after every phase checkpoint — pure git operations not gated on `github.enabled`; feature branches on every phase, impl branches during implement, all tags via `--tags`
+- ALWAYS link branches to issues via `createLinkedBranch` GraphQL mutation — feature branches to epic issues, impl branches to feature issues; gated on `github.enabled`; delete-then-recreate workaround for existing remote branches
 - ALWAYS create GitHub issues pre-dispatch (early issue creation) — epic issues before design phase, feature issues before implement phase; idempotent (skips if issue number already in manifest); stub body enriched later at post-dispatch sync
 
 ## Epic State Machine

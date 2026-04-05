@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { PipelineManifest, ManifestFeature } from "../manifest/store";
-import { formatEpicBody, formatFeatureBody, formatClosingComment, buildCompareUrl } from "../github/sync";
+import { formatEpicBody, formatFeatureBody, formatClosingComment, buildCompareUrl, epicTitle, featureTitle } from "../github/sync";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},
@@ -229,6 +229,63 @@ describe("formatEpicBody", () => {
     expect(body).not.toContain("## Decisions");
   });
 
+  test("renders testing decisions section when prdSections.testingDecisions present", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { testingDecisions: "- Unit test coverage > 80%" },
+    });
+    expect(body).toContain("## Testing Decisions\n\n- Unit test coverage > 80%");
+  });
+
+  test("omits testing decisions section when prdSections.testingDecisions absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { problem: "p" },
+    });
+    expect(body).not.toContain("## Testing Decisions");
+  });
+
+  test("renders out of scope section when prdSections.outOfScope present", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { outOfScope: "- Dashboard\n- Notifications" },
+    });
+    expect(body).toContain("## Out of Scope\n\n- Dashboard\n- Notifications");
+  });
+
+  test("omits out of scope section when prdSections.outOfScope absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { problem: "p" },
+    });
+    expect(body).not.toContain("## Out of Scope");
+  });
+
+  test("renders all six PRD sections in correct order", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: {
+        problem: "P",
+        solution: "S",
+        userStories: "US",
+        decisions: "D",
+        testingDecisions: "TD",
+        outOfScope: "OOS",
+      },
+    });
+    const problemIdx = body.indexOf("## Problem");
+    const solutionIdx = body.indexOf("## Solution");
+    const storiesIdx = body.indexOf("## User Stories");
+    const decisionsIdx = body.indexOf("## Decisions");
+    const testingIdx = body.indexOf("## Testing Decisions");
+    const oosIdx = body.indexOf("## Out of Scope");
+    expect(problemIdx).toBeLessThan(solutionIdx);
+    expect(solutionIdx).toBeLessThan(storiesIdx);
+    expect(storiesIdx).toBeLessThan(decisionsIdx);
+    expect(decisionsIdx).toBeLessThan(testingIdx);
+    expect(testingIdx).toBeLessThan(oosIdx);
+  });
+
   // --- artifactLinks ---
 
   test("renders artifact links table with permalinks", () => {
@@ -258,152 +315,12 @@ describe("formatEpicBody", () => {
     expect(body).not.toContain("## Artifacts");
   });
 
-  // --- gitMetadata ---
+  // --- gitMetadata removed ---
 
-  test("renders git metadata section with branch", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "feature/my-branch" },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain("**Branch:** `feature/my-branch`");
-  });
-
-  test("renders git metadata with phase tags", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        phaseTags: {
-          design: "beastmode/my-epic/design",
-          plan: "beastmode/my-epic/plan",
-        },
-      },
-    });
-    expect(body).toContain("**Tags:** `beastmode/my-epic/design`, `beastmode/my-epic/plan`");
-  });
-
-  test("renders git metadata with version", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { version: "1.2.3" },
-    });
-    expect(body).toContain("**Version:** 1.2.3");
-  });
-
-  test("renders git metadata with merge commit", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        mergeCommit: { sha: "abc1234def5678", url: "https://github.com/org/repo/commit/abc1234def5678" },
-      },
-    });
-    expect(body).toContain("**Merge Commit:** [abc1234](https://github.com/org/repo/commit/abc1234def5678)");
-  });
-
-  test("renders full git metadata section with all fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/epic-branch",
-        phaseTags: { design: "beastmode/epic/design" },
-        version: "2.0.0",
-        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
-      },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain("**Branch:** `feature/epic-branch`");
-    expect(body).toContain("**Tags:** `beastmode/epic/design`");
-    expect(body).toContain("**Version:** 2.0.0");
-    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
-  });
-
-  test("omits git metadata section when gitMetadata absent", () => {
+  test("does not render git metadata section (removed)", () => {
+    // gitMetadata field removed from EpicBodyInput — Git section no longer rendered
     const body = formatEpicBody(makeManifest());
     expect(body).not.toContain("## Git");
-  });
-
-  test("omits git metadata section when gitMetadata has no populated fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {},
-    });
-    expect(body).not.toContain("## Git");
-  });
-
-  test("omits tags line when phaseTags is empty object", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "main", phaseTags: {} },
-    });
-    expect(body).toContain("**Branch:** `main`");
-    expect(body).not.toContain("**Tags:**");
-  });
-
-  test("renders compare URL as clickable link in git section", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/my-epic",
-        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
-      },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain(
-      "**Compare:** [main...feature/my-epic](https://github.com/org/repo/compare/main...feature/my-epic)",
-    );
-  });
-
-  test("renders archive compare URL after release", () => {
-    const body = formatEpicBody({
-      ...makeManifest({ phase: "done" }),
-      gitMetadata: {
-        version: "1.2.0",
-        compareUrl: "https://github.com/org/repo/compare/v1.2.0...archive/my-epic",
-      },
-    });
-    expect(body).toContain(
-      "**Compare:** [v1.2.0...archive/my-epic](https://github.com/org/repo/compare/v1.2.0...archive/my-epic)",
-    );
-  });
-
-  test("omits compare line when compareUrl absent", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "feature/my-epic" },
-    });
-    expect(body).not.toContain("**Compare:**");
-  });
-
-  test("compare URL appears after branch line in git section", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/my-epic",
-        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
-      },
-    });
-    const branchIdx = body.indexOf("**Branch:**");
-    const compareIdx = body.indexOf("**Compare:**");
-    expect(branchIdx).toBeGreaterThan(-1);
-    expect(compareIdx).toBeGreaterThan(branchIdx);
-  });
-
-  test("full git section includes compare URL alongside other fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/epic-branch",
-        phaseTags: { design: "beastmode/epic/design" },
-        version: "2.0.0",
-        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
-        compareUrl: "https://github.com/org/repo/compare/main...feature/epic-branch",
-      },
-    });
-    expect(body).toContain("**Branch:** `feature/epic-branch`");
-    expect(body).toContain("**Compare:** [main...feature/epic-branch](https://github.com/org/repo/compare/main...feature/epic-branch)");
-    expect(body).toContain("**Tags:** `beastmode/epic/design`");
-    expect(body).toContain("**Version:** 2.0.0");
-    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
   });
 
 });
@@ -479,6 +396,66 @@ describe("formatFeatureBody", () => {
     const epicIdx = body.indexOf("**Epic:** #42");
     expect(storyIdx).toBeGreaterThan(-1);
     expect(epicIdx).toBeGreaterThan(storyIdx);
+  });
+
+  // --- whatToBuild ---
+
+  test("renders what-to-build section when whatToBuild present", () => {
+    const body = formatFeatureBody(
+      { slug: "feat-a", description: "desc", whatToBuild: "### Component\n\nBuild the thing" },
+      42,
+    );
+    expect(body).toContain("## What to Build\n\n### Component\n\nBuild the thing");
+  });
+
+  test("omits what-to-build section when whatToBuild absent", () => {
+    const body = formatFeatureBody(
+      { slug: "feat-a", description: "desc" },
+      42,
+    );
+    expect(body).not.toContain("## What to Build");
+  });
+
+  // --- acceptanceCriteria ---
+
+  test("renders acceptance criteria section when acceptanceCriteria present", () => {
+    const body = formatFeatureBody(
+      { slug: "feat-a", description: "desc", acceptanceCriteria: "- [ ] Works\n- [ ] Tests pass" },
+      42,
+    );
+    expect(body).toContain("## Acceptance Criteria\n\n- [ ] Works\n- [ ] Tests pass");
+  });
+
+  test("omits acceptance criteria section when acceptanceCriteria absent", () => {
+    const body = formatFeatureBody(
+      { slug: "feat-a", description: "desc" },
+      42,
+    );
+    expect(body).not.toContain("## Acceptance Criteria");
+  });
+
+  // --- section ordering ---
+
+  test("feature body sections appear in correct order: description, user story, what to build, acceptance criteria, epic ref", () => {
+    const body = formatFeatureBody(
+      {
+        slug: "feat-a",
+        description: "Description text",
+        userStory: "As a user...",
+        whatToBuild: "Build this",
+        acceptanceCriteria: "- [ ] Done",
+      },
+      42,
+    );
+    const descIdx = body.indexOf("Description text");
+    const storyIdx = body.indexOf("## User Story");
+    const buildIdx = body.indexOf("## What to Build");
+    const criteriaIdx = body.indexOf("## Acceptance Criteria");
+    const epicIdx = body.indexOf("**Epic:** #42");
+    expect(descIdx).toBeLessThan(storyIdx);
+    expect(storyIdx).toBeLessThan(buildIdx);
+    expect(buildIdx).toBeLessThan(criteriaIdx);
+    expect(criteriaIdx).toBeLessThan(epicIdx);
   });
 });
 
@@ -604,5 +581,37 @@ describe("buildCompareUrl", () => {
       });
       expect(url).toBe("https://github.com/org/repo/compare/main...feature/my-epic");
     }
+  });
+});
+
+// --- epicTitle ---
+
+describe("epicTitle", () => {
+  test("returns epic name when available", () => {
+    expect(epicTitle("a1b2c3", "logging-cleanup")).toBe("logging-cleanup");
+  });
+
+  test("falls back to slug when epic name is undefined", () => {
+    expect(epicTitle("a1b2c3", undefined)).toBe("a1b2c3");
+  });
+
+  test("falls back to slug when epic name is empty string", () => {
+    expect(epicTitle("a1b2c3", "")).toBe("a1b2c3");
+  });
+});
+
+// --- featureTitle ---
+
+describe("featureTitle", () => {
+  test("prefixes feature slug with epic name", () => {
+    expect(featureTitle("logging-cleanup", "core-logger")).toBe("logging-cleanup: core-logger");
+  });
+
+  test("uses just feature slug when epic name is undefined", () => {
+    expect(featureTitle(undefined, "core-logger")).toBe("core-logger");
+  });
+
+  test("uses just feature slug when epic name is empty", () => {
+    expect(featureTitle("", "core-logger")).toBe("core-logger");
   });
 });

@@ -12,13 +12,16 @@
  *   6. manifest.reconcile       -- Update manifest from phase results
  *   7. manifest.advance         -- Advance phase, enrich metadata
  *   8. github.mirror            -- One-way sync to GitHub
+ *   8.5. commit-issue-ref       -- Amend commit with issue number
+ *   8.7. git.push               -- Push branches and tags to remote
+ *   8.9. branch-link            -- Link branches to GitHub issues
  *   9. git.worktree.cleanup     -- Release only: archive + remove
  */
 
 import { resolve } from "node:path";
 import type { Phase, PhaseResult } from "../types.js";
 import type { Logger } from "../logger.js";
-import { createLogger, createStdioSink } from "../logger.js";
+import { createLogger } from "../logger.js";
 import * as worktree from "../git/worktree.js";
 import { rebase, createImplBranch } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
@@ -30,7 +33,9 @@ import type { ResolvedGitHub } from "../github/discovery.js";
 import { ensureEarlyIssues } from "../github/early-issues.js";
 import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "../manifest/pure.js";
 import { createTag } from "../git/tags.js";
-import { amendCommitWithIssueRef } from "../git/commit-issue-ref.js";
+import { amendCommitsInRange } from "../git/commit-issue-ref.js";
+import { linkBranches } from "../github/branch-link.js";
+import { hasRemote, pushBranches, pushTags } from "../git/push.js";
 import {
   reconcileDesign,
   reconcilePlan,
@@ -53,7 +58,7 @@ import {
   buildFilePermissionPostToolUseHooks,
 } from "../hooks/file-permission-settings.js";
 import type { BeastmodeConfig } from "../config.js";
-import { getCategoryProse, DEFAULT_HITL_PROSE } from "../config.js";
+import { getCategoryProse } from "../config.js";
 
 /** Dispatch strategy type -- determines how the phase session runs. */
 export type DispatchStrategy = "interactive" | "iterm2";
@@ -117,7 +122,7 @@ export interface PipelineResult {
  * failure never blocks the pipeline.
  */
 export async function run(config: PipelineConfig): Promise<PipelineResult> {
-  const logger = config.logger ?? createLogger(createStdioSink(0), { phase: config.phase, epic: config.epicSlug });
+  const logger = config.logger ?? createLogger(0, { phase: config.phase, epic: config.epicSlug });
   let epicSlug = config.epicSlug;
   let worktreePath: string;
 
@@ -135,11 +140,11 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       const wt = await worktree.create(epicSlug, { cwd: config.projectRoot });
       worktreePath = wt.path;
     }
-    logger.info("worktree ready", { path: worktreePath });
+    logger.log(`worktree: ${worktreePath}`);
 
     // -- Step 2: git.worktree.rebase ------------------------------------------
     const rebaseResult = await rebase(config.phase, { cwd: worktreePath, logger });
-    logger.debug("rebase complete", { outcome: rebaseResult.outcome });
+    logger.detail?.(`rebase: ${rebaseResult.outcome}`);
     if (rebaseResult.outcome === "stale") {
       logger.warn(`worktree is stale — agent may encounter missing dependencies`);
     }
@@ -153,10 +158,8 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
-    const fpConfig = config.config["file-permissions"];
-    const fpProse = fpConfig ? getCategoryProse(fpConfig, "claude-settings") : DEFAULT_HITL_PROSE;
-    const fpTimeout = fpConfig?.timeout ?? 30;
-    const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, fpTimeout);
+    const fpProse = getCategoryProse(config.config["file-permissions"], "claude-settings");
+    const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, config.config["file-permissions"].timeout);
     const fpPostToolUseHooks = buildFilePermissionPostToolUseHooks(config.phase);
     writeFilePermissionSettings({ claudeDir, preToolUseHooks: fpPreToolUseHooks, postToolUseHooks: fpPostToolUseHooks });
   }
@@ -165,10 +168,10 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   if (config.phase === "implement" && config.featureSlug) {
     try {
       const implBranch = await createImplBranch(config.epicSlug, config.featureSlug, { cwd: worktreePath });
-      logger.info("impl branch created", { branch: implBranch });
+      logger.log(`impl branch: ${implBranch}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.warn("impl branch creation failed", { error: message });
+      logger.warn(`impl branch creation failed: ${message}`);
     }
   }
 
@@ -187,7 +190,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.warn("early issue creation failed", { error: message });
+      logger.warn(`early issue creation failed (non-blocking): ${message}`);
     }
   }
 
@@ -197,7 +200,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   if (!dispatchResult.success && config.phase !== "validate") {
     // Early exit on failure -- no manifest/sync updates.
     // Exception: validate failures must reach the machine so REGRESS fires.
-    logger.info("dispatch failed -- skipping post-dispatch steps");
+    logger.log("dispatch failed -- skipping post-dispatch steps");
     return { success: false, worktreePath, epicSlug };
   }
 
@@ -206,7 +209,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
 
   // Design abandon guard: if design produced no output, skip everything
   if (config.phase === "design" && !phaseOutput) {
-    logger.info("no output -- skipping post-dispatch");
+    logger.log("no output -- skipping post-dispatch");
     return { success: dispatchResult.success, worktreePath, epicSlug };
   }
 
@@ -236,11 +239,11 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     }
 
     if (reconcileResult) {
-      logger.info("reconciled", { phase: reconcileResult.phase });
+      logger.log(`reconciled -> ${reconcileResult.phase}`);
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn("reconciliation failed", { error: message });
+    logger.warn(`reconciliation failed: ${message}`);
   }
 
   // Create phase tag at current HEAD for regression support
@@ -249,7 +252,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   } catch (err: unknown) {
     // Non-blocking -- tag creation failure shouldn't halt pipeline
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn("tag creation failed", { error: message });
+    logger.warn(`tag creation failed: ${message}`);
   }
 
   // Design phase: rename hex slug to real slug
@@ -265,9 +268,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       );
       if (renameResult.renamed) {
         epicSlug = renameResult.finalSlug;
-        logger.info("renamed", { slug: renameResult.finalSlug });
+        logger.log(`renamed -> ${renameResult.finalSlug}`);
       } else if (renameResult.error) {
-        logger.warn("slug rename failed", { error: renameResult.error });
+        logger.warn(`Slug rename failed: ${renameResult.error}`);
       }
     }
   }
@@ -282,7 +285,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
         resolved: config.resolved,
         logger,
       });
-      logger.info("GitHub sync complete");
+      logger.log("GitHub sync complete");
     } else {
       // Manual CLI path -- discover and sync
       const beastConfig = config.config;
@@ -319,53 +322,104 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
               });
             }
 
-            logger.info("GitHub sync complete");
+            logger.log("GitHub sync complete");
           }
         } else {
-          logger.debug("GitHub discovery failed -- skipping sync");
+          logger.detail?.("GitHub discovery failed -- skipping sync");
         }
       }
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn("GitHub sync failed", { error: message });
+    logger.warn(`GitHub sync failed (non-blocking): ${message}`);
   }
 
   // -- Step 8.5: commit-issue-ref --------------------------------------------
-  // Amend the most recent commit to append a GitHub issue reference (#N).
+  // Amend all commits since the last phase tag to append GitHub issue refs (#N).
   // Runs post-sync so issue numbers from early-issues or sync are available.
+  // Runs pre-push so no force-push is needed.
   try {
     const manifest = store.load(config.projectRoot, epicSlug);
     if (manifest) {
-      const amendResult = await amendCommitWithIssueRef(manifest, { cwd: worktreePath });
-      if (amendResult.amended) {
-        logger.debug("commit ref added", { issue: amendResult.issueNumber });
+      const rangeResult = await amendCommitsInRange(manifest, epicSlug, config.phase, { cwd: worktreePath });
+      if (rangeResult.amended > 0) {
+        logger.detail?.(`commit refs: ${rangeResult.amended} amended, ${rangeResult.skipped} skipped`);
       }
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn("commit issue ref failed", { error: message });
+    logger.warn(`commit issue ref failed (non-blocking): ${message}`);
+  }
+
+  // -- Step 8.7: git.push --------------------------------------------------
+  // Push branches and tags to remote. Pure git operation — not gated on
+  // github.enabled. Warn-and-continue on failure.
+  try {
+    const remoteExists = await hasRemote({ cwd: worktreePath });
+    if (remoteExists) {
+      await pushBranches({
+        epicSlug,
+        phase: config.phase,
+        featureSlug: config.featureSlug,
+        cwd: worktreePath,
+      });
+      await pushTags({ cwd: worktreePath });
+      logger.detail?.("pushed branches and tags");
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.warn(`git push failed (non-blocking): ${message}`);
+  }
+
+  // -- Step 8.9: branch-link -------------------------------------------------
+  // Link branches to GitHub issues via createLinkedBranch GraphQL mutation.
+  // Gated on github.enabled — pure git push (step 8.7) always runs.
+  // Warn-and-continue on failure.
+  try {
+    const beastConfig = config.config;
+    if (beastConfig.github.enabled) {
+      const manifest = store.load(config.projectRoot, epicSlug);
+      if (manifest?.github) {
+        const featureIssueNumber = config.featureSlug
+          ? manifest.features.find((f) => f.slug === config.featureSlug)?.github?.issue
+          : undefined;
+        await linkBranches({
+          repo: manifest.github.repo,
+          epicSlug,
+          epicIssueNumber: manifest.github.epic,
+          featureSlug: config.featureSlug,
+          featureIssueNumber,
+          phase: config.phase,
+          cwd: worktreePath,
+          logger,
+        });
+        logger.detail?.("branch linking complete");
+      }
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.warn(`branch linking failed (non-blocking): ${message}`);
   }
 
   // -- Step 9: git.worktree.cleanup -------------------------------------------
   if (config.phase === "release" && dispatchResult.success) {
     try {
-      logger.info("release teardown -- archiving branch...");
+      logger.log("release teardown -- archiving branch...");
       const tagName = await worktree.archive(epicSlug, { cwd: config.projectRoot });
-      logger.info("archived", { tag: tagName });
+      logger.log(`archived as ${tagName}`);
 
       await worktree.remove(epicSlug, { cwd: config.projectRoot });
-      logger.info("worktree removed");
+      logger.log("worktree removed");
 
       // Mark manifest as done so scanner skips it
       const doneManifest = store.load(config.projectRoot, epicSlug);
       if (doneManifest) {
         store.save(config.projectRoot, epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
       }
-      logger.info("manifest marked done");
+      logger.log("manifest marked done");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.error("release teardown failed", { error: message });
+      logger.error(`release teardown failed: ${message}`);
       logger.error("worktree preserved for manual cleanup");
       return { success: false, worktreePath, epicSlug, reconcileResult };
     }

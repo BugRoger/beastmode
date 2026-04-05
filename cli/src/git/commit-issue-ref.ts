@@ -11,6 +11,7 @@
  */
 
 import { git } from "./worktree.js";
+import { tagName } from "./tags.js";
 import type { PipelineManifest } from "../manifest/store.js";
 
 /** Result of parsing an impl branch name. */
@@ -77,6 +78,211 @@ export function appendIssueRef(message: string, issueNumber: number): string {
 
   lines[0] = `${subject} (#${issueNumber})`;
   return lines.join("\n");
+}
+
+/**
+ * Phase ordering for range-start resolution.
+ */
+const PHASE_ORDER = ["design", "plan", "implement", "validate", "release"] as const;
+
+/**
+ * Resolve the issue number for a specific commit based on its message.
+ *
+ * Routing:
+ * - `feat(<feature>): ...` → feature issue (impl task commit)
+ * - `implement(<slug>--<feature>): ...` → feature issue (impl checkpoint)
+ * - Everything else → epic issue (phase checkpoints, misc)
+ *
+ * Falls back to epic issue if feature not found in manifest.
+ * Returns undefined if manifest has no github config.
+ */
+export function resolveCommitIssueNumber(
+  commitMessage: string,
+  manifest: PipelineManifest,
+): number | undefined {
+  if (!manifest.github?.epic) return undefined;
+
+  // feat(<feature>): pattern — impl task commits
+  const featMatch = commitMessage.match(/^feat\(([^)]+)\):/);
+  if (featMatch) {
+    const featureSlug = featMatch[1];
+    const feature = manifest.features.find((f) => f.slug === featureSlug);
+    if (feature?.github?.issue) return feature.github.issue;
+    return manifest.github.epic;
+  }
+
+  // implement(<slug>--<feature>): pattern — impl branch checkpoint
+  const implMatch = commitMessage.match(/^implement\([^)]*--([^)]+)\):/);
+  if (implMatch) {
+    const featureSlug = implMatch[1];
+    const feature = manifest.features.find((f) => f.slug === featureSlug);
+    if (feature?.github?.issue) return feature.github.issue;
+    return manifest.github.epic;
+  }
+
+  // Default: epic issue (phase checkpoints, misc commits)
+  return manifest.github.epic;
+}
+
+/**
+ * Resolve the range start SHA for commit amending.
+ *
+ * Strategy:
+ * 1. If current phase has a predecessor, try its tag (`beastmode/<slug>/<prev-phase>`)
+ * 2. Fall back to merge-base with main (handles design phase and missing tags)
+ */
+export async function resolveRangeStart(
+  slug: string,
+  currentPhase: string,
+  opts: { cwd?: string } = {},
+): Promise<string | undefined> {
+  const phaseIdx = PHASE_ORDER.indexOf(currentPhase as (typeof PHASE_ORDER)[number]);
+
+  // Try previous phase tag
+  if (phaseIdx > 0) {
+    const prevPhase = PHASE_ORDER[phaseIdx - 1];
+    const prevTag = tagName(slug, prevPhase);
+    const result = await git(["rev-parse", prevTag], { cwd: opts.cwd, allowFailure: true });
+    if (result.exitCode === 0 && result.stdout) {
+      return result.stdout;
+    }
+  }
+
+  // Fallback: merge-base with main
+  const mbResult = await git(["merge-base", "main", "HEAD"], { cwd: opts.cwd, allowFailure: true });
+  if (mbResult.exitCode === 0 && mbResult.stdout) {
+    return mbResult.stdout;
+  }
+
+  return undefined;
+}
+
+/** Result of range-based commit amending. */
+export interface AmendRangeResult {
+  amended: number;
+  skipped: number;
+}
+
+/**
+ * Amend all commits in a range to append issue references.
+ *
+ * Enumerates commits from range start to HEAD, pre-computes which need
+ * amending and their new messages, then uses `git rebase --exec` with
+ * a shell script that checks each replayed commit and amends if needed.
+ *
+ * The shell script uses only git + sh — no Bun dependency during rebase.
+ */
+export async function amendCommitsInRange(
+  manifest: PipelineManifest,
+  slug: string,
+  currentPhase: string,
+  opts: { cwd?: string; rangeStartOverride?: string } = {},
+): Promise<AmendRangeResult> {
+  if (!manifest.github?.epic) {
+    return { amended: 0, skipped: 0 };
+  }
+
+  // Resolve range start
+  let rangeStart: string | undefined;
+  if (opts.rangeStartOverride) {
+    const r = await git(["rev-parse", opts.rangeStartOverride], { cwd: opts.cwd, allowFailure: true });
+    rangeStart = r.exitCode === 0 ? r.stdout : undefined;
+  } else {
+    rangeStart = await resolveRangeStart(slug, currentPhase, opts);
+  }
+
+  if (!rangeStart) {
+    return { amended: 0, skipped: 0 };
+  }
+
+  // Get commits in range (oldest first)
+  const logResult = await git(
+    ["log", "--reverse", "--format=%H|%s", `${rangeStart}..HEAD`],
+    { cwd: opts.cwd, allowFailure: true },
+  );
+
+  if (logResult.exitCode !== 0 || !logResult.stdout) {
+    return { amended: 0, skipped: 0 };
+  }
+
+  const commits = logResult.stdout.split("\n").filter(Boolean).map((line) => {
+    const idx = line.indexOf("|");
+    return { sha: line.slice(0, idx), subject: line.slice(idx + 1) };
+  });
+
+  if (commits.length === 0) {
+    return { amended: 0, skipped: 0 };
+  }
+
+  // Pre-compute which commits need amending and their new messages
+  const amendments = new Map<string, string>();
+  let skipped = 0;
+
+  for (const commit of commits) {
+    if (/\(#\d+\)$/.test(commit.subject.trim())) {
+      skipped++;
+      continue;
+    }
+    const issueNumber = resolveCommitIssueNumber(commit.subject, manifest);
+    if (issueNumber) {
+      amendments.set(commit.subject, `${commit.subject} (#${issueNumber})`);
+    } else {
+      skipped++;
+    }
+  }
+
+  if (amendments.size === 0) {
+    return { amended: 0, skipped };
+  }
+
+  // Write temp map file: each line is "old_subject\tnew_message"
+  const { writeFile, unlink } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const cwd = opts.cwd ?? process.cwd();
+  const mapPath = join(cwd, ".git", "beastmode-amend-map.txt");
+
+  const mapLines: string[] = [];
+  for (const [oldSubject, newMessage] of amendments) {
+    mapLines.push(`${oldSubject}\t${newMessage}`);
+  }
+  await writeFile(mapPath, mapLines.join("\n") + "\n");
+
+  // Shell script that reads current HEAD subject, looks up in map, amends.
+  // Uses only git + sh — no Bun dependency during rebase.
+  const scriptPath = join(cwd, ".git", "beastmode-amend.sh");
+  const escapedMapPath = mapPath.replace(/'/g, "'\\''");
+  const script = `#!/bin/sh
+SUBJECT=$(git log -1 --format=%s)
+MAP_FILE='${escapedMapPath}'
+NEW_MSG=""
+while IFS=$(printf '\\t') read -r old new; do
+  if [ "$old" = "$SUBJECT" ]; then
+    NEW_MSG="$new"
+    break
+  fi
+done < "$MAP_FILE"
+if [ -n "$NEW_MSG" ]; then
+  git commit --amend -m "$NEW_MSG"
+fi
+`;
+  await writeFile(scriptPath, script, { mode: 0o755 });
+
+  // Run rebase with exec
+  const rebaseResult = await git(
+    ["rebase", "--exec", `sh '${scriptPath.replace(/'/g, "'\\''")}'`, rangeStart],
+    { cwd: opts.cwd, allowFailure: true },
+  );
+
+  // Clean up temp files
+  await unlink(mapPath).catch(() => {});
+  await unlink(scriptPath).catch(() => {});
+
+  if (rebaseResult.exitCode !== 0) {
+    await git(["rebase", "--abort"], { cwd: opts.cwd, allowFailure: true });
+    return { amended: 0, skipped };
+  }
+
+  return { amended: amendments.size, skipped };
 }
 
 /**

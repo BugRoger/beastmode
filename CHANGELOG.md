@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.92.0 — GitHub Sync Polish (Apr 2026)
+
+- **Body enrichment** — Epic issues get full PRD (6 sections), feature issues get full plan (4 sections), human-readable titles
+- **Git push** — Unconditional branch/tag push after every checkpoint with `hasRemote()` guard and warn-and-continue
+- **Branch linking** — `createLinkedBranch` GraphQL mutation with delete-then-recreate workaround, node ID resolution helpers
+- **Commit traceability** — Range-based rebase amend replacing single-commit HEAD amend; `resolveRangeStart`, `resolveCommitIssueNumber`, `amendCommitsInRange`
+- **Backfill** — Full reconciliation command (sync, push, amend, link) with comprehensive test suite
+- **Dead code removal** — Removed `resolveGitMetadata`, `readVersionTag`, Git section from body enrichment
+
+---
+
 ### v0.91.0 — Logging Cleanup (Apr 2026)
 
 - **Unified 4-level Logger** — Single Logger interface with debug/info/warn/error replacing six ad-hoc levels; structured LogEntry with key-value data support

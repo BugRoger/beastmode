@@ -48,17 +48,26 @@
 - Four feature statuses: pending, in-progress, blocked, completed
 - GitHub API failures: warn and continue -- absence of `github` data is the signal
 
-## Compare URLs
-- ALWAYS include a compare URL in epic body git metadata — `buildCompareUrl()` pure function generates the URL from repo, branch, phase, and tag inputs
-- Active development: `main...feature/{slug}` branch range
-- Post-release (phase=done): `{version-tag}...archive/feature/{slug}` archive tag range
-- Fallback: branch-based URL when no archive tag exists — prevents broken links
-
 ## Commit Issue References
-- ALWAYS amend the most recent commit message with an issue reference after sync — `(#N)` trailing format on the subject line
-- Three commit types get refs: phase checkpoint commits (epic issue), impl branch commits (feature issue, resolved from branch name), release squash-merge commits (epic issue)
+- ALWAYS amend all commits since the last phase tag with issue references via range-based rebase — `(#N)` trailing format on the subject line
+- Three commit types get refs: phase checkpoint commits (epic issue), impl branch commits (feature issue, resolved from branch name or message prefix), release squash-merge commits (epic issue)
 - Commits without a known issue number are left unchanged — no-op, not an error
-- Module is pure functions (`shouldAmendCommit`, `buildAmendedMessage`) plus a thin integration layer calling `git commit --amend`
+- Amend runs before push in the pipeline — rewrites local-only history, no force-push needed from CLI
+- Module uses pure functions (`shouldAmendCommit`, `buildAmendedMessage`, `resolveCommitIssueNumber`) plus range orchestrator (`amendCommitsInRange`, `resolveRangeStart`)
+
+## Git Push
+- ALWAYS push feature branches after every phase checkpoint — pure git operation, not gated on `github.enabled`
+- ALWAYS push impl branches during implement phase
+- ALWAYS push all tags after each checkpoint — phase tags and archive tags
+- Push failures warn and continue — never block the pipeline
+- No push attempted when no remote is configured
+
+## Branch Linking
+- ALWAYS link feature branches to epic issues and impl branches to feature issues via `createLinkedBranch` GraphQL mutation
+- Gated on `github.enabled` — unlike push, this is a GitHub API operation
+- Delete-then-recreate workaround for branches already on remote — mutation returns null for existing branches
+- GraphQL node IDs resolved via `ghRepoNodeId()` and `ghIssueNodeId()`
+- Warn-and-continue — linking failures never block the pipeline
 
 ## Early Issue Creation
 - ALWAYS ensure GitHub issues exist before dispatch — pre-dispatch step in the pipeline runner

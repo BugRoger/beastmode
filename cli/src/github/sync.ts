@@ -49,6 +49,8 @@ import {
 /** Minimal epic input — decoupled from full PipelineManifest to stay pure. */
 export interface EpicBodyInput {
   slug: string;
+  /** Human-readable epic name for title construction. */
+  epic?: string;
   phase: Phase;
   summary?: { problem: string; solution: string };
   features: Array<{
@@ -62,18 +64,11 @@ export interface EpicBodyInput {
     solution?: string;
     userStories?: string;
     decisions?: string;
+    testingDecisions?: string;
+    outOfScope?: string;
   };
   /** Artifact links per phase — repo path + optional permalink. */
   artifactLinks?: Record<string, { repoPath: string; permalink?: string }>;
-  /** Git metadata for traceability — branch, tags, version, merge commit. */
-  gitMetadata?: {
-    branch?: string;
-    phaseTags?: Record<string, string>;  // phase -> tag name
-    version?: string;
-    mergeCommit?: { sha: string; url: string };
-    /** Compare URL for viewing the full diff — branch-based or archive-based. */
-    compareUrl?: string;
-  };
   /** GitHub repo in "owner/repo" format — needed for permalink construction. */
   repo?: string;
 }
@@ -84,6 +79,10 @@ export interface FeatureBodyInput {
   description?: string;
   /** User story text extracted from the feature plan. */
   userStory?: string;
+  /** What to Build section from the feature plan. */
+  whatToBuild?: string;
+  /** Acceptance Criteria section from the feature plan. */
+  acceptanceCriteria?: string;
 }
 
 /**
@@ -109,12 +108,18 @@ export function formatEpicBody(input: EpicBodyInput): string {
     sections.push(`## Solution\n\n${solution}`);
   }
 
-  // PRD user stories and decisions (only from prdSections)
+  // PRD sections (only from prdSections)
   if (input.prdSections?.userStories) {
     sections.push(`## User Stories\n\n${input.prdSections.userStories}`);
   }
   if (input.prdSections?.decisions) {
     sections.push(`## Decisions\n\n${input.prdSections.decisions}`);
+  }
+  if (input.prdSections?.testingDecisions) {
+    sections.push(`## Testing Decisions\n\n${input.prdSections.testingDecisions}`);
+  }
+  if (input.prdSections?.outOfScope) {
+    sections.push(`## Out of Scope\n\n${input.prdSections.outOfScope}`);
   }
 
   // Artifact links table
@@ -128,31 +133,6 @@ export function formatEpicBody(input: EpicBodyInput): string {
       sections.push(
         `## Artifacts\n\n| Phase | Link |\n|-------|------|\n${rows.join("\n")}`,
       );
-    }
-  }
-
-  // Git metadata
-  if (input.gitMetadata) {
-    const meta = input.gitMetadata;
-    const lines: string[] = [];
-    if (meta.branch) lines.push(`**Branch:** \`${meta.branch}\``);
-    if (meta.compareUrl) {
-      // Extract the range label from the URL path: everything after /compare/
-      const rangeLabel = meta.compareUrl.split("/compare/").pop() ?? meta.compareUrl;
-      lines.push(`**Compare:** [${rangeLabel}](${meta.compareUrl})`);
-    }
-    if (meta.phaseTags && Object.keys(meta.phaseTags).length > 0) {
-      const tagList = Object.entries(meta.phaseTags)
-        .map(([_phase, tag]) => `\`${tag}\``)
-        .join(", ");
-      lines.push(`**Tags:** ${tagList}`);
-    }
-    if (meta.version) lines.push(`**Version:** ${meta.version}`);
-    if (meta.mergeCommit) {
-      lines.push(`**Merge Commit:** [${meta.mergeCommit.sha.slice(0, 7)}](${meta.mergeCommit.url})`);
-    }
-    if (lines.length > 0) {
-      sections.push(`## Git\n\n${lines.join("\n")}`);
     }
   }
 
@@ -195,9 +175,35 @@ export function formatFeatureBody(
     sections.push(`## User Story\n\n${input.userStory}`);
   }
 
+  // What to Build (optional, from feature plan)
+  if (input.whatToBuild) {
+    sections.push(`## What to Build\n\n${input.whatToBuild}`);
+  }
+
+  // Acceptance Criteria (optional, from feature plan)
+  if (input.acceptanceCriteria) {
+    sections.push(`## Acceptance Criteria\n\n${input.acceptanceCriteria}`);
+  }
+
   sections.push(`**Epic:** #${epicNumber}`);
 
   return sections.join("\n\n");
+}
+
+/**
+ * Build the epic issue title from the human-readable epic name.
+ * Falls back to slug if epic name is unavailable.
+ */
+export function epicTitle(slug: string, epicName?: string): string {
+  return epicName || slug;
+}
+
+/**
+ * Build the feature issue title with epic name prefix.
+ * Format: "{epic}: {feature}" or just "{feature}" if epic name unavailable.
+ */
+export function featureTitle(epicName: string | undefined, featureSlug: string): string {
+  return epicName ? `${epicName}: ${featureSlug}` : featureSlug;
 }
 
 /**
@@ -340,6 +346,8 @@ function readPrdSections(
       "Solution",
       "User Stories",
       "Implementation Decisions",
+      "Testing Decisions",
+      "Out of Scope",
     ]);
 
     const result: EpicBodyInput["prdSections"] = {};
@@ -347,6 +355,8 @@ function readPrdSections(
     if (sections["Solution"]) result.solution = sections["Solution"];
     if (sections["User Stories"]) result.userStories = sections["User Stories"];
     if (sections["Implementation Decisions"]) result.decisions = sections["Implementation Decisions"];
+    if (sections["Testing Decisions"]) result.testingDecisions = sections["Testing Decisions"];
+    if (sections["Out of Scope"]) result.outOfScope = sections["Out of Scope"];
 
     return Object.keys(result).length > 0 ? result : undefined;
   } catch {
@@ -390,73 +400,6 @@ function resolveArtifactLinks(
   return Object.keys(links).length > 0 ? links : undefined;
 }
 
-/**
- * Resolve git metadata for traceability.
- * Branch from manifest, phase tags from git, version from manifest/plugin.
- * Only resolves tags when a worktree branch is present — tags without branch
- * context are not meaningful traceability metadata.
- */
-function resolveGitMetadata(
-  manifest: PipelineManifest,
-  repo?: string,
-): EpicBodyInput["gitMetadata"] | undefined {
-  const meta: NonNullable<EpicBodyInput["gitMetadata"]> = {};
-
-  // Branch from worktree — gate all git lookups on worktree presence
-  if (manifest.worktree?.branch) {
-    meta.branch = manifest.worktree.branch;
-
-    // Phase tags from git
-    const tagPrefix = `beastmode/${manifest.slug}/`;
-    try {
-      const tagResult = Bun.spawnSync(["git", "tag", "-l", `${tagPrefix}*`]);
-      if (tagResult.exitCode === 0) {
-        const tags = tagResult.stdout.toString().trim().split("\n").filter(Boolean);
-        if (tags.length > 0) {
-          const phaseTags: Record<string, string> = {};
-          for (const tag of tags) {
-            const phase = tag.replace(tagPrefix, "");
-            if (phase) phaseTags[phase] = tag;
-          }
-          if (Object.keys(phaseTags).length > 0) {
-            meta.phaseTags = phaseTags;
-          }
-        }
-      }
-    } catch {
-      // Git not available — skip tags
-    }
-
-  }
-
-  // Compare URL — pure computation from available metadata
-  if (repo) {
-    // Check for archive tag
-    let hasArchiveTag = false;
-    try {
-      const archiveCheck = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/archive/${manifest.slug}`]);
-      hasArchiveTag = archiveCheck.exitCode === 0;
-    } catch {
-      // Git not available — skip
-    }
-
-    // Read version tag if available
-    const versionTag = readVersionTag(manifest.slug);
-
-    const compareUrl = buildCompareUrl({
-      repo,
-      branch: manifest.worktree?.branch,
-      phase: manifest.phase,
-      slug: manifest.slug,
-      versionTag,
-      hasArchiveTag,
-    });
-    if (compareUrl) meta.compareUrl = compareUrl;
-  }
-
-  return Object.keys(meta).length > 0 ? meta : undefined;
-}
-
 /** Read version from plugin.json — returns undefined if unavailable. */
 function readVersionFromPlugin(projectRoot?: string): string | undefined {
   if (!projectRoot) return undefined;
@@ -476,25 +419,6 @@ function readReleaseTag(slug: string): string | undefined {
     const tagName = `beastmode/${slug}/release`;
     const result = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/${tagName}`]);
     return result.exitCode === 0 ? tagName : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Read the version tag for this epic — returns undefined if no tag exists. */
-function readVersionTag(slug: string): string | undefined {
-  try {
-    // Look for version tags like v1.2.0 that point to the same commit as the release tag
-    const releaseTagName = `beastmode/${slug}/release`;
-    const releaseRef = Bun.spawnSync(["git", "rev-parse", "--verify", `refs/tags/${releaseTagName}`]);
-    if (releaseRef.exitCode !== 0) return undefined;
-    const releaseSha = releaseRef.stdout.toString().trim();
-
-    // Find version tags (vX.Y.Z) pointing to the same commit
-    const tagsResult = Bun.spawnSync(["git", "tag", "-l", "v*", "--points-at", releaseSha]);
-    if (tagsResult.exitCode !== 0) return undefined;
-    const tags = tagsResult.stdout.toString().trim().split("\n").filter(Boolean);
-    return tags[0] || undefined;
   } catch {
     return undefined;
   }
@@ -551,7 +475,6 @@ export async function syncGitHub(
     ? readPrdSections(manifest, opts.projectRoot)
     : undefined;
   const artifactLinks = resolveArtifactLinks(manifest, repo);
-  const gitMetadata = resolveGitMetadata(manifest, repo);
 
   // --- Epic Sync ---
 
@@ -567,12 +490,11 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
-      gitMetadata,
       repo,
     });
     epicNumber = await ghIssueCreate(
       repo,
-      manifest.slug,
+      epicTitle(manifest.slug, manifest.epic),
       initialEpicBody,
       ["type/epic", `phase/${manifest.phase}`],
       { logger: opts.logger },
@@ -595,6 +517,10 @@ export async function syncGitHub(
 
   // --- Epic Body Update ---
   if (!epicJustCreated) {
+    // Update epic title to use human-readable name
+    const expectedEpicTitle = epicTitle(manifest.slug, manifest.epic);
+    await ghIssueEdit(repo, epicNumber, { title: expectedEpicTitle }, { logger: opts.logger });
+
     const epicBody = formatEpicBody({
       slug: manifest.slug,
       phase: manifest.phase,
@@ -602,7 +528,6 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
-      gitMetadata,
       repo,
     });
     const epicBodyHash = hashBody(epicBody);
@@ -654,7 +579,7 @@ export async function syncGitHub(
   // --- Feature Sync ---
 
   for (const feature of manifest.features) {
-    await syncFeature(repo, owner, epicNumber, feature, resolved, result, opts);
+    await syncFeature(repo, owner, epicNumber, manifest.epic, feature, resolved, result, opts);
   }
 
   // --- Epic Close (if done or cancelled) ---
@@ -712,13 +637,16 @@ async function syncFeature(
   repo: string,
   owner: string,
   epicNumber: number,
+  epicName: string | undefined,
   feature: ManifestFeature,
   resolved: ResolvedGitHub,
   result: SyncResult,
   opts: { logger?: Logger; projectRoot?: string } = {},
 ): Promise<void> {
-  // Read user story from feature plan (if projectRoot available)
+  // Read plan sections from feature plan (if projectRoot available)
   let userStory: string | undefined;
+  let whatToBuild: string | undefined;
+  let acceptanceCriteria: string | undefined;
   if (opts.projectRoot && feature.plan) {
     const planPath = resolve(opts.projectRoot, feature.plan);
     try {
@@ -726,6 +654,10 @@ async function syncFeature(
         const planContent = readFileSync(planPath, "utf-8");
         const section = extractSection(planContent, "User Stories");
         if (section) userStory = section;
+        const wtb = extractSection(planContent, "What to Build");
+        if (wtb) whatToBuild = wtb;
+        const ac = extractSection(planContent, "Acceptance Criteria");
+        if (ac) acceptanceCriteria = ac;
       }
     } catch {
       // Graceful degradation
@@ -738,12 +670,12 @@ async function syncFeature(
 
   if (!featureNumber) {
     const featureBody = formatFeatureBody(
-      { slug: feature.slug, description: feature.description, userStory },
+      { slug: feature.slug, description: feature.description, userStory, whatToBuild, acceptanceCriteria },
       epicNumber,
     );
     featureNumber = await ghIssueCreate(
       repo,
-      feature.slug,
+      featureTitle(epicName, feature.slug),
       featureBody,
       ["type/feature", STATUS_TO_LABEL[feature.status] ?? "status/ready"],
       { logger: opts.logger },
@@ -796,8 +728,12 @@ async function syncFeature(
 
   // --- Feature Body Update ---
   if (!featureJustCreated) {
+    // Update feature title with epic name prefix
+    const expectedFeatureTitle = featureTitle(epicName, feature.slug);
+    await ghIssueEdit(repo, featureNumber, { title: expectedFeatureTitle }, { logger: opts.logger });
+
     const featureBody = formatFeatureBody(
-      { slug: feature.slug, description: feature.description, userStory },
+      { slug: feature.slug, description: feature.description, userStory, whatToBuild, acceptanceCriteria },
       epicNumber,
     );
     const featureBodyHash = hashBody(featureBody);
