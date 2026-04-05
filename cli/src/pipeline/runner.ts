@@ -26,14 +26,14 @@ import * as worktree from "../git/worktree.js";
 import { rebase, createImplBranch } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
 import * as store from "../manifest/store.js";
-import { syncGitHub } from "../github/sync.js";
 import { syncGitHubForEpic } from "../github/sync.js";
 import { discoverGitHub } from "../github/discovery.js";
 import type { ResolvedGitHub } from "../github/discovery.js";
 import { ensureEarlyIssues } from "../github/early-issues.js";
-import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "../manifest/pure.js";
 import { createTag } from "../git/tags.js";
 import { amendCommitsInRange } from "../git/commit-issue-ref.js";
+import { loadSyncRefs, getSyncRef } from "../github/sync-refs.js";
+import { JsonFileStore } from "../store/json-file-store.js";
 import { linkBranches } from "../github/branch-link.js";
 import { hasRemote, pushBranches, pushTags } from "../git/push.js";
 import {
@@ -69,6 +69,8 @@ export interface PipelineConfig {
   phase: Phase;
   /** Epic slug */
   epicSlug: string;
+  /** Epic entity ID (for store lookups) */
+  epicId?: string;
   /** CLI arguments for the phase */
   args: string[];
   /** Project root (where .beastmode/ lives) */
@@ -180,14 +182,21 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   // for commit references from the first commit.
   if (!config.skipPreDispatch) {
     try {
-      await ensureEarlyIssues({
-        phase: config.phase,
-        epicSlug,
-        projectRoot: config.projectRoot,
-        config: config.config,
-        resolved: config.resolved,
-        logger,
-      });
+      const taskStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+      taskStore.load();
+      // Find epic by slug
+      const epicEntity = taskStore.find(epicSlug);
+      if (epicEntity && epicEntity.type === "epic") {
+        await ensureEarlyIssues({
+          phase: config.phase,
+          epicId: epicEntity.id,
+          projectRoot: config.projectRoot,
+          config: config.config,
+          store: taskStore,
+          resolved: config.resolved,
+          logger,
+        });
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       logger.warn(`early issue creation failed (non-blocking): ${message}`);
@@ -277,56 +286,25 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
 
   // -- Step 8: github.mirror --------------------------------------------------
   try {
-    if (config.resolved) {
-      // Watch loop path -- uses pre-resolved GitHub data
-      await syncGitHubForEpic({
-        projectRoot: config.projectRoot,
-        epicSlug,
-        resolved: config.resolved,
-        logger,
-      });
-      logger.info("GitHub sync complete");
-    } else {
-      // Manual CLI path -- discover and sync
-      const beastConfig = config.config;
-      if (beastConfig.github.enabled) {
-        const resolved = await discoverGitHub(config.projectRoot, beastConfig.github["project-name"]);
-        if (resolved) {
-          const manifest = store.load(config.projectRoot, epicSlug);
-          if (manifest) {
-            const syncResult = await syncGitHub(manifest, beastConfig, resolved, {
-              logger,
-              projectRoot: config.projectRoot,
-            });
-
-            if (syncResult.mutations.length > 0) {
-              await store.transact(config.projectRoot, epicSlug, (m) => {
-                let updated = m;
-                for (const mutation of syncResult.mutations) {
-                  switch (mutation.type) {
-                    case "setEpic":
-                      updated = setGitHubEpic(updated, mutation.epicNumber, mutation.repo);
-                      break;
-                    case "setFeatureIssue":
-                      updated = setFeatureGitHubIssue(updated, mutation.featureSlug, mutation.issueNumber);
-                      break;
-                    case "setEpicBodyHash":
-                      updated = setEpicBodyHash(updated, mutation.bodyHash);
-                      break;
-                    case "setFeatureBodyHash":
-                      updated = setFeatureBodyHash(updated, mutation.featureSlug, mutation.bodyHash);
-                      break;
-                  }
-                }
-                return updated;
-              });
-            }
-
-            logger.info("GitHub sync complete");
-          }
-        } else {
-          logger.debug?.("GitHub discovery failed -- skipping sync");
-        }
+    const taskStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+    taskStore.load();
+    const epicEntity = taskStore.find(epicSlug);
+    if (epicEntity && epicEntity.type === "epic") {
+      const resolved = config.resolved ?? (config.config.github.enabled
+        ? await discoverGitHub(config.projectRoot, config.config.github["project-name"])
+        : undefined);
+      if (resolved) {
+        await syncGitHubForEpic({
+          projectRoot: config.projectRoot,
+          epicId: epicEntity.id,
+          epicSlug,
+          store: taskStore,
+          resolved,
+          logger,
+        });
+        logger.info("GitHub sync complete");
+      } else {
+        logger.debug?.("GitHub discovery failed -- skipping sync");
       }
     }
   } catch (err: unknown) {
@@ -339,9 +317,13 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   // Runs post-sync so issue numbers from early-issues or sync are available.
   // Runs pre-push so no force-push is needed.
   try {
-    const manifest = store.load(config.projectRoot, epicSlug);
-    if (manifest) {
-      const rangeResult = await amendCommitsInRange(manifest, epicSlug, config.phase, { cwd: worktreePath });
+    const syncRefs = loadSyncRefs(config.projectRoot);
+    const taskStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+    taskStore.load();
+    const epicEntity = taskStore.find(epicSlug);
+    if (epicEntity && epicEntity.type === "epic") {
+      const features = taskStore.listFeatures(epicEntity.id).map((f) => ({ id: f.id, slug: f.slug }));
+      const rangeResult = await amendCommitsInRange(syncRefs, epicEntity.id, features, epicSlug, config.phase, { cwd: worktreePath });
       if (rangeResult.amended > 0) {
         logger.debug?.(`commit refs: ${rangeResult.amended} amended, ${rangeResult.skipped} skipped`);
       }
@@ -378,22 +360,35 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   try {
     const beastConfig = config.config;
     if (beastConfig.github.enabled) {
-      const manifest = store.load(config.projectRoot, epicSlug);
-      if (manifest?.github) {
-        const featureIssueNumber = config.featureSlug
-          ? manifest.features.find((f) => f.slug === config.featureSlug)?.github?.issue
-          : undefined;
-        await linkBranches({
-          repo: manifest.github.repo,
-          epicSlug,
-          epicIssueNumber: manifest.github.epic,
-          featureSlug: config.featureSlug,
-          featureIssueNumber,
-          phase: config.phase,
-          cwd: worktreePath,
-          logger,
-        });
-        logger.debug?.("branch linking complete");
+      const syncRefs = loadSyncRefs(config.projectRoot);
+      const taskStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+      taskStore.load();
+      const epicEntity = taskStore.find(epicSlug);
+      if (epicEntity && epicEntity.type === "epic") {
+        const epicRef = getSyncRef(syncRefs, epicEntity.id);
+        if (epicRef) {
+          let featureIssueNumber: number | undefined;
+          if (config.featureSlug) {
+            const features = taskStore.listFeatures(epicEntity.id);
+            const feat = features.find((f) => f.slug === config.featureSlug);
+            if (feat) featureIssueNumber = getSyncRef(syncRefs, feat.id)?.issue;
+          }
+          // Discover repo from sync ref or discovery
+          const resolved = config.resolved ?? await discoverGitHub(config.projectRoot, beastConfig.github["project-name"]);
+          if (resolved) {
+            await linkBranches({
+              repo: resolved.repo,
+              epicSlug,
+              epicIssueNumber: epicRef.issue,
+              featureSlug: config.featureSlug,
+              featureIssueNumber,
+              phase: config.phase,
+              cwd: worktreePath,
+              logger,
+            });
+            logger.debug?.("branch linking complete");
+          }
+        }
       }
     }
   } catch (err: unknown) {

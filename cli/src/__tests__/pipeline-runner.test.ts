@@ -100,6 +100,53 @@ vi.mock("../github/early-issues.js", () => ({
   ensureEarlyIssues: mockEnsureEarlyIssues,
 }));
 
+// Mock store/json-file-store
+const mockJsonFileStore = vi.hoisted(() => {
+  const storeState = {
+    find: vi.fn((idOrSlug: string) => {
+      if (idOrSlug === "test-epic") {
+        return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+      }
+      return undefined;
+    }),
+    listFeatures: vi.fn(() => []),
+  };
+
+  class JsonFileStore {
+    private state = storeState;
+    constructor(_path: string) {}
+    load() {}
+    save() {}
+    find(idOrSlug: string) { return this.state.find(idOrSlug); }
+    listFeatures(epicId: string) { return this.state.listFeatures(epicId); }
+  }
+
+  // Attach state object for test manipulation
+  (JsonFileStore as any).__storeState = storeState;
+  return JsonFileStore;
+});
+vi.mock("../store/json-file-store.js", () => ({
+  JsonFileStore: mockJsonFileStore,
+}));
+
+// Mock github/sync-refs
+const mockLoadSyncRefs = vi.hoisted(() => vi.fn(() => ({})));
+const mockSaveSyncRefs = vi.hoisted(() => vi.fn(() => {}));
+const mockGetSyncRef = vi.hoisted(() => vi.fn((_refs: any, entityId: string) => {
+  if (entityId === "epic-123") {
+    return { issue: 100 };
+  }
+  return undefined;
+}));
+const mockSetSyncRef = vi.hoisted(() => vi.fn((_refs: any, _entityId: string, _ref: any) => ({})));
+vi.mock("../github/sync-refs.js", () => ({
+  loadSyncRefs: mockLoadSyncRefs,
+  saveSyncRefs: mockSaveSyncRefs,
+  getSyncRef: mockGetSyncRef,
+  setSyncRef: mockSetSyncRef,
+}));
+
+
 // Mock git/push
 const mockHasRemote = vi.hoisted(() => vi.fn(async () => true));
 const mockPushBranches = vi.hoisted(() => vi.fn(async () => {}));
@@ -201,6 +248,8 @@ function resetAllMocks() {
   mockPushTags.mockClear();
   mockAmendCommitsInRange.mockClear();
   mockLinkBranches.mockClear();
+  mockLoadSyncRefs.mockClear();
+  mockGetSyncRef.mockClear();
 
   // Restore default implementations
   mockLoadOutput.mockImplementation(
@@ -231,6 +280,24 @@ function resetAllMocks() {
   mockPushTags.mockImplementation(async () => {});
   mockAmendCommitsInRange.mockImplementation(async () => ({ amended: 0, skipped: 0 }));
   mockLinkBranches.mockImplementation(async () => {});
+
+  // Reset store/sync-refs mocks to defaults
+  const storeState = (mockJsonFileStore as any).__storeState;
+  storeState.find = vi.fn((idOrSlug: string) => {
+    if (idOrSlug === "test-epic") {
+      return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+    }
+    return undefined;
+  });
+  storeState.listFeatures = vi.fn(() => []);
+
+  mockLoadSyncRefs.mockImplementation(() => ({}));
+  mockGetSyncRef.mockImplementation((_refs: any, entityId: string) => {
+    if (entityId === "epic-123") {
+      return { issue: 100 };
+    }
+    return undefined;
+  });
 }
 
 // ---------- tests ----------
@@ -462,6 +529,15 @@ describe("pipeline/runner", () => {
         projectNumber: 1,
       }) as any);
 
+      // Configure store mocks
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+
       await run(makeConfig({
         config: {
           hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
@@ -472,7 +548,7 @@ describe("pipeline/runner", () => {
       }));
 
       expect(mockDiscoverGitHub).toHaveBeenCalled();
-      expect(mockSyncGitHub).toHaveBeenCalled();
+      expect(mockSyncGitHubForEpic).toHaveBeenCalled();
     });
 
     it("skips sync when github.enabled is false and no resolved", async () => {
@@ -518,6 +594,15 @@ describe("pipeline/runner", () => {
     });
 
     it("passes correct arguments to ensureEarlyIssues", async () => {
+      // Configure store mocks
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "my-epic") {
+          return { id: "epic-123", slug: "my-epic", name: "My Epic", type: "epic" };
+        }
+        return undefined;
+      });
+
       await run(makeConfig({
         phase: "design",
         epicSlug: "my-epic",
@@ -531,9 +616,10 @@ describe("pipeline/runner", () => {
 
       expect(mockEnsureEarlyIssues).toHaveBeenCalledWith({
         phase: "design",
-        epicSlug: "my-epic",
+        epicId: "epic-123",
         projectRoot: "/tmp/test-project",
         config: expect.objectContaining({ github: { enabled: true } }),
+        store: expect.anything(),
         resolved: undefined,
         logger: expect.anything(),
       });
@@ -718,13 +804,42 @@ describe("pipeline/runner", () => {
         lastUpdated: new Date().toISOString(),
       }) as any);
 
+      // Configure store mocks for the new code path
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+      storeState.listFeatures = vi.fn(() => [
+        { id: "feat-123", slug: "my-feature", type: "feature" },
+      ]);
+
+      // Configure getSyncRef to return proper issue numbers
+      mockGetSyncRef.mockImplementation((_refs: any, entityId: string) => {
+        if (entityId === "epic-123") {
+          return { issue: 100 };
+        }
+        if (entityId === "feat-123") {
+          return { issue: 200 };
+        }
+        return undefined;
+      });
+
+      // Mock discoverGitHub to return repo info
+      mockDiscoverGitHub.mockImplementation(async () => ({
+        repo: "BugRoger/beastmode",
+        projectNumber: 1,
+      }) as any);
+
       await run(makeConfig({
         phase: "implement",
         featureSlug: "my-feature",
         config: {
           hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
           "file-permissions": { timeout: 60, "claude-settings": "test" },
-          github: { enabled: true },
+          github: { enabled: true, "project-name": "test" },
           cli: {},
         } as any,
         skipPreDispatch: true,
@@ -761,6 +876,18 @@ describe("pipeline/runner", () => {
         lastUpdated: new Date().toISOString(),
       }) as any);
 
+      // Configure store mocks - getSyncRef should return undefined (no issue)
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+      storeState.listFeatures = vi.fn(() => []);
+
+      mockGetSyncRef.mockImplementation(() => undefined); // No sync ref = no github block
+
       await run(makeConfig({
         config: {
           hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
@@ -784,6 +911,23 @@ describe("pipeline/runner", () => {
         github: { epic: 100, repo: "BugRoger/beastmode" },
         lastUpdated: new Date().toISOString(),
       }) as any);
+
+      // Configure store mocks
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+      storeState.listFeatures = vi.fn(() => []);
+
+      mockGetSyncRef.mockImplementation((_refs: any, entityId: string) => {
+        if (entityId === "epic-123") {
+          return { issue: 100 };
+        }
+        return undefined;
+      });
 
       const result = await run(makeConfig({
         config: {
@@ -811,13 +955,43 @@ describe("pipeline/runner", () => {
         lastUpdated: new Date().toISOString(),
       }) as any);
 
+      // Configure store mocks for the new code path
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+      storeState.listFeatures = vi.fn(() => [
+        { id: "feat-a-id", slug: "feat-a", type: "feature" },
+        { id: "feat-b-id", slug: "feat-b", type: "feature" },
+      ]);
+
+      // Configure getSyncRef to return proper issue numbers
+      mockGetSyncRef.mockImplementation((_refs: any, entityId: string) => {
+        if (entityId === "epic-123") {
+          return { issue: 100 };
+        }
+        if (entityId === "feat-b-id") {
+          return { issue: 20 };
+        }
+        return undefined;
+      });
+
+      // Mock discoverGitHub to return repo info
+      mockDiscoverGitHub.mockImplementation(async () => ({
+        repo: "BugRoger/beastmode",
+        projectNumber: 1,
+      }) as any);
+
       await run(makeConfig({
         phase: "implement",
         featureSlug: "feat-b",
         config: {
           hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
           "file-permissions": { timeout: 60, "claude-settings": "test" },
-          github: { enabled: true },
+          github: { enabled: true, "project-name": "test" },
           cli: {},
         } as any,
         skipPreDispatch: true,
