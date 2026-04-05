@@ -53,7 +53,7 @@ export async function phaseCommand(
   let worktreeSlug = deriveWorktreeSlug(phase, args);
 
   // Fail-fast: non-design phases require the epic to exist.
-  // Resolution priority: store ID → store slug → manifest fallback
+  // Resolution priority: store ID → store slug
   if (phase !== "design") {
     const storePath = join(projectRoot, ".beastmode", "state", "store.json");
     const taskStore = new JsonFileStore(storePath);
@@ -110,7 +110,7 @@ export async function phaseCommand(
   // Full pipeline via runner: worktree + rebase + HITL + dispatch +
   // reconcile + GitHub sync + cleanup.
 
-  // Seed manifest for design phase so the runner can enrich it
+  // Seed worktree for design phase so the pipeline runner can create the epic during reconciliation
   if (phase === "design") {
     enterWorktree(epicSlug, { cwd: projectRoot });
   }
