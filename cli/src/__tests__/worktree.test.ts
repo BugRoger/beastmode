@@ -354,7 +354,7 @@ describe("rebase", () => {
     const logs: string[] = [];
     const warns: string[] = [];
     const logger = {
-      log: (msg: string) => logs.push(msg),
+      info: (msg: string) => logs.push(msg),
       warn: (msg: string) => warns.push(msg),
     };
 
@@ -390,7 +390,7 @@ describe("rebase", () => {
     const logs: string[] = [];
     const warns: string[] = [];
     const logger = {
-      log: (msg: string) => logs.push(msg),
+      info: (msg: string) => logs.push(msg),
       warn: (msg: string) => warns.push(msg),
     };
 
@@ -416,7 +416,7 @@ describe("rebase", () => {
     const logs: string[] = [];
     const warns: string[] = [];
     const logger = {
-      log: (msg: string) => logs.push(msg),
+      info: (msg: string) => logs.push(msg),
       warn: (msg: string) => warns.push(msg),
     };
 

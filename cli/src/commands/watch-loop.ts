@@ -19,7 +19,7 @@ import { acquireLock, releaseLock } from "../lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import { createTag } from "../git/tags.js";
 import { createImplBranch } from "../git/worktree.js";
 
@@ -59,7 +59,7 @@ export class WatchLoop extends EventEmitter {
     super();
     this.config = config;
     this.deps = deps;
-    this.logger = deps.logger ?? createLogger(0, {});
+    this.logger = deps.logger ?? createLogger(createStdioSink(0), {});
   }
 
   /** Type-safe emit helper. */

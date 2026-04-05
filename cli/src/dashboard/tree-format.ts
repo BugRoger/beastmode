@@ -21,9 +21,7 @@ export type TreeDepth =
 /** Level labels — fixed 5-char width (matches logger.ts). */
 const LEVEL_LABELS: Record<LogLevel, string> = {
   info:   "INFO ",
-  detail: "DETL ",
   debug:  "DEBUG",
-  trace:  "TRACE",
   warn:   "WARN ",
   error:  "ERR  ",
 };
