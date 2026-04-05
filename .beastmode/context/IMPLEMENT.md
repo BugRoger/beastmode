@@ -9,6 +9,7 @@
 - ALWAYS add new worktree functions to all mock objects in tests — mock gaps cause test failures discovered only after implementation is complete
 - NEVER use Bun `mock.module()` for modules shared across test files — it pollutes the module registry globally within a test run; use dependency injection or per-file mock objects instead
 - ALWAYS grep for all mock sites of a module when adding new exports — mocks in unrelated test files break silently until the full suite runs
+- ALWAYS include Cucumber step definition files (`*.steps.ts`) in migration scope analysis — they import module paths at runtime (e.g., `require('../manifest/store.js')`) that differ from TypeScript source import paths, making them invisible to TypeScript-import grep patterns
 - Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
 
 ## Testing
@@ -19,7 +20,7 @@
 ## GitHub Integration
 - ALWAYS gate GitHub sync on `github.enabled` in config.yaml — skip entirely when false or missing
 - ALWAYS use warn-and-continue for gh CLI calls — print warning, skip failed op, never block local workflow
-- Manifest JSON is the local authority; GitHub is a synced mirror updated only at checkpoint boundaries
+- Store JSON is the local authority; GitHub is a synced mirror updated only at checkpoint boundaries
 - ALWAYS use `_shared/github.md` for all GitHub operations — never inline gh CLI logic
 - Label taxonomy: 12 labels across type (2), phase (7), status (3) — status/review and gate/awaiting-approval removed
 - Epic lifecycle: created at design checkpoint, phase-advanced at each subsequent checkpoint, closed at release with closing comment
@@ -32,9 +33,9 @@
 - ALWAYS link branches to issues via `createLinkedBranch` GraphQL — gated on `github.enabled`, warn-and-continue
 
 ## State Scanning
-- ALWAYS discover epics from manifest files — never from design files or date heuristics
-- Scan artifacts/plan/ then state/ — state/ wins dedup
-- ALWAYS derive phase from the manifest.phases map — no filesystem marker sniffing
+- ALWAYS discover epics from store entities — never from design files or date heuristics
+- Scan store.listEpics() — enrichment via XState machine snapshots
+- ALWAYS derive phase from the store epic state — no filesystem marker sniffing
 - Status table: Epic, Phase, Progress, Blocked, Last Activity
 - Next action: fan-out at implement, single dispatch for all other phases, null for done epics
 
@@ -95,6 +96,7 @@ context/implement/agent-review-pipeline.md
 
 ## Branch Isolation
 - CLI creates `impl/<slug>--<feature-name>` branch before dispatch; agents commit per task on the impl branch
+- ALWAYS verify the correct impl branch (`impl/<slug>--<feature-name>`) is checked out before writing the Write Plan — parallel wave execution leaves the prior feature's impl branch checked out; writing tasks on the wrong branch silently contaminates an adjacent feature's history
 - Checkpoint rebases impl branch onto worktree branch — fast-forward on success, conflict resolution agent on failure
 - Max 2 conflict resolution attempts before aborting and reporting to user
 - Resume model: first unchecked task in .tasks.md; prior tasks have commits on impl branch

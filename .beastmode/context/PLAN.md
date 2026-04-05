@@ -40,18 +40,18 @@ Phase lifecycle (design -> plan -> implement -> validate -> release), session tr
 context/plan/workflow.md
 
 ## GitHub Integration
-CLI-owned GitHub sync system. The CLI invokes a stateless `syncGitHub(manifest, config)` TypeScript module after every phase dispatch, reconciling manifest state to GitHub Issues and a Projects V2 board. Manifest lives at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` (gitignored, local-only, CLI is sole mutator) and is managed through two modules: manifest-store.ts (filesystem boundary, sole disk accessor — includes rename, find, slugify) and manifest.ts (pure state machine functions, no fs imports). Terminology: `slug` is immutable hex, `epic` is human-readable name, `feature` is sub-unit. Skills are pure artifact producers with no GitHub, manifest, or output.json awareness -- they write phase artifacts with standardized YAML frontmatter (`phase`, `slug` hex, `epic` name always present) to `artifacts/<phase>/`. A Stop hook auto-generates output.json from artifact frontmatter as the sole completion signal (replacing .dispatch-done.json). The github-sync module returns mutation objects that the caller applies via manifest.ts functions and saves through manifest-store.ts. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Projects V2 metadata stored in `config.yaml`. Setup bootstrapped via `/beastmode setup-github` subcommand. Warn-and-continue error handling ensures GitHub failures never block local workflow.
+CLI-owned GitHub sync system. The CLI invokes a stateless sync module after every phase dispatch, reconciling store state to GitHub Issues and a Projects V2 board. Store lives at `.beastmode/state/YYYY-MM-DD-<slug>.store.json` (gitignored, local-only, CLI is sole mutator) and is managed through the JSON file store module (`store/json-file-store.ts`). GitHub sync references (issue numbers, project item IDs) are stored in a separate sync-refs I/O module, not in the store itself. Terminology: `slug` is immutable hex, `epic` is human-readable name, `feature` is sub-unit. Skills are pure artifact producers with no GitHub, store, or output.json awareness -- they write phase artifacts with standardized YAML frontmatter (`phase`, `slug` hex, `epic` name always present) to `artifacts/<phase>/`. A Stop hook auto-generates output.json from artifact frontmatter as the sole completion signal. Two-level issue hierarchy (Epic > Feature) with label-based state machines. Projects V2 metadata stored in `config.yaml`. Setup bootstrapped via `/beastmode setup-github` subcommand. Warn-and-continue error handling ensures GitHub failures never block local workflow.
 
 1. ALWAYS use `gh` CLI via `Bun.spawn` in the sync engine TypeScript module -- never from skills, never raw curl
 2. ALWAYS make label and project creation idempotent -- `--force` for labels, existence check for projects
-3. NEVER put GitHub sync, manifest mutation, or output.json logic in skill files -- CLI and Stop hook own all sync, manifest, and completion signal operations
-4. ALWAYS treat manifest JSON as the operational authority -- GitHub is a synced mirror, never the source of truth
+3. NEVER put GitHub sync, store mutation, or output.json logic in skill files -- CLI and Stop hook own all sync, store, and completion signal operations
+4. ALWAYS treat store JSON as the operational authority -- GitHub is a synced mirror, never the source of truth
 5. ALWAYS store Projects V2 metadata (project-id, field-id, option IDs) in config.yaml -- no cache file
 6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
-7. ALWAYS use manifest-store.ts for all manifest filesystem operations (including rename, find, slugify) -- no other module touches manifest files on disk
-8. ALWAYS keep manifest.ts pure -- no fs imports, all functions take and return PipelineManifest objects
-9. ALWAYS use four feature statuses: pending, in-progress, completed, blocked -- enum values on ManifestFeature
-10. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
+7. ALWAYS use json-file-store.ts for all store filesystem operations -- no other module touches store files on disk
+8. ALWAYS use four feature statuses: pending, in-progress, completed, blocked -- enum values on Feature entity
+9. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
+10. ALWAYS use sync-refs I/O module for GitHub issue/project references -- separate from the store, not persisted in epic state
 
 context/plan/github-integration.md
 
@@ -66,6 +66,7 @@ Plan skill may spawn domain-specialist subagents to produce planning artifacts t
 ## File Collapse
 - ALWAYS audit exported symbol names across all source files being collapsed into a single target — name collisions from file merges are predictable and should be resolved in the plan, not auto-fixed during implementation
 - ALWAYS run full reverse-dependency analysis (grep for all import paths being changed) when planning file moves — enumerate every consumer, including transitive importers in unrelated domains (dashboard, lockfile, etc.)
+- ALWAYS scope deletion features as "verify + final cleanup" when the deletion wave follows a migration wave that touches the same files — prior wave migration features will delete consumer imports during their own cleanup, leaving the deletion feature with only grep verification and source file removal
 
 context/plan/file-collapse.md
 

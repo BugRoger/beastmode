@@ -10,11 +10,12 @@
 - ALWAYS follow the standard report structure for validation artifacts
 - ALWAYS trace custom gates back to design acceptance criteria
 - NEVER assert PASS without verifiable evidence
+- In migration epics that replace a module's persistence contract, expect reconciler/bridge logic bugs to surface only at validate — individual feature BDD tests exercise each consumer in isolation and cannot catch the full round-trip (XState event -> store write -> store read -> correct state). Budget validate time for reconciler fixup when the epic includes a bridge feature.
 
 ## Known Pre-existing Failures
 - `state-scanner.test.ts` line 109: expects `design -> single` but v0.59.0 changed dispatch to `design -> skip` — not in scope for any current epic, do not triage repeatedly
 - ALWAYS record the pre-existing failure count baseline from main in validation reports — prevents re-triaging known failures across epics
-- Baseline as of 2026-04-05 (post github-sync-polish): 70 test files passing (1333 individual tests), 4 failing (pre-existing Bun-in-Node incompatibilities: verbosity.test.ts, event-log-fallback.test.ts, monokai-palette.test.ts, tree-format.palette.test.ts); 17 type errors (pre-existing in untouched files)
+- Baseline as of 2026-04-05 (post manifest-absorption): 75 unit test files passing (1282 individual tests), 22/23 pipeline-all integration scenarios (1 pre-existing), 56/56 store integration scenarios, 2/2 validate-feedback scenarios; 10 type errors (pre-existing in untouched files)
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:
