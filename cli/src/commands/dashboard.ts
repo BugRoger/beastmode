@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import type { BeastmodeConfig } from "../config.js";
 import { WatchLoop } from "./watch-loop.js";
 import type { WatchDeps } from "./watch-loop.js";
-import { JsonFileStore } from "../store/index.js";
-import type { EnrichedEpic } from "../store/index.js";
+import { listEnrichedFromStore } from "../store/scan.js";
+import { JsonFileStore } from "../store/json-file-store.js";
 import { ReconcilingFactory } from "../dispatch/reconciling.js";
 import type { SessionFactory } from "../dispatch/factory.js";
 import { ITermSessionFactory } from "../dispatch/it2.js";
@@ -70,10 +70,7 @@ export async function dashboardCommand(
       const storePath = resolve(root, ".beastmode", "state", "store.json");
       const taskStore = new JsonFileStore(storePath);
       taskStore.load();
-      return taskStore.listEpics().map((epic) => ({
-        ...epic,
-        nextAction: undefined,
-      })) as EnrichedEpic[];
+      return listEnrichedFromStore(taskStore);
     },
     sessionFactory,
     logger,

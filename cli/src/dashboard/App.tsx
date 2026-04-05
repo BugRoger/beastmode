@@ -336,14 +336,13 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
 
     const refreshEpics = async () => {
       try {
-        const { JsonFileStore } = await import("../store/index.js");
-        const storePath = resolve(projectRoot, ".beastmode", "state", "store.json");
+        const { listEnrichedFromStore } = await import("../store/scan.js");
+        const { JsonFileStore } = await import("../store/json-file-store.js");
+        const { join } = await import("node:path");
+        const storePath = join(projectRoot!, ".beastmode", "state", "store.json");
         const taskStore = new JsonFileStore(storePath);
         taskStore.load();
-        const epicList = taskStore.listEpics().map((epic) => ({
-          ...epic,
-          nextAction: undefined,
-        })) as EnrichedEpic[];
+        const epicList = listEnrichedFromStore(taskStore);
         setEpics(epicList);
       } catch {
         // Non-fatal — will retry on next scan
