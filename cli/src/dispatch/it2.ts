@@ -22,7 +22,7 @@ import type {
 import type { SessionResult } from "./types.js";
 import { filenameMatchesEpic } from "../artifacts/reader.js";
 import * as worktree from "../git/worktree.js";
-import * as store from "../manifest/store.js";
+import { JsonFileStore } from "../store/index.js";
 
 export class It2Error extends Error {
   constructor(message: string) {
@@ -489,10 +489,12 @@ export class ITermSessionFactory implements SessionFactory {
       const epicSlug = session.name.replace(/^bm-/, "");
 
       if (session.isAlive) {
-        // Check manifest — if epic is done/cancelled, close instead of adopting
+        // Check store — if epic is done/cancelled, close instead of adopting
         if (projectRoot) {
-          const manifest = store.load(projectRoot, epicSlug);
-          if (manifest && (manifest.phase === "done" || manifest.phase === "cancelled")) {
+          const taskStore = new JsonFileStore(resolve(projectRoot, ".beastmode", "state", "store.json"));
+          taskStore.load();
+          const entity = taskStore.find(epicSlug);
+          if (entity && entity.type === "epic" && (entity.status === "done" || entity.status === "cancelled")) {
             try {
               await this.client.closeSession(session.id);
             } catch {

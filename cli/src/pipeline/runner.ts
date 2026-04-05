@@ -25,7 +25,6 @@ import { createLogger, createStdioSink } from "../logger.js";
 import * as worktree from "../git/worktree.js";
 import { rebase, createImplBranch } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
-import * as store from "../manifest/store.js";
 import { syncGitHubForEpic } from "../github/sync.js";
 import { discoverGitHub } from "../github/discovery.js";
 import type { ResolvedGitHub } from "../github/discovery.js";
@@ -43,8 +42,8 @@ import {
   reconcileImplement,
   reconcileValidate,
   reconcileRelease,
-} from "../manifest/reconcile.js";
-import type { ReconcileResult } from "../manifest/reconcile.js";
+} from "./reconcile.js";
+import type { ReconcileResult } from "./reconcile.js";
 import {
   writeHitlSettings,
   cleanHitlSettings,
@@ -264,23 +263,12 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     logger.warn(`tag creation failed: ${message}`);
   }
 
-  // Design phase: rename hex slug to real slug
+  // Design phase: update slug to real slug
   if (config.phase === "design" && reconcileResult) {
-    const finalManifest = reconcileResult.manifest;
-    const epicName = finalManifest.epic ?? finalManifest.slug;
-    if (epicName && epicName !== epicSlug) {
-      const renameResult = await store.rename(
-        config.projectRoot,
-        epicSlug,
-        epicName,
-        worktreePath,
-      );
-      if (renameResult.renamed) {
-        epicSlug = renameResult.finalSlug;
-        logger.info(`renamed -> ${renameResult.finalSlug}`);
-      } else if (renameResult.error) {
-        logger.warn(`Slug rename failed: ${renameResult.error}`);
-      }
+    const finalEpic = reconcileResult.epic;
+    if (finalEpic.slug && finalEpic.slug !== epicSlug) {
+      epicSlug = finalEpic.slug;
+      logger.info(`slug updated -> ${finalEpic.slug}`);
     }
   }
 
@@ -406,12 +394,15 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       await worktree.remove(epicSlug, { cwd: config.projectRoot });
       logger.info("worktree removed");
 
-      // Mark manifest as done so scanner skips it
-      const doneManifest = store.load(config.projectRoot, epicSlug);
-      if (doneManifest) {
-        store.save(config.projectRoot, epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
+      // Mark store entity as done so scanner skips it
+      const doneStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+      doneStore.load();
+      const doneEntity = doneStore.find(epicSlug);
+      if (doneEntity && doneEntity.type === "epic") {
+        doneStore.updateEpic(doneEntity.id, { status: "done", updated_at: new Date().toISOString() });
+        doneStore.save();
       }
-      logger.info("manifest marked done");
+      logger.info("store entity marked done");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       logger.error(`release teardown failed: ${message}`);

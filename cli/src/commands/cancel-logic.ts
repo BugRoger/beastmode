@@ -15,7 +15,7 @@ import { remove as removeWorktree } from "../git/worktree.js";
 import { git } from "../git/worktree.js";
 import { gh } from "../github/cli.js";
 import { deleteAllTags } from "../git/tags.js";
-import * as store from "../manifest/store.js";
+import { JsonFileStore, resolveIdentifier } from "../store/index.js";
 import type { Logger } from "../logger.js";
 
 // ---------------------------------------------------------------------------
@@ -79,10 +79,14 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   const warned: string[] = [];
 
   // --- Self-resolution ---
-  const manifest = store.find(projectRoot, identifier);
-  const slug = manifest?.slug ?? identifier;
-  const epic = manifest?.epic ?? manifest?.slug ?? identifier;
-  const githubEpicNumber = manifest?.github?.epic;
+  const storePath = resolve(projectRoot, ".beastmode", "state", "store.json");
+  const taskStore = new JsonFileStore(storePath);
+  taskStore.load();
+  const resolution = resolveIdentifier(taskStore, identifier, { resolveToEpic: true });
+  const entity = resolution.kind === "found" ? resolution.entity : undefined;
+  const slug = entity?.slug ?? identifier;
+  const epic = entity?.name ?? entity?.slug ?? identifier;
+  const githubEpicNumber = undefined; // GitHub refs now in sync-refs.json
 
   // --- Confirmation ---
   if (!force) {
@@ -175,19 +179,24 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
     }
   }
 
-  // --- Step 6: Delete manifest ---
+  // --- Step 6: Delete store entity ---
   try {
-    const removed = store.remove(projectRoot, slug);
-    if (removed) {
-      logger.debug("deleted manifest", { slug });
+    if (entity) {
+      const features = taskStore.listFeatures(entity.id);
+      for (const f of features) {
+        taskStore.deleteFeature(f.id);
+      }
+      taskStore.deleteEpic(entity.id);
+      taskStore.save();
+      logger.debug("deleted store entity", { slug });
     } else {
-      logger.debug("no manifest found", { slug });
+      logger.debug("no store entity found", { slug });
     }
-    cleaned.push("manifest");
+    cleaned.push("store-entity");
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    logger.warn(`manifest deletion: ${msg}`);
-    warned.push("manifest");
+    logger.warn(`store entity deletion: ${msg}`);
+    warned.push("store-entity");
   }
 
   return { cleaned, warned };
