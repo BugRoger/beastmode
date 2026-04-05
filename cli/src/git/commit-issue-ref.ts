@@ -80,6 +80,50 @@ export function appendIssueRef(message: string, issueNumber: number): string {
 }
 
 /**
+ * Phase ordering for range-start resolution.
+ */
+const PHASE_ORDER = ["design", "plan", "implement", "validate", "release"] as const;
+
+/**
+ * Resolve the issue number for a specific commit based on its message.
+ *
+ * Routing:
+ * - `feat(<feature>): ...` → feature issue (impl task commit)
+ * - `implement(<slug>--<feature>): ...` → feature issue (impl checkpoint)
+ * - Everything else → epic issue (phase checkpoints, misc)
+ *
+ * Falls back to epic issue if feature not found in manifest.
+ * Returns undefined if manifest has no github config.
+ */
+export function resolveCommitIssueNumber(
+  commitMessage: string,
+  manifest: PipelineManifest,
+): number | undefined {
+  if (!manifest.github?.epic) return undefined;
+
+  // feat(<feature>): pattern — impl task commits
+  const featMatch = commitMessage.match(/^feat\(([^)]+)\):/);
+  if (featMatch) {
+    const featureSlug = featMatch[1];
+    const feature = manifest.features.find((f) => f.slug === featureSlug);
+    if (feature?.github?.issue) return feature.github.issue;
+    return manifest.github.epic;
+  }
+
+  // implement(<slug>--<feature>): pattern — impl branch checkpoint
+  const implMatch = commitMessage.match(/^implement\([^)]*--([^)]+)\):/);
+  if (implMatch) {
+    const featureSlug = implMatch[1];
+    const feature = manifest.features.find((f) => f.slug === featureSlug);
+    if (feature?.github?.issue) return feature.github.issue;
+    return manifest.github.epic;
+  }
+
+  // Default: epic issue (phase checkpoints, misc commits)
+  return manifest.github.epic;
+}
+
+/**
  * Amend the most recent commit to append an issue reference.
  *
  * Reads the current branch name and manifest, resolves the issue number,

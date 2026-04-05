@@ -7,6 +7,7 @@ import {
   resolveIssueNumber,
   appendIssueRef,
   amendCommitWithIssueRef,
+  resolveCommitIssueNumber,
 } from "../git/commit-issue-ref.js";
 import { git } from "../git/worktree.js";
 import type { PipelineManifest } from "../manifest/store.js";
@@ -127,6 +128,60 @@ describe("appendIssueRef", () => {
   test("appends to release commit", () => {
     expect(appendIssueRef("release(my-epic): v1.0.0", 42))
       .toBe("release(my-epic): v1.0.0 (#42)");
+  });
+});
+
+describe("resolveCommitIssueNumber", () => {
+  const manifest: PipelineManifest = {
+    slug: "my-epic-5aa1b9",
+    epic: "my-epic",
+    phase: "implement",
+    features: [
+      {
+        slug: "commit-traceability",
+        plan: "plan.md",
+        status: "in-progress",
+        github: { issue: 99 },
+      },
+      {
+        slug: "body-enrichment",
+        plan: "other.md",
+        status: "completed",
+        github: { issue: 88 },
+      },
+    ],
+    artifacts: {},
+    github: { epic: 42, repo: "owner/repo" },
+    lastUpdated: "2026-04-05T00:00:00Z",
+  };
+
+  test("returns epic issue for phase checkpoint commit", () => {
+    expect(resolveCommitIssueNumber("implement(my-epic): checkpoint", manifest)).toBe(42);
+  });
+
+  test("returns epic issue for design checkpoint", () => {
+    expect(resolveCommitIssueNumber("design(my-epic): checkpoint", manifest)).toBe(42);
+  });
+
+  test("returns feature issue for feat(<feature>): prefix", () => {
+    expect(resolveCommitIssueNumber("feat(commit-traceability): add parsing", manifest)).toBe(99);
+  });
+
+  test("returns feature issue for implement(<slug>--<feature>): prefix", () => {
+    expect(resolveCommitIssueNumber("implement(my-epic-5aa1b9--commit-traceability): checkpoint", manifest)).toBe(99);
+  });
+
+  test("returns epic issue for unrecognized commit message format", () => {
+    expect(resolveCommitIssueNumber("some random commit", manifest)).toBe(42);
+  });
+
+  test("falls back to epic when feature slug not found", () => {
+    expect(resolveCommitIssueNumber("feat(unknown-feature): something", manifest)).toBe(42);
+  });
+
+  test("returns undefined when no github on manifest", () => {
+    const noGithub: PipelineManifest = { ...manifest, github: undefined };
+    expect(resolveCommitIssueNumber("design(my-epic): checkpoint", noGithub)).toBeUndefined();
   });
 });
 
