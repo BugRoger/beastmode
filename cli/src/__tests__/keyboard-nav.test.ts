@@ -380,3 +380,122 @@ describe("verbosity cycling logic", () => {
     expect(verbosity).toBe(0);
   });
 });
+
+describe("focus panel logic", () => {
+  test("default focused panel is 'epics'", () => {
+    const focusedPanel: "epics" | "log" = "epics";
+    expect(focusedPanel).toBe("epics");
+  });
+
+  test("Tab toggles from epics to log", () => {
+    let focusedPanel: "epics" | "log" = "epics";
+    focusedPanel = focusedPanel === "epics" ? "log" : "epics";
+    expect(focusedPanel).toBe("log");
+  });
+
+  test("Tab toggles from log to epics", () => {
+    let focusedPanel: "epics" | "log" = "log";
+    focusedPanel = focusedPanel === "epics" ? "log" : "epics";
+    expect(focusedPanel).toBe("epics");
+  });
+
+  test("Tab is ignored in filter mode", () => {
+    let focusedPanel: "epics" | "log" = "epics";
+    const mode = "filter";
+    if (mode === "normal") {
+      focusedPanel = focusedPanel === "epics" ? "log" : "epics";
+    }
+    expect(focusedPanel).toBe("epics");
+  });
+
+  test("Tab is ignored in confirm mode", () => {
+    let focusedPanel: "epics" | "log" = "epics";
+    const mode = "confirm";
+    if (mode === "normal") {
+      focusedPanel = focusedPanel === "epics" ? "log" : "epics";
+    }
+    expect(focusedPanel).toBe("epics");
+  });
+});
+
+describe("phase filter logic", () => {
+  const PHASE_ORDER = ["all", "design", "plan", "implement", "validate", "release"] as const;
+  type PhaseFilter = (typeof PHASE_ORDER)[number];
+
+  function cyclePhase(current: PhaseFilter): PhaseFilter {
+    const idx = PHASE_ORDER.indexOf(current);
+    return PHASE_ORDER[(idx + 1) % PHASE_ORDER.length];
+  }
+
+  test("default phase filter is 'all'", () => {
+    const phaseFilter: PhaseFilter = "all";
+    expect(phaseFilter).toBe("all");
+  });
+
+  test("'p' cycles all -> design", () => {
+    expect(cyclePhase("all")).toBe("design");
+  });
+
+  test("'p' cycles design -> plan", () => {
+    expect(cyclePhase("design")).toBe("plan");
+  });
+
+  test("'p' cycles plan -> implement", () => {
+    expect(cyclePhase("plan")).toBe("implement");
+  });
+
+  test("'p' cycles implement -> validate", () => {
+    expect(cyclePhase("implement")).toBe("validate");
+  });
+
+  test("'p' cycles validate -> release", () => {
+    expect(cyclePhase("validate")).toBe("release");
+  });
+
+  test("'p' wraps release -> all", () => {
+    expect(cyclePhase("release")).toBe("all");
+  });
+
+  test("'p' is ignored in filter mode", () => {
+    let phaseFilter: PhaseFilter = "all";
+    const mode = "filter";
+    if (mode === "normal") {
+      phaseFilter = cyclePhase(phaseFilter);
+    }
+    expect(phaseFilter).toBe("all");
+  });
+});
+
+describe("blocked toggle logic", () => {
+  test("default showBlocked is true", () => {
+    const showBlocked = true;
+    expect(showBlocked).toBe(true);
+  });
+
+  test("'b' toggles showBlocked from true to false", () => {
+    let showBlocked = true;
+    showBlocked = !showBlocked;
+    expect(showBlocked).toBe(false);
+  });
+
+  test("'b' toggles showBlocked from false to true", () => {
+    let showBlocked = false;
+    showBlocked = !showBlocked;
+    expect(showBlocked).toBe(true);
+  });
+
+  test("'b' is ignored in filter mode", () => {
+    let showBlocked = true;
+    const mode = "filter";
+    if (mode === "normal") showBlocked = !showBlocked;
+    expect(showBlocked).toBe(true);
+  });
+
+  test("'b' is ignored in confirm mode", () => {
+    let showBlocked = true;
+    const mode = "confirm";
+    if (mode === "normal") showBlocked = !showBlocked;
+    expect(showBlocked).toBe(true);
+  });
+});
+

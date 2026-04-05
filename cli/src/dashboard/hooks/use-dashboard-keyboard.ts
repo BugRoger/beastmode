@@ -9,11 +9,14 @@
  * 2. Confirm mode (cancel flow) → y/n/Escape only
  * 3. Filter mode → text input, Enter to apply, Escape to clear/exit
  * 4. Shutdown keys (q, Q, Ctrl+C)
- * 5. Arrow keys → navigation
- * 6. 'a'/'A' → toggle done/cancelled visibility
- * 7. 'x'/'X' → initiate cancel for selected epic (not on "(all)" row)
- * 8. '/' → enter filter mode
- * 9. 'v'/'V' → cycle verbosity level
+ * 5. Tab → toggle focus panel (epics/log)
+ * 6. Arrow keys → navigation
+ * 7. 'a'/'A' → toggle done/cancelled visibility
+ * 8. 'p'/'P' → cycle phase filter
+ * 9. 'b'/'B' → toggle blocked visibility
+ * 10. 'x'/'X' → initiate cancel for selected epic (not on "(all)" row)
+ * 11. '/' → enter filter mode
+ * 12. 'v'/'V' → cycle verbosity level
  */
 
 import { useState, useCallback } from "react";
@@ -31,6 +34,21 @@ import type { ToggleAllState } from "./use-toggle-all.js";
 
 /** Interaction mode for the dashboard keyboard */
 export type DashboardMode = "normal" | "filter" | "confirm";
+
+/** Focused panel in flat layout */
+export type FocusedPanel = "epics" | "log";
+
+/** Phase filter for dashboard view */
+export type PhaseFilter = "all" | "design" | "plan" | "implement" | "validate" | "release";
+
+const PHASE_ORDER: readonly PhaseFilter[] = [
+  "all", "design", "plan", "implement", "validate", "release",
+];
+
+export function cyclePhaseFilter(current: PhaseFilter): PhaseFilter {
+  const idx = PHASE_ORDER.indexOf(current);
+  return PHASE_ORDER[(idx + 1) % PHASE_ORDER.length];
+}
 
 export interface DashboardKeyboardDeps {
   /** Number of visible rows including (all) entry */
@@ -64,6 +82,12 @@ export interface DashboardKeyboardState {
   filterInput: string;
   /** Current verbosity level (0=info, 1=detail, 2=debug, 3=trace) */
   verbosity: number;
+  /** Currently focused panel */
+  focusedPanel: FocusedPanel;
+  /** Current phase filter */
+  phaseFilter: PhaseFilter;
+  /** Whether to show blocked items */
+  showBlocked: boolean;
 }
 
 export function useDashboardKeyboard(
@@ -87,6 +111,9 @@ export function useDashboardKeyboard(
   const [mode, setMode] = useState<DashboardMode>("normal");
   const [filterInput, setFilterInput] = useState("");
   const [verbosity, setVerbosity] = useState(initialVerbosity);
+  const [focusedPanel, setFocusedPanel] = useState<FocusedPanel>("epics");
+  const [phaseFilter, setPhaseFilter] = useState<PhaseFilter>("all");
+  const [showBlocked, setShowBlocked] = useState(true);
 
   const handleInput = useCallback(
     (input: string, key: Key) => {
@@ -139,19 +166,37 @@ export function useDashboardKeyboard(
       shutdown.handleShutdownInput(input, key, onShutdown);
       if (input === "q" || input === "Q" || (input === "c" && key.ctrl)) return;
 
-      // Priority 5: arrow key navigation
+      // Priority 5: Tab — toggle focus panel
+      if (key.tab) {
+        setFocusedPanel((prev) => (prev === "epics" ? "log" : "epics"));
+        return;
+      }
+
+      // Priority 6: arrow key navigation
       if (key.upArrow || key.downArrow) {
         nav.handleNavInput(key);
         return;
       }
 
-      // Priority 6: toggle all
+      // Priority 7: toggle all
       if (input === "a" || input === "A") {
         toggleAll.handleToggleInput(input);
         return;
       }
 
-      // Priority 7: cancel initiation (not on "(all)" row — index 0)
+      // Priority 8: phase filter cycling
+      if (input === "p" || input === "P") {
+        setPhaseFilter((prev) => cyclePhaseFilter(prev));
+        return;
+      }
+
+      // Priority 9: blocked toggle
+      if (input === "b" || input === "B") {
+        setShowBlocked((prev) => !prev);
+        return;
+      }
+
+      // Priority 10: cancel initiation (not on "(all)" row — index 0)
       if (input === "x" || input === "X") {
         if (nav.selectedIndex > 0) {
           const slug = slugAtIndex(nav.selectedIndex);
@@ -163,14 +208,14 @@ export function useDashboardKeyboard(
         return;
       }
 
-      // Priority 8: enter filter mode
+      // Priority 11: enter filter mode
       if (input === "/") {
         setFilterInput("");
         setMode("filter");
         return;
       }
 
-      // Priority 9: verbosity cycling
+      // Priority 12: verbosity cycling
       if (input === "v" || input === "V") {
         setVerbosity((prev) => cycleVerbosity(prev));
         return;
@@ -181,6 +226,9 @@ export function useDashboardKeyboard(
       mode,
       filterInput,
       verbosity,
+      focusedPanel,
+      phaseFilter,
+      showBlocked,
       cancelFlow,
       shutdown,
       nav,
@@ -196,5 +244,5 @@ export function useDashboardKeyboard(
   // Wire up useInput — disabled during shutdown
   useInput(handleInput, { isActive: !shutdown.isShuttingDown });
 
-  return { nav, cancelFlow, shutdown, toggleAll, mode, filterInput, verbosity };
+  return { nav, cancelFlow, shutdown, toggleAll, mode, filterInput, verbosity, focusedPanel, phaseFilter, showBlocked };
 }
