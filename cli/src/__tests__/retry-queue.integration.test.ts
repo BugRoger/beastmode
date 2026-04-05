@@ -12,7 +12,6 @@ import {
   resolvePendingOp,
   computeNextRetryTick,
   type PendingOp,
-  type OpType,
 } from "../github/retry-queue";
 
 describe("@github-sync-again: Failed GitHub API operations retry with exponential backoff", () => {

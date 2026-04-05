@@ -8,7 +8,7 @@
  * After 5 failed retries, the operation is marked as permanently failed.
  */
 
-import type { SyncRefs, SyncRef } from "./sync-refs.js";
+import type { SyncRefs } from "./sync-refs.js";
 
 /** Operation types that can be retried. */
 export type OpType =
@@ -109,7 +109,7 @@ export function resolvePendingOp(
   refs: SyncRefs,
   entityId: string,
   op: PendingOp,
-  resolution: "completed" | "failed",
+  _resolution: "completed" | "failed",
 ): SyncRefs {
   const entry = refs[entityId];
   if (!entry?.pendingOps) return refs;
