@@ -110,9 +110,9 @@ vi.mock("../git/push.js", () => ({
 }));
 
 // Mock git/commit-issue-ref
-const mockAmendCommitWithIssueRef = vi.hoisted(() => vi.fn(async () => ({ amended: false })));
+const mockAmendCommitsInRange = vi.hoisted(() => vi.fn(async () => ({ amended: 0, skipped: 0 })));
 vi.mock("../git/commit-issue-ref.js", () => ({
-  amendCommitWithIssueRef: mockAmendCommitWithIssueRef,
+  amendCommitsInRange: mockAmendCommitsInRange,
 }));
 
 // Mock github/branch-link
@@ -200,7 +200,7 @@ function resetAllMocks() {
   mockHasRemote.mockClear();
   mockPushBranches.mockClear();
   mockPushTags.mockClear();
-  mockAmendCommitWithIssueRef.mockClear();
+  mockAmendCommitsInRange.mockClear();
   mockLinkBranches.mockClear();
 
   // Restore default implementations
@@ -230,7 +230,7 @@ function resetAllMocks() {
   mockHasRemote.mockImplementation(async () => true);
   mockPushBranches.mockImplementation(async () => {});
   mockPushTags.mockImplementation(async () => {});
-  mockAmendCommitWithIssueRef.mockImplementation(async () => ({ amended: false }));
+  mockAmendCommitsInRange.mockImplementation(async () => ({ amended: 0, skipped: 0 }));
   mockLinkBranches.mockImplementation(async () => {});
 }
 

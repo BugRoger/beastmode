@@ -65,7 +65,7 @@ vi.mock("../manifest/pure.js", () => ({
 }));
 vi.mock("../github/early-issues.js", () => ({ ensureEarlyIssues: vi.fn(async () => {}) }));
 vi.mock("../git/commit-issue-ref.js", () => ({
-  amendCommitWithIssueRef: vi.fn(async () => ({ amended: false })),
+  amendCommitsInRange: vi.fn(async () => ({ amended: 0, skipped: 0 })),
 }));
 
 // Mock push module — will be created in Task 1
