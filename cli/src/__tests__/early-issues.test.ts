@@ -145,7 +145,7 @@ describe("ensureEarlyIssues", () => {
 
     it("skips features that already have issue numbers", async () => {
       const featA = store.addFeature({ parent: epicId, name: "Feat A", slug: "feat-a" });
-      const featB = store.addFeature({ parent: epicId, name: "Feat B", slug: "feat-b" });
+      store.addFeature({ parent: epicId, name: "Feat B", slug: "feat-b" });
 
       // feat-a already has an issue
       mockLoadSyncRefs.mockReturnValue({

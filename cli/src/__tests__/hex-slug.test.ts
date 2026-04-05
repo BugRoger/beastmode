@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { randomHex, slugify } from "../commands/phase";
+import { randomHex } from "../commands/phase";
 
 const PHASE_TS_PATH = resolve(import.meta.dirname, "../commands/phase.ts");
 

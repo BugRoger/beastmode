@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { WatchLoop } from "../commands/watch-loop.js";
 import type { WatchDeps } from "../commands/watch-loop.js";

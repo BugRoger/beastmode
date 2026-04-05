@@ -19,6 +19,7 @@
  */
 
 import { resolve } from "node:path";
+import { renameSync, existsSync, writeFileSync as fsWriteFileSync } from "node:fs";
 import type { Phase, PhaseResult } from "../types.js";
 import type { Logger } from "../logger.js";
 import { createLogger, createStdioSink } from "../logger.js";
@@ -263,10 +264,55 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     logger.warn(`tag creation failed: ${message}`);
   }
 
-  // Design phase: update slug to real slug
+  // Design phase: update slug to real slug and rename worktree directory
   if (config.phase === "design" && reconcileResult) {
     const finalEpic = reconcileResult.epic;
     if (finalEpic.slug && finalEpic.slug !== epicSlug) {
+      // Rename the worktree directory, git branch, and git metadata
+      const oldWtPath = resolve(config.projectRoot, ".claude", "worktrees", epicSlug);
+      const newWtPath = resolve(config.projectRoot, ".claude", "worktrees", finalEpic.slug);
+      const oldBranch = `feature/${epicSlug}`;
+      const newBranch = `feature/${finalEpic.slug}`;
+      if (existsSync(oldWtPath)) {
+        try {
+          // Rename git branch
+          await worktree.git(["branch", "-m", oldBranch, newBranch], { cwd: config.projectRoot });
+
+          // Move worktree directory
+          renameSync(oldWtPath, newWtPath);
+
+          // Repair git worktree metadata
+          const gitDir = resolve(config.projectRoot, ".git", "worktrees", epicSlug);
+          const newGitDir = resolve(config.projectRoot, ".git", "worktrees", finalEpic.slug);
+          if (existsSync(gitDir)) {
+            renameSync(gitDir, newGitDir);
+            fsWriteFileSync(resolve(newWtPath, ".git"), `gitdir: ${newGitDir}\n`);
+            const gitdirPath = resolve(newGitDir, "gitdir");
+            if (existsSync(gitdirPath)) {
+              fsWriteFileSync(gitdirPath, `${newWtPath}/.git\n`);
+            }
+          }
+          await worktree.git(["worktree", "repair"], { cwd: config.projectRoot, allowFailure: true });
+
+          worktreePath = newWtPath;
+          logger.info(`worktree renamed -> ${finalEpic.slug}`);
+
+          // Update the store's worktree path
+          const renameStore = new JsonFileStore(resolve(config.projectRoot, ".beastmode", "state", "store.json"));
+          renameStore.load();
+          const renamedEntity = renameStore.find(finalEpic.slug);
+          if (renamedEntity && renamedEntity.type === "epic") {
+            renameStore.updateEpic(renamedEntity.id, {
+              worktree: { branch: newBranch, path: newWtPath },
+            });
+            renameStore.save();
+          }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          logger.warn(`worktree rename failed: ${message}`);
+        }
+      }
+
       epicSlug = finalEpic.slug;
       logger.info(`slug updated -> ${finalEpic.slug}`);
     }

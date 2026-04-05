@@ -7,8 +7,17 @@
 
 import { When, Then, DataTable } from "@cucumber/cucumber";
 import { strict as assert } from "node:assert";
-import * as store from "../../src/manifest/store.js";
+import { resolve } from "node:path";
+import { JsonFileStore } from "../../src/store/json-file-store.js";
 import type { PipelineWorld } from "../support/world.js";
+
+/** Load the task store for a project root. */
+function loadStore(projectRoot: string): JsonFileStore {
+  const storePath = resolve(projectRoot, ".beastmode", "state", "store.json");
+  const s = new JsonFileStore(storePath);
+  s.load();
+  return s;
+}
 
 // -- When: validate with per-feature failures --
 
@@ -30,10 +39,13 @@ When(
 Then(
   "feature {string} should have reDispatchCount {int}",
   function (this: PipelineWorld, featureSlug: string, expectedCount: number) {
-    const manifest = store.load(this.projectRoot, this.epicSlug);
-    assert.ok(manifest, `No manifest found for slug: ${this.epicSlug}`);
-    const feature = manifest.features.find((f) => f.slug === featureSlug);
-    assert.ok(feature, `Feature "${featureSlug}" not found in manifest`);
+    const s = loadStore(this.projectRoot);
+    const epic = s.find(this.epicSlug);
+    assert.ok(epic, `No epic found for slug: ${this.epicSlug}`);
+    assert.ok(epic.type === "epic", `Entity is not an epic: ${epic.type}`);
+    const features = s.listFeatures(epic.id);
+    const feature = features.find((f) => f.slug === featureSlug);
+    assert.ok(feature, `Feature "${featureSlug}" not found in store`);
     assert.strictEqual(
       feature.reDispatchCount ?? 0,
       expectedCount,

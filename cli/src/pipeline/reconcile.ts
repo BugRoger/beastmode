@@ -37,7 +37,7 @@ function buildContext(epic: Epic, store: JsonFileStore): EpicContext {
     description: f.description,
     wave: store.computeWave(f.id),
     status: f.status,
-    reDispatchCount: 0,
+    reDispatchCount: f.reDispatchCount ?? 0,
   }));
 
   return {
@@ -178,6 +178,29 @@ export async function reconcileDesign(
       : undefined;
     actor.send({ type: "DESIGN_COMPLETED", realSlug, summary, artifacts: eventArtifacts });
     const updated = extractEpic(actor, epic);
+
+    // Design phase may rename the slug (hex -> human-readable).
+    // Since slug is immutable on epic entities, delete and recreate.
+    const newSlug = realSlug ?? epic.slug;
+    if (newSlug !== epic.slug) {
+      store.deleteEpic(epic.id);
+      const renamed = store.addEpic({ name: newSlug, slug: newSlug });
+      store.updateEpic(renamed.id, {
+        status: updated.status,
+        summary: typeof summary === "object" ? `${summary.problem} — ${summary.solution}` : epic.summary,
+        design: designPath,
+        worktree: epic.worktree,
+        updated_at: updated.updated_at,
+      });
+      store.save();
+      const savedEpic = store.getEpic(renamed.id)!;
+      return {
+        epic: savedEpic,
+        manifest: savedEpic,
+        phase: savedEpic.status as Phase,
+        progress: readProgress(renamed.id, store),
+      };
+    }
 
     store.updateEpic(epic.id, {
       status: updated.status,
@@ -373,7 +396,26 @@ export async function reconcileValidate(
         actor.send({ type: "REGRESS", targetPhase: "implement" as Phase });
       }
     }
+
+    // Read feature state from XState before extractEpic stops the actor
+    const machineCtx = actor.getSnapshot().context as unknown as {
+      features: Array<{ slug: string; status: string; reDispatchCount?: number }>;
+    };
+    const machineFeatures = machineCtx.features;
+
     const updated = extractEpic(actor, epic);
+
+    // Sync feature status changes and reDispatchCount from XState back to store
+    const storeFeatures = store.listFeatures(epic.id);
+    for (const mf of machineFeatures) {
+      const sf = storeFeatures.find((f) => f.slug === mf.slug);
+      if (sf && (sf.status !== mf.status || (sf.reDispatchCount ?? 0) !== (mf.reDispatchCount ?? 0))) {
+        store.updateFeature(sf.id, {
+          status: mf.status as import("../store/types.js").FeatureStatus,
+          ...(mf.reDispatchCount !== undefined ? { reDispatchCount: mf.reDispatchCount } : {}),
+        });
+      }
+    }
 
     store.updateEpic(epic.id, {
       status: updated.status,

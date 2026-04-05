@@ -39,6 +39,7 @@ export interface Feature {
   slug: string;
   description?: string;
   status: FeatureStatus;
+  reDispatchCount?: number;
   plan?: string;
   implement?: string;
   depends_on: string[];

@@ -11,7 +11,6 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { InMemoryTaskStore } from "../store/in-memory";
 import { saveSyncRefs, loadSyncRefs } from "../github/sync-refs";
-import type { ResolvedGitHub } from "../github/discovery";
 
 // --- Mock gh CLI ---
 const mockCalls: { fn: string; args: unknown[] }[] = [];
@@ -87,7 +86,6 @@ describe("syncGitHubForEpic", () => {
 
   test("is a no-op when github.enabled is false", async () => {
     // Override config mock for this test
-    const { syncGitHubForEpic: syncFn } = await import("../github/sync");
     // Can't easily override config mock, so this test verifies the store path
     // The real guard is tested via the syncGitHub unit tests
     expect(true).toBe(true);

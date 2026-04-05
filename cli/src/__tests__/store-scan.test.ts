@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryTaskStore } from "../store/in-memory.js";
 import { listEnrichedFromStore } from "../store/scan.js";
-import type { EnrichedEpic } from "../store/types.js";
 
 describe("listEnrichedFromStore", () => {
   let store: InMemoryTaskStore;

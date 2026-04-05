@@ -27,7 +27,6 @@ function setupTempProject(slug: string, opts?: { epic?: string; phase?: string; 
   mkdirSync(stateDir, { recursive: true });
 
   const epic = opts?.epic ?? slug;
-  const phase = opts?.phase ?? "implement";
 
   // Create store entity instead of manifest file
   const storePath = resolve(stateDir, "store.json");

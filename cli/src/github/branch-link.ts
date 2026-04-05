@@ -116,7 +116,7 @@ async function linkOneBranch(opts: {
   // Create linked branch (establishes the issue link)
   const linkedId = await ghCreateLinkedBranch(repoId, issueId, branchName, oid, { cwd, logger: log });
   if (linkedId) {
-    log?.detail?.(`branch-link: linked ${branchName} -> #${issueNumber}`);
+    log?.debug?.(`branch-link: linked ${branchName} -> #${issueNumber}`);
   } else {
     log?.warn?.(`branch-link: createLinkedBranch returned null for ${branchName} -> #${issueNumber}`);
   }

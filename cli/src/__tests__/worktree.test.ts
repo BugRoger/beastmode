@@ -10,7 +10,6 @@ import { git, gitCheck, create, enter, remove, ensureWorktree, exists, resolveMa
  */
 
 let repoDir: string;
-let mainBranch: string;
 
 beforeAll(async () => {
   // Create a temporary bare-ish repo with an initial commit
@@ -18,7 +17,6 @@ beforeAll(async () => {
   await git(["init", "-b", "main"], { cwd: repoDir });
   await git(["config", "user.email", "test@test.com"], { cwd: repoDir });
   await git(["config", "user.name", "Test"], { cwd: repoDir });
-  mainBranch = "main";
 
   // Create an initial commit so HEAD exists
   const filePath = join(repoDir, "README.md");
@@ -119,7 +117,7 @@ describe("worktree remove", () => {
   });
 
   test("removes worktree but keeps branch when deleteBranch is false", async () => {
-    const info = await create("test-keep-branch", { cwd: repoDir });
+    await create("test-keep-branch", { cwd: repoDir });
     await remove("test-keep-branch", { cwd: repoDir, deleteBranch: false });
 
     // Branch should still exist

@@ -103,9 +103,6 @@ import type { EpicSyncInput, FeatureSyncInput } from "../github/sync";
 import type { SyncRefs } from "../github/sync-refs";
 import type { BeastmodeConfig } from "../config";
 import type { ResolvedGitHub } from "../github/discovery";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
 
 // --- Test helpers ---
 

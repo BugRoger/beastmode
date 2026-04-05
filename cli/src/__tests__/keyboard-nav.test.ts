@@ -24,7 +24,7 @@ describe("cancelEpicAction", () => {
   const { resolve } = require("path");
   const os = require("os");
 
-  function setupTempProject(slug: string, phase: string = "implement") {
+  function setupTempProject(slug: string, _phase: string = "implement") {
     const tmpDir = mkdtempSync(resolve(os.tmpdir(), "bm-test-"));
     const stateDir = resolve(tmpDir, ".beastmode", "state");
     mkdirSync(stateDir, { recursive: true });

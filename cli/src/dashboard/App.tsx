@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Text, useApp } from "ink";
-import { resolve } from "node:path";
 import type { BeastmodeConfig } from "../config.js";
 import type { EnrichedEpic } from "../store/index.js";
 import type { WatchLoopEventMap, DispatchedSession } from "../dispatch/types.js";

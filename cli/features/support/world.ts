@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, basename } from "node:path";
 import { git } from "../../src/git/worktree.js";
-import * as store from "../../src/manifest/store.js";
+import { JsonFileStore } from "../../src/store/json-file-store.js";
 import { generateAll } from "../../src/hooks/generate-output.js";
 import { run } from "../../src/pipeline/runner.js";
 import { createNullLogger } from "../../src/logger.js";

@@ -9,6 +9,17 @@
     "format": ["progress-bar"],
     "publishQuiet": true
   },
+  "validate-feedback": {
+    "paths": ["features/validate-feedback-loop.feature"],
+    "import": [
+      "features/step_definitions/pipeline.steps.ts",
+      "features/step_definitions/validate-feedback.steps.ts",
+      "features/support/world.ts",
+      "features/support/hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
   "watch": {
     "paths": ["features/watch-loop-happy-path.feature"],
     "import": [
@@ -105,6 +116,7 @@
   "pipeline-all": {
     "paths": [
       "features/pipeline-happy-path.feature",
+      "features/validate-feedback-loop.feature",
       "features/regression-loop.feature",
       "features/design-slug-rename.feature",
       "features/pipeline-error-resilience.feature",
@@ -116,6 +128,7 @@
     ],
     "import": [
       "features/step_definitions/pipeline.steps.ts",
+      "features/step_definitions/validate-feedback.steps.ts",
       "features/step_definitions/regression.steps.ts",
       "features/step_definitions/slug-rename.steps.ts",
       "features/step_definitions/error-resilience.steps.ts",

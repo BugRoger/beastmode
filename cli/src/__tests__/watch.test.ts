@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { WatchLoop } from "../commands/watch-loop.js";
 import type { WatchDeps } from "../commands/watch-loop.js";
 import type { EnrichedEpic } from "../store/types.js";
-import type { SessionResult } from "../dispatch/types.js";
 import type { SessionFactory } from "../dispatch/factory.js";
 import { DispatchTracker } from "../dispatch/tracker.js";
 import { acquireLock, releaseLock, readLockfile } from "../lockfile.js";

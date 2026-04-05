@@ -7,8 +7,6 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryTaskStore } from "../store/in-memory.js";
-import type { EnrichedEpic, NextAction } from "../store/types.js";
-import type { Epic, Feature } from "../store/types.js";
 
 describe("@manifest-absorption: Watch loop and dashboard consume store entities", () => {
   let store: InMemoryTaskStore;
@@ -57,8 +55,8 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
       const f1 = store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
       store.updateFeature(f1.id, { status: "completed" });
 
-      const f2 = store.addFeature({ parent: epic.id, name: "Token Cache", slug: "token-cache" });
-      // f2 depends on f1 — but f1 completed, so f2 is pending and dispatchable
+      store.addFeature({ parent: epic.id, name: "Token Cache", slug: "token-cache" });
+      // token-cache depends on f1 — but f1 completed, so token-cache is pending and dispatchable
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
@@ -125,8 +123,8 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
       const f1 = store.addFeature({ parent: epic.id, name: "Login", slug: "login" });
       store.updateFeature(f1.id, { status: "completed" });
-      const f2 = store.addFeature({ parent: epic.id, name: "Signup", slug: "signup" });
-      const f3 = store.addFeature({ parent: epic.id, name: "Reset", slug: "reset" });
+      store.addFeature({ parent: epic.id, name: "Signup", slug: "signup" });
+      store.addFeature({ parent: epic.id, name: "Reset", slug: "reset" });
 
       // Store tree view
       const storeEpic = store.getEpic(epic.id);
