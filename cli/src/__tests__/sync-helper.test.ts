@@ -195,4 +195,142 @@ describe("syncGitHubForEpic", () => {
 
     expect(true).toBe(true);
   });
+
+  test("maps epicEntity.status to EpicSyncInput.phase", async () => {
+    const epic = store.addEpic({ name: "Phase Test", slug: "phase-test" });
+    store.updateEpic(epic.id, { status: "design" });
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "phase-test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const createCalls = callsTo("ghIssueCreate");
+    expect(createCalls.length).toBeGreaterThanOrEqual(1);
+    const labels = createCalls[0].args[3] as string[];
+    expect(labels).toContain("phase/design");
+    expect(labels).not.toContain("phase/undefined");
+  });
+
+  test("builds artifacts record from flat store fields", async () => {
+    const epic = store.addEpic({ name: "Artifacts Test", slug: "artifacts-test" });
+    store.updateEpic(epic.id, {
+      status: "plan",
+      design: ".beastmode/artifacts/design/2026-04-05-test.md",
+    });
+
+    const designDir = join(tmpDir, ".beastmode", "artifacts", "design");
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(designDir, { recursive: true });
+    writeFileSync(
+      join(designDir, "2026-04-05-test.md"),
+      "---\nphase: design\n---\n\n## Problem Statement\n\nTest problem.\n\n## Solution\n\nTest solution.\n",
+    );
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "artifacts-test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const createCalls = callsTo("ghIssueCreate");
+    expect(createCalls.length).toBeGreaterThanOrEqual(1);
+    const body = createCalls[0].args[2] as string;
+    expect(body).toContain("Test problem.");
+  });
+
+  test("normalizes absolute artifact paths to repo-relative", async () => {
+    const epic = store.addEpic({ name: "Path Test", slug: "path-test" });
+    const absPath = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-test.md");
+    store.updateEpic(epic.id, {
+      status: "plan",
+      design: absPath,
+    });
+
+    const designDir = join(tmpDir, ".beastmode", "artifacts", "design");
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(designDir, { recursive: true });
+    writeFileSync(absPath, "---\nphase: design\n---\n\n## Problem Statement\n\nPath test.\n");
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "path-test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const createCalls = callsTo("ghIssueCreate");
+    expect(createCalls.length).toBeGreaterThanOrEqual(1);
+    const body = createCalls[0].args[2] as string;
+    expect(body).not.toContain(tmpDir);
+  });
+
+  test("feature plan content populates feature body enrichment", async () => {
+    const epic = store.addEpic({ name: "Enrich Test", slug: "enrich-test" });
+    store.updateEpic(epic.id, { status: "implement" });
+
+    // Add feature with plan path
+    const feat = store.addFeature({
+      parent: epic.id,
+      name: "my-feat",
+      slug: "my-feat",
+      description: "A cool feature",
+    });
+    store.updateFeature(feat.id, {
+      plan: ".beastmode/artifacts/plan/2026-04-05-enrich-test-my-feat.md",
+    });
+
+    // Pre-populate epic ref
+    saveSyncRefs(tmpDir, { [epic.id]: { issue: 10 } });
+
+    // Create plan artifact
+    const planDir = join(tmpDir, ".beastmode", "artifacts", "plan");
+    const { mkdirSync, writeFileSync } = await import("fs");
+    mkdirSync(planDir, { recursive: true });
+    writeFileSync(
+      join(planDir, "2026-04-05-enrich-test-my-feat.md"),
+      `---
+phase: plan
+---
+
+## User Stories
+
+1. As a user, I want to test enrichment.
+
+## What to Build
+
+Build the enrichment pipeline.
+
+## Acceptance Criteria
+
+- [ ] Enrichment works
+`,
+    );
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "enrich-test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    // Feature create call body should contain plan sections
+    const createCalls = callsTo("ghIssueCreate");
+    const featureCreate = createCalls.find((c) => {
+      const title = c.args[1] as string;
+      return title.includes("my-feat");
+    });
+    expect(featureCreate).toBeDefined();
+    const body = featureCreate!.args[2] as string;
+    expect(body).toContain("As a user, I want to test enrichment");
+    expect(body).toContain("Build the enrichment pipeline");
+    expect(body).toContain("Enrichment works");
+  });
 });

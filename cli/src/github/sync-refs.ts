@@ -5,16 +5,18 @@
  * separate from the pipeline store. The GitHub sync module is the
  * sole reader/writer of this file.
  *
- * Schema: Record<entityId, { issue: number; bodyHash?: string }>
+ * Schema: Record<entityId, { issue: number; bodyHash?: string; pendingOps?: PendingOp[] }>
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
+import type { PendingOp } from "./retry-queue.js";
 
 /** A single entity's GitHub sync reference. */
 export interface SyncRef {
   issue: number;
   bodyHash?: string;
+  pendingOps?: PendingOp[];
 }
 
 /** The full sync refs map — keyed by entity ID. */

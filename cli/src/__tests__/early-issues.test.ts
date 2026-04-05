@@ -61,7 +61,7 @@ describe("ensureEarlyIssues", () => {
 
       expect(mockGhIssueCreate).toHaveBeenCalledWith(
         "owner/repo",
-        "my-epic",
+        "My Epic",
         expect.any(String),
         ["type/epic", "phase/design"],
         { logger: nullLogger },
@@ -167,7 +167,7 @@ describe("ensureEarlyIssues", () => {
       expect(mockGhIssueCreate).toHaveBeenCalledTimes(1);
       expect(mockGhIssueCreate).toHaveBeenCalledWith(
         "owner/repo",
-        "feat-b",
+        "My Epic: feat-b",
         expect.any(String),
         ["type/feature", "status/ready"],
         { logger: nullLogger },

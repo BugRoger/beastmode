@@ -69,6 +69,11 @@
 - Skills are pure content processors writing artifacts with YAML frontmatter only
 - The CLI post-dispatch pipeline handles all GitHub sync after output.json generation
 
+## Retry Queue Integration
+- ALWAYS enqueue pending operations via SyncMutation `enqueuePendingOp` type — sync engine error paths produce mutations, bridge layer applies them
+- ALWAYS type SyncMutation.opType as the `OpType` union, not `string` — prevents `as any` casts and maintains compile-time safety at the mutation handler site
+- ALWAYS mock Bun globals (CryptoHasher, spawnSync) in integration tests that import sync engine modules — `hashBody()` uses `Bun.CryptoHasher` which throws in Node-mode vitest; the try/catch in hashBody silently returns undefined, causing body-hash comparisons to always mismatch or always skip depending on code path
+
 ## Label Taxonomy
 - 12 labels total: `type/epic`, `type/feature`, `phase/backlog`, `phase/design`, `phase/plan`, `phase/implement`, `phase/validate`, `phase/release`, `phase/done`, `status/ready`, `status/in-progress`, `status/blocked`
 - Phase labels are mutually exclusive on an issue — remove siblings before adding

@@ -48,6 +48,16 @@
 - ALWAYS use github.project-name config key for the Projects V2 board name
 - NEVER hardcode transition behavior in skills — config.yaml is the single source for sync behavior
 
+## Retry Queue and Reconciliation
+- ALWAYS store retry queue metadata as `pendingOps` on SyncRef entries — not a separate data structure, extends the existing sync-refs I/O transparently
+- ALWAYS use pure functions for queue operations (enqueue, drain, resolve, incrementRetry) — consistent with the immutable pattern in sync-refs
+- ALWAYS use tick-based exponential backoff (2^retryCount ticks) with MAX_RETRIES=5 — permanent failure is logged but does not block the pipeline
+- ALWAYS run reconciliation on every watch loop tick regardless of dispatch activity — operates on sync-refs state, independent of the dispatch tracker
+- ALWAYS bootstrap sync-refs from epic store when sync-refs is empty but store has entities — idempotent, only runs when sync-refs has zero entries
+- ALWAYS use `bodyHash: undefined` as the reconciliation sentinel — bootstrap entries and stub entries both trigger full body/title/label sync on the next pass
+- ALWAYS delegate operation execution to `syncGitHub()` in the reconciliation engine — no per-operation-type dispatch, the sync engine is idempotent and hash-based
+- NEVER add per-operation-type executors in the reconciliation engine — running a full sync pass per entity is simpler and catches cascading changes (e.g., body hash changes that also affect labels)
+
 ## Setup
 - ALWAYS make setup idempotent -- safe to re-run without side effects
 - Setup bootstraps: label taxonomy, Projects V2 board with phase columns, close-to-done automation

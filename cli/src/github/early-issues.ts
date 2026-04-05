@@ -16,6 +16,7 @@ import type { TaskStore } from "../store/types.js";
 import { discoverGitHub } from "./discovery.js";
 import { ghIssueCreate } from "./cli.js";
 import { loadSyncRefs, saveSyncRefs, getSyncRef, setSyncRef } from "./sync-refs.js";
+import { featureTitle, epicTitle } from "./sync.js";
 
 /** Options for the pre-dispatch early issue creation step. */
 export interface EarlyIssueOpts {
@@ -70,7 +71,7 @@ export async function ensureEarlyIssues(opts: EarlyIssueOpts): Promise<void> {
       const stubBody = `**Phase:** design\n\n_Stub issue — content will be enriched after the design phase completes._`;
       const epicNumber = await ghIssueCreate(
         repo,
-        epic.slug,
+        epicTitle(epic.slug, epic.name),
         stubBody,
         ["type/epic", "phase/design"],
         { logger },
@@ -104,7 +105,7 @@ export async function ensureEarlyIssues(opts: EarlyIssueOpts): Promise<void> {
         const stubBody = `**Epic:** #${epicNumber}\n\n_Stub issue — content will be enriched after the implement phase completes._`;
         const issueNumber = await ghIssueCreate(
           repo,
-          feature.slug,
+          featureTitle(epic.name, feature.slug),
           stubBody,
           ["type/feature", "status/ready"],
           { logger },

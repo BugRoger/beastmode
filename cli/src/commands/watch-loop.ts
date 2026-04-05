@@ -5,7 +5,7 @@
  * handles implement fan-out and graceful shutdown.
  */
 
-import type { EnrichedEpic } from "../store/types.js";
+import type { EnrichedEpic, TaskStore } from "../store/types.js";
 import type {
   DispatchedSession,
   WatchConfig,
@@ -22,6 +22,10 @@ import { execSync } from "node:child_process";
 import { createLogger, createStdioSink } from "../logger.js";
 import { createTag } from "../git/tags.js";
 import { createImplBranch } from "../git/worktree.js";
+import { reconcileGitHub } from "../github/reconcile.js";
+import { loadSyncRefs, saveSyncRefs } from "../github/sync-refs.js";
+import { loadConfig } from "../config.js";
+import { discoverGitHub } from "../github/discovery.js";
 
 // --- Version banner ---
 
@@ -42,6 +46,8 @@ export interface WatchDeps {
   scanEpics: (projectRoot: string) => Promise<EnrichedEpic[]>;
   /** Factory for creating phase sessions. */
   sessionFactory: SessionFactory;
+  /** Task store for reconciliation pass. */
+  store?: TaskStore;
   /** Scoped logger. Falls back to createLogger(0, {}) if omitted. */
   logger?: Logger;
 }
@@ -55,6 +61,7 @@ export class WatchLoop extends EventEmitter {
   private logger: Logger;
   /** Session IDs currently under liveness check — used to emit session-dead before rescanEpic. */
   private livenessCheckIds = new Set<string>();
+  private tickCount = 0;
   constructor(config: WatchConfig, deps: WatchDeps) {
     super();
     this.config = config;
@@ -163,6 +170,42 @@ export class WatchLoop extends EventEmitter {
     for (const epic of epics) {
       dispatched += await this.processEpic(epic);
     }
+
+    // --- Reconciliation pass ---
+    this.tickCount++;
+    try {
+      const config = loadConfig(this.config.projectRoot);
+      if (config.github.enabled && this.deps.store) {
+        const resolved = await discoverGitHub(this.config.projectRoot, config.github["project-name"]);
+        if (resolved) {
+          const syncRefs = loadSyncRefs(this.config.projectRoot);
+          const reconcileResult = await reconcileGitHub({
+            projectRoot: this.config.projectRoot,
+            store: this.deps.store,
+            syncRefs,
+            config,
+            resolved,
+            currentTick: this.tickCount,
+            logger: this.logger,
+          });
+
+          if (reconcileResult.updatedRefs !== syncRefs) {
+            saveSyncRefs(this.config.projectRoot, reconcileResult.updatedRefs);
+          }
+
+          if (reconcileResult.opsAttempted > 0) {
+            this.logger.info("reconcile: processed operations", {
+              attempted: String(reconcileResult.opsAttempted),
+              succeeded: String(reconcileResult.opsSucceeded),
+              failed: String(reconcileResult.opsFailed),
+            });
+          }
+        }
+      }
+    } catch (err) {
+      this.logger.warn("reconciliation pass failed", { error: String(err) });
+    }
+
     this.emitTyped('scan-complete', { epicsScanned: epics.length, dispatched });
   }
 

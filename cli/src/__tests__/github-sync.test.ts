@@ -8,6 +8,16 @@
 
 import { describe, test, expect, vi, beforeEach } from "vitest";
 
+// --- Mock Bun globals ---
+globalThis.Bun = {
+  CryptoHasher: class {
+    constructor(_algo: string) {}
+    update(_data: string) {}
+    digest(_format: string) { return "abc123"; }
+  },
+  spawnSync: (_args: string[]) => ({ success: true, stdout: "", stderr: "" }),
+} as any;
+
 // --- Mock infrastructure ---
 
 /** Track all mock calls for assertions. */
@@ -449,5 +459,88 @@ describe("syncGitHub", () => {
 
     const labelCalls = callsTo("ghIssueLabels");
     expect(labelCalls.length).toBeGreaterThanOrEqual(3);
+  });
+
+  describe("retry-queue integration", () => {
+    test("enqueues bodyEnrich when epic body update fails", async () => {
+      const epic = makeTestEpicInput();
+      const syncRefs = makeTestSyncRefs({ "bm-1234": { issue: 10, bodyHash: "stale-hash" } });
+      mockErrors.ghIssueEdit = true;
+      const config = makeTestConfig();
+      const resolved = makeTestResolved();
+
+      const result = await syncGitHub(epic, syncRefs, config, resolved);
+
+      const enqueueMuts = result.mutations.filter((m) => m.type === "enqueuePendingOp");
+      expect(enqueueMuts.length).toBeGreaterThanOrEqual(1);
+      const bodyMut = enqueueMuts.find((m) => m.type === "enqueuePendingOp" && (m as any).opType === "bodyEnrich");
+      expect(bodyMut).toBeDefined();
+    });
+
+    test("enqueues labelSync when epic label fetch fails", async () => {
+      const epic = makeTestEpicInput();
+      const syncRefs = makeTestSyncRefs();
+      mockErrors.ghIssueLabels = true;
+      const config = makeTestConfig();
+      const resolved = makeTestResolved();
+
+      const result = await syncGitHub(epic, syncRefs, config, resolved);
+
+      const enqueueMuts = result.mutations.filter((m) => m.type === "enqueuePendingOp");
+      const labelMut = enqueueMuts.find((m) => m.type === "enqueuePendingOp" && (m as any).opType === "labelSync");
+      expect(labelMut).toBeDefined();
+    });
+
+    test("enqueues subIssueLink when sub-issue linking fails", async () => {
+      const feature = makeTestFeatureInput();
+      const epic = makeTestEpicInput({ features: [feature] });
+      const syncRefs = makeTestSyncRefs();
+      mockErrors.ghSubIssueAdd = true;
+      mockReturns.ghIssueCreate = 50;
+      const config = makeTestConfig();
+      const resolved = makeTestResolved();
+
+      const result = await syncGitHub(epic, syncRefs, config, resolved);
+
+      const enqueueMuts = result.mutations.filter((m) => m.type === "enqueuePendingOp");
+      const linkMut = enqueueMuts.find((m) => m.type === "enqueuePendingOp" && (m as any).opType === "subIssueLink");
+      expect(linkMut).toBeDefined();
+    });
+
+    test("enqueues bodyEnrich when feature body update fails", async () => {
+      const feature = makeTestFeatureInput();
+      const epic = makeTestEpicInput({ features: [feature] });
+      const syncRefs = makeTestSyncRefs({
+        "bm-1234": { issue: 10 },
+        "bm-1234.1": { issue: 20, bodyHash: "stale" },
+      });
+      mockErrors.ghIssueEdit = true;
+      const config = makeTestConfig();
+      const resolved = makeTestResolved();
+
+      const result = await syncGitHub(epic, syncRefs, config, resolved);
+
+      const enqueueMuts = result.mutations.filter((m) => m.type === "enqueuePendingOp");
+      const bodyMut = enqueueMuts.find((m) => m.type === "enqueuePendingOp" && (m as any).opType === "bodyEnrich" && (m as any).entityId === "bm-1234.1");
+      expect(bodyMut).toBeDefined();
+    });
+
+    test("enqueues labelSync when feature label fetch fails", async () => {
+      const feature = makeTestFeatureInput({ status: "in-progress" });
+      const epic = makeTestEpicInput({ features: [feature] });
+      const syncRefs = makeTestSyncRefs({
+        "bm-1234": { issue: 10 },
+        "bm-1234.1": { issue: 20 },
+      });
+      mockErrors.ghIssueLabels = true;
+      const config = makeTestConfig();
+      const resolved = makeTestResolved();
+
+      const result = await syncGitHub(epic, syncRefs, config, resolved);
+
+      const enqueueMuts = result.mutations.filter((m) => m.type === "enqueuePendingOp");
+      const labelMut = enqueueMuts.find((m) => m.type === "enqueuePendingOp" && (m as any).opType === "labelSync" && (m as any).entityId === "bm-1234.1");
+      expect(labelMut).toBeDefined();
+    });
   });
 });

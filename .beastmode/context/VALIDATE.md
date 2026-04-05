@@ -16,6 +16,7 @@
 - `state-scanner.test.ts` line 109: expects `design -> single` but v0.59.0 changed dispatch to `design -> skip` — not in scope for any current epic, do not triage repeatedly
 - ALWAYS record the pre-existing failure count baseline from main in validation reports — prevents re-triaging known failures across epics
 - Baseline as of 2026-04-05 (post manifest-absorption): 75 unit test files passing (1282 individual tests), 22/23 pipeline-all integration scenarios (1 pre-existing), 56/56 store integration scenarios, 2/2 validate-feedback scenarios; 10 type errors (pre-existing in untouched files)
+- ALWAYS check for missing Bun global mocks when integration tests pass individually but fail in the full suite — hashBody() and tag resolution use Bun APIs that silently fail under try/catch in Node-mode vitest, producing false-green results during per-feature BDD but true-red during validate
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:

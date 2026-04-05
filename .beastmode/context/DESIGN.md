@@ -68,6 +68,11 @@ The JSON file store is the operational authority for feature lifecycle, located 
 7. ALWAYS use github.enabled config toggle to control GitHub sync — when false, all GitHub steps are silently skipped
 8. ALWAYS use blast-replace for mutually exclusive label families (phase/*, status/*) — remove all labels in family, add correct one, idempotent
 
+Retry queue metadata (`pendingOps` array) extends SyncRef entries in `github-sync.json` — each pending operation stores type, retry count, next-retry tick, status, and context payload. Exponential backoff: 5 attempts with `2^retryCount` tick delays (1, 2, 4, 8, 16). After 5 failures, the operation is marked permanently failed and logged. A reconciliation pass runs on every watch loop tick: drains the retry queue, runs full body/title/label reconciliation for entities with `bodyHash: undefined`, and bootstraps sync-refs from the epic store when empty. Bootstrap creates entries with `bodyHash: undefined` to trigger reconciliation on the next pass. The reconciliation engine delegates to the existing `syncGitHub` function for operation execution — idempotent and hash-based.
+
+9. ALWAYS use retry queue for failed GitHub operations — enqueue in sync engine error paths, drain via reconciliation on each watch loop tick
+10. ALWAYS use `bodyHash: undefined` as the reconciliation trigger — bootstrap and stub creation both use this sentinel to force full body sync
+
 context/design/github-state-model.md
 
 ## Pipeline Orchestration

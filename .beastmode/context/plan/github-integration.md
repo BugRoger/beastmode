@@ -75,6 +75,10 @@
 - Idempotent: skips if issue number already recorded in manifest
 - Creates minimal stub (slug as title, phase badge, type label); body enriched later at post-dispatch sync
 
+## Retry Queue Planning
+11. ALWAYS verify shared file targets across features during plan decomposition — retry-queue types and sync-refs extensions are foundational data model changes that must live in a single feature, not duplicated across consumer features
+12. ALWAYS use sync-refs I/O module for retry queue metadata — `pendingOps` extends SyncRef, not a separate persistence layer
+
 ## Related Decisions
 - GitHub state model design — see [github-state-model design](../../state/design/2026-03-28-github-state-model.md)
 - GitHub state model plan — see [github-state-model plan](../../state/plan/2026-03-28-github-state-model.md)

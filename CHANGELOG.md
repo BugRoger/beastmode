@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.94.0 — GitHub Sync Resilience (Apr 2026)
+
+- **Retry queue** — PendingOp types extending SyncRef, exponential backoff (2^retryCount ticks, max 5), enqueue/drain/resolve pure functions, enqueue on sync engine error paths
+- **Reconciliation loop** — Bootstrap sync-refs from store, drain retry queue, full body/title/label reconciliation for entities with `bodyHash: undefined`, runs on every watch loop tick
+- **Field mapping fix** — Map store status to phase, build artifacts from flat fields, normalize artifact paths to repo-relative
+- **Bun mock fixes** — CryptoHasher and spawnSync global mocks for Node-mode vitest integration tests
+- **Early issue titles** — Epic-prefixed titles for stub feature issues
+
+---
+
 ### v0.93.0 — Manifest Absorption (Apr 2026)
 
 - **Store schema extension** — Feature.slug, EnrichedEpic, NextAction, summary object shape, slug utilities (slugify, isValidSlug, deduplicateSlug)

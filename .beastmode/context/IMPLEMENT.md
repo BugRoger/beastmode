@@ -31,6 +31,7 @@
 - ALWAYS push branches and tags upstream after every phase checkpoint — pure git operations, not gated on `github.enabled`
 - ALWAYS amend all commits since last phase tag with issue refs before push — range-based rebase, no force-push needed from CLI
 - ALWAYS link branches to issues via `createLinkedBranch` GraphQL — gated on `github.enabled`, warn-and-continue
+- ALWAYS add Bun global mocks (CryptoHasher, spawnSync) to integration tests that exercise sync engine code — vitest runs in Node mode where `globalThis.Bun` is undefined; the sync engine's `hashBody()` silently catches the ReferenceError, causing body updates to silently skip
 
 ## State Scanning
 - ALWAYS discover epics from store entities — never from design files or date heuristics
