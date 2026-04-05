@@ -11,7 +11,7 @@ import chalk from "chalk";
 // Types
 // ---------------------------------------------------------------------------
 
-export type LogLevel = "info" | "detail" | "debug" | "trace" | "warn" | "error";
+export type LogLevel = "info" | "debug" | "warn" | "error";
 
 export interface LogContext {
   phase?: string;
@@ -24,12 +24,10 @@ export interface LogContext {
 // ---------------------------------------------------------------------------
 
 const LEVEL_LABELS: Record<LogLevel, string> = {
-  info:   "INFO ",
-  detail: "DETL ",
-  debug:  "DEBUG",
-  trace:  "TRACE",
-  warn:   "WARN ",
-  error:  "ERR  ",
+  info:  "INFO ",
+  debug: "DEBUG",
+  warn:  "WARN ",
+  error: "ERR  ",
 };
 
 // ---------------------------------------------------------------------------
@@ -39,10 +37,8 @@ const LEVEL_LABELS: Record<LogLevel, string> = {
 function colorLevel(level: LogLevel, label: string): string {
   switch (level) {
     case "info":
-    case "detail":
       return chalk.green(label);
     case "debug":
-    case "trace":
       return chalk.blue(label);
     case "warn":
       return chalk.yellow(label);
