@@ -365,53 +365,54 @@ describe("key hints", () => {
 
 describe("epic filtering and sorting", () => {
   const STATUS_ORDER: Record<string, number> = {
-    cancelled: -1,
     design: 0,
-    plan: 1,
-    implement: 2,
-    validate: 3,
-    release: 4,
-    done: 5,
+    plan: 0,
+    implement: 0,
+    validate: 0,
+    release: 0,
+    done: 1,
+    cancelled: 1,
   };
 
   interface FakeEpic {
     slug: string;
     status: string;
+    created_at: string;
   }
 
   function sortEpics(epics: FakeEpic[]): FakeEpic[] {
     return [...epics].sort((a, b) => {
-      const aP = STATUS_ORDER[a.status] ?? 99;
-      const bP = STATUS_ORDER[b.status] ?? 99;
-      if (aP !== bP) return bP - aP;
-      return a.slug.localeCompare(b.slug);
+      const aGroup = STATUS_ORDER[a.status] ?? 99;
+      const bGroup = STATUS_ORDER[b.status] ?? 99;
+      if (aGroup !== bGroup) return aGroup - bGroup;
+      return b.created_at.localeCompare(a.created_at);
     });
   }
 
-  test("sort puts furthest status first", () => {
+  test("sort puts active epics before terminal epics", () => {
     const epics: FakeEpic[] = [
-      { slug: "a", status: "design" },
-      { slug: "b", status: "validate" },
-      { slug: "c", status: "implement" },
+      { slug: "done-one", status: "done", created_at: "2025-12-01T00:00:00.000Z" },
+      { slug: "active-one", status: "design", created_at: "2025-01-01T00:00:00.000Z" },
+      { slug: "cancelled-one", status: "cancelled", created_at: "2025-11-01T00:00:00.000Z" },
     ];
     const sorted = sortEpics(epics);
-    expect(sorted.map((e) => e.slug)).toEqual(["b", "c", "a"]);
+    expect(sorted.map((e) => e.slug)).toEqual(["active-one", "done-one", "cancelled-one"]);
   });
 
-  test("sort breaks ties alphabetically", () => {
+  test("sort orders by created_at descending within same group", () => {
     const epics: FakeEpic[] = [
-      { slug: "c-epic", status: "implement" },
-      { slug: "a-epic", status: "implement" },
+      { slug: "old", status: "implement", created_at: "2025-01-01T00:00:00.000Z" },
+      { slug: "new", status: "plan", created_at: "2025-12-01T00:00:00.000Z" },
     ];
     const sorted = sortEpics(epics);
-    expect(sorted.map((e) => e.slug)).toEqual(["a-epic", "c-epic"]);
+    expect(sorted.map((e) => e.slug)).toEqual(["new", "old"]);
   });
 
   test("toggle filters out done and cancelled", () => {
     const epics: FakeEpic[] = [
-      { slug: "a", status: "implement" },
-      { slug: "b", status: "done" },
-      { slug: "c", status: "cancelled" },
+      { slug: "a", status: "implement", created_at: "2025-06-01T00:00:00.000Z" },
+      { slug: "b", status: "done", created_at: "2025-06-01T00:00:00.000Z" },
+      { slug: "c", status: "cancelled", created_at: "2025-06-01T00:00:00.000Z" },
     ];
     const showAll = false;
     const visible = showAll
@@ -422,8 +423,8 @@ describe("epic filtering and sorting", () => {
 
   test("toggle showAll includes done and cancelled", () => {
     const epics: FakeEpic[] = [
-      { slug: "a", status: "implement" },
-      { slug: "b", status: "done" },
+      { slug: "a", status: "implement", created_at: "2025-06-01T00:00:00.000Z" },
+      { slug: "b", status: "done", created_at: "2025-06-01T00:00:00.000Z" },
     ];
     const showAll = true;
     const visible = showAll
@@ -434,9 +435,9 @@ describe("epic filtering and sorting", () => {
 
   test("name filter matches substring", () => {
     const epics: FakeEpic[] = [
-      { slug: "dashboard-rework", status: "implement" },
-      { slug: "auth-flow", status: "design" },
-      { slug: "dashboard-v2", status: "plan" },
+      { slug: "dashboard-rework", status: "implement", created_at: "2025-06-01T00:00:00.000Z" },
+      { slug: "auth-flow", status: "design", created_at: "2025-06-01T00:00:00.000Z" },
+      { slug: "dashboard-v2", status: "plan", created_at: "2025-06-01T00:00:00.000Z" },
     ];
     const filterString = "dashboard";
     const filtered = epics.filter((e) => e.slug.includes(filterString));
@@ -447,7 +448,7 @@ describe("epic filtering and sorting", () => {
   });
 
   test("empty filter returns all", () => {
-    const epics: FakeEpic[] = [{ slug: "a", status: "implement" }];
+    const epics: FakeEpic[] = [{ slug: "a", status: "implement", created_at: "2025-06-01T00:00:00.000Z" }];
     const filterString = "";
     const filtered = filterString
       ? epics.filter((e) => e.slug.includes(filterString))
