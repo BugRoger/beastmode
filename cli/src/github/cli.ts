@@ -102,6 +102,49 @@ export async function ghGraphQL<T = unknown>(
 }
 
 /**
+ * Resolve a repository's GraphQL node ID from "owner/repo".
+ * Returns the ID string (e.g., "R_kgDOABCDEF") or undefined.
+ */
+export async function ghRepoNodeId(
+  repo: string,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<string | undefined> {
+  const [owner, name] = repo.split("/");
+  const data = await ghGraphQL<{
+    repository: { id: string };
+  }>(
+    `query($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) { id }
+    }`,
+    { owner, name },
+    opts,
+  );
+  return data?.repository?.id;
+}
+
+/**
+ * Resolve a GitHub issue's GraphQL node ID from repo + issue number.
+ * Returns the ID string (e.g., "I_kwDOABCDEF") or undefined.
+ */
+export async function ghIssueNodeId(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<string | undefined> {
+  const [owner, name] = repo.split("/");
+  const data = await ghGraphQL<{
+    repository: { issue: { id: string } };
+  }>(
+    `query($owner: String!, $name: String!, $number: Int!) {
+      repository(owner: $owner, name: $name) { issue(number: $number) { id } }
+    }`,
+    { owner, name, number: issueNumber },
+    opts,
+  );
+  return data?.repository?.issue?.id;
+}
+
+/**
  * Create or update a GitHub issue label. Idempotent via --force.
  */
 export async function ghLabelCreate(

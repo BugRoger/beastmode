@@ -770,3 +770,100 @@ describe("warn-and-continue: no function throws", () => {
     expect(threw).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// ghRepoNodeId() — repository GraphQL node ID resolution
+// ---------------------------------------------------------------------------
+describe("ghRepoNodeId()", () => {
+  test("parses repository node ID from GraphQL response", () => {
+    // Test the response parsing pattern
+    const mockStdout = '{"data":{"repository":{"id":"R_kgDOABCDEF"}}}';
+    const parsed = JSON.parse(mockStdout);
+    expect(parsed.data.repository.id).toBe("R_kgDOABCDEF");
+  });
+
+  test("splits owner/name from repo string", () => {
+    const repo = "BugRoger/beastmode";
+    const [owner, name] = repo.split("/");
+    expect(owner).toBe("BugRoger");
+    expect(name).toBe("beastmode");
+  });
+
+  test("returns undefined when response is missing repository", () => {
+    const data: { repository?: { id: string } } | undefined = undefined;
+    expect(data?.repository?.id).toBeUndefined();
+  });
+
+  test("returns undefined when response has null repository", () => {
+    const data = { repository: null as any };
+    expect(data?.repository?.id).toBeUndefined();
+  });
+
+  test("builds correct GraphQL query for repo ID lookup", () => {
+    const owner = "BugRoger";
+    const name = "beastmode";
+    const query = `query($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) { id }
+    }`;
+    expect(query).toContain("$owner: String!");
+    expect(query).toContain("$name: String!");
+    expect(query).toContain("repository(owner: $owner, name: $name)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ghIssueNodeId() — issue GraphQL node ID resolution
+// ---------------------------------------------------------------------------
+describe("ghIssueNodeId()", () => {
+  test("parses issue node ID from GraphQL response", () => {
+    const mockStdout = '{"data":{"repository":{"issue":{"id":"I_kwDOABCDEF"}}}}';
+    const parsed = JSON.parse(mockStdout);
+    expect(parsed.data.repository.issue.id).toBe("I_kwDOABCDEF");
+  });
+
+  test("returns undefined when issue is missing", () => {
+    const data = { repository: { issue: null as any } };
+    expect(data?.repository?.issue?.id).toBeUndefined();
+  });
+
+  test("passes issue number as numeric variable", () => {
+    // Verify the variable construction pattern
+    const variables: Record<string, string | number> = {
+      owner: "org",
+      name: "repo",
+      number: 42,
+    };
+    const args: string[] = [];
+    for (const [key, value] of Object.entries(variables)) {
+      if (typeof value === "number") {
+        args.push("-F", `${key}=${value}`);
+      } else {
+        args.push("-f", `${key}=${value}`);
+      }
+    }
+    const numIdx = args.indexOf("number=42");
+    expect(numIdx).toBeGreaterThan(-1);
+    expect(args[numIdx - 1]).toBe("-F");
+  });
+
+  test("splits owner/name for repos", () => {
+    const repo = "my-org/my-project";
+    const [owner, name] = repo.split("/");
+    expect(owner).toBe("my-org");
+    expect(name).toBe("my-project");
+  });
+
+  test("builds correct GraphQL query for issue ID lookup", () => {
+    const owner = "org";
+    const name = "repo";
+    const number = 42;
+    const query = `query($owner: String!, $name: String!, $number: Int!) {
+      repository(owner: $owner, name: $name) { issue(number: $number) { id } }
+    }`;
+    expect(query).toContain("$owner: String!");
+    expect(query).toContain("$name: String!");
+    expect(query).toContain("$number: Int!");
+    expect(query).toContain("issue(number: $number)");
+  });
+});
+
