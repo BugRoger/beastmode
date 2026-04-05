@@ -33,7 +33,7 @@ import type { ResolvedGitHub } from "../github/discovery.js";
 import { ensureEarlyIssues } from "../github/early-issues.js";
 import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "../manifest/pure.js";
 import { createTag } from "../git/tags.js";
-import { amendCommitWithIssueRef } from "../git/commit-issue-ref.js";
+import { amendCommitsInRange } from "../git/commit-issue-ref.js";
 import { linkBranches } from "../github/branch-link.js";
 import { hasRemote, pushBranches, pushTags } from "../git/push.js";
 import {
@@ -335,14 +335,15 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   }
 
   // -- Step 8.5: commit-issue-ref --------------------------------------------
-  // Amend the most recent commit to append a GitHub issue reference (#N).
+  // Amend all commits since the last phase tag to append GitHub issue refs (#N).
   // Runs post-sync so issue numbers from early-issues or sync are available.
+  // Runs pre-push so no force-push is needed.
   try {
     const manifest = store.load(config.projectRoot, epicSlug);
     if (manifest) {
-      const amendResult = await amendCommitWithIssueRef(manifest, { cwd: worktreePath });
-      if (amendResult.amended) {
-        logger.detail?.(`commit ref: (#${amendResult.issueNumber})`);
+      const rangeResult = await amendCommitsInRange(manifest, epicSlug, config.phase, { cwd: worktreePath });
+      if (rangeResult.amended > 0) {
+        logger.detail?.(`commit refs: ${rangeResult.amended} amended, ${rangeResult.skipped} skipped`);
       }
     }
   } catch (err: unknown) {
