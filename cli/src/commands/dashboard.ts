@@ -15,7 +15,8 @@ import { CmuxSessionFactory, CmuxClient } from "../dispatch/cmux.js";
 import { ITermSessionFactory, It2Client } from "../dispatch/it2.js";
 import { discoverGitHub } from "../github/discovery.js";
 import { FallbackEntryStore } from "../dashboard/lifecycle-entries.js";
-import { createDashboardLogger } from "../dashboard/dashboard-logger.js";
+import { createLogger } from "../logger.js";
+import { DashboardSink } from "../dashboard/dashboard-sink.js";
 import type { SystemEntryRef } from "../dashboard/dashboard-logger.js";
 
 /** Discover the project root (walks up to find .beastmode/). */
@@ -43,11 +44,8 @@ export async function dashboardCommand(
     nextSeq: () => systemSeqCounter++,
   };
 
-  const logger = createDashboardLogger({
-    fallbackStore,
-    systemRef,
-    verbosity,
-  });
+  const dashboardSink = new DashboardSink({ fallbackStore, systemRef });
+  const logger = createLogger(dashboardSink);
 
   // --- Select dispatch strategy from config (same as watch command) ---
   const selected = await selectStrategy(config.cli["dispatch-strategy"] ?? "sdk", undefined, logger);
