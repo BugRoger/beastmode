@@ -8,7 +8,6 @@
 
 import { World, setWorldConstructor } from "@cucumber/cucumber";
 import { WatchLoop } from "../../src/commands/watch-loop.js";
-import { SdkSessionFactory } from "../../src/dispatch/factory.js";
 import { createNullLogger } from "../../src/logger.js";
 import type { WatchDeps } from "../../src/commands/watch-loop.js";
 import type { EnrichedManifest, ManifestFeature } from "../../src/manifest/store.js";
@@ -83,31 +82,33 @@ export class WatchLoopWorld extends World {
 
     const deps: WatchDeps = {
       scanEpics: async () => Array.from(self.manifests.values()),
-      sessionFactory: new SdkSessionFactory(async (opts: SessionCreateOpts) => {
-        const id = `session-${self.nextId++}`;
-        const featureSlug = opts.featureSlug;
+      sessionFactory: {
+        async create(opts: SessionCreateOpts) {
+          const id = `session-${self.nextId++}`;
+          const featureSlug = opts.featureSlug;
 
-        self.dispatchLog.push({
-          epicSlug: opts.epicSlug,
-          phase: opts.phase,
-          featureSlug,
-        });
-
-        const promise = new Promise<SessionResult>((resolve) => {
-          self.sessionResolvers.set(id, {
-            resolve,
+          self.dispatchLog.push({
             epicSlug: opts.epicSlug,
             phase: opts.phase,
             featureSlug,
           });
-        });
 
-        return {
-          id,
-          worktreeSlug: opts.epicSlug,
-          promise,
-        };
-      }),
+          const promise = new Promise<SessionResult>((resolve) => {
+            self.sessionResolvers.set(id, {
+              resolve,
+              epicSlug: opts.epicSlug,
+              phase: opts.phase,
+              featureSlug,
+            });
+          });
+
+          return {
+            id,
+            worktreeSlug: opts.epicSlug,
+            promise,
+          };
+        },
+      },
       logger: createNullLogger(),
     };
 
