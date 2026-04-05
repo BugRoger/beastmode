@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 const CLI_SRC = resolve(import.meta.dirname, "../../src");
 
 /** Verbosity level names indexed by numeric level. */
-const VERBOSITY_NAMES = ["info", "detail", "debug", "trace"] as const;
+const VERBOSITY_NAMES = ["info", "debug"] as const;
 type VerbosityName = (typeof VERBOSITY_NAMES)[number];
 
 export class DashboardDispatchWorld extends World {
@@ -51,16 +51,16 @@ export class DashboardDispatchWorld extends World {
     this.currentVerbosity = idx >= 0 ? idx : 0;
   }
 
-  /** Cycle verbosity: 0 -> 1 -> 2 -> 3 -> 0 */
+  /** Cycle verbosity: 0 -> 1 -> 0 */
   cycleVerbosity(): void {
-    this.currentVerbosity = (this.currentVerbosity + 1) % 4;
+    this.currentVerbosity = (this.currentVerbosity + 1) % 2;
   }
 
   /** Check if App.tsx has verbosity cycling state management. */
   hasVerbosityCycling(): boolean {
-    return this.appSource.includes("cycleVerbosity") ||
-           this.appSource.includes("setVerbosity") ||
-           (this.appSource.includes("verbosity") && this.appSource.includes("% 4"));
+    return this.keyboardHookSource.includes("cycleVerbosity") ||
+           this.keyboardHookSource.includes("setVerbosity") ||
+           (this.appSource.includes("verbosity") && (this.appSource.includes("% 4") || this.appSource.includes("% 2")));
   }
 
   /** Check if keyboard hook handles 'v' key. */

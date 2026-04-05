@@ -62,11 +62,9 @@ export function parseArgs(argv: string[]): ParsedCommand {
   const command = userArgs[0];
 
   if (!ALL_COMMANDS.has(command)) {
-    console.error(`Unknown command: ${command}`);
-    console.error(
-      `Phases: ${VALID_PHASES.join(", ")}`,
-    );
-    console.error(`Other: watch, status, cancel, compact, dashboard, help`);
+    process.stderr.write(`Unknown command: ${command}\n`);
+    process.stderr.write(`Phases: ${VALID_PHASES.join(", ")}\n`);
+    process.stderr.write(`Other: watch, status, cancel, compact, dashboard, help\n`);
     process.exit(1);
   }
 

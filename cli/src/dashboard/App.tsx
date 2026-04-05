@@ -16,7 +16,8 @@ import { useTerminalSize } from "./hooks/use-terminal-size.js";
 import { getKeyHints } from "./key-hints.js";
 import { cancelEpicAction } from "./actions/cancel-epic.js";
 import { FallbackEntryStore, lifecycleToLogEntry } from "./lifecycle-entries.js";
-import { createDashboardLogger } from "./dashboard-logger.js";
+import { createLogger } from "../logger.js";
+import { DashboardSink } from "./dashboard-sink.js";
 import type { SystemEntryRef } from "./dashboard-logger.js";
 
 export interface AppProps {
@@ -56,14 +57,15 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
 
   // Dashboard logger for cancel actions (uses shared stores)
   const dashboardLoggerRef = useRef(
-    createDashboardLogger({
-      fallbackStore: fallbackStoreRef.current,
-      systemRef: systemRef ?? {
-        entries: systemEntriesRef.current,
-        nextSeq: () => systemSeqRef.current++,
-      },
-      verbosity,
-    }),
+    createLogger(
+      new DashboardSink({
+        fallbackStore: fallbackStoreRef.current,
+        systemRef: systemRef ?? {
+          entries: systemEntriesRef.current,
+          nextSeq: () => systemSeqRef.current++,
+        },
+      }),
+    ),
   );
 
   // slugAtIndex reads from a ref so it always sees the latest filteredEpics

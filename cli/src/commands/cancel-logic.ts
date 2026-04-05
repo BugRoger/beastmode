@@ -47,7 +47,7 @@ export interface CancelResult {
 // ---------------------------------------------------------------------------
 
 async function confirmCancel(logger: Logger): Promise<boolean> {
-  logger.log(
+  logger.info(
     "This will remove the worktree, branch, tags, artifacts, manifest, and close the GitHub issue. Proceed? [y/N]",
   );
   const reader = Bun.stdin.stream().getReader();
@@ -88,7 +88,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   if (!force) {
     const confirmed = await confirmCancel(logger);
     if (!confirmed) {
-      logger.log("Cancelled.");
+      logger.info("Cancelled.");
       return { cleaned, warned };
     }
   }
@@ -96,7 +96,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   // --- Step 1: Remove worktree and branch ---
   try {
     await removeWorktree(slug, { cwd: projectRoot, deleteBranch: true });
-    logger.detail(`Removed worktree and branch for ${slug}`);
+    logger.debug("removed worktree and branch", { slug });
     cleaned.push("worktree");
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -110,7 +110,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
       cwd: projectRoot,
       allowFailure: true,
     });
-    logger.detail(`Deleted archive tag archive/${slug}`);
+    logger.debug("deleted archive tag", { tag: `archive/${slug}` });
     cleaned.push("archive-tag");
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -121,7 +121,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   // --- Step 3: Delete phase tags ---
   try {
     await deleteAllTags(slug, { cwd: projectRoot });
-    logger.detail(`Deleted phase tags for ${slug}`);
+    logger.debug("deleted phase tags", { slug });
     cleaned.push("phase-tags");
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -143,12 +143,12 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
       for (const file of files) {
         if (file.includes(`-${epic}-`) || file.includes(`-${epic}.`)) {
           unlinkSync(resolve(dir, file));
-          logger.detail(`  deleted ${phase}/${file}`);
+          logger.debug("deleted artifact", { phase, file });
           count++;
         }
       }
     }
-    logger.detail(`Deleted ${count} artifact file(s)`);
+    logger.debug("artifact cleanup complete", { count });
     cleaned.push("artifacts");
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -166,7 +166,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
       if (!result) {
         throw new Error("gh issue close returned no result");
       }
-      logger.detail(`Closed GitHub issue #${githubEpicNumber}`);
+      logger.debug("closed GitHub issue", { issue: githubEpicNumber });
       cleaned.push("github-issue");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -179,9 +179,9 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   try {
     const removed = store.remove(projectRoot, slug);
     if (removed) {
-      logger.detail(`Deleted manifest for ${slug}`);
+      logger.debug("deleted manifest", { slug });
     } else {
-      logger.detail(`No manifest found for ${slug} (already removed)`);
+      logger.debug("no manifest found", { slug });
     }
     cleaned.push("manifest");
   } catch (err: unknown) {

@@ -21,10 +21,8 @@ vi.mock("../github/discovery.js", () => ({
 import { ensureEarlyIssues } from "../github/early-issues.js";
 
 const nullLogger = {
-  log: () => {},
-  detail: () => {},
+  info: () => {},
   debug: () => {},
-  trace: () => {},
   warn: () => {},
   error: () => {},
   child: () => nullLogger,

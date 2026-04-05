@@ -254,12 +254,10 @@ describe("syncGitHubForEpic", () => {
   test("logs warning when discovery fails and logger provided", async () => {
     const warnMessages: string[] = [];
     const customLogger: any = {
-      log: () => {},
+      info: () => {},
       warn: (msg: string) => warnMessages.push(msg),
       error: () => {},
       debug: () => {},
-      detail: () => {},
-      trace: () => {},
       child: () => customLogger,
     };
 

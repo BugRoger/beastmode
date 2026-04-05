@@ -1,33 +1,31 @@
 import { describe, test, expect } from "vitest";
 import { createTreeState, addEntry, openPhase, closePhase } from "../tree-view/tree-state.js";
-import { TreeLogger } from "../tree-view/tree-logger.js";
+import { createTreeSink } from "../tree-view/tree-sink.js";
+import { createLogger } from "../logger.js";
 
-/**
- * These tests validate the integration between TreeLogger and tree-state,
- * which is the core logic behind useTreeState. The React hook layer adds
- * only a revision bump for re-renders — tested via Ink snapshot tests later.
- */
 describe("useTreeState integration", () => {
-  test("TreeLogger with notify callback simulates hook re-render trigger", () => {
+  test("TreeSink with notify callback simulates hook re-render trigger", () => {
     const state = createTreeState();
     let renderCount = 0;
     const notify = () => { renderCount++; };
 
-    const logger = new TreeLogger(state, 0, { epic: "e" }, notify);
-    logger.log("a");
-    logger.log("b");
+    const sink = createTreeSink(state, 0, notify);
+    const logger = createLogger(sink, { epic: "e" });
+    logger.info("a");
+    logger.info("b");
 
     expect(renderCount).toBe(2);
     expect(state.epics[0].entries).toHaveLength(2);
   });
 
-  test("createLogger from state produces working TreeLogger", () => {
+  test("createLogger from sink produces working Logger", () => {
     const state = createTreeState();
     let renderCount = 0;
     const notify = () => { renderCount++; };
 
-    const logger = new TreeLogger(state, 0, { epic: "my-epic", phase: "plan" }, notify);
-    logger.log("msg");
+    const sink = createTreeSink(state, 0, notify);
+    const logger = createLogger(sink, { epic: "my-epic", phase: "plan" });
+    logger.info("msg");
 
     expect(state.epics[0].children[0].entries[0].message).toBe("msg");
     expect(renderCount).toBe(1);
@@ -49,8 +47,8 @@ describe("useTreeState integration", () => {
     openPhase(state, "e", "implement");
     addEntry(state, "info", { epic: "e", phase: "implement" }, "implementing");
 
-    expect(state.epics[0].children[0].closed).toBe(true);  // plan closed
-    expect(state.epics[0].children[1].closed).toBe(false);  // implement open
+    expect(state.epics[0].children[0].closed).toBe(true);
+    expect(state.epics[0].children[1].closed).toBe(false);
   });
 
   test("closePhase marks phase closed", () => {

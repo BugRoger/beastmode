@@ -1,0 +1,70 @@
+---
+phase: design
+slug: logging-cleanup
+epic: logging-cleanup
+---
+
+## Problem Statement
+
+The beastmode CLI has a functional but inconsistent logging system. Six log levels exist where four suffice. Three separate Logger implementations duplicate verbosity gating logic. A handful of console.error calls bypass the logger entirely. Messages are string-only with no structured data support. At least one log call is misclassified. The result: filtering is coarse, the interface is wider than necessary, and adding a new transport means reimplementing verbosity checks.
+
+## Solution
+
+Unify to a single Logger interface with four levels (debug/info/warn/error), a pluggable sink model where one LogSink implementation is injected at construction, structured log entries carrying a message string plus an optional key-value data object, and hierarchical context (epic > feature) with phase as an orthogonal filter dimension. Sinks receive the full log stream and decide what to show. The CLI defaults to info level, overridable with -v for debug. The dashboard defaults to info with built-in UI filters.
+
+## User Stories
+
+1. As a CLI user, I want a single Logger interface with four levels (debug/info/warn/error), so that the API is minimal and predictable.
+
+2. As a CLI user, I want logs to carry structured data (message + key-value pairs), so that context like file paths, durations, and flags are machine-readable alongside human-readable messages.
+
+3. As a CLI user, I want to filter logs by epic and feature hierarchically (filtering by epic includes all its features), so that I can narrow output to the work I care about.
+
+4. As a dashboard user, I want the dashboard to receive the full log stream and apply its own filtering (default info, built-in UI controls), so that dashboard and CLI can have independent visibility settings.
+
+5. As a developer, I want a pluggable sink model (StdioSink, DashboardSink, TreeSink) behind a single LogSink interface, so that adding a new transport means implementing one write() method without duplicating gating logic.
+
+6. As a developer, I want all console.error/console.log calls in the CLI runtime (excluding standalone scripts) migrated to the Logger, so that no log output bypasses the structured logging pipeline.
+
+7. As a developer, I want all existing log call sites reviewed and reclassified to the correct level (debug/info/warn/error), so that the default info output is clean and debug contains implementation details.
+
+## Implementation Decisions
+
+- **Four log levels**: debug, info, warn, error. The current six collapse: log()→info(), detail()→debug(), debug()→debug(), trace()→debug().
+- **Hierarchy model**: epic > feature is the parent-child hierarchy. Phase is an orthogonal filter dimension alongside log level. LogContext retains {phase, epic, feature} fields but phase is not part of the nesting.
+- **Structured entries**: Logger methods accept (msg: string, data?: Record<string, unknown>). The LogEntry record passed to sinks includes level, timestamp, msg, data, and context.
+- **Sink interface**: `interface LogSink { write(entry: LogEntry): void }`. Three implementations: StdioSink (stdout/stderr with colored columns), DashboardSink (routes to entry stores), TreeSink (routes to tree state).
+- **Verbosity gating in sinks, not Logger**: The Logger passes all entries to the sink. Each sink decides its own filtering. This allows dashboard and CLI to have independent thresholds.
+- **CLI defaults**: Default level is info. -v flag sets debug. No graduated -vv/-vvv (only two meaningful thresholds with four levels).
+- **Dashboard defaults**: Info level, built-in UI filters for epic/feature/phase. No CLI args for log level on the dashboard command.
+- **Console ban scope**: All log output in cli/src/ (excluding scripts/) goes through Logger. process.stdout.write is permitted for non-log output: TTY control sequences (ANSI escapes), structured JSON output (store command), help text.
+- **Standalone scripts excluded**: scripts/backfill-enrichment.ts keeps console.log — it's not part of the CLI runtime.
+- **Internal API only**: No external consumers of the Logger interface. No semver implications for the interface change.
+- **Level reclassification**: All ~100 call sites reviewed and reclassified. Known issue: watch-loop.ts "State scan failed" currently error(), should be warn() (loop continues after scan failures).
+
+## Testing Decisions
+
+- Existing test files (logger.test.ts, tree-logger.test.ts, log-format.test.ts) must be updated to match the new 4-level interface and sink model.
+- Test the LogSink interface with a mock sink that captures LogEntry records — assert level, context, msg, and data fields.
+- Test that StdioSink respects verbosity filtering (debug entries suppressed at info level).
+- Test that DashboardSink and TreeSink correctly route entries to their backing stores.
+- Test child() context merging preserves epic > feature hierarchy.
+- Prior art: existing logger.test.ts tests verbosity gating and format output. Same pattern applies with the new interface.
+
+## Out of Scope
+
+- Runtime filter flags (--epic=foo, --phase=implement) on CLI commands
+- Multi-sink fan-out (logging to multiple sinks simultaneously)
+- File-based log sink or log rotation
+- JSON output mode for machine parsing (structured entries enable this later but we don't build the serializer now)
+- Migration of standalone scripts in scripts/
+
+## Further Notes
+
+The args.ts console.error calls happen before any logger is created (argument parsing failure). These need special handling — either a bootstrap logger or inline creation at the call site.
+
+## Deferred Ideas
+
+- JSON log serialization mode for piping to external tools
+- Log file sink for persistent debugging
+- Runtime filter flags for CLI commands

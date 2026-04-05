@@ -5,7 +5,7 @@
  * and log a warning to stderr. Never throws.
  */
 
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import type { Logger } from "../logger.js";
 
 export interface GhResult {
@@ -22,7 +22,7 @@ export async function gh(
   args: string[],
   opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<GhResult | undefined> {
-  const log = opts.logger ?? createLogger(0, {});
+  const log = opts.logger ?? createLogger(createStdioSink(0), {});
   try {
     const proc = Bun.spawn(["gh", ...args], {
       cwd: opts.cwd,
@@ -65,7 +65,7 @@ export async function ghJson<T = unknown>(
   try {
     return JSON.parse(result.stdout) as T;
   } catch {
-    const log = opts.logger ?? createLogger(0, {});
+    const log = opts.logger ?? createLogger(createStdioSink(0), {});
     log.warn(`gh ${args[0]} returned non-JSON output`);
     return undefined;
   }
@@ -95,7 +95,7 @@ export async function ghGraphQL<T = unknown>(
     const parsed = JSON.parse(result.stdout);
     return parsed.data as T;
   } catch {
-    const log = opts.logger ?? createLogger(0, {});
+    const log = opts.logger ?? createLogger(createStdioSink(0), {});
     log.warn(`gh api graphql returned non-JSON output`);
     return undefined;
   }

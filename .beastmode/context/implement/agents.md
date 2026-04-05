@@ -19,6 +19,11 @@
 - Same-wave tasks can run simultaneously if no shared files — wave-based parallelism
 - ALWAYS verify current file state before implementing a wave task — a parallel task may have already implemented shared prerequisites, reducing the remaining scope
 
+## Sweep Migrations
+- ALWAYS pre-enumerate target files in Write Plan tasks for sweep migrations (migrate all X, replace all Y) — agent grep at dispatch time misses files in atypical paths; spec reviewer verifies list completeness with second grep
+
+context/implement/agents/sweep-migration-coverage.md
+
 ## Agent Definitions
 - ALWAYS use `<phase>-<role>` naming for agent files — no stuttering (implement-dev not implement-implementer)
 - ALWAYS dispatch agents via `subagent_type="beastmode:<agent-name>"` — not manual prompt assembly with general-purpose

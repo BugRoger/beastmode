@@ -5,7 +5,7 @@ export type { TreeEntry, TreeNode, TreeNodeType, TreeState } from "./types.js";
 export { createTreeState, addEntry, openPhase, closePhase } from "./tree-state.js";
 
 // Logger
-export { TreeLogger } from "./tree-logger.js";
+export { createTreeSink } from "./tree-sink.js";
 
 // Format
 export { formatTreeLogLine } from "./format.js";

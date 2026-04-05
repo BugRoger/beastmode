@@ -8,19 +8,19 @@
 
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { createLogger } from "../logger";
+import { createLogger, createStdioSink } from "../logger";
 
 export async function compactCommand(): Promise<void> {
   const projectRoot = process.cwd();
   const beastmodeDir = resolve(projectRoot, ".beastmode");
 
   if (!existsSync(beastmodeDir)) {
-    console.error("Not a beastmode project (missing .beastmode/ directory)");
+    process.stderr.write("Not a beastmode project (missing .beastmode/ directory)\n");
     process.exit(1);
   }
 
-  const logger = createLogger(0, { phase: "compact" });
-  logger.log("Dispatching compaction agent...");
+  const logger = createLogger(createStdioSink(0), { phase: "compact" });
+  logger.info("Dispatching compaction agent...");
 
   const proc = Bun.spawn(
     [
@@ -50,9 +50,9 @@ export async function compactCommand(): Promise<void> {
     if (cancelled) {
       logger.warn("Compaction cancelled.");
     } else if (exitCode === 0) {
-      logger.log("Compaction complete.");
+      logger.info("Compaction complete.");
     } else {
-      logger.error(`Compaction failed (exit code ${exitCode}).`);
+      logger.error("compaction failed", { exitCode });
       process.exit(exitCode ?? 1);
     }
   } finally {

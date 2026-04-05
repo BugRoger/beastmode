@@ -23,6 +23,11 @@
 
 context/design/architecture/phased-subsystem-rollout.md
 
+## Consumer-Boundary Filtering
+- ALWAYS push filtering/gating logic to the consumer boundary (sink, subscriber, adapter) when a source has multiple consumers with divergent filtering needs — producer is pass-all, consumers own policy
+
+context/design/architecture/single-source-api-boundary.md
+
 ## Sub-Phase Anatomy
 - Every phase follows sub-phase anatomy: prime -> execute -> validate -> checkpoint as inline sections within SKILL.md — standardized lifecycle
 - ALWAYS enter worktree in prime before state file reads — step 3 in plan/implement primes

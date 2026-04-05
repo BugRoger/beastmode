@@ -13,7 +13,7 @@ import {
   ghProjectDiscover,
   ghFieldDiscover,
 } from "./cli.js";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import type { Logger } from "../logger.js";
 
 /** Resolved GitHub metadata — the sync engine's input. */
@@ -98,7 +98,7 @@ export async function discoverGitHub(
   projectName?: string,
   logger?: Logger,
 ): Promise<ResolvedGitHub | undefined> {
-  const log = logger ?? createLogger(0, {});
+  const log = logger ?? createLogger(createStdioSink(0), {});
 
   // Cache hit?
   const cached = readCache(projectRoot, projectName);

@@ -470,10 +470,10 @@ export async function remove(
  */
 export async function rebase(
   phase: string,
-  opts: { cwd?: string; logger?: { log: (msg: string) => void; warn: (msg: string) => void } } = {},
+  opts: { cwd?: string; logger?: { info: (msg: string) => void; warn: (msg: string) => void } } = {},
 ): Promise<RebaseResult> {
   if (phase === "design") {
-    opts.logger?.log("rebase: skipped (design phase)");
+    opts.logger?.info("rebase: skipped (design phase)");
     return { outcome: "skipped", message: "design phase — rebase not applicable" };
   }
 
@@ -484,7 +484,7 @@ export async function rebase(
 
   if (result.exitCode === 0) {
     const msg = `merged ${mainBranch} into feature branch`;
-    opts.logger?.log(msg);
+    opts.logger?.info(msg);
     return { outcome: "success", message: msg };
   }
 

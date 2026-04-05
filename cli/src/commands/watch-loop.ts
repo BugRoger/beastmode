@@ -19,7 +19,7 @@ import { acquireLock, releaseLock } from "../lockfile.js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import { createTag } from "../git/tags.js";
 import { createImplBranch } from "../git/worktree.js";
 
@@ -59,7 +59,7 @@ export class WatchLoop extends EventEmitter {
     super();
     this.config = config;
     this.deps = deps;
-    this.logger = deps.logger ?? createLogger(0, {});
+    this.logger = deps.logger ?? createLogger(createStdioSink(0), {});
   }
 
   /** Type-safe emit helper. */
@@ -106,10 +106,10 @@ export class WatchLoop extends EventEmitter {
       this.pollTimer = null;
     }
 
-    this.logger.log("Shutting down...");
+    this.logger.info("Shutting down...");
 
     if (this.tracker.size > 0) {
-      this.logger.log(
+      this.logger.info(
         `Waiting for ${this.tracker.size} active session(s)...`,
       );
       this.tracker.abortAll();
@@ -146,7 +146,7 @@ export class WatchLoop extends EventEmitter {
       try {
         await this.deps.sessionFactory.checkLiveness(activeSessions);
       } catch (err) {
-        this.logger.warn(`Liveness check failed: ${err}`);
+        this.logger.warn("liveness check failed", { error: String(err) });
       }
       this.livenessCheckIds.clear();
     }
@@ -156,7 +156,7 @@ export class WatchLoop extends EventEmitter {
       const result = await this.deps.scanEpics(this.config.projectRoot);
       epics = Array.isArray(result) ? result : result.epics;
     } catch (err) {
-      this.logger.error(`State scan failed: ${err}`);
+        this.logger.warn("state scan failed", { error: String(err) });
       return;
     }
 
@@ -315,7 +315,7 @@ export class WatchLoop extends EventEmitter {
             cwd: resolve(this.config.projectRoot, ".claude", "worktrees", epic.slug),
           });
         } catch (branchErr) {
-          this.logger.warn(`impl branch creation failed for ${featureSlug}: ${branchErr}`);
+          this.logger.warn("impl branch creation failed", { feature: featureSlug, error: String(branchErr) });
         }
 
         const handle = await this.deps.sessionFactory.create({
@@ -388,7 +388,7 @@ export class WatchLoop extends EventEmitter {
             const wtPath = resolve(this.config.projectRoot, ".claude", "worktrees", session.worktreeSlug);
             await createTag(session.epicSlug, session.phase, { cwd: wtPath });
           } catch (err) {
-            this.logger.warn(`Failed to create phase tag: ${err}`);
+            this.logger.warn("phase tag creation failed", { error: String(err) });
           }
         }
 
@@ -415,7 +415,7 @@ export class WatchLoop extends EventEmitter {
         await this.processEpic(epic);
       }
     } catch (err) {
-      this.logger.warn(`Re-scan of ${epicSlug} failed: ${err}`);
+      this.logger.warn("epic re-scan failed", { epic: epicSlug, error: String(err) });
     }
   }
 
@@ -430,7 +430,7 @@ export class WatchLoop extends EventEmitter {
 
   private setupSignalHandlers(): void {
     const handler = async () => {
-      this.logger.log("Received SIGINT — initiating graceful shutdown...");
+      this.logger.info("Received SIGINT — initiating graceful shutdown...");
       await this.stop();
       process.exit(0);
     };
@@ -446,16 +446,16 @@ export class WatchLoop extends EventEmitter {
  */
 export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
   loop.on('started', ({ version, pid, intervalSeconds }) => {
-    logger.log(`Started ${version} (PID ${pid}, poll every ${intervalSeconds}s)`);
+    logger.info(`Started ${version} (PID ${pid}, poll every ${intervalSeconds}s)`);
   });
 
   loop.on('stopped', () => {
-    logger.log('Stopped.');
+    logger.info('Stopped.');
   });
 
   loop.on('session-started', ({ epicSlug, featureSlug, phase }) => {
     const child = logger.child({ phase, epic: epicSlug, ...(featureSlug ? { feature: featureSlug } : {}) });
-    child.log("dispatching");
+    child.info("dispatching");
   });
 
   loop.on('session-completed', ({ epicSlug, featureSlug, phase, success, durationMs, costUsd }) => {
@@ -463,7 +463,7 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
     const status = success ? 'completed' : 'failed';
     const dur = `${(durationMs / 1000).toFixed(0)}s`;
     const detail = costUsd != null ? `$${costUsd.toFixed(2)}, ${dur}` : dur;
-    child.log(`${status} (${detail})`);
+    child.info(`${status} (${detail})`);
   });
 
   loop.on('error', ({ epicSlug, message }) => {
@@ -475,7 +475,7 @@ export function attachLoggerSubscriber(loop: WatchLoop, logger: Logger): void {
   });
 
   loop.on('release:held', ({ waitingSlug, blockingSlug }) => {
-    logger.child({ epic: waitingSlug }).log(`release held: ${waitingSlug} blocked by ${blockingSlug}`);
+    logger.child({ epic: waitingSlug }).info(`release held: ${waitingSlug} blocked by ${blockingSlug}`);
   });
 
   loop.on('session-dead', ({ epicSlug, phase, featureSlug, sessionId, tty }) => {

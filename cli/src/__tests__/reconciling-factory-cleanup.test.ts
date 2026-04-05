@@ -118,8 +118,8 @@ vi.mock("../hooks/file-permission-settings.js", () => ({
 }));
 
 // Import AFTER mocking
-const { ReconcilingFactory } = await import("../dispatch/reconciling.js");
-import { createLogger } from "../logger.js";
+const { ReconcilingFactory } = await import("../commands/watch.js");
+import { createLogger, createStdioSink } from "../logger.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -157,7 +157,7 @@ function makeInnerFactory(
   return factory;
 }
 
-const logger = createLogger(0, {});
+const logger = createLogger(createStdioSink(0), {});
 
 // ---------------------------------------------------------------------------
 // Tests

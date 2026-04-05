@@ -3,7 +3,7 @@ import { Box, Text } from "ink";
 import MinSizeGate from "./MinSizeGate.js";
 import PanelBox from "./PanelBox.js";
 import NyanBanner from "./NyanBanner.js";
-import { CHROME, DEPTH } from "./monokai-palette.js";
+import { CHROME } from "./monokai-palette.js";
 
 export interface ThreePanelLayoutProps {
   /** Watch loop running state. */
@@ -42,7 +42,7 @@ export default function ThreePanelLayout({
     <MinSizeGate>
       <Box flexDirection="column" width="100%" height={rows ?? "100%"}>
         {/* Header bar — banner + watch status */}
-        <Box flexDirection="row" justifyContent="space-between" paddingX={1} backgroundColor={DEPTH.chrome}>
+        <Box flexDirection="row" justifyContent="space-between" paddingX={1} paddingY={1}>
           <NyanBanner />
           <Box flexDirection="column" alignItems="flex-end" justifyContent="flex-start">
             <Box>
@@ -73,16 +73,13 @@ export default function ThreePanelLayout({
           </PanelBox>
         </Box>
 
-        {/* Cancel confirmation prompt — between content and hints bar */}
-        {cancelPrompt}
-
-        {/* Bottom bar — key hints */}
-        <Box paddingX={1} backgroundColor={DEPTH.chrome}>
-          {isShuttingDown ? (
+        {/* Bottom bar — key hints or cancel prompt */}
+        <Box paddingX={1}>
+          {cancelPrompt ?? (isShuttingDown ? (
             <Text color="yellow">shutting down...</Text>
           ) : (
             <Text color={CHROME.muted}>{keyHints}</Text>
-          )}
+          ))}
         </Box>
       </Box>
     </MinSizeGate>

@@ -18,7 +18,7 @@
 import { resolve } from "node:path";
 import type { Phase, PhaseResult } from "../types.js";
 import type { Logger } from "../logger.js";
-import { createLogger } from "../logger.js";
+import { createLogger, createStdioSink } from "../logger.js";
 import * as worktree from "../git/worktree.js";
 import { rebase, createImplBranch } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
@@ -117,7 +117,7 @@ export interface PipelineResult {
  * failure never blocks the pipeline.
  */
 export async function run(config: PipelineConfig): Promise<PipelineResult> {
-  const logger = config.logger ?? createLogger(0, { phase: config.phase, epic: config.epicSlug });
+  const logger = config.logger ?? createLogger(createStdioSink(0), { phase: config.phase, epic: config.epicSlug });
   let epicSlug = config.epicSlug;
   let worktreePath: string;
 
@@ -135,11 +135,11 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       const wt = await worktree.create(epicSlug, { cwd: config.projectRoot });
       worktreePath = wt.path;
     }
-    logger.log(`worktree: ${worktreePath}`);
+    logger.info("worktree ready", { path: worktreePath });
 
     // -- Step 2: git.worktree.rebase ------------------------------------------
     const rebaseResult = await rebase(config.phase, { cwd: worktreePath, logger });
-    logger.detail?.(`rebase: ${rebaseResult.outcome}`);
+    logger.debug("rebase complete", { outcome: rebaseResult.outcome });
     if (rebaseResult.outcome === "stale") {
       logger.warn(`worktree is stale — agent may encounter missing dependencies`);
     }
@@ -165,10 +165,10 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   if (config.phase === "implement" && config.featureSlug) {
     try {
       const implBranch = await createImplBranch(config.epicSlug, config.featureSlug, { cwd: worktreePath });
-      logger.log(`impl branch: ${implBranch}`);
+      logger.info("impl branch created", { branch: implBranch });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.warn(`impl branch creation failed: ${message}`);
+      logger.warn("impl branch creation failed", { error: message });
     }
   }
 
@@ -187,7 +187,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.warn(`early issue creation failed (non-blocking): ${message}`);
+      logger.warn("early issue creation failed", { error: message });
     }
   }
 
@@ -197,7 +197,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   if (!dispatchResult.success && config.phase !== "validate") {
     // Early exit on failure -- no manifest/sync updates.
     // Exception: validate failures must reach the machine so REGRESS fires.
-    logger.log("dispatch failed -- skipping post-dispatch steps");
+    logger.info("dispatch failed -- skipping post-dispatch steps");
     return { success: false, worktreePath, epicSlug };
   }
 
@@ -206,7 +206,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
 
   // Design abandon guard: if design produced no output, skip everything
   if (config.phase === "design" && !phaseOutput) {
-    logger.log("no output -- skipping post-dispatch");
+    logger.info("no output -- skipping post-dispatch");
     return { success: dispatchResult.success, worktreePath, epicSlug };
   }
 
@@ -236,11 +236,11 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     }
 
     if (reconcileResult) {
-      logger.log(`reconciled -> ${reconcileResult.phase}`);
+      logger.info("reconciled", { phase: reconcileResult.phase });
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`reconciliation failed: ${message}`);
+    logger.warn("reconciliation failed", { error: message });
   }
 
   // Create phase tag at current HEAD for regression support
@@ -249,7 +249,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   } catch (err: unknown) {
     // Non-blocking -- tag creation failure shouldn't halt pipeline
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`tag creation failed: ${message}`);
+    logger.warn("tag creation failed", { error: message });
   }
 
   // Design phase: rename hex slug to real slug
@@ -265,9 +265,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       );
       if (renameResult.renamed) {
         epicSlug = renameResult.finalSlug;
-        logger.log(`renamed -> ${renameResult.finalSlug}`);
+        logger.info("renamed", { slug: renameResult.finalSlug });
       } else if (renameResult.error) {
-        logger.warn(`Slug rename failed: ${renameResult.error}`);
+        logger.warn("slug rename failed", { error: renameResult.error });
       }
     }
   }
@@ -282,7 +282,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
         resolved: config.resolved,
         logger,
       });
-      logger.log("GitHub sync complete");
+      logger.info("GitHub sync complete");
     } else {
       // Manual CLI path -- discover and sync
       const beastConfig = config.config;
@@ -319,16 +319,16 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
               });
             }
 
-            logger.log("GitHub sync complete");
+            logger.info("GitHub sync complete");
           }
         } else {
-          logger.detail?.("GitHub discovery failed -- skipping sync");
+          logger.debug("GitHub discovery failed -- skipping sync");
         }
       }
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`GitHub sync failed (non-blocking): ${message}`);
+    logger.warn("GitHub sync failed", { error: message });
   }
 
   // -- Step 8.5: commit-issue-ref --------------------------------------------
@@ -339,33 +339,33 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     if (manifest) {
       const amendResult = await amendCommitWithIssueRef(manifest, { cwd: worktreePath });
       if (amendResult.amended) {
-        logger.detail?.(`commit ref: (#${amendResult.issueNumber})`);
+        logger.debug("commit ref added", { issue: amendResult.issueNumber });
       }
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`commit issue ref failed (non-blocking): ${message}`);
+    logger.warn("commit issue ref failed", { error: message });
   }
 
   // -- Step 9: git.worktree.cleanup -------------------------------------------
   if (config.phase === "release" && dispatchResult.success) {
     try {
-      logger.log("release teardown -- archiving branch...");
+      logger.info("release teardown -- archiving branch...");
       const tagName = await worktree.archive(epicSlug, { cwd: config.projectRoot });
-      logger.log(`archived as ${tagName}`);
+      logger.info("archived", { tag: tagName });
 
       await worktree.remove(epicSlug, { cwd: config.projectRoot });
-      logger.log("worktree removed");
+      logger.info("worktree removed");
 
       // Mark manifest as done so scanner skips it
       const doneManifest = store.load(config.projectRoot, epicSlug);
       if (doneManifest) {
         store.save(config.projectRoot, epicSlug, { ...doneManifest, phase: "done", lastUpdated: new Date().toISOString() });
       }
-      logger.log("manifest marked done");
+      logger.info("manifest marked done");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      logger.error(`release teardown failed: ${message}`);
+      logger.error("release teardown failed", { error: message });
       logger.error("worktree preserved for manual cleanup");
       return { success: false, worktreePath, epicSlug, reconcileResult };
     }

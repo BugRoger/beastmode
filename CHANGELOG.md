@@ -4,6 +4,18 @@ All notable changes to beastmode.
 
 ---
 
+### v0.91.0 — Logging Cleanup (Apr 2026)
+
+- **Unified 4-level Logger** — Single Logger interface with debug/info/warn/error replacing six ad-hoc levels; structured LogEntry with key-value data support
+- **Pluggable sink model** — StdioSink, DashboardSink, TreeSink behind one LogSink interface; verbosity gating moved to sinks, not Logger
+- **Full call-site migration** — ~100 call sites migrated from three Logger implementations to unified API; console.error/console.log calls migrated to Logger
+- **Dashboard sink** — DashboardSink routes log entries to dashboard stores; 2-level verbosity cycle (info/debug)
+- **Tree sink** — TreeSink replaces TreeLogger; createTreeSink factory with tests
+- **Integration tests** — Cucumber BDD scenarios for all 7 user stories with LoggingWorld API-behavioral pattern
+- **Test updates** — All test mocks updated to 4-level Logger interface
+
+---
+
 ### v0.90.0 — BDD Feedback Loop (Apr 2026)
 
 - **Inline Gherkin distribution** — Plan invokes integration tester agent in batch, distributes scenarios inline into each feature plan (no dedicated Wave 1 integration-tests feature)

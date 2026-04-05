@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import type { LogLevel, LogContext, Logger } from "../logger.js";
+import { createLogger as coreCreateLogger } from "../logger.js";
 import type { TreeState } from "./types.js";
 import {
   createTreeState,
@@ -7,7 +8,7 @@ import {
   openPhase as stateOpenPhase,
   closePhase as stateClosePhase,
 } from "./tree-state.js";
-import { TreeLogger } from "./tree-logger.js";
+import { createTreeSink } from "./tree-sink.js";
 
 export interface UseTreeStateResult {
   /** Current tree state. */
@@ -18,17 +19,10 @@ export interface UseTreeStateResult {
   openPhase: (epicSlug: string, phase: string) => void;
   /** Close a specific phase node. */
   closePhase: (epicSlug: string, phase: string) => void;
-  /** Create a TreeLogger that writes to this state and triggers re-renders. */
+  /** Create a Logger backed by a TreeSink that writes to this state and triggers re-renders. */
   createLogger: (verbosity: number, context?: LogContext) => Logger;
 }
 
-/**
- * React hook providing reactive access to tree state for Ink components.
- *
- * Mutations to the tree state trigger re-renders via a revision counter.
- * The underlying TreeState object is mutated in place for performance —
- * the revision bump tells React to re-read the same reference.
- */
 export function useTreeState(): UseTreeStateResult {
   const stateRef = useRef<TreeState>(createTreeState());
   const [, setRevision] = useState(0);
@@ -63,7 +57,7 @@ export function useTreeState(): UseTreeStateResult {
 
   const createLogger = useCallback(
     (verbosity: number, context?: LogContext): Logger => {
-      return new TreeLogger(stateRef.current, verbosity, context, bump);
+      return coreCreateLogger(createTreeSink(stateRef.current, verbosity, bump), context);
     },
     [bump],
   );

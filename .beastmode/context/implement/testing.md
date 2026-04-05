@@ -23,5 +23,8 @@ context/implement/testing/bun-test-runner-imports.md
 - ALWAYS create a dedicated cucumber profile per domain in `cucumber.json` — explicit import list (world, hooks, steps), isolated from other profiles
 - ALWAYS write intentionally-failing scenarios first (wave 1) before the implementation that fixes them (wave 2) — BDD verifies the wiring bug, then the fix
 
+- ALWAYS use API-behavioral World pattern for module contract tests (interface shape, delegation, data routing) — inject mock dependency at World construction, capture calls for Then-step assertions
+
 context/implement/testing/cucumber-source-analysis-world.md
 context/implement/testing/cucumber-store-lifecycle-world.md
+context/implement/testing/cucumber-api-behavioral-world.md

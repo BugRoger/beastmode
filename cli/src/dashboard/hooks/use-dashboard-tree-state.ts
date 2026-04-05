@@ -27,11 +27,11 @@ function entryTypeToLevel(entry: LogEntry): LogLevel {
     case "text":
       return "info";
     case "tool-start":
-      return "detail";
+      return "debug";
     case "tool-result":
       return "debug";
     case "heartbeat":
-      return "trace";
+      return "debug";
     case "result":
       return entry.text.toLowerCase().includes("error") ? "error" : "info";
     default:

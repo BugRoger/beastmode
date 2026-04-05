@@ -14,6 +14,11 @@
 - NEVER mark a criterion PASS without performing the actual check — honest verification
 - DEFER for checks requiring conditions not available in the current session — explicit deferral
 
+## Delta Framing
+- ALWAYS report test results as (new count) vs. (baseline), not as absolute — delta catches regressions and improvements equally
+- ALWAYS note pre-existing failures fixed by this feature as an improvement in the delta row — a net decrease in failures is a positive signal, not noise
+- ALWAYS explain each element of the delta: new failures (regressions), fixed failures (improvements), new files (additions) — even a zero-delta is worth confirming explicitly
+
 ## Evidence Standards
 - ALWAYS include concrete evidence for PASS results (file paths, line counts, grep output) — proof
 - ALWAYS use tabular format for acceptance criteria (criterion | status columns minimum) — structured display

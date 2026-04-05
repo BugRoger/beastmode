@@ -8,10 +8,8 @@ import type { Logger } from "../logger";
 
 const noop = () => {};
 const noopLogger: Logger = {
-  log: noop,
-  detail: noop,
+  info: noop,
   debug: noop,
-  trace: noop,
   warn: noop,
   error: noop,
   child: () => noopLogger,

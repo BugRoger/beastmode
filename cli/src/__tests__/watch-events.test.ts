@@ -267,10 +267,8 @@ describe("WatchLoop event emission", () => {
     const errors: string[] = [];
 
     const mockLogger: Logger = {
-      log: (msg: string) => logged.push(msg),
-      detail: (msg: string) => logged.push(msg),
+      info: (msg: string) => logged.push(msg),
       debug: () => {},
-      trace: () => {},
       warn: () => {},
       error: (msg: string) => errors.push(msg),
       child: () => mockLogger,
@@ -541,10 +539,8 @@ describe("WatchLoop event emission", () => {
     const warnings: string[] = [];
 
     const mockLogger: Logger = {
-      log: () => {},
-      detail: () => {},
+      info: () => {},
       debug: () => {},
-      trace: () => {},
       warn: (msg: string) => warnings.push(msg),
       error: () => {},
       child: () => mockLogger,

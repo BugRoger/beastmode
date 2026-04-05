@@ -60,7 +60,7 @@ export async function ensureEarlyIssues(opts: EarlyIssueOpts): Promise<void> {
     // Load manifest
     const manifest = store.load(projectRoot, epicSlug);
     if (!manifest) {
-      logger?.detail?.("early issues: no manifest — skipping");
+      logger?.debug("early issues: no manifest — skipping");
       return;
     }
 
@@ -84,7 +84,7 @@ async function ensureEpicStub(
   logger?: Logger,
 ): Promise<void> {
   if (manifest.github?.epic) {
-    logger?.detail?.("early issues: epic already has issue number — skipping");
+    logger?.debug("early issues: epic already has issue number — skipping");
     return;
   }
 
@@ -107,7 +107,7 @@ async function ensureEpicStub(
     return setGitHubEpic(m, epicNumber, repo);
   });
 
-  logger?.log(`early issues: epic stub created (#${epicNumber})`);
+  logger?.info("early issues: epic stub created", { issue: epicNumber });
 }
 
 /** Create minimal feature stub issues for features missing issue numbers. */
@@ -120,7 +120,7 @@ async function ensureFeatureStubs(
 ): Promise<void> {
   // Guard: need an epic issue number for feature back-reference
   if (!manifest.github?.epic) {
-    logger?.detail?.("early issues: no epic issue — skipping feature stubs");
+    logger?.debug("early issues: no epic issue — skipping feature stubs");
     return;
   }
 
@@ -128,7 +128,7 @@ async function ensureFeatureStubs(
   const featuresToCreate = manifest.features.filter((f) => !f.github?.issue);
 
   if (featuresToCreate.length === 0) {
-    logger?.detail?.("early issues: all features already have issue numbers");
+    logger?.debug("early issues: all features already have issue numbers");
     return;
   }
 
@@ -148,7 +148,7 @@ async function ensureFeatureStubs(
 
     if (issueNumber) {
       mutations.push({ featureSlug: feature.slug, issueNumber });
-      logger?.log(`early issues: feature stub created for ${feature.slug} (#${issueNumber})`);
+      logger?.info("early issues: feature stub created", { feature: feature.slug, issue: issueNumber });
     } else {
       logger?.warn(`early issues: feature stub creation failed for ${feature.slug} — sync will retry at post-dispatch`);
     }

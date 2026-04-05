@@ -3,16 +3,13 @@ import chalk from "chalk";
 import { formatLogLine } from "../logger";
 import type { LogLevel, LogContext } from "../logger";
 
-// Strip ANSI codes for content assertions
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
 describe("formatLogLine", () => {
   describe("level labels", () => {
     const levels: [LogLevel, string][] = [
       ["info", "INFO "],
-      ["detail", "DETL "],
       ["debug", "DEBUG"],
-      ["trace", "TRACE"],
       ["warn", "WARN "],
       ["error", "ERR  "],
     ];
@@ -21,7 +18,6 @@ describe("formatLogLine", () => {
       test(`${level} renders as "${label}" (5-char fixed width)`, () => {
         const line = stripAnsi(formatLogLine(level, {}, "test"));
         expect(line).toContain(label);
-        // All labels are exactly 5 chars
         expect(label.length).toBe(5);
       });
     }
@@ -30,9 +26,7 @@ describe("formatLogLine", () => {
   describe("scope construction", () => {
     test("epic + feature builds scope without phase", () => {
       const line = stripAnsi(formatLogLine("info", { phase: "plan", epic: "my-epic", feature: "feat1" }, "msg"));
-      // Phase is a separate column, scope contains only epic/feature
       expect(line).toContain("(my-epic/feat1):");
-      // Phase should NOT be inside the scope parens
       expect(line).not.toContain("(plan/");
     });
 
@@ -44,7 +38,6 @@ describe("formatLogLine", () => {
 
     test("phase-only falls back to (cli)", () => {
       const line = stripAnsi(formatLogLine("info", { phase: "design" }, "msg"));
-      // No epic means scope is "cli", phase appears as column
       expect(line).toContain("(cli):");
       expect(line).toContain("design");
     });
@@ -58,10 +51,7 @@ describe("formatLogLine", () => {
   describe("phase column", () => {
     test("phase renders as 9-char fixed-width column", () => {
       const line = stripAnsi(formatLogLine("info", { phase: "implement", epic: "test" }, "msg"));
-      // "implement" is exactly 9 chars — should appear without extra padding
       expect(line).toContain("implement");
-      // label is "INFO " (5 chars) then "  " then phase(9) then "  " then "("
-      // So after "] " we have "INFO   implement  ("
       const match = line.match(/INFO \s{2}(.{9})\s{2}\(/);
       expect(match).not.toBeNull();
       expect(match![1]).toBe("implement");
@@ -69,7 +59,6 @@ describe("formatLogLine", () => {
 
     test("short phase is right-padded to 9 chars", () => {
       const line = stripAnsi(formatLogLine("info", { phase: "plan", epic: "test" }, "msg"));
-      // "plan" + 5 spaces = 9 chars
       const match = line.match(/INFO \s{2}(.{9})\s{2}\(/);
       expect(match).not.toBeNull();
       expect(match![1]).toBe("plan     ");
@@ -77,7 +66,6 @@ describe("formatLogLine", () => {
 
     test("no phase renders as 9 spaces", () => {
       const line = stripAnsi(formatLogLine("info", {}, "msg"));
-      // 9 spaces where phase would be
       const match = line.match(/INFO \s{2}(.{9})\s{2}\(/);
       expect(match).not.toBeNull();
       expect(match![1]).toBe("         ");
@@ -142,8 +130,6 @@ describe("formatLogLine", () => {
   describe("output format", () => {
     test("matches format: [HH:MM:SS] LEVEL  PHASE  (scope):  message", () => {
       const line = stripAnsi(formatLogLine("info", { phase: "plan", epic: "test" }, "hello world"));
-      // Format: [HH:MM:SS] INFO  plan       (test):  hello world
-      // "INFO " (5) + "  " (2) + "plan     " (9) + "  " (2) + "(test):" + padding + msg
       expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s{3}plan\s{7}\(test\):\s+hello world$/);
     });
 

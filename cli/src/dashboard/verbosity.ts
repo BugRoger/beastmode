@@ -6,28 +6,26 @@
 
 import type { LogLevel } from "../logger.js";
 
-/** Number of verbosity levels (info, detail, debug, trace). */
-const VERBOSITY_COUNT = 4;
+/** Number of verbosity levels (info, debug). */
+const VERBOSITY_COUNT = 2;
 
 /** Map LogLevel to numeric verbosity. warn/error return -1 (always shown). */
 const LEVEL_MAP: Record<LogLevel, number> = {
   info: 0,
-  detail: 1,
-  debug: 2,
-  trace: 3,
+  debug: 1,
   warn: -1,
   error: -1,
 };
 
 /** Verbosity index labels. */
-const LABELS: readonly string[] = ["info", "detail", "debug", "trace"];
+const LABELS: readonly string[] = ["info", "debug"];
 
 /** Get the numeric verbosity for a log level. -1 means always shown. */
 export function levelToVerbosity(level: LogLevel): number {
   return LEVEL_MAP[level];
 }
 
-/** Cycle to the next verbosity level (wraps 3 -> 0). */
+/** Cycle to the next verbosity level (wraps 1 -> 0). */
 export function cycleVerbosity(current: number): number {
   return (current + 1) % VERBOSITY_COUNT;
 }
