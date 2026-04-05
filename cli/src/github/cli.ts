@@ -102,6 +102,82 @@ export async function ghGraphQL<T = unknown>(
 }
 
 /**
+ * Resolve a repository's GraphQL node ID from "owner/repo".
+ * Returns the ID string (e.g., "R_kgDOABCDEF") or undefined.
+ */
+export async function ghRepoNodeId(
+  repo: string,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<string | undefined> {
+  const [owner, name] = repo.split("/");
+  const data = await ghGraphQL<{
+    repository: { id: string };
+  }>(
+    `query($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) { id }
+    }`,
+    { owner, name },
+    opts,
+  );
+  return data?.repository?.id;
+}
+
+/**
+ * Resolve a GitHub issue's GraphQL node ID from repo + issue number.
+ * Returns the ID string (e.g., "I_kwDOABCDEF") or undefined.
+ */
+export async function ghIssueNodeId(
+  repo: string,
+  issueNumber: number,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<string | undefined> {
+  const [owner, name] = repo.split("/");
+  const data = await ghGraphQL<{
+    repository: { issue: { id: string } };
+  }>(
+    `query($owner: String!, $name: String!, $number: Int!) {
+      repository(owner: $owner, name: $name) { issue(number: $number) { id } }
+    }`,
+    { owner, name, number: issueNumber },
+    opts,
+  );
+  return data?.repository?.issue?.id;
+}
+
+/**
+ * Create a linked branch on a GitHub issue via GraphQL mutation.
+ *
+ * The mutation creates a remote branch AND links it to the issue in one step.
+ * Returns the linked branch ID on success, or undefined if the branch
+ * already existed (linkedBranch: null) or the call failed.
+ */
+export async function ghCreateLinkedBranch(
+  repoId: string,
+  issueId: string,
+  branchName: string,
+  oid: string,
+  opts: { cwd?: string; logger?: Logger } = {},
+): Promise<string | undefined> {
+  const data = await ghGraphQL<{
+    createLinkedBranch: { linkedBranch: { id: string } | null };
+  }>(
+    `mutation($repoId: ID!, $issueId: ID!, $branchName: String!, $oid: GitObjectID!) {
+      createLinkedBranch(input: {
+        repositoryId: $repoId
+        issueId: $issueId
+        name: $branchName
+        oid: $oid
+      }) {
+        linkedBranch { id }
+      }
+    }`,
+    { repoId, issueId, branchName, oid },
+    opts,
+  );
+  return data?.createLinkedBranch?.linkedBranch?.id;
+}
+
+/**
  * Create or update a GitHub issue label. Idempotent via --force.
  */
 export async function ghLabelCreate(
@@ -127,10 +203,12 @@ export async function ghIssueEdit(
     removeLabels?: string[];
     state?: "open" | "closed";
     body?: string;
+    title?: string;
   },
   opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<boolean> {
   const args = ["issue", "edit", String(issueNumber), "--repo", repo];
+  if (edits.title !== undefined) args.push("--title", edits.title);
   if (edits.body !== undefined) args.push("--body", edits.body);
   if (edits.addLabels?.length)
     args.push("--add-label", edits.addLabels.join(","));

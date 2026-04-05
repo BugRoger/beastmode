@@ -12,8 +12,8 @@ const mockCreate = vi.hoisted(() => vi.fn(async (slug: string) => ({
   path: `/tmp/test-project/.claude/worktrees/${slug}`,
   branch: `feature/${slug}`,
 })));
-const mockRebase = vi.hoisted(() => vi.fn(async (_phase: string, _opts?: any) => ({
-  outcome: "success" as const,
+const mockRebase = vi.hoisted(() => vi.fn(async (_phase: string, _opts?: any): Promise<{ outcome: string; message: string }> => ({
+  outcome: "success",
   message: "rebased onto main",
 })));
 const mockArchive = vi.hoisted(() => vi.fn(async (_slug: string, _opts?: any) => `archive/test-epic`));
@@ -99,6 +99,28 @@ vi.mock("../github/early-issues.js", () => ({
   ensureEarlyIssues: mockEnsureEarlyIssues,
 }));
 
+// Mock git/push
+const mockHasRemote = vi.hoisted(() => vi.fn(async () => true));
+const mockPushBranches = vi.hoisted(() => vi.fn(async () => {}));
+const mockPushTags = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../git/push.js", () => ({
+  hasRemote: mockHasRemote,
+  pushBranches: mockPushBranches,
+  pushTags: mockPushTags,
+}));
+
+// Mock git/commit-issue-ref
+const mockAmendCommitsInRange = vi.hoisted(() => vi.fn(async () => ({ amended: 0, skipped: 0 })));
+vi.mock("../git/commit-issue-ref.js", () => ({
+  amendCommitsInRange: mockAmendCommitsInRange,
+}));
+
+// Mock github/branch-link
+const mockLinkBranches = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../github/branch-link.js", () => ({
+  linkBranches: mockLinkBranches,
+}));
+
 // Note: hooks/hitl-settings and hooks/file-permission-settings are NOT mocked.
 // Real functions run against mocked worktree paths (/tmp/test-project/...).
 // This avoids Bun mock.module() pollution — mock.module is process-global in Bun
@@ -173,6 +195,11 @@ function resetAllMocks() {
   mockSyncGitHubForEpic.mockClear();
   mockDiscoverGitHub.mockClear();
   mockEnsureEarlyIssues.mockClear();
+  mockHasRemote.mockClear();
+  mockPushBranches.mockClear();
+  mockPushTags.mockClear();
+  mockAmendCommitsInRange.mockClear();
+  mockLinkBranches.mockClear();
 
   // Restore default implementations
   mockLoadOutput.mockImplementation(
@@ -198,6 +225,11 @@ function resetAllMocks() {
   mockReconcileRelease.mockImplementation(async () => ({ phase: "done", manifest: { slug: "test-epic" } }));
   mockDiscoverGitHub.mockImplementation(async () => null);
   mockArchive.mockImplementation(async () => `archive/test-epic`);
+  mockHasRemote.mockImplementation(async () => true);
+  mockPushBranches.mockImplementation(async () => {});
+  mockPushTags.mockImplementation(async () => {});
+  mockAmendCommitsInRange.mockImplementation(async () => ({ amended: 0, skipped: 0 }));
+  mockLinkBranches.mockImplementation(async () => {});
 }
 
 // ---------- tests ----------
@@ -369,7 +401,7 @@ describe("pipeline/runner", () => {
     });
 
     it("runs reconciliation on validate failure (REGRESS path)", async () => {
-      const result = await run(makeConfig({
+      await run(makeConfig({
         phase: "validate",
         dispatch: async () => ({ success: false }),
       }));
@@ -614,6 +646,183 @@ describe("pipeline/runner", () => {
       expect(mockCreate).not.toHaveBeenCalled();
       // Rebase should still run
       expect(mockRebase).toHaveBeenCalled();
+    });
+  });
+
+  describe("git push (Step 8.7)", () => {
+    it("pushes branches and tags when remote exists", async () => {
+      await run(makeConfig());
+
+      expect(mockHasRemote).toHaveBeenCalled();
+      expect(mockPushBranches).toHaveBeenCalled();
+      expect(mockPushTags).toHaveBeenCalled();
+    });
+
+    it("skips push when no remote", async () => {
+      mockHasRemote.mockImplementation(async () => false);
+
+      await run(makeConfig());
+
+      expect(mockPushBranches).not.toHaveBeenCalled();
+      expect(mockPushTags).not.toHaveBeenCalled();
+    });
+
+    it("passes epicSlug and phase to pushBranches", async () => {
+      await run(makeConfig({ phase: "plan", epicSlug: "my-epic" }));
+
+      expect(mockPushBranches).toHaveBeenCalledWith(expect.objectContaining({
+        epicSlug: "my-epic",
+        phase: "plan",
+      }));
+    });
+
+    it("passes featureSlug to pushBranches for implement phase", async () => {
+      await run(makeConfig({ phase: "implement", epicSlug: "my-epic", featureSlug: "my-feat" }));
+
+      expect(mockPushBranches).toHaveBeenCalledWith(expect.objectContaining({
+        epicSlug: "my-epic",
+        phase: "implement",
+        featureSlug: "my-feat",
+      }));
+    });
+
+    it("continues when push throws", async () => {
+      mockHasRemote.mockRejectedValue(new Error("git broke"));
+
+      const result = await run(makeConfig());
+
+      expect(result.success).toBe(true);
+    });
+
+    it("is not gated on github.enabled", async () => {
+      // github.enabled is false in makeConfig default
+      await run(makeConfig());
+
+      expect(mockHasRemote).toHaveBeenCalled();
+      expect(mockPushBranches).toHaveBeenCalled();
+    });
+  });
+
+  describe("branch-link (Step 8.9)", () => {
+    it("calls linkBranches when github.enabled and manifest has github block", async () => {
+      mockStoreLoad.mockImplementation(() => ({
+        slug: "test-epic",
+        phase: "implement",
+        features: [{ slug: "my-feature", plan: "", status: "in-progress", github: { issue: 200 } }],
+        artifacts: {},
+        github: { epic: 100, repo: "BugRoger/beastmode" },
+        lastUpdated: new Date().toISOString(),
+      }) as any);
+
+      await run(makeConfig({
+        phase: "implement",
+        featureSlug: "my-feature",
+        config: {
+          hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+          "file-permissions": { timeout: 60, "claude-settings": "test" },
+          github: { enabled: true },
+          cli: {},
+        } as any,
+        skipPreDispatch: true,
+      }));
+
+      expect(mockLinkBranches).toHaveBeenCalledWith(expect.objectContaining({
+        repo: "BugRoger/beastmode",
+        epicSlug: "test-epic",
+        epicIssueNumber: 100,
+        featureSlug: "my-feature",
+        featureIssueNumber: 200,
+        phase: "implement",
+      }));
+    });
+
+    it("skips linkBranches when github.enabled is false", async () => {
+      mockLinkBranches.mockClear();
+
+      await run(makeConfig({
+        phase: "plan",
+        skipPreDispatch: true,
+      }));
+
+      expect(mockLinkBranches).not.toHaveBeenCalled();
+    });
+
+    it("skips linkBranches when manifest has no github block", async () => {
+      mockLinkBranches.mockClear();
+      mockStoreLoad.mockImplementation(() => ({
+        slug: "test-epic",
+        phase: "plan",
+        features: [],
+        artifacts: {},
+        lastUpdated: new Date().toISOString(),
+      }) as any);
+
+      await run(makeConfig({
+        config: {
+          hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+          "file-permissions": { timeout: 60, "claude-settings": "test" },
+          github: { enabled: true },
+          cli: {},
+        } as any,
+        skipPreDispatch: true,
+      }));
+
+      expect(mockLinkBranches).not.toHaveBeenCalled();
+    });
+
+    it("does not block pipeline when linkBranches throws", async () => {
+      mockLinkBranches.mockRejectedValueOnce(new Error("GraphQL timeout"));
+      mockStoreLoad.mockImplementation(() => ({
+        slug: "test-epic",
+        phase: "plan",
+        features: [],
+        artifacts: {},
+        github: { epic: 100, repo: "BugRoger/beastmode" },
+        lastUpdated: new Date().toISOString(),
+      }) as any);
+
+      const result = await run(makeConfig({
+        config: {
+          hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+          "file-permissions": { timeout: 60, "claude-settings": "test" },
+          github: { enabled: true },
+          cli: {},
+        } as any,
+        skipPreDispatch: true,
+      }));
+
+      expect(result.success).toBe(true);
+    });
+
+    it("resolves feature issue number from manifest", async () => {
+      mockStoreLoad.mockImplementation(() => ({
+        slug: "test-epic",
+        phase: "implement",
+        features: [
+          { slug: "feat-a", plan: "", status: "completed", github: { issue: 10 } },
+          { slug: "feat-b", plan: "", status: "in-progress", github: { issue: 20 } },
+        ],
+        artifacts: {},
+        github: { epic: 100, repo: "BugRoger/beastmode" },
+        lastUpdated: new Date().toISOString(),
+      }) as any);
+
+      await run(makeConfig({
+        phase: "implement",
+        featureSlug: "feat-b",
+        config: {
+          hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+          "file-permissions": { timeout: 60, "claude-settings": "test" },
+          github: { enabled: true },
+          cli: {},
+        } as any,
+        skipPreDispatch: true,
+      }));
+
+      expect(mockLinkBranches).toHaveBeenCalledWith(expect.objectContaining({
+        featureSlug: "feat-b",
+        featureIssueNumber: 20,
+      }));
     });
   });
 });

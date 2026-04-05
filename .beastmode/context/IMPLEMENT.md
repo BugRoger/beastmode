@@ -26,6 +26,10 @@
 - Feature lifecycle: created as sub-issues at plan checkpoint, set in-progress at implement prime, closed at implement checkpoint
 - ALWAYS use presence-based rendering for issue body sections — present field = render section, absent field = omit, no phase-conditional logic in body-format.ts
 - ALWAYS extract artifact content at sync time via section-extractor — never store extracted PRD/plan content in the manifest
+- ALWAYS use `manifest.epic` (human-readable name) for epic issue titles — not hex slugs; feature titles use `{epic}: {feature}` format
+- ALWAYS push branches and tags upstream after every phase checkpoint — pure git operations, not gated on `github.enabled`
+- ALWAYS amend all commits since last phase tag with issue refs before push — range-based rebase, no force-push needed from CLI
+- ALWAYS link branches to issues via `createLinkedBranch` GraphQL — gated on `github.enabled`, warn-and-continue
 
 ## State Scanning
 - ALWAYS discover epics from manifest files — never from design files or date heuristics

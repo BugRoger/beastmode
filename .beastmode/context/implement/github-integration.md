@@ -23,28 +23,46 @@
 
 ## Body Enrichment
 - ALWAYS use presence-based rendering for issue body sections — present field = render section, absent field = omit, no phase-conditional logic in body-format.ts
-- ALWAYS extract artifact content at sync time via section-extractor.ts — PRD sections from design artifact, user stories from feature plan artifacts
+- ALWAYS extract artifact content at sync time via section-extractor.ts — six PRD sections from design artifact (Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions, Out of Scope), four plan sections from feature plan artifacts (description, User Stories, What to Build, Acceptance Criteria)
 - ALWAYS resolve artifact paths via manifest.artifacts first, glob fallback second — artifact-reader.ts handles both strategies
 - NEVER store extracted artifact content in the manifest — read from artifact files at sync time, manifest stays lean
 - ALWAYS degrade gracefully when artifacts or sections are missing — return undefined up the call chain, body sections simply omit
 - ALWAYS post a release closing comment on epic issues when phase is done — duplicate prevention via existing comment content scanning
 - ALWAYS use `ghIssueComment()` and `ghIssueComments()` in gh.ts for comment operations — same warn-and-continue pattern as other gh functions
+- ALWAYS use `manifest.epic` (human-readable name) for epic issue titles — not the hex slug
+- ALWAYS prefix feature issue titles with the epic name — format: `{epic}: {feature}`
+- ALWAYS use `ghIssueEdit()` with optional `title` parameter for title updates — same warn-and-continue pattern
+- NEVER include Git section (Branch, Compare URL, Tags) in epic bodies — redundant with native GitHub features now that branches and tags are pushed upstream
 
 ## Commit Issue References
 - ALWAYS use pure functions for commit message logic — `shouldAmendCommit()`, `buildAmendedMessage()`, `resolveIssueNumber()` in `commit-issue-ref.ts`; thin integration wrapper calls `git log` and `git commit --amend`
 - ALWAYS resolve feature issue numbers by parsing impl branch name (`impl/<slug>--<feature>`) and looking up the feature in the manifest
 - ALWAYS skip amend gracefully when no issue number is available — return early, no error
 - Integration tests for commit amend require shell access — mark Bun-specific shell tests with skip annotations for cross-runtime compatibility
+- ALWAYS use range-based amend (rebase all commits since last phase tag) — not just HEAD commit; ensures every commit appears in the GitHub issue timeline
+- ALWAYS run amend before push in the pipeline — rewrites local-only history, no force-push needed from CLI
+- ALWAYS use `resolveRangeStart()` to find the previous phase tag — falls back to merge-base with main for first phase (design)
+- ALWAYS use `resolveCommitIssueNumber()` to route each commit to the correct issue — epic ref for phase checkpoints, feature ref for impl tasks detected by message prefix
+
+## Git Push
+- ALWAYS push feature branches after every phase checkpoint — pure git operation, not gated on `github.enabled`
+- ALWAYS push impl branches during implement phase
+- ALWAYS push all tags (phase tags and archive tags) after each checkpoint — `git push origin --tags`
+- ALWAYS use `hasRemote()` to detect configured remote before push — pure local workflows skip silently
+- ALWAYS use warn-and-continue for push failures — never block the pipeline
+- NEVER force-push from the CLI pipeline — amend runs before push, so no rewrite of pushed history
+
+## Branch Linking
+- ALWAYS use `createLinkedBranch` GraphQL mutation to link branches to issues — feature branches to epic issues, impl branches to feature issues
+- ALWAYS gate branch linking on `github.enabled` — unlike push, this is a GitHub API operation
+- ALWAYS use delete-then-recreate workaround for already-existing remote branches — `createLinkedBranch` returns null for existing branches
+- ALWAYS resolve GraphQL node IDs via `ghRepoNodeId()` and `ghIssueNodeId()` — REST API numbers are not accepted
+- ALWAYS use warn-and-continue for linking failures — never block the pipeline
 
 ## Early Issue Creation
 - ALWAYS use `ensureEarlyIssues()` module for pre-dispatch issue creation — separate from the post-dispatch sync path
 - ALWAYS gate on `github.enabled` and `github.repo` before creating issues — same config gating as other GitHub operations
 - ALWAYS write new issue numbers back to the manifest immediately — enables commit ref amend to use them in the same dispatch cycle
-
-## Compare URLs
-- ALWAYS use `buildCompareUrl()` pure function for URL generation — input interface `CompareUrlInput` with `repo`, `branch`, `phase`, `hasArchiveTag`, `versionTag`, `slug` fields
-- ALWAYS add `compareUrl` field to `gitMetadata` type in `body-format.ts` — rendered as a markdown link in the git metadata section
-- ALWAYS compute compare URL in `resolveGitMetadata()` — separate from the formatter, keeps formatter pure
 
 ## API Boundary
 - ALL GitHub operations are CLI-owned via github-sync.ts — skills never call gh CLI or perform GitHub operations
