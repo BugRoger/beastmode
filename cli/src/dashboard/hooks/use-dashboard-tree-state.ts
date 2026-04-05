@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import type { DispatchedSession } from "../../dispatch/types.js";
 import type { LogEntry } from "../../dispatch/factory.js";
-import type { TreeState, EpicNode, TreeEntry, SystemEntry } from "../tree-types.js";
+import type { EnrichedEpic } from "../../store/types.js";
+import type { TreeState, EpicNode, FeatureNode, TreeEntry, SystemEntry } from "../tree-types.js";
 import type { LogLevel } from "../../logger.js";
 import type { FallbackEntryStore } from "../lifecycle-entries.js";
 
@@ -14,6 +15,8 @@ export interface UseDashboardTreeStateOptions {
   fallbackEntries?: FallbackEntryStore;
   /** System-level log entries (watch lifecycle events). */
   systemEntries?: SystemEntry[];
+  /** Enriched epics from the store for skeleton seeding. */
+  enrichedEpics?: EnrichedEpic[];
 }
 
 export interface UseDashboardTreeStateResult {
@@ -39,70 +42,85 @@ function entryTypeToLevel(entry: LogEntry): LogLevel {
   }
 }
 
-/** Map a LogEntry to a TreeEntry. */
-function toTreeEntry(entry: LogEntry): TreeEntry {
+/** Map a LogEntry to a TreeEntry with phase. */
+function toTreeEntry(entry: LogEntry, phase: string): TreeEntry {
   return {
     timestamp: entry.timestamp,
     level: entryTypeToLevel(entry),
     message: entry.text,
     seq: entry.seq,
+    phase,
   };
 }
 
 /**
- * Build a TreeState from sessions and their buffered entries.
+ * Build a TreeState from enriched epics (skeleton) + sessions (log entries).
  * Pure function — no React dependency, testable standalone.
+ *
+ * 1. Seed skeleton from EnrichedEpic[] — every epic and feature gets a node.
+ * 2. Attach session log entries to existing nodes by slug matching.
+ * 3. System entries go to the CLI root node.
  */
 export function buildTreeState(
   sessions: Array<{ epicSlug: string; phase: string; featureSlug?: string }>,
   getEntries: (session: { epicSlug: string; phase: string; featureSlug?: string }) => LogEntry[],
   fallbackEntries?: FallbackEntryStore,
   systemEntries?: SystemEntry[],
+  enrichedEpics?: EnrichedEpic[],
 ): TreeState {
+  // Seed skeleton from enriched epics
   const epicMap = new Map<string, EpicNode>();
 
+  if (enrichedEpics) {
+    for (const ee of enrichedEpics) {
+      const featureNodes: FeatureNode[] = ee.features.map((f) => ({
+        slug: f.slug,
+        status: f.status,
+        entries: [],
+      }));
+      epicMap.set(ee.slug, {
+        slug: ee.slug,
+        status: ee.status,
+        features: featureNodes,
+        entries: [],
+      });
+    }
+  }
+
+  // Attach session entries to skeleton nodes
   for (const session of sessions) {
-    // Get or create epic
+    // Get or create epic node (for sessions that reference epics not in store)
     let epic = epicMap.get(session.epicSlug);
     if (!epic) {
-      epic = { slug: session.epicSlug, phases: [] };
+      epic = { slug: session.epicSlug, status: "unknown", features: [], entries: [] };
       epicMap.set(session.epicSlug, epic);
     }
 
-    // Get or create phase
-    let phase = epic.phases.find((p) => p.phase === session.phase);
-    if (!phase) {
-      phase = { phase: session.phase, features: [], entries: [] };
-      epic.phases.push(phase);
-    }
-
-    // Get entries for this session — SDK entries if available, fallback if not
+    // Get entries for this session
     let rawEntries = getEntries(session);
     if (rawEntries.length === 0 && fallbackEntries) {
       rawEntries = fallbackEntries.get(session.epicSlug, session.phase, session.featureSlug);
     }
-    const treeEntries = rawEntries.map(toTreeEntry);
+    const treeEntries = rawEntries.map((e) => toTreeEntry(e, session.phase));
 
     if (session.featureSlug) {
-      // Get or create feature
-      let feature = phase.features.find((f) => f.slug === session.featureSlug);
+      // Find or create feature node
+      let feature = epic.features.find((f) => f.slug === session.featureSlug);
       if (!feature) {
-        feature = { slug: session.featureSlug!, entries: [] };
-        phase.features.push(feature);
+        feature = { slug: session.featureSlug, status: "unknown", entries: [] };
+        epic.features.push(feature);
       }
       feature.entries.push(...treeEntries);
-      // Sort entries by timestamp then seq
       feature.entries.sort((a, b) => a.timestamp - b.timestamp || a.seq - b.seq);
     } else {
-      phase.entries.push(...treeEntries);
-      // Sort entries by timestamp then seq
-      phase.entries.sort((a, b) => a.timestamp - b.timestamp || a.seq - b.seq);
+      epic.entries.push(...treeEntries);
+      epic.entries.sort((a, b) => a.timestamp - b.timestamp || a.seq - b.seq);
     }
   }
 
   return {
+    cli: { entries: systemEntries ?? [] },
     epics: Array.from(epicMap.values()),
-    system: systemEntries ?? [],
   };
 }
 
@@ -115,6 +133,7 @@ export function useDashboardTreeState({
   selectedEpicSlug,
   fallbackEntries,
   systemEntries,
+  enrichedEpics,
 }: UseDashboardTreeStateOptions): UseDashboardTreeStateResult {
   // Filter sessions by selected epic
   const filteredSessions =
@@ -132,8 +151,12 @@ export function useDashboardTreeState({
     return () => clearInterval(interval);
   }, [fallbackEntries]);
 
-  // Build tree state on each render (revision bump triggers rebuild)
-  // System entries only shown in aggregate mode (no specific epic selected)
+  // Filter enriched epics when a specific epic is selected
+  const filteredEnrichedEpics = selectedEpicSlug === undefined
+    ? enrichedEpics
+    : enrichedEpics?.filter((e) => e.slug === selectedEpicSlug);
+
+  // Build tree state on each render
   const visibleSystemEntries = selectedEpicSlug === undefined ? systemEntries : undefined;
   const state = buildTreeState(
     filteredSessions,
@@ -145,6 +168,7 @@ export function useDashboardTreeState({
     },
     fallbackEntries,
     visibleSystemEntries,
+    filteredEnrichedEpics,
   );
 
   return { state };
