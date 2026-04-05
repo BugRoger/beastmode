@@ -1,10 +1,21 @@
 import { describe, test, expect } from "vitest";
-import { createLogger, createNullLogger } from "../logger";
-import type { Logger, LogContext } from "../logger";
+import { createLogger, createNullLogger, createStdioSink } from "../logger";
+import type { Logger, LogContext, LogEntry, LogSink } from "../logger";
 
 const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
-function captureWith(verbosity: number, context: LogContext | undefined, fn: (logger: Logger) => void): { stdout: string[]; stderr: string[] } {
+/** Mock sink that captures all entries. */
+function createMockSink(): LogSink & { entries: LogEntry[] } {
+  const entries: LogEntry[] = [];
+  return {
+    entries,
+    write(entry: LogEntry) {
+      entries.push(entry);
+    },
+  };
+}
+
+function captureStdio(fn: () => void): { stdout: string[]; stderr: string[] } {
   const stdout: string[] = [];
   const stderr: string[] = [];
   const origStdout = process.stdout.write;
@@ -12,7 +23,7 @@ function captureWith(verbosity: number, context: LogContext | undefined, fn: (lo
   process.stdout.write = ((chunk: string) => { stdout.push(chunk); return true; }) as typeof process.stdout.write;
   process.stderr.write = ((chunk: string) => { stderr.push(chunk); return true; }) as typeof process.stderr.write;
   try {
-    fn(createLogger(verbosity, context));
+    fn();
   } finally {
     process.stdout.write = origStdout;
     process.stderr.write = origStderr;
@@ -20,198 +31,198 @@ function captureWith(verbosity: number, context: LogContext | undefined, fn: (lo
   return { stdout, stderr };
 }
 
-describe("createLogger", () => {
-  describe("level gating", () => {
-    test("verbosity 0: only log() writes to stdout", () => {
-      const { stdout } = captureWith(0, { phase: "test" }, (l) => {
-        l.log("visible"); l.detail("hidden"); l.debug("hidden"); l.trace("hidden");
-      });
-      expect(stdout.length).toBe(1);
-      expect(stripAnsi(stdout[0])).toContain("visible");
-    });
-
-    test("verbosity 1: log() and detail() write to stdout", () => {
-      const { stdout } = captureWith(1, { phase: "test" }, (l) => {
-        l.log("a"); l.detail("b"); l.debug("hidden"); l.trace("hidden");
-      });
-      expect(stdout.length).toBe(2);
-      expect(stripAnsi(stdout[1])).toContain("b");
-    });
-
-    test("verbosity 2: log(), detail(), debug() write to stdout", () => {
-      const { stdout } = captureWith(2, { phase: "test" }, (l) => {
-        l.log("a"); l.detail("b"); l.debug("c"); l.trace("hidden");
-      });
-      expect(stdout.length).toBe(3);
-      expect(stripAnsi(stdout[2])).toContain("c");
-    });
-
-    test("verbosity 3: all levels write to stdout", () => {
-      const { stdout } = captureWith(3, { phase: "test" }, (l) => {
-        l.log("a"); l.detail("b"); l.debug("c"); l.trace("d");
-      });
-      expect(stdout.length).toBe(4);
-      expect(stripAnsi(stdout[3])).toContain("d");
-    });
+describe("Logger (with mock sink)", () => {
+  test("exposes exactly info, debug, warn, error, child", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    expect(typeof logger.info).toBe("function");
+    expect(typeof logger.debug).toBe("function");
+    expect(typeof logger.warn).toBe("function");
+    expect(typeof logger.error).toBe("function");
+    expect(typeof logger.child).toBe("function");
+    // Old methods must NOT exist
+    expect((logger as any).log).toBeUndefined();
+    expect((logger as any).detail).toBeUndefined();
+    expect((logger as any).trace).toBeUndefined();
   });
 
-  describe("stderr/stdout separation", () => {
-    test("warn() always writes to stderr", () => {
-      const { stdout, stderr } = captureWith(0, { phase: "test" }, (l) => { l.warn("w"); });
-      expect(stdout.length).toBe(0);
-      expect(stderr.length).toBe(1);
-      expect(stripAnsi(stderr[0])).toContain("w");
-    });
-
-    test("error() always writes to stderr", () => {
-      const { stdout, stderr } = captureWith(0, { phase: "test" }, (l) => { l.error("e"); });
-      expect(stdout.length).toBe(0);
-      expect(stderr.length).toBe(1);
-      expect(stripAnsi(stderr[0])).toContain("e");
-    });
+  test("delegates all calls to sink without filtering", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    logger.info("a");
+    logger.debug("b");
+    logger.warn("c");
+    logger.error("d");
+    expect(sink.entries).toHaveLength(4);
+    expect(sink.entries.map(e => e.level)).toEqual(["info", "debug", "warn", "error"]);
   });
 
-  describe("output format", () => {
-    test("full context: [HH:MM:SS] LEVEL  PHASE  (epic/feature):  msg", () => {
-      const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic", feature: "auth" }, (l) => {
-        l.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\/auth\):\s+test message\n$/);
-    });
-
-    test("phase+epic context: PHASE  (epic) scope", () => {
-      const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic" }, (l) => {
-        l.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\):\s+test message\n$/);
-    });
-
-    test("phase-only context: PHASE  (cli) scope", () => {
-      const { stdout } = captureWith(0, { phase: "plan" }, (l) => {
-        l.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(cli\):\s+test message\n$/);
-    });
-
-    test("no context: falls back to (cli) scope", () => {
-      const { stdout } = captureWith(0, undefined, (l) => {
-        l.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+\(cli\):\s+test message\n$/);
-    });
-
-    test("each method uses its own level label", () => {
-      const { stdout, stderr } = captureWith(3, { phase: "test" }, (l) => {
-        l.log("a"); l.detail("b"); l.debug("c"); l.trace("d"); l.warn("e"); l.error("f");
-      });
-      const all = [...stdout, ...stderr].map(stripAnsi);
-      expect(all[0]).toContain("INFO ");
-      expect(all[1]).toContain("DETL ");
-      expect(all[2]).toContain("DEBUG");
-      expect(all[3]).toContain("TRACE");
-      expect(all[4]).toContain("WARN ");
-      expect(all[5]).toContain("ERR  ");
-    });
-
-    test("scope is included in all methods", () => {
-      const { stdout, stderr } = captureWith(3, { phase: "plan", epic: "my-epic", feature: "auth" }, (l) => {
-        l.log("a"); l.detail("b"); l.debug("c"); l.trace("d"); l.warn("e"); l.error("f");
-      });
-      for (const line of [...stdout, ...stderr]) {
-        expect(stripAnsi(line)).toContain("(my-epic/auth):");
-      }
-    });
+  test("passes msg and data to sink", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    logger.info("hello", { key: "value" });
+    expect(sink.entries[0].msg).toBe("hello");
+    expect(sink.entries[0].data).toEqual({ key: "value" });
   });
 
-  describe("child logger", () => {
-    test("merges parent and child context", () => {
-      const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic" }, (l) => {
-        const child = l.child({ feature: "auth" });
-        child.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\/auth\):\s+test message\n$/);
-    });
+  test("data is optional (undefined when omitted)", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    logger.info("hello");
+    expect(sink.entries[0].data).toBeUndefined();
+  });
 
-    test("child inherits parent verbosity", () => {
-      const { stdout } = captureWith(0, { phase: "plan" }, (l) => {
-        const child = l.child({ epic: "my-epic" });
-        child.log("visible");
-        child.detail("hidden");
-      });
-      expect(stdout.length).toBe(1);
-      expect(stripAnsi(stdout[0])).toContain("visible");
-    });
+  test("LogEntry includes timestamp", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    const before = Date.now();
+    logger.info("msg");
+    const after = Date.now();
+    expect(sink.entries[0].timestamp).toBeGreaterThanOrEqual(before);
+    expect(sink.entries[0].timestamp).toBeLessThanOrEqual(after);
+  });
 
-    test("child context overrides parent fields", () => {
-      const { stdout } = captureWith(0, { phase: "plan", epic: "old-epic" }, (l) => {
-        const child = l.child({ epic: "new-epic" });
-        child.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(new-epic\):\s+test message\n$/);
-    });
+  test("LogEntry includes context", () => {
+    const sink = createMockSink();
+    const ctx: LogContext = { phase: "plan", epic: "my-epic", feature: "auth" };
+    const logger = createLogger(sink, ctx);
+    logger.info("msg");
+    expect(sink.entries[0].context).toEqual(ctx);
+  });
+});
 
-    test("child does not modify parent context", () => {
-      const { stdout } = captureWith(0, { phase: "plan", epic: "my-epic" }, (l) => {
-        l.child({ feature: "auth" });
-        l.log("test message");
-      });
-      const line = stripAnsi(stdout[0]);
-      expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(my-epic\):\s+test message\n$/);
+describe("child logger", () => {
+  test("merges parent and child context", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink, { phase: "plan", epic: "my-epic" });
+    const child = logger.child({ feature: "auth" });
+    child.info("msg");
+    expect(sink.entries[0].context).toEqual({ phase: "plan", epic: "my-epic", feature: "auth" });
+  });
+
+  test("child context overrides parent fields", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink, { phase: "plan", epic: "old" });
+    const child = logger.child({ epic: "new" });
+    child.info("msg");
+    expect(sink.entries[0].context.epic).toBe("new");
+  });
+
+  test("child does not modify parent context", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink, { phase: "plan", epic: "my-epic" });
+    logger.child({ feature: "auth" });
+    logger.info("msg");
+    expect(sink.entries[0].context).toEqual({ phase: "plan", epic: "my-epic" });
+  });
+
+  test("child shares same sink", () => {
+    const sink = createMockSink();
+    const logger = createLogger(sink);
+    const child = logger.child({ epic: "e" });
+    logger.info("parent");
+    child.info("child");
+    expect(sink.entries).toHaveLength(2);
+  });
+});
+
+describe("StdioSink", () => {
+  test("info level: info writes to stdout", () => {
+    const sink = createStdioSink(0);
+    const { stdout, stderr } = captureStdio(() => {
+      sink.write({ level: "info", timestamp: Date.now(), msg: "visible", context: { phase: "test" } });
     });
+    expect(stdout).toHaveLength(1);
+    expect(stderr).toHaveLength(0);
+    expect(stripAnsi(stdout[0])).toContain("visible");
+  });
+
+  test("info level: debug is suppressed", () => {
+    const sink = createStdioSink(0);
+    const { stdout, stderr } = captureStdio(() => {
+      sink.write({ level: "debug", timestamp: Date.now(), msg: "hidden", context: {} });
+    });
+    expect(stdout).toHaveLength(0);
+    expect(stderr).toHaveLength(0);
+  });
+
+  test("debug level (-v): debug writes to stdout", () => {
+    const sink = createStdioSink(1);
+    const { stdout } = captureStdio(() => {
+      sink.write({ level: "debug", timestamp: Date.now(), msg: "visible", context: {} });
+    });
+    expect(stdout).toHaveLength(1);
+    expect(stripAnsi(stdout[0])).toContain("visible");
+  });
+
+  test("warn writes to stderr at any verbosity", () => {
+    const sink = createStdioSink(0);
+    const { stdout, stderr } = captureStdio(() => {
+      sink.write({ level: "warn", timestamp: Date.now(), msg: "warning", context: { phase: "test" } });
+    });
+    expect(stdout).toHaveLength(0);
+    expect(stderr).toHaveLength(1);
+    expect(stripAnsi(stderr[0])).toContain("warning");
+  });
+
+  test("error writes to stderr at any verbosity", () => {
+    const sink = createStdioSink(0);
+    const { stdout, stderr } = captureStdio(() => {
+      sink.write({ level: "error", timestamp: Date.now(), msg: "bad", context: { phase: "test" } });
+    });
+    expect(stdout).toHaveLength(0);
+    expect(stderr).toHaveLength(1);
+    expect(stripAnsi(stderr[0])).toContain("bad");
+  });
+
+  test("output includes formatted log line", () => {
+    const sink = createStdioSink(0);
+    const { stdout } = captureStdio(() => {
+      sink.write({ level: "info", timestamp: Date.now(), msg: "hello", context: { phase: "plan", epic: "test" } });
+    });
+    const line = stripAnsi(stdout[0]);
+    expect(line).toMatch(/^\[\d{2}:\d{2}:\d{2}\] INFO\s+plan\s+\(test\):\s+hello\n$/);
   });
 });
 
 describe("createNullLogger", () => {
-  test("suppresses all output", () => {
-    const stdout: string[] = [];
-    const stderr: string[] = [];
-    const origStdout = process.stdout.write;
-    const origStderr = process.stderr.write;
-    process.stdout.write = ((chunk: string) => { stdout.push(chunk); return true; }) as typeof process.stdout.write;
-    process.stderr.write = ((chunk: string) => { stderr.push(chunk); return true; }) as typeof process.stderr.write;
-    try {
-      const l = createNullLogger();
-      l.log("x"); l.detail("x"); l.debug("x"); l.trace("x"); l.warn("x"); l.error("x");
-    } finally {
-      process.stdout.write = origStdout;
-      process.stderr.write = origStderr;
-    }
-    expect(stdout.length).toBe(0);
-    expect(stderr.length).toBe(0);
+  test("exposes 4-level interface", () => {
+    const l = createNullLogger();
+    expect(typeof l.info).toBe("function");
+    expect(typeof l.debug).toBe("function");
+    expect(typeof l.warn).toBe("function");
+    expect(typeof l.error).toBe("function");
+    expect(typeof l.child).toBe("function");
+    // Old methods must NOT exist
+    expect((l as any).log).toBeUndefined();
+    expect((l as any).detail).toBeUndefined();
+    expect((l as any).trace).toBeUndefined();
   });
 
-  test("child() returns a logger", () => {
+  test("suppresses all output", () => {
+    const { stdout, stderr } = captureStdio(() => {
+      const l = createNullLogger();
+      l.info("x"); l.debug("x"); l.warn("x"); l.error("x");
+    });
+    expect(stdout).toHaveLength(0);
+    expect(stderr).toHaveLength(0);
+  });
+
+  test("child() returns a logger with 4-level interface", () => {
     const child = createNullLogger().child({ phase: "test" });
-    expect(typeof child.log).toBe("function");
-    expect(typeof child.detail).toBe("function");
+    expect(typeof child.info).toBe("function");
     expect(typeof child.debug).toBe("function");
-    expect(typeof child.trace).toBe("function");
     expect(typeof child.warn).toBe("function");
     expect(typeof child.error).toBe("function");
     expect(typeof child.child).toBe("function");
   });
 
   test("child also suppresses all output", () => {
-    const stdout: string[] = [];
-    const stderr: string[] = [];
-    const origStdout = process.stdout.write;
-    const origStderr = process.stderr.write;
-    process.stdout.write = ((chunk: string) => { stdout.push(chunk); return true; }) as typeof process.stdout.write;
-    process.stderr.write = ((chunk: string) => { stderr.push(chunk); return true; }) as typeof process.stderr.write;
-    try {
+    const { stdout, stderr } = captureStdio(() => {
       const child = createNullLogger().child({ phase: "test" });
-      child.log("x"); child.detail("x"); child.debug("x"); child.trace("x"); child.warn("x"); child.error("x");
-    } finally {
-      process.stdout.write = origStdout;
-      process.stderr.write = origStderr;
-    }
-    expect(stdout.length).toBe(0);
-    expect(stderr.length).toBe(0);
+      child.info("x"); child.debug("x"); child.warn("x"); child.error("x");
+    });
+    expect(stdout).toHaveLength(0);
+    expect(stderr).toHaveLength(0);
   });
 });

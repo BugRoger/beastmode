@@ -139,68 +139,101 @@ export function formatLogLine(level: LogLevel, ctx: LogContext, message: string)
 }
 
 // ---------------------------------------------------------------------------
+// LogEntry — structured record passed to sinks
+// ---------------------------------------------------------------------------
+
+export interface LogEntry {
+  level: LogLevel;
+  timestamp: number;
+  msg: string;
+  data?: Record<string, unknown>;
+  context: LogContext;
+}
+
+// ---------------------------------------------------------------------------
+// LogSink — single contract for all transports
+// ---------------------------------------------------------------------------
+
+export interface LogSink {
+  write(entry: LogEntry): void;
+}
+
+// ---------------------------------------------------------------------------
 // Logger interface and factory
 // ---------------------------------------------------------------------------
 
-/** Logger instance returned by createLogger. */
+/** Logger instance — 4 levels, delegates to injected sink. */
 export interface Logger {
-  /** Level 0 — always shown. Writes to stdout. */
-  log(msg: string): void;
-  /** Level 1 — shown at -v. Writes to stdout. */
-  detail(msg: string): void;
-  /** Level 2 — shown at -vv. Writes to stdout. */
-  debug(msg: string): void;
-  /** Level 3 — shown at -vvv. Writes to stdout. */
-  trace(msg: string): void;
-  /** Always shown — writes to stderr. */
-  warn(msg: string): void;
-  /** Always shown — writes to stderr. */
-  error(msg: string): void;
-  /** Create a child logger with merged context. */
+  info(msg: string, data?: Record<string, unknown>): void;
+  debug(msg: string, data?: Record<string, unknown>): void;
+  warn(msg: string, data?: Record<string, unknown>): void;
+  error(msg: string, data?: Record<string, unknown>): void;
   child(ctx: Partial<LogContext>): Logger;
 }
 
 /**
- * Create a scoped logger with verbosity gating.
- *
- * Messages at or below the verbosity level are shown.
- * warn() and error() always show regardless of verbosity.
+ * Create a logger that delegates all calls to the given sink.
+ * No verbosity gating — sinks decide what to show.
  */
-export function createLogger(verbosity: number, context?: LogContext): Logger {
+export function createLogger(sink: LogSink, context?: LogContext): Logger {
   const ctx = context ?? {};
 
-  function emit(stream: NodeJS.WriteStream, level: LogLevel, msg: string): void {
-    stream.write(formatLogLine(level, ctx, msg) + "\n");
+  function emit(level: LogLevel, msg: string, data?: Record<string, unknown>): void {
+    sink.write({ level, timestamp: Date.now(), msg, data, context: ctx });
   }
 
   return {
-    log(msg: string) {
-      if (verbosity >= 0) emit(process.stdout, "info", msg);
-    },
-    detail(msg: string) {
-      if (verbosity >= 1) emit(process.stdout, "detail", msg);
-    },
-    debug(msg: string) {
-      if (verbosity >= 2) emit(process.stdout, "debug", msg);
-    },
-    trace(msg: string) {
-      if (verbosity >= 3) emit(process.stdout, "trace", msg);
-    },
-    warn(msg: string) {
-      emit(process.stderr, "warn", msg);
-    },
-    error(msg: string) {
-      emit(process.stderr, "error", msg);
-    },
+    info(msg: string, data?: Record<string, unknown>) { emit("info", msg, data); },
+    debug(msg: string, data?: Record<string, unknown>) { emit("debug", msg, data); },
+    warn(msg: string, data?: Record<string, unknown>) { emit("warn", msg, data); },
+    error(msg: string, data?: Record<string, unknown>) { emit("error", msg, data); },
     child(childCtx: Partial<LogContext>): Logger {
-      return createLogger(verbosity, { ...ctx, ...childCtx });
+      return createLogger(sink, { ...ctx, ...childCtx });
     },
   };
 }
 
+// ---------------------------------------------------------------------------
+// StdioSink — default CLI transport
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a StdioSink that writes formatted log lines to stdout/stderr.
+ *
+ * Verbosity gating:
+ * - verbosity 0 (info): debug entries suppressed
+ * - verbosity 1 (debug / -v flag): all entries pass through
+ * - warn/error always shown
+ */
+export function createStdioSink(verbosity: number): LogSink {
+  return {
+    write(entry: LogEntry): void {
+      // Verbosity gating: debug suppressed at info level
+      if (entry.level === "debug" && verbosity < 1) return;
+
+      const line = formatLogLine(entry.level, entry.context, entry.msg) + "\n";
+      if (entry.level === "warn" || entry.level === "error") {
+        process.stderr.write(line);
+      } else {
+        process.stdout.write(line);
+      }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Null logger — suppresses all output
+// ---------------------------------------------------------------------------
+
 /** Create a no-op logger that suppresses all output. Useful for tests. */
 export function createNullLogger(): Logger {
-  const noop = () => {};
-  const nl: Logger = { log: noop, detail: noop, debug: noop, trace: noop, warn: noop, error: noop, child: () => nl };
+  const noop = (() => {}) as (msg: string, data?: Record<string, unknown>) => void;
+  const nl: Logger = {
+    info: noop,
+    debug: noop,
+    warn: noop,
+    error: noop,
+    child: () => nl,
+  };
   return nl;
 }
