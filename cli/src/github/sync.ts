@@ -292,7 +292,8 @@ export type SyncMutation =
   | { type: "setEpic"; entityId: string; issue: number; repo: string }
   | { type: "setFeatureIssue"; entityId: string; issue: number }
   | { type: "setEpicBodyHash"; entityId: string; bodyHash: string }
-  | { type: "setFeatureBodyHash"; entityId: string; bodyHash: string };
+  | { type: "setFeatureBodyHash"; entityId: string; bodyHash: string }
+  | { type: "enqueuePendingOp"; entityId: string; opType: string; context: Record<string, unknown> };
 
 /** Result of a sync operation — informational, never throws. */
 export interface SyncResult {
@@ -563,6 +564,12 @@ export async function syncGitHub(
         result.bodiesUpdated++;
       } else {
         result.warnings.push("Failed to update epic body");
+        result.mutations.push({
+          type: "enqueuePendingOp",
+          entityId: epic.id,
+          opType: "bodyEnrich",
+          context: {},
+        });
       }
     }
   }
@@ -585,6 +592,13 @@ export async function syncGitHub(
         }, { logger: opts.logger });
         result.labelsUpdated++;
       }
+    } else {
+      result.mutations.push({
+        type: "enqueuePendingOp",
+        entityId: epic.id,
+        opType: "labelSync",
+        context: { phase: epic.phase },
+      });
     }
   }
 
@@ -721,7 +735,15 @@ async function syncFeature(
       featureJustCreated = true;
 
       // Link as sub-issue of epic
-      await ghSubIssueAdd(repo, epicNumber, featureNumber, { logger: opts.logger });
+      const linked = await ghSubIssueAdd(repo, epicNumber, featureNumber, { logger: opts.logger });
+      if (!linked) {
+        result.mutations.push({
+          type: "enqueuePendingOp",
+          entityId: feature.id,
+          opType: "subIssueLink",
+          context: { epicNumber, featureNumber },
+        });
+      }
     } else {
       result.warnings.push(`Failed to create issue for feature ${feature.slug}`);
       return;
@@ -774,6 +796,12 @@ async function syncFeature(
         result.bodiesUpdated++;
       } else {
         result.warnings.push(`Failed to update body for feature ${feature.slug}`);
+        result.mutations.push({
+          type: "enqueuePendingOp",
+          entityId: feature.id,
+          opType: "bodyEnrich",
+          context: {},
+        });
       }
     }
   }
@@ -798,6 +826,13 @@ async function syncFeature(
         }, { logger: opts.logger });
         result.labelsUpdated++;
       }
+    } else {
+      result.mutations.push({
+        type: "enqueuePendingOp",
+        entityId: feature.id,
+        opType: "labelSync",
+        context: { status: feature.status },
+      });
     }
   }
 
@@ -967,6 +1002,12 @@ export async function syncGitHubForEpic(opts: {
         } else if (mut.type === "setFeatureBodyHash") {
           const existing = getSyncRef(syncRefs, mut.entityId);
           if (existing) syncRefs = setSyncRef(syncRefs, mut.entityId, { ...existing, bodyHash: mut.bodyHash });
+        } else if (mut.type === "enqueuePendingOp") {
+          const { enqueuePendingOp } = await import("./retry-queue.js");
+          syncRefs = enqueuePendingOp(syncRefs, mut.entityId, {
+            opType: mut.opType as any,
+            context: mut.context,
+          }, 0);
         }
       }
       saveSyncRefs(opts.projectRoot, syncRefs);
