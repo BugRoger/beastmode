@@ -3,6 +3,7 @@
 .beastmode/sessions/
 .beastmode/worktrees/
 .beastmode/pipeline/
+.beastmode/config.yaml
 .claude/worktrees/
 .claude/settings.local.json
 .beastmode/artifacts/**/*.output.json

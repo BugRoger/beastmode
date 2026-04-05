@@ -14,3 +14,6 @@ hitl:
   implement: "auto-answer all questions, never defer to human"
   validate: "auto-answer all questions, never defer to human"
   release: "auto-answer all questions, never defer to human"
+
+file-permissions:
+  claude-settings: "allow read, write to ./skill ./agent ./hooks"
