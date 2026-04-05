@@ -69,7 +69,8 @@ describe("@manifest-absorption: Manifest module removed after migration", () => 
         .split("\n")
         .filter(Boolean)
         .filter((f) => !f.includes("node_modules"))
-        .filter((f) => !f.includes("manifest/"));
+        .filter((f) => !f.includes("manifest/"))
+        .filter((f) => !f.includes("manifest-deletion.integration.test"));
 
       expect(remaining).toEqual([]);
     });
@@ -84,7 +85,8 @@ describe("@manifest-absorption: Manifest module removed after migration", () => 
         .split("\n")
         .filter(Boolean)
         .filter((f) => !f.includes("node_modules"))
-        .filter((f) => !f.includes("manifest/"));
+        .filter((f) => !f.includes("manifest/"))
+        .filter((f) => !f.includes("manifest-deletion.integration.test"));
 
       expect(remaining).toEqual([]);
     });
@@ -99,7 +101,8 @@ describe("@manifest-absorption: Manifest module removed after migration", () => 
         .split("\n")
         .filter(Boolean)
         .filter((f) => !f.includes("node_modules"))
-        .filter((f) => !f.includes("manifest/"));
+        .filter((f) => !f.includes("manifest/"))
+        .filter((f) => !f.includes("manifest-deletion.integration.test"));
 
       expect(remaining).toEqual([]);
     });

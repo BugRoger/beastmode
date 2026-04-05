@@ -78,7 +78,7 @@ export function computeMarkFeatureCompleted(context: EpicContext, event: EpicEve
 }
 
 /**
- * Compute the regressed context — inlined from manifest/pure.ts regress().
+ * Compute the regressed context.
  * Resets features to "pending" if regressing to or past "implement".
  * Clears downstream artifact entries.
  */
@@ -106,8 +106,7 @@ export function computeRegress(context: EpicContext, event: EpicEvent): Partial<
 }
 
 /**
- * Compute the regressed context for specific failing features —
- * inlined from manifest/pure.ts regressFeatures().
+ * Compute the regressed context for specific failing features.
  * Targets only failing features, incrementing their reDispatchCount.
  */
 export function computeRegressFeatures(context: EpicContext, event: EpicEvent): Partial<EpicContext> {

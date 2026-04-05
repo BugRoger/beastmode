@@ -46,7 +46,7 @@ import {
 // Body formatting — pure functions (formerly body-format.ts)
 // ---------------------------------------------------------------------------
 
-/** Minimal epic input — decoupled from full PipelineManifest to stay pure. */
+/** Minimal epic input — decoupled from store types to stay pure. */
 export interface EpicBodyInput {
   slug: string;
   /** Human-readable epic name for title construction. */
@@ -73,7 +73,7 @@ export interface EpicBodyInput {
   repo?: string;
 }
 
-/** Minimal feature input — decoupled from full ManifestFeature. */
+/** Minimal feature input — decoupled from store types. */
 export interface FeatureBodyInput {
   slug: string;
   description?: string;
@@ -85,7 +85,7 @@ export interface FeatureBodyInput {
   acceptanceCriteria?: string;
 }
 
-/** Store-derived epic input for sync — no PipelineManifest dependency. */
+/** Store-derived epic input for sync. */
 export interface EpicSyncInput {
   id: string;
   slug: string;

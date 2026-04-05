@@ -110,7 +110,7 @@ describe("basic snapshot round-trip", () => {
 
 describe("manifest-shaped fixture input", () => {
   test("actor created from manifest-like context starts in design and advances", () => {
-    // Simulate the shape of a PipelineManifest as input context
+    // Simulate the shape of an Epic as input context
     const fixtureContext: EpicContext = {
       id: "bm-fixture",
       slug: "fixture-epic",

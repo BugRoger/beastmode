@@ -1,8 +1,5 @@
 /**
- * Slug utilities for the store module.
- *
- * Moved from manifest/store.ts to the store module as part of
- * the manifest-absorption migration.
+ * Slug utilities for entity naming in the store module.
  */
 
 /** Slug format: lowercase alphanumeric with optional hyphens, no leading/trailing hyphens */

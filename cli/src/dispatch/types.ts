@@ -7,17 +7,6 @@
 
 import type { EnrichedEpic, NextAction } from "../store/types.js";
 export type { EnrichedEpic, NextAction };
-/**
- * @deprecated Use EnrichedEpic from store/types.js directly.
- * Kept as alias during migration for backward compat in tests.
- */
-export type EnrichedManifest = EnrichedEpic;
-/**
- * @deprecated Scan result wrapper removed — listEnrichedFromStore returns EnrichedEpic[] directly.
- */
-export interface ScanResult {
-  epics: EnrichedEpic[];
-}
 
 /** Tracks an active SDK session dispatched by the watch loop. */
 export interface DispatchedSession {

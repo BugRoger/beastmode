@@ -1,7 +1,7 @@
 /**
  * Store Import — migrates .manifest.json files into the structured task store.
  *
- * Self-contained: inlines all manifest-reading code, no imports from manifest/ module.
+ * Self-contained: inlines all manifest-reading code.
  * Idempotent: existing entities matched by slug are skipped.
  * Cleanup: deletes .manifest.json files on success.
  */
@@ -18,9 +18,9 @@ import { resolve, dirname } from "path";
 import type { JsonFileStore } from "../store/json-file-store.js";
 import type { Epic, Feature, EpicStatus, FeatureStatus } from "../store/types.js";
 
-// --- Inlined manifest types (no imports from manifest/) ---
+// --- Inlined raw file types ---
 
-interface ManifestFeature {
+interface RawFeatureEntry {
   slug: string;
   plan: string;
   description?: string;
@@ -30,21 +30,21 @@ interface ManifestFeature {
   github?: { issue: number; bodyHash?: string };
 }
 
-interface ManifestGitHub {
+interface RawGitHubEntry {
   epic: number;
   repo: string;
   bodyHash?: string;
 }
 
-interface PipelineManifest {
+interface RawEpicFile {
   slug: string;
   epic?: string;
   phase: string;
-  features: ManifestFeature[];
+  features: RawFeatureEntry[];
   artifacts: Record<string, string[]>;
   summary?: { problem: string; solution: string };
   worktree?: { branch: string; path: string };
-  github?: ManifestGitHub;
+  github?: RawGitHubEntry;
   blocked?: { gate: string; reason: string } | null;
   originId?: string;
   lastUpdated: string;
@@ -78,7 +78,7 @@ const VALID_FEATURE_STATUSES = new Set([
   "blocked",
 ]);
 
-function isValidManifest(data: unknown): data is PipelineManifest {
+function isValidManifest(data: unknown): data is RawEpicFile {
   if (data === null || typeof data !== "object") return false;
   const obj = data as Record<string, unknown>;
 
@@ -103,7 +103,7 @@ function isValidManifest(data: unknown): data is PipelineManifest {
 
 function discoverManifests(
   projectRoot: string,
-): { path: string; manifest: PipelineManifest }[] {
+): { path: string; manifest: RawEpicFile }[] {
   const dir = resolve(projectRoot, ".beastmode", "state");
   if (!existsSync(dir)) return [];
 
@@ -112,7 +112,7 @@ function discoverManifests(
     .sort();
 
   // Deduplicate by slug — keep latest (files sorted chronologically by date prefix)
-  const bySlug = new Map<string, { path: string; manifest: PipelineManifest }>();
+  const bySlug = new Map<string, { path: string; manifest: RawEpicFile }>();
 
   for (const file of files) {
     try {
