@@ -93,11 +93,11 @@ vi.mock("../github/cli", () => ({
 }));
 
 import { reconcileGitHub } from "../github/reconcile";
-import type { SyncRefs, SyncRef } from "../github/sync-refs";
+import type { SyncRefs } from "../github/sync-refs";
 import type { BeastmodeConfig } from "../config";
 import type { ResolvedGitHub } from "../github/discovery";
 import type { TaskStore, Epic, Feature } from "../store/types";
-import { enqueuePendingOp, drainPendingOps, resolvePendingOp } from "../github/retry-queue";
+import { enqueuePendingOp } from "../github/retry-queue";
 
 // --- Test helpers ---
 

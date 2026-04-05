@@ -7,11 +7,11 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
 // --- Mock Bun globals ---
 globalThis.Bun = {
   CryptoHasher: class {
-    constructor(algo: string) {}
-    update(data: string) {}
-    digest(format: string) { return "abc123"; }
+    constructor(_algo: string) {}
+    update(_data: string) {}
+    digest(_format: string) { return "abc123"; }
   },
-  spawnSync: (args: string[]) => ({ success: true, stdout: "", stderr: "" }),
+  spawnSync: (_args: string[]) => ({ success: true, stdout: "", stderr: "" }),
 } as any;
 
 // --- Mock infrastructure ---

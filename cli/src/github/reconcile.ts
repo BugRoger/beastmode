@@ -186,7 +186,7 @@ export async function reconcileGitHub(opts: ReconcileOpts): Promise<ReconcileRes
  */
 async function executeOp(
   entityId: string,
-  op: import("./retry-queue.js").PendingOp,
+  _op: import("./retry-queue.js").PendingOp,
   refs: SyncRefs,
   store: TaskStore,
   config: BeastmodeConfig,

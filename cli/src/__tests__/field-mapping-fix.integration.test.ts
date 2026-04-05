@@ -14,6 +14,16 @@ import { tmpdir } from "os";
 import { InMemoryTaskStore } from "../store/in-memory";
 import { saveSyncRefs } from "../github/sync-refs";
 
+// --- Mock Bun globals ---
+globalThis.Bun = {
+  CryptoHasher: class {
+    constructor(_algo: string) {}
+    update(_data: string) {}
+    digest(_format: string) { return "abc123"; }
+  },
+  spawnSync: (_args: string[]) => ({ success: true, stdout: "", stderr: "" }),
+} as any;
+
 // --- Mock gh CLI ---
 const mockCalls: { fn: string; args: unknown[] }[] = [];
 
