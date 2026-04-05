@@ -25,3 +25,20 @@
 - Each task: `### Task N: [Name]` with Wave, Depends-on, Files (Create/Modify/Test), and Steps 1-5
 - Steps follow TDD: write failing test, verify failure, write implementation, verify pass, commit
 - Commit step includes exact `git add` and `git commit` commands with specific files and messages
+
+## Task 0: Integration Test from Gherkin
+- If the feature plan has a `## Integration Test Scenarios` section with Gherkin blocks, generate Task 0 as the first task
+- Task 0 creates a runnable integration test file from the Gherkin scenarios
+- Task 0 is always Wave 0 with no dependencies — executes before all implementation tasks
+- The test must be feature-scoped and runnable in isolation
+- The test is expected to FAIL after Task 0 (RED state) — the feature isn't implemented yet
+- If no Gherkin section exists in the feature plan, skip Task 0 — tasks start at Task 1
+- All implementation tasks start at Wave 1 minimum — Wave 0 is reserved for Task 0
+
+## Convention-Based Test Discovery
+- Integration tests are identified by convention, not configuration
+- File naming: `<feature-name>.integration.test.ts` or `<feature-name>.feature`
+- Tags: `@<epic-name>` on Gherkin features
+- Describe blocks: feature name in the describe/feature block
+- The implement skill uses these conventions to locate and run the correct integration test after all tasks complete
+- No separate configuration file for test-to-feature mapping
