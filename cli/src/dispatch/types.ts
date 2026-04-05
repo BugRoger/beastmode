@@ -5,8 +5,14 @@
  * Moved from: watch-types.ts
  */
 
-import type { EnrichedManifest, ScanResult, NextAction } from "../manifest/store.js";
-export type { EnrichedManifest, ScanResult, NextAction };
+import type { EnrichedEpic, NextAction } from "../store/index.js";
+export type { EnrichedEpic, NextAction };
+/** @deprecated Use EnrichedEpic — alias kept for migration */
+export type EnrichedManifest = EnrichedEpic;
+/** Scan result wrapping enriched epics. */
+export interface ScanResult {
+  epics: EnrichedEpic[];
+}
 
 /** Tracks an active SDK session dispatched by the watch loop. */
 export interface DispatchedSession {
