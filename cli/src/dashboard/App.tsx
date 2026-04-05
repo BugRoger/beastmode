@@ -47,6 +47,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("");
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+  const [expandedEpicSlug, setExpandedEpicSlug] = useState<string | undefined>(undefined);
   const { rows } = useTerminalSize();
   const loopRef = useRef(loop);
   loopRef.current = loop;
@@ -71,10 +72,13 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   // slugAtIndex reads from a ref so it always sees the latest filteredEpics
   // (computed below the keyboard hook, updated every render).
   const filteredEpicsRef = useRef<EnrichedEpic[]>([]);
+  const flatRowsRef = useRef<SelectableRow[]>([]);
   const slugAtIndex = useCallback(
     (index: number): string | undefined => {
-      if (index === 0) return undefined;
-      return filteredEpicsRef.current[index - 1]?.slug;
+      const sel = rowSlugAtIndex(flatRowsRef.current, index);
+      if (!sel) return undefined;
+      if (typeof sel === "string") return sel;
+      return sel.epicSlug; // For cancel flow, use the parent epic slug
     },
     [],
   );
@@ -109,6 +113,11 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     setActiveFilter("");
   }, []);
 
+  const handleToggleExpand = useCallback((slug: string | undefined) => {
+    if (!slug) return; // (all) row — no expansion
+    setExpandedEpicSlug((prev) => (prev === slug ? undefined : slug));
+  }, []);
+
   // --- Keyboard hook (flat model — no view stack) ---
   // itemCount uses epics.length as upper bound; clamped below after filtering.
   const keyboard = useDashboardKeyboard({
@@ -119,6 +128,10 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     onFilterApply: handleFilterApply,
     onFilterClear: handleFilterClear,
     initialVerbosity: verbosity,
+    logTotalLines: 0,
+    detailsContentHeight: 0,
+    detailsVisibleHeight: 0,
+    onToggleExpand: handleToggleExpand,
   });
 
   // --- Filter + toggle-all ---
@@ -133,21 +146,28 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   });
   filteredEpicsRef.current = filteredEpics;
 
+  const flatRows = buildFlatRows(filteredEpics, expandedEpicSlug);
+  flatRowsRef.current = flatRows;
+
   // Clamp nav when list changes
   useEffect(() => {
-    keyboard.nav.clampToRange(filteredEpics.length + 1); // +1 for "(all)"
-  }, [filteredEpics.length]);
+    keyboard.nav.clampToRange(flatRows.length);
+  }, [flatRows.length]);
 
   // --- Tree state for log panel ---
-  const selectedEpicSlug = keyboard.nav.selectedIndex === 0
+  const selectedRowResult = rowSlugAtIndex(flatRows, keyboard.nav.selectedIndex);
+  const selectedEpicSlug = !selectedRowResult
     ? undefined
-    : filteredEpics[keyboard.nav.selectedIndex - 1]?.slug;
+    : typeof selectedRowResult === "string"
+      ? selectedRowResult
+      : selectedRowResult.epicSlug;
 
   const { state: treeState } = useDashboardTreeState({
     sessions: trackerSessions,
     selectedEpicSlug,
     fallbackEntries: fallbackStoreRef.current,
     systemEntries: systemEntriesRef.current,
+    enrichedEpics: epics,
   });
 
   // --- Clock tick every 1s ---
