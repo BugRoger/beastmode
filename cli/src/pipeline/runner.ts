@@ -7,7 +7,7 @@
  *   1. git.worktree.prepare     -- Create/enter worktree
  *   2. git.worktree.rebase      -- Rebase onto local main (skip for design)
  *   3. settings.create          -- Write .claude/settings.local.json with hooks
- *   4. dispatch.run             -- Run session (interactive or SDK or cmux or it2)
+ *   4. dispatch.run             -- Run session (interactive or iterm2)
  *   5. artifacts.collect        -- Read phase output.json
  *   6. manifest.reconcile       -- Update manifest from phase results
  *   7. manifest.advance         -- Advance phase, enrich metadata
@@ -56,7 +56,7 @@ import type { BeastmodeConfig } from "../config.js";
 import { getCategoryProse } from "../config.js";
 
 /** Dispatch strategy type -- determines how the phase session runs. */
-export type DispatchStrategy = "interactive" | "sdk" | "cmux" | "iterm2";
+export type DispatchStrategy = "interactive" | "iterm2";
 
 /** Configuration for a pipeline run. */
 export interface PipelineConfig {
