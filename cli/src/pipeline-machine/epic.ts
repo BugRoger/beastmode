@@ -44,48 +44,48 @@ export const epicMachine = setup({
   actions: {
     enrichManifest: assign({
       features: ({ context, event }) => computeEnrichFeatures(context, event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     renameSlug: assign({
       slug: ({ context, event }) => computeRenameSlug(context, event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     setSummary: assign({
       summary: ({ context, event }) => computeSetSummary(context, event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     setFeatures: assign({
       features: ({ event }) => computeSetFeatures(event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     resetFeatures: assign({
       features: ({ context }) => computeResetFeatures(context),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     applyRegress: assign(({ context, event }) => {
       const result = computeRegress(context, event);
       return {
         ...result,
-        lastUpdated: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }),
     applyRegressFeatures: assign(({ context, event }) => {
       const result = computeRegressFeatures(context, event);
       return {
         ...result,
-        lastUpdated: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }),
     markCancelled: assign({
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     markFeatureCompleted: assign({
       features: ({ context, event }) => computeMarkFeatureCompleted(context, event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     accumulateArtifacts: assign({
       artifacts: ({ context, event }) => computeAccumulateArtifacts(context, event),
-      lastUpdated: () => new Date().toISOString(),
+      updated_at: () => new Date().toISOString(),
     }),
     persist: () => {
       // Side-effect stub — consumer provides real implementation
