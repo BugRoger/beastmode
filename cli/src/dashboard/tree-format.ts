@@ -2,7 +2,9 @@
  * Pure formatting functions for tree-mode log output.
  *
  * Builds tree prefixes (│ · connectors) and formats leaf lines
- * with timestamp + level + message (no scope, no phase column).
+ * with timestamp + phase badge + level + message.
+ *
+ * Hierarchy: CLI > Epic > Feature > Entry
  */
 
 import chalk from "chalk";
@@ -11,12 +13,12 @@ import { PHASE_COLOR } from "./monokai-palette.js";
 
 /** Depth level in the tree hierarchy. */
 export type TreeDepth =
-  | "epic"          // top-level — no prefix
-  | "phase"         // │
-  | "feature"       // │ │
-  | "leaf-phase"    // │ ·
-  | "leaf-feature"  // │ │ ·
-  | "system";       // flat — no prefix
+  | "cli"            // synthetic root — no prefix
+  | "epic"           // │
+  | "feature"        // │ │
+  | "leaf-epic"      // │ ·        (entry directly under epic)
+  | "leaf-feature"   // │ │ ·      (entry under feature)
+  | "system";        // flat — no prefix (legacy compat)
 
 /** Level labels — fixed 5-char width (matches logger.ts). */
 const LEVEL_LABELS: Record<LogLevel, string> = {
@@ -31,14 +33,14 @@ const LEVEL_LABELS: Record<LogLevel, string> = {
  */
 export function buildTreePrefix(depth: TreeDepth): string {
   switch (depth) {
-    case "epic":
+    case "cli":
     case "system":
       return "";
-    case "phase":
+    case "epic":
       return "│ ";
     case "feature":
       return "│ │ ";
-    case "leaf-phase":
+    case "leaf-epic":
       return "│ · ";
     case "leaf-feature":
       return "│ │ · ";
@@ -66,11 +68,22 @@ function colorPrefix(prefix: string, phase: string | undefined): string {
 }
 
 /**
+ * Format a phase badge: [phase] in the phase's color.
+ */
+function formatPhaseBadge(phase: string | undefined): string {
+  if (!phase) return "";
+  const color = PHASE_COLOR[phase];
+  const badge = `[${phase}]`;
+  return color ? chalk.hex(color)(badge) : badge;
+}
+
+/**
  * Format a single tree line.
  *
- * For node labels (epic, phase, feature): renders prefix + label.
- * For leaf entries: renders prefix + HH:MM:SS + LEVEL + message.
- * For system entries: renders HH:MM:SS + LEVEL + message (no prefix).
+ * For the CLI root label: renders "CLI" (no prefix).
+ * For node labels (epic, feature): renders prefix + label.
+ * For leaf entries: renders prefix + phase badge + HH:MM:SS + LEVEL + message.
+ * For system entries: renders HH:MM:SS + LEVEL + message (no prefix, no badge).
  *
  * Warn/error: full-line yellow/red coloring.
  * Normal: phase-colored prefix, dimmed timestamp.
@@ -84,29 +97,28 @@ export function formatTreeLine(
 ): string {
   const prefix = buildTreePrefix(depth);
 
-  // Node labels (epic, phase, feature) — just prefix + message
-  if (depth === "epic") {
+  // Node labels — just prefix + message
+  if (depth === "cli") {
     return message;
   }
-  if (depth === "phase") {
-    const color = phase ? PHASE_COLOR[phase] : undefined;
-    const label = color ? chalk.hex(color)(message) : message;
-    return `${colorPrefix(prefix, phase)}${label}`;
+  if (depth === "epic") {
+    return `${colorPrefix(prefix, phase)}${message}`;
   }
   if (depth === "feature") {
     return `${colorPrefix(prefix, phase)}${message}`;
   }
 
-  // Leaf and system entries — timestamp + level + message
+  // Leaf and system entries — phase badge + timestamp + level + message
   const time = formatTime(timestamp);
   const label = LEVEL_LABELS[level];
+  const badge = depth !== "system" ? `${formatPhaseBadge(phase)} ` : "";
 
   // Warn/error: full-line coloring
   if (level === "warn") {
-    return chalk.yellow(`${prefix}${time} ${label} ${message}`);
+    return chalk.yellow(`${prefix}${badge}${time} ${label} ${message}`);
   }
   if (level === "error") {
-    return chalk.red(`${prefix}${time} ${label} ${message}`);
+    return chalk.red(`${prefix}${badge}${time} ${label} ${message}`);
   }
 
   // Normal: phase-colored prefix, dim timestamp
@@ -114,5 +126,5 @@ export function formatTreeLine(
     return `${chalk.dim(time)} ${chalk.green(label)} ${message}`;
   }
 
-  return `${colorPrefix(prefix, phase)}${chalk.dim(time)} ${chalk.green(label)} ${message}`;
+  return `${colorPrefix(prefix, phase)}${badge}${chalk.dim(time)} ${chalk.green(label)} ${message}`;
 }
