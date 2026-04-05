@@ -229,6 +229,63 @@ describe("formatEpicBody", () => {
     expect(body).not.toContain("## Decisions");
   });
 
+  test("renders testing decisions section when prdSections.testingDecisions present", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { testingDecisions: "- Unit test coverage > 80%" },
+    });
+    expect(body).toContain("## Testing Decisions\n\n- Unit test coverage > 80%");
+  });
+
+  test("omits testing decisions section when prdSections.testingDecisions absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { problem: "p" },
+    });
+    expect(body).not.toContain("## Testing Decisions");
+  });
+
+  test("renders out of scope section when prdSections.outOfScope present", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { outOfScope: "- Dashboard\n- Notifications" },
+    });
+    expect(body).toContain("## Out of Scope\n\n- Dashboard\n- Notifications");
+  });
+
+  test("omits out of scope section when prdSections.outOfScope absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: { problem: "p" },
+    });
+    expect(body).not.toContain("## Out of Scope");
+  });
+
+  test("renders all six PRD sections in correct order", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      prdSections: {
+        problem: "P",
+        solution: "S",
+        userStories: "US",
+        decisions: "D",
+        testingDecisions: "TD",
+        outOfScope: "OOS",
+      },
+    });
+    const problemIdx = body.indexOf("## Problem");
+    const solutionIdx = body.indexOf("## Solution");
+    const storiesIdx = body.indexOf("## User Stories");
+    const decisionsIdx = body.indexOf("## Decisions");
+    const testingIdx = body.indexOf("## Testing Decisions");
+    const oosIdx = body.indexOf("## Out of Scope");
+    expect(problemIdx).toBeLessThan(solutionIdx);
+    expect(solutionIdx).toBeLessThan(storiesIdx);
+    expect(storiesIdx).toBeLessThan(decisionsIdx);
+    expect(decisionsIdx).toBeLessThan(testingIdx);
+    expect(testingIdx).toBeLessThan(oosIdx);
+  });
+
   // --- artifactLinks ---
 
   test("renders artifact links table with permalinks", () => {
@@ -258,152 +315,12 @@ describe("formatEpicBody", () => {
     expect(body).not.toContain("## Artifacts");
   });
 
-  // --- gitMetadata ---
+  // --- gitMetadata removed ---
 
-  test("renders git metadata section with branch", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "feature/my-branch" },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain("**Branch:** `feature/my-branch`");
-  });
-
-  test("renders git metadata with phase tags", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        phaseTags: {
-          design: "beastmode/my-epic/design",
-          plan: "beastmode/my-epic/plan",
-        },
-      },
-    });
-    expect(body).toContain("**Tags:** `beastmode/my-epic/design`, `beastmode/my-epic/plan`");
-  });
-
-  test("renders git metadata with version", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { version: "1.2.3" },
-    });
-    expect(body).toContain("**Version:** 1.2.3");
-  });
-
-  test("renders git metadata with merge commit", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        mergeCommit: { sha: "abc1234def5678", url: "https://github.com/org/repo/commit/abc1234def5678" },
-      },
-    });
-    expect(body).toContain("**Merge Commit:** [abc1234](https://github.com/org/repo/commit/abc1234def5678)");
-  });
-
-  test("renders full git metadata section with all fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/epic-branch",
-        phaseTags: { design: "beastmode/epic/design" },
-        version: "2.0.0",
-        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
-      },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain("**Branch:** `feature/epic-branch`");
-    expect(body).toContain("**Tags:** `beastmode/epic/design`");
-    expect(body).toContain("**Version:** 2.0.0");
-    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
-  });
-
-  test("omits git metadata section when gitMetadata absent", () => {
+  test("does not render git metadata section (removed)", () => {
+    // gitMetadata field removed from EpicBodyInput — Git section no longer rendered
     const body = formatEpicBody(makeManifest());
     expect(body).not.toContain("## Git");
-  });
-
-  test("omits git metadata section when gitMetadata has no populated fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {},
-    });
-    expect(body).not.toContain("## Git");
-  });
-
-  test("omits tags line when phaseTags is empty object", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "main", phaseTags: {} },
-    });
-    expect(body).toContain("**Branch:** `main`");
-    expect(body).not.toContain("**Tags:**");
-  });
-
-  test("renders compare URL as clickable link in git section", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/my-epic",
-        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
-      },
-    });
-    expect(body).toContain("## Git");
-    expect(body).toContain(
-      "**Compare:** [main...feature/my-epic](https://github.com/org/repo/compare/main...feature/my-epic)",
-    );
-  });
-
-  test("renders archive compare URL after release", () => {
-    const body = formatEpicBody({
-      ...makeManifest({ phase: "done" }),
-      gitMetadata: {
-        version: "1.2.0",
-        compareUrl: "https://github.com/org/repo/compare/v1.2.0...archive/my-epic",
-      },
-    });
-    expect(body).toContain(
-      "**Compare:** [v1.2.0...archive/my-epic](https://github.com/org/repo/compare/v1.2.0...archive/my-epic)",
-    );
-  });
-
-  test("omits compare line when compareUrl absent", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: { branch: "feature/my-epic" },
-    });
-    expect(body).not.toContain("**Compare:**");
-  });
-
-  test("compare URL appears after branch line in git section", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/my-epic",
-        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
-      },
-    });
-    const branchIdx = body.indexOf("**Branch:**");
-    const compareIdx = body.indexOf("**Compare:**");
-    expect(branchIdx).toBeGreaterThan(-1);
-    expect(compareIdx).toBeGreaterThan(branchIdx);
-  });
-
-  test("full git section includes compare URL alongside other fields", () => {
-    const body = formatEpicBody({
-      ...makeManifest(),
-      gitMetadata: {
-        branch: "feature/epic-branch",
-        phaseTags: { design: "beastmode/epic/design" },
-        version: "2.0.0",
-        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
-        compareUrl: "https://github.com/org/repo/compare/main...feature/epic-branch",
-      },
-    });
-    expect(body).toContain("**Branch:** `feature/epic-branch`");
-    expect(body).toContain("**Compare:** [main...feature/epic-branch](https://github.com/org/repo/compare/main...feature/epic-branch)");
-    expect(body).toContain("**Tags:** `beastmode/epic/design`");
-    expect(body).toContain("**Version:** 2.0.0");
-    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
   });
 
 });

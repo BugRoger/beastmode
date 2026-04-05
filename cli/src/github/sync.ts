@@ -49,6 +49,8 @@ import {
 /** Minimal epic input — decoupled from full PipelineManifest to stay pure. */
 export interface EpicBodyInput {
   slug: string;
+  /** Human-readable epic name for title construction. */
+  epic?: string;
   phase: Phase;
   summary?: { problem: string; solution: string };
   features: Array<{
@@ -62,18 +64,11 @@ export interface EpicBodyInput {
     solution?: string;
     userStories?: string;
     decisions?: string;
+    testingDecisions?: string;
+    outOfScope?: string;
   };
   /** Artifact links per phase — repo path + optional permalink. */
   artifactLinks?: Record<string, { repoPath: string; permalink?: string }>;
-  /** Git metadata for traceability — branch, tags, version, merge commit. */
-  gitMetadata?: {
-    branch?: string;
-    phaseTags?: Record<string, string>;  // phase -> tag name
-    version?: string;
-    mergeCommit?: { sha: string; url: string };
-    /** Compare URL for viewing the full diff — branch-based or archive-based. */
-    compareUrl?: string;
-  };
   /** GitHub repo in "owner/repo" format — needed for permalink construction. */
   repo?: string;
 }
@@ -109,12 +104,18 @@ export function formatEpicBody(input: EpicBodyInput): string {
     sections.push(`## Solution\n\n${solution}`);
   }
 
-  // PRD user stories and decisions (only from prdSections)
+  // PRD sections (only from prdSections)
   if (input.prdSections?.userStories) {
     sections.push(`## User Stories\n\n${input.prdSections.userStories}`);
   }
   if (input.prdSections?.decisions) {
     sections.push(`## Decisions\n\n${input.prdSections.decisions}`);
+  }
+  if (input.prdSections?.testingDecisions) {
+    sections.push(`## Testing Decisions\n\n${input.prdSections.testingDecisions}`);
+  }
+  if (input.prdSections?.outOfScope) {
+    sections.push(`## Out of Scope\n\n${input.prdSections.outOfScope}`);
   }
 
   // Artifact links table
@@ -128,31 +129,6 @@ export function formatEpicBody(input: EpicBodyInput): string {
       sections.push(
         `## Artifacts\n\n| Phase | Link |\n|-------|------|\n${rows.join("\n")}`,
       );
-    }
-  }
-
-  // Git metadata
-  if (input.gitMetadata) {
-    const meta = input.gitMetadata;
-    const lines: string[] = [];
-    if (meta.branch) lines.push(`**Branch:** \`${meta.branch}\``);
-    if (meta.compareUrl) {
-      // Extract the range label from the URL path: everything after /compare/
-      const rangeLabel = meta.compareUrl.split("/compare/").pop() ?? meta.compareUrl;
-      lines.push(`**Compare:** [${rangeLabel}](${meta.compareUrl})`);
-    }
-    if (meta.phaseTags && Object.keys(meta.phaseTags).length > 0) {
-      const tagList = Object.entries(meta.phaseTags)
-        .map(([_phase, tag]) => `\`${tag}\``)
-        .join(", ");
-      lines.push(`**Tags:** ${tagList}`);
-    }
-    if (meta.version) lines.push(`**Version:** ${meta.version}`);
-    if (meta.mergeCommit) {
-      lines.push(`**Merge Commit:** [${meta.mergeCommit.sha.slice(0, 7)}](${meta.mergeCommit.url})`);
-    }
-    if (lines.length > 0) {
-      sections.push(`## Git\n\n${lines.join("\n")}`);
     }
   }
 
@@ -340,6 +316,8 @@ function readPrdSections(
       "Solution",
       "User Stories",
       "Implementation Decisions",
+      "Testing Decisions",
+      "Out of Scope",
     ]);
 
     const result: EpicBodyInput["prdSections"] = {};
@@ -347,6 +325,8 @@ function readPrdSections(
     if (sections["Solution"]) result.solution = sections["Solution"];
     if (sections["User Stories"]) result.userStories = sections["User Stories"];
     if (sections["Implementation Decisions"]) result.decisions = sections["Implementation Decisions"];
+    if (sections["Testing Decisions"]) result.testingDecisions = sections["Testing Decisions"];
+    if (sections["Out of Scope"]) result.outOfScope = sections["Out of Scope"];
 
     return Object.keys(result).length > 0 ? result : undefined;
   } catch {
@@ -551,7 +531,6 @@ export async function syncGitHub(
     ? readPrdSections(manifest, opts.projectRoot)
     : undefined;
   const artifactLinks = resolveArtifactLinks(manifest, repo);
-  const gitMetadata = resolveGitMetadata(manifest, repo);
 
   // --- Epic Sync ---
 
@@ -567,7 +546,6 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
-      gitMetadata,
       repo,
     });
     epicNumber = await ghIssueCreate(
@@ -602,7 +580,6 @@ export async function syncGitHub(
       features: manifest.features,
       prdSections,
       artifactLinks,
-      gitMetadata,
       repo,
     });
     const epicBodyHash = hashBody(epicBody);
