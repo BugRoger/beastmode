@@ -40,3 +40,89 @@ export const MAX_RETRIES = 5;
 export function computeNextRetryTick(currentTick: number, retryCount: number): number {
   return currentTick + Math.pow(2, retryCount);
 }
+
+/** Result of draining — identifies entity and the op ready for retry. */
+export interface DrainedOp {
+  entityId: string;
+  op: PendingOp;
+}
+
+/**
+ * Enqueue a new pending operation on an entity.
+ * Returns a new SyncRefs object (immutable). No-op if entityId not found.
+ */
+export function enqueuePendingOp(
+  refs: SyncRefs,
+  entityId: string,
+  params: { opType: OpType; context: Record<string, unknown> },
+  currentTick: number,
+): SyncRefs {
+  const entry = refs[entityId];
+  if (!entry) return refs;
+
+  const newOp: PendingOp = {
+    opType: params.opType,
+    retryCount: 0,
+    nextRetryTick: computeNextRetryTick(currentTick, 0),
+    status: "pending",
+    context: params.context,
+  };
+
+  const existingOps = entry.pendingOps ?? [];
+  return {
+    ...refs,
+    [entityId]: {
+      ...entry,
+      pendingOps: [...existingOps, newOp],
+    },
+  };
+}
+
+/**
+ * Drain all pending operations whose next-retry tick has arrived.
+ * Returns a flat list of { entityId, op } pairs. Skips failed and over-limit ops.
+ */
+export function drainPendingOps(refs: SyncRefs, currentTick: number): DrainedOp[] {
+  const result: DrainedOp[] = [];
+
+  for (const [entityId, entry] of Object.entries(refs)) {
+    if (!entry.pendingOps) continue;
+
+    for (const op of entry.pendingOps) {
+      if (op.status === "failed") continue;
+      if (op.retryCount >= MAX_RETRIES) continue;
+      if (op.nextRetryTick <= currentTick) {
+        result.push({ entityId, op });
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Resolve a pending operation — removes it from the queue.
+ * Resolution is either "completed" (success) or "failed" (permanent failure).
+ * Returns a new SyncRefs object (immutable).
+ */
+export function resolvePendingOp(
+  refs: SyncRefs,
+  entityId: string,
+  op: PendingOp,
+  resolution: "completed" | "failed",
+): SyncRefs {
+  const entry = refs[entityId];
+  if (!entry?.pendingOps) return refs;
+
+  const remaining = entry.pendingOps.filter(
+    (p) => !(p.opType === op.opType && p.retryCount === op.retryCount && p.nextRetryTick === op.nextRetryTick),
+  );
+
+  return {
+    ...refs,
+    [entityId]: {
+      ...entry,
+      pendingOps: remaining,
+    },
+  };
+}
