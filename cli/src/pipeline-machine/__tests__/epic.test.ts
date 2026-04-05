@@ -685,3 +685,56 @@ describe("action effects", () => {
     expect(features[0].wave).toBeUndefined();
   });
 });
+
+// ── Artifact propagation ──────────────────────────────────────────
+
+describe("artifact propagation", () => {
+  test("DESIGN_COMPLETED stores artifacts in context", () => {
+    const actor = startActor();
+    actor.send({
+      type: "DESIGN_COMPLETED",
+      artifacts: { design: [".beastmode/artifacts/design/2026-04-04-my-epic.md"] },
+    });
+    expect(actor.getSnapshot().value).toBe("plan");
+    expect(actor.getSnapshot().context.artifacts).toEqual({
+      design: [".beastmode/artifacts/design/2026-04-04-my-epic.md"],
+    });
+  });
+
+  test("PLAN_COMPLETED stores artifacts in context", () => {
+    const actor = startActor();
+    actor.send({ type: "DESIGN_COMPLETED" });
+    actor.send({
+      type: "PLAN_COMPLETED",
+      features: [{ slug: "feat-a", plan: "plan-a" }],
+      artifacts: { plan: [".beastmode/artifacts/plan/2026-04-04-my-epic-feat-a.md"] },
+    });
+    expect(actor.getSnapshot().value).toBe("implement");
+    expect(actor.getSnapshot().context.artifacts).toEqual({
+      plan: [".beastmode/artifacts/plan/2026-04-04-my-epic-feat-a.md"],
+    });
+  });
+
+  test("artifacts accumulate across phases", () => {
+    const actor = startActor();
+    actor.send({
+      type: "DESIGN_COMPLETED",
+      artifacts: { design: [".beastmode/artifacts/design/prd.md"] },
+    });
+    actor.send({
+      type: "PLAN_COMPLETED",
+      features: [{ slug: "feat-a", plan: "plan-a" }],
+      artifacts: { plan: [".beastmode/artifacts/plan/feat-a.md"] },
+    });
+    expect(actor.getSnapshot().context.artifacts).toEqual({
+      design: [".beastmode/artifacts/design/prd.md"],
+      plan: [".beastmode/artifacts/plan/feat-a.md"],
+    });
+  });
+
+  test("DESIGN_COMPLETED without artifacts leaves context.artifacts unchanged", () => {
+    const actor = startActor({ artifacts: { existing: ["file.md"] } });
+    actor.send({ type: "DESIGN_COMPLETED" });
+    expect(actor.getSnapshot().context.artifacts).toEqual({ existing: ["file.md"] });
+  });
+});

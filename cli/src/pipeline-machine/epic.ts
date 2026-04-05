@@ -18,6 +18,7 @@ import {
   computeResetFeatures,
   computeMarkFeatureCompleted,
   computeRegress,
+  computeAccumulateArtifacts,
 } from "./actions";
 import { syncGitHubService } from "./services";
 
@@ -72,6 +73,10 @@ export const epicMachine = setup({
       features: ({ context, event }) => computeMarkFeatureCompleted(context, event),
       lastUpdated: () => new Date().toISOString(),
     }),
+    accumulateArtifacts: assign({
+      artifacts: ({ context, event }) => computeAccumulateArtifacts(context, event),
+      lastUpdated: () => new Date().toISOString(),
+    }),
     persist: () => {
       // Side-effect stub — consumer provides real implementation
     },
@@ -89,7 +94,7 @@ export const epicMachine = setup({
       on: {
         DESIGN_COMPLETED: {
           target: "plan",
-          actions: ["renameSlug", "setSummary", "persist"],
+          actions: ["renameSlug", "setSummary", "accumulateArtifacts", "persist"],
         },
         CANCEL: {
           target: "cancelled",
@@ -103,7 +108,7 @@ export const epicMachine = setup({
         PLAN_COMPLETED: {
           target: "implement",
           guard: "hasFeatures",
-          actions: ["setFeatures", "persist"],
+          actions: ["setFeatures", "accumulateArtifacts", "persist"],
         },
         REGRESS: [
           {

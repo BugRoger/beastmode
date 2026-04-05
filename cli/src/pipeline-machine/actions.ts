@@ -92,3 +92,18 @@ export function computeRegress(context: EpicContext, event: EpicEvent): Partial<
     artifacts: result.artifacts,
   };
 }
+
+export function computeAccumulateArtifacts(context: EpicContext, event: EpicEvent): EpicContext["artifacts"] {
+  if (
+    (event.type === "DESIGN_COMPLETED" || event.type === "PLAN_COMPLETED") &&
+    event.artifacts
+  ) {
+    const merged = { ...context.artifacts };
+    for (const [phase, paths] of Object.entries(event.artifacts)) {
+      const existing = merged[phase] ?? [];
+      merged[phase] = [...existing, ...paths];
+    }
+    return merged;
+  }
+  return context.artifacts;
+}

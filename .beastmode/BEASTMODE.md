@@ -46,6 +46,7 @@
 
 ## Plan Process
 
+- ALWAYS deduplicate features during plan decomposition — two features touching the same files with overlapping scope cause rebase conflicts during implementation; merge overlapping user stories into a single feature
 - ALWAYS produce detailed design documents with component breakdowns — enables direct 1:1 mapping to plan tasks
 - ALWAYS use design locked decisions as cross-cutting constraints applied uniformly across all plan tasks
 - ALWAYS derive wave ordering from the component dependency graph — foundation before consumers before integration
@@ -71,6 +72,7 @@
 
 ## Implement Workarounds
 
+- ALWAYS check for pre-existing implementations on the worktree branch before rebasing impl branches — duplicate features from plan decomposition cause code duplication during rebase that requires manual cleanup
 - ALWAYS verify task state from .tasks.md checkboxes rather than trusting in-memory state in long sessions — context compaction drops incremental state
 - ALWAYS design parallel dispatch for post-hoc reconciliation, not real-time status updates
 - ALWAYS read skill files from worktree path when the feature modifies skill files — plugin cache serves main-branch files

@@ -15,8 +15,8 @@ export interface EpicContext {
 }
 
 export type EpicEvent =
-  | { type: "DESIGN_COMPLETED"; realSlug?: string; summary?: { problem: string; solution: string } }
-  | { type: "PLAN_COMPLETED"; features: Array<{ slug: string; plan: string; description?: string; wave?: number }> }
+  | { type: "DESIGN_COMPLETED"; realSlug?: string; summary?: { problem: string; solution: string }; artifacts?: Record<string, string[]> }
+  | { type: "PLAN_COMPLETED"; features: Array<{ slug: string; plan: string; description?: string; wave?: number }>; artifacts?: Record<string, string[]> }
   | { type: "FEATURE_COMPLETED"; featureSlug: string }
   | { type: "IMPLEMENT_COMPLETED" }
   | { type: "VALIDATE_COMPLETED" }

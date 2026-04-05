@@ -33,60 +33,6 @@ function now(): string {
 // --- Pure state transitions ---
 
 /**
- * Enrich a manifest with phase output data.
- * Merges features (preserving existing github info), accumulates artifacts.
- */
-export function enrich(
-  manifest: PipelineManifest,
-  phaseOutput: {
-    phase: Phase;
-    features?: ManifestFeature[];
-    artifacts?: string[];
-    summary?: { problem: string; solution: string };
-  },
-): PipelineManifest {
-  let features = [...manifest.features];
-
-  if (phaseOutput.features) {
-    const existingBySlug = new Map(features.map((f) => [f.slug, f]));
-    for (const incoming of phaseOutput.features) {
-      const existing = existingBySlug.get(incoming.slug);
-      if (existing) {
-        // Preserve github info from existing, update plan and status
-        const merged: ManifestFeature = {
-          ...existing,
-          plan: incoming.plan,
-          status: incoming.status,
-          ...(incoming.description !== undefined && { description: incoming.description }),
-        };
-        if (incoming.github) {
-          merged.github = incoming.github;
-        }
-        features = features.map((f) =>
-          f.slug === incoming.slug ? merged : f,
-        );
-      } else {
-        features = [...features, incoming];
-      }
-    }
-  }
-
-  const artifacts = { ...manifest.artifacts };
-  if (phaseOutput.artifacts && phaseOutput.artifacts.length > 0) {
-    const existing = artifacts[phaseOutput.phase] ?? [];
-    artifacts[phaseOutput.phase] = [...existing, ...phaseOutput.artifacts];
-  }
-
-  return {
-    ...manifest,
-    features,
-    artifacts,
-    summary: phaseOutput.summary ?? manifest.summary,
-    lastUpdated: now(),
-  };
-}
-
-/**
  * Mark a single feature's status by slug.
  * Returns the manifest unchanged if the feature is not found.
  */

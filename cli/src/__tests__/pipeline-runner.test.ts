@@ -93,6 +93,12 @@ vi.mock("../manifest/pure.js", () => ({
   setFeatureBodyHash: vi.fn((m: any) => m),
 }));
 
+// Mock github/early-issues
+const mockEnsureEarlyIssues = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../github/early-issues.js", () => ({
+  ensureEarlyIssues: mockEnsureEarlyIssues,
+}));
+
 // Note: hooks/hitl-settings and hooks/file-permission-settings are NOT mocked.
 // Real functions run against mocked worktree paths (/tmp/test-project/...).
 // This avoids Bun mock.module() pollution — mock.module is process-global in Bun
@@ -168,6 +174,7 @@ function resetAllMocks() {
   mockSyncGitHub.mockClear();
   mockSyncGitHubForEpic.mockClear();
   mockDiscoverGitHub.mockClear();
+  mockEnsureEarlyIssues.mockClear();
 
   // Restore default implementations
   mockLoadOutput.mockImplementation(
@@ -440,6 +447,86 @@ describe("pipeline/runner", () => {
       expect(mockDiscoverGitHub).not.toHaveBeenCalled();
       expect(mockSyncGitHub).not.toHaveBeenCalled();
       expect(mockSyncGitHubForEpic).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("early issue creation", () => {
+    it("calls ensureEarlyIssues before dispatch for design phase", async () => {
+      const callOrder: string[] = [];
+
+      mockEnsureEarlyIssues.mockImplementation(async () => {
+        callOrder.push("early-issues");
+      });
+      const dispatch = async () => {
+        callOrder.push("dispatch");
+        return { success: true };
+      };
+
+      await run(makeConfig({ phase: "design", dispatch }));
+
+      expect(callOrder).toEqual(["early-issues", "dispatch"]);
+    });
+
+    it("calls ensureEarlyIssues before dispatch for implement phase", async () => {
+      const callOrder: string[] = [];
+
+      mockEnsureEarlyIssues.mockImplementation(async () => {
+        callOrder.push("early-issues");
+      });
+      const dispatch = async () => {
+        callOrder.push("dispatch");
+        return { success: true };
+      };
+
+      await run(makeConfig({ phase: "implement", featureSlug: "my-feat", dispatch }));
+
+      expect(callOrder).toEqual(["early-issues", "dispatch"]);
+    });
+
+    it("passes correct arguments to ensureEarlyIssues", async () => {
+      await run(makeConfig({
+        phase: "design",
+        epicSlug: "my-epic",
+        config: {
+          hitl: { model: "claude-sonnet-4-5-20250514", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+          "file-permissions": { timeout: 60, "claude-settings": "test" },
+          github: { enabled: true },
+          cli: {},
+        } as any,
+      }));
+
+      expect(mockEnsureEarlyIssues).toHaveBeenCalledWith({
+        phase: "design",
+        epicSlug: "my-epic",
+        projectRoot: "/tmp/test-project",
+        config: expect.objectContaining({ github: { enabled: true } }),
+        resolved: undefined,
+        logger: expect.anything(),
+      });
+    });
+
+    it("passes pre-resolved GitHub data to ensureEarlyIssues", async () => {
+      const resolved = { repo: "test/repo" } as any;
+
+      await run(makeConfig({ phase: "design", resolved }));
+
+      expect(mockEnsureEarlyIssues).toHaveBeenCalledWith(
+        expect.objectContaining({ resolved }),
+      );
+    });
+
+    it("continues dispatch even when ensureEarlyIssues throws", async () => {
+      mockEnsureEarlyIssues.mockRejectedValue(new Error("early issues kaboom"));
+
+      const result = await run(makeConfig({ phase: "design" }));
+
+      expect(result.success).toBe(true);
+    });
+
+    it("skips ensureEarlyIssues when skipPreDispatch is true", async () => {
+      await run(makeConfig({ phase: "design", skipPreDispatch: true }));
+
+      expect(mockEnsureEarlyIssues).not.toHaveBeenCalled();
     });
   });
 

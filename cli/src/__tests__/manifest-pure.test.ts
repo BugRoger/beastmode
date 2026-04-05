@@ -1,7 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { PipelineManifest, ManifestFeature } from "../manifest/store";
 import {
-  enrich,
   markFeature,
   setGitHubEpic,
   setFeatureGitHubIssue,
@@ -31,74 +30,6 @@ function makeFeature(
     ...overrides,
   };
 }
-
-// --- enrich ---
-
-describe("enrich", () => {
-  test("merges new features into empty manifest", () => {
-    const manifest = makeManifest();
-    const features: ManifestFeature[] = [
-      makeFeature({ slug: "feat-a" }),
-      makeFeature({ slug: "feat-b" }),
-    ];
-    const result = enrich(manifest, { phase: "plan", features });
-
-    expect(result.features).toHaveLength(2);
-    expect(result.features[0].slug).toBe("feat-a");
-    expect(result.features[1].slug).toBe("feat-b");
-  });
-
-  test("updates existing features, preserves github info", () => {
-    const manifest = makeManifest({
-      features: [
-        makeFeature({
-          slug: "feat-a",
-          plan: "old-plan.md",
-          status: "pending",
-          github: { issue: 42 },
-        }),
-      ],
-    });
-
-    const result = enrich(manifest, {
-      phase: "plan",
-      features: [
-        makeFeature({ slug: "feat-a", plan: "new-plan.md", status: "in-progress" }),
-      ],
-    });
-
-    expect(result.features).toHaveLength(1);
-    expect(result.features[0].plan).toBe("new-plan.md");
-    expect(result.features[0].status).toBe("in-progress");
-    expect(result.features[0].github).toEqual({ issue: 42 });
-  });
-
-  test("accumulates artifacts under phase key", () => {
-    const manifest = makeManifest({
-      artifacts: { design: ["design.md"] },
-    });
-
-    const result = enrich(manifest, {
-      phase: "design",
-      artifacts: ["design-v2.md"],
-    });
-
-    expect(result.artifacts.design).toEqual(["design.md", "design-v2.md"]);
-  });
-
-  test("returns new object, does not mutate input", () => {
-    const manifest = makeManifest();
-    const result = enrich(manifest, {
-      phase: "plan",
-      features: [makeFeature()],
-    });
-
-    expect(result).not.toBe(manifest);
-    expect(manifest.features).toHaveLength(0);
-    expect(result.features).toHaveLength(1);
-  });
-});
-
 
 // --- markFeature ---
 

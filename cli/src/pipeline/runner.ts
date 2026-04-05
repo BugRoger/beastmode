@@ -27,8 +27,10 @@ import { syncGitHub } from "../github/sync.js";
 import { syncGitHubForEpic } from "../github/sync.js";
 import { discoverGitHub } from "../github/discovery.js";
 import type { ResolvedGitHub } from "../github/discovery.js";
+import { ensureEarlyIssues } from "../github/early-issues.js";
 import { setGitHubEpic, setFeatureGitHubIssue, setEpicBodyHash, setFeatureBodyHash } from "../manifest/pure.js";
 import { createTag } from "../git/tags.js";
+import { amendCommitWithIssueRef } from "../git/commit-issue-ref.js";
 import {
   reconcileDesign,
   reconcilePlan,
@@ -165,6 +167,25 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     }
   }
 
+  // -- Step 3.5: github.early-issues -----------------------------------------
+  // Create stub GitHub issues before dispatch so issue numbers are available
+  // for commit references from the first commit.
+  if (!config.skipPreDispatch) {
+    try {
+      await ensureEarlyIssues({
+        phase: config.phase,
+        epicSlug,
+        projectRoot: config.projectRoot,
+        config: config.config,
+        resolved: config.resolved,
+        logger,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn(`early issue creation failed (non-blocking): ${message}`);
+    }
+  }
+
   // -- Step 4: dispatch.run ---------------------------------------------------
   const dispatchResult = await config.dispatch({ phase: config.phase, args: config.args, cwd: worktreePath });
 
@@ -265,7 +286,10 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
         if (resolved) {
           const manifest = store.load(config.projectRoot, epicSlug);
           if (manifest) {
-            const syncResult = await syncGitHub(manifest, beastConfig, resolved);
+            const syncResult = await syncGitHub(manifest, beastConfig, resolved, {
+              logger,
+              projectRoot: config.projectRoot,
+            });
 
             if (syncResult.mutations.length > 0) {
               await store.transact(config.projectRoot, epicSlug, (m) => {
@@ -300,6 +324,22 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.warn(`GitHub sync failed (non-blocking): ${message}`);
+  }
+
+  // -- Step 8.5: commit-issue-ref --------------------------------------------
+  // Amend the most recent commit to append a GitHub issue reference (#N).
+  // Runs post-sync so issue numbers from early-issues or sync are available.
+  try {
+    const manifest = store.load(config.projectRoot, epicSlug);
+    if (manifest) {
+      const amendResult = await amendCommitWithIssueRef(manifest, { cwd: worktreePath });
+      if (amendResult.amended) {
+        logger.detail?.(`commit ref: (#${amendResult.issueNumber})`);
+      }
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.warn(`commit issue ref failed (non-blocking): ${message}`);
   }
 
   // -- Step 9: git.worktree.cleanup -------------------------------------------

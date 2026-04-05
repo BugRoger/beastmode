@@ -200,5 +200,23 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "github-enrichment": {
+    "paths": [
+      "features/github-enrichment/epic-body-content.feature",
+      "features/github-enrichment/feature-body-content.feature",
+      "features/github-enrichment/commit-issue-refs.feature",
+      "features/github-enrichment/compare-url.feature",
+      "features/github-enrichment/compare-url-archive.feature",
+      "features/github-enrichment/early-issue-creation.feature",
+      "features/github-enrichment/backfill.feature"
+    ],
+    "import": [
+      "features/github-enrichment/step_definitions/enrichment.steps.ts",
+      "features/github-enrichment/support/enrichment-world.ts",
+      "features/github-enrichment/support/enrichment-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }

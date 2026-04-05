@@ -30,6 +30,22 @@
 - ALWAYS post a release closing comment on epic issues when phase is done — duplicate prevention via existing comment content scanning
 - ALWAYS use `ghIssueComment()` and `ghIssueComments()` in gh.ts for comment operations — same warn-and-continue pattern as other gh functions
 
+## Commit Issue References
+- ALWAYS use pure functions for commit message logic — `shouldAmendCommit()`, `buildAmendedMessage()`, `resolveIssueNumber()` in `commit-issue-ref.ts`; thin integration wrapper calls `git log` and `git commit --amend`
+- ALWAYS resolve feature issue numbers by parsing impl branch name (`impl/<slug>--<feature>`) and looking up the feature in the manifest
+- ALWAYS skip amend gracefully when no issue number is available — return early, no error
+- Integration tests for commit amend require shell access — mark Bun-specific shell tests with skip annotations for cross-runtime compatibility
+
+## Early Issue Creation
+- ALWAYS use `ensureEarlyIssues()` module for pre-dispatch issue creation — separate from the post-dispatch sync path
+- ALWAYS gate on `github.enabled` and `github.repo` before creating issues — same config gating as other GitHub operations
+- ALWAYS write new issue numbers back to the manifest immediately — enables commit ref amend to use them in the same dispatch cycle
+
+## Compare URLs
+- ALWAYS use `buildCompareUrl()` pure function for URL generation — input interface `CompareUrlInput` with `repo`, `branch`, `phase`, `hasArchiveTag`, `versionTag`, `slug` fields
+- ALWAYS add `compareUrl` field to `gitMetadata` type in `body-format.ts` — rendered as a markdown link in the git metadata section
+- ALWAYS compute compare URL in `resolveGitMetadata()` — separate from the formatter, keeps formatter pure
+
 ## API Boundary
 - ALL GitHub operations are CLI-owned via github-sync.ts — skills never call gh CLI or perform GitHub operations
 - Skills are pure content processors writing artifacts with YAML frontmatter only

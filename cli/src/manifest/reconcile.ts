@@ -105,9 +105,15 @@ export async function reconcileDesign(
   const realSlug = artifacts?.slug as string | undefined;
   const summary = artifacts?.summary as { problem: string; solution: string } | undefined;
 
+  // Extract design artifact path for manifest enrichment
+  const designPath = artifacts?.design as string | undefined;
+  const eventArtifacts: Record<string, string[]> | undefined = designPath
+    ? { design: [designPath] }
+    : undefined;
+
   const updated = await store.transact(projectRoot, slug, (m) => {
     const actor = hydrateActor(m);
-    actor.send({ type: "DESIGN_COMPLETED", realSlug, summary });
+    actor.send({ type: "DESIGN_COMPLETED", realSlug, summary, artifacts: eventArtifacts });
     return extractManifest(actor);
   });
 
@@ -128,9 +134,15 @@ export async function reconcilePlan(
 
   const features = extractFeaturesFromOutput(output);
 
+  // Collect plan artifact paths from feature entries
+  const planPaths = features.map((f) => f.plan).filter(Boolean);
+  const eventArtifacts: Record<string, string[]> | undefined = planPaths.length > 0
+    ? { plan: planPaths }
+    : undefined;
+
   const updated = await store.transact(projectRoot, slug, (m) => {
     const actor = hydrateActor(m);
-    actor.send({ type: "PLAN_COMPLETED", features });
+    actor.send({ type: "PLAN_COMPLETED", features, artifacts: eventArtifacts });
     return extractManifest(actor);
   });
 

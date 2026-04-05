@@ -48,6 +48,24 @@
 - Four feature statuses: pending, in-progress, blocked, completed
 - GitHub API failures: warn and continue -- absence of `github` data is the signal
 
+## Compare URLs
+- ALWAYS include a compare URL in epic body git metadata — `buildCompareUrl()` pure function generates the URL from repo, branch, phase, and tag inputs
+- Active development: `main...feature/{slug}` branch range
+- Post-release (phase=done): `{version-tag}...archive/feature/{slug}` archive tag range
+- Fallback: branch-based URL when no archive tag exists — prevents broken links
+
+## Commit Issue References
+- ALWAYS amend the most recent commit message with an issue reference after sync — `(#N)` trailing format on the subject line
+- Three commit types get refs: phase checkpoint commits (epic issue), impl branch commits (feature issue, resolved from branch name), release squash-merge commits (epic issue)
+- Commits without a known issue number are left unchanged — no-op, not an error
+- Module is pure functions (`shouldAmendCommit`, `buildAmendedMessage`) plus a thin integration layer calling `git commit --amend`
+
+## Early Issue Creation
+- ALWAYS ensure GitHub issues exist before dispatch — pre-dispatch step in the pipeline runner
+- Epic issues created before design phase; feature issues created before implement phase
+- Idempotent: skips if issue number already recorded in manifest
+- Creates minimal stub (slug as title, phase badge, type label); body enriched later at post-dispatch sync
+
 ## Related Decisions
 - GitHub state model design — see [github-state-model design](../../state/design/2026-03-28-github-state-model.md)
 - GitHub state model plan — see [github-state-model plan](../../state/plan/2026-03-28-github-state-model.md)

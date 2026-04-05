@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.88.0 — GitHub Issue Enrichment (Apr 2026)
+
+- **Commit issue refs** — Post-sync pipeline step amends commit messages with `(#N)` trailing format for epic/feature auto-linking in GitHub timeline
+- **Compare URLs** — Epic body git metadata section includes compare URL with active branch range during development, archive tag range after release
+- **Early issue creation** — Pre-dispatch pipeline step creates GitHub issues before phase dispatch so issue numbers are available from the first commit
+- **Enrichment pipeline fix** — Artifact paths wired through reconcile functions; `artifacts` field added to EpicEvent; dead `enrich()` function removed
+- **Backfill script** — `backfill-enrichment` script for retroactively enriching existing epic issues
+- **Integration tests** — 26 Cucumber scenarios across 7 feature files covering all enrichment capabilities
+
+---
+
 ### v0.87.0 — Dead Man Switch (Apr 2026)
 
 - **Liveness engine** — External process liveness detection via iTerm2 TTY process tree inspection; `checkLiveness` on `SessionFactory` interface (optional) probes `ps -t <tty>` for `beastmode` in args

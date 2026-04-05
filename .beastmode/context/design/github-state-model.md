@@ -14,6 +14,9 @@
 - ALWAYS produce fallback body format when summary fields are missing — phase badge and feature checklist render regardless, richer than a stub
 - ALWAYS post a closing comment on epic issues when phase transitions to done — includes version, release tag, and merge commit link
 - ALWAYS prevent duplicate closing comments via content scanning — check existing comments for the version string before posting
+- ALWAYS include a compare URL in the git metadata section of epic bodies — active development uses `main...feature/{slug}` branch range, post-release uses `{version-tag}...archive/feature/{slug}` archive tag range, fallback to branch range if no archive tag exists
+- ALWAYS amend commit messages with issue references post-checkpoint — trailing `(#N)` format on the subject line; phase checkpoint and release commits get the epic issue ref, impl branch commits get the feature issue ref
+- ALWAYS create GitHub issues pre-dispatch (early issue creation) — epic issues before design phase, feature issues before implement phase; idempotent (skips if issue number already in manifest); stub body enriched later at post-dispatch sync
 
 ## Epic State Machine
 - ALWAYS track Epic phase via mutually exclusive `phase/*` labels: backlog, design, plan, implement, validate, release, done -- lifecycle state is visible and queryable

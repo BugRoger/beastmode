@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { PipelineManifest, ManifestFeature } from "../manifest/store";
-import { formatEpicBody, formatFeatureBody, formatClosingComment } from "../github/sync";
+import { formatEpicBody, formatFeatureBody, formatClosingComment, buildCompareUrl } from "../github/sync";
 
 function makeManifest(
   overrides: Partial<PipelineManifest> = {},
@@ -338,6 +338,74 @@ describe("formatEpicBody", () => {
     expect(body).toContain("**Branch:** `main`");
     expect(body).not.toContain("**Tags:**");
   });
+
+  test("renders compare URL as clickable link in git section", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/my-epic",
+        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
+      },
+    });
+    expect(body).toContain("## Git");
+    expect(body).toContain(
+      "**Compare:** [main...feature/my-epic](https://github.com/org/repo/compare/main...feature/my-epic)",
+    );
+  });
+
+  test("renders archive compare URL after release", () => {
+    const body = formatEpicBody({
+      ...makeManifest({ phase: "done" }),
+      gitMetadata: {
+        version: "1.2.0",
+        compareUrl: "https://github.com/org/repo/compare/v1.2.0...archive/my-epic",
+      },
+    });
+    expect(body).toContain(
+      "**Compare:** [v1.2.0...archive/my-epic](https://github.com/org/repo/compare/v1.2.0...archive/my-epic)",
+    );
+  });
+
+  test("omits compare line when compareUrl absent", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: { branch: "feature/my-epic" },
+    });
+    expect(body).not.toContain("**Compare:**");
+  });
+
+  test("compare URL appears after branch line in git section", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/my-epic",
+        compareUrl: "https://github.com/org/repo/compare/main...feature/my-epic",
+      },
+    });
+    const branchIdx = body.indexOf("**Branch:**");
+    const compareIdx = body.indexOf("**Compare:**");
+    expect(branchIdx).toBeGreaterThan(-1);
+    expect(compareIdx).toBeGreaterThan(branchIdx);
+  });
+
+  test("full git section includes compare URL alongside other fields", () => {
+    const body = formatEpicBody({
+      ...makeManifest(),
+      gitMetadata: {
+        branch: "feature/epic-branch",
+        phaseTags: { design: "beastmode/epic/design" },
+        version: "2.0.0",
+        mergeCommit: { sha: "deadbeef12345678", url: "https://github.com/org/repo/commit/deadbeef12345678" },
+        compareUrl: "https://github.com/org/repo/compare/main...feature/epic-branch",
+      },
+    });
+    expect(body).toContain("**Branch:** `feature/epic-branch`");
+    expect(body).toContain("**Compare:** [main...feature/epic-branch](https://github.com/org/repo/compare/main...feature/epic-branch)");
+    expect(body).toContain("**Tags:** `beastmode/epic/design`");
+    expect(body).toContain("**Version:** 2.0.0");
+    expect(body).toContain("**Merge Commit:** [deadbee](https://github.com/org/repo/commit/deadbeef12345678)");
+  });
+
 });
 
 // --- formatFeatureBody ---
@@ -457,5 +525,84 @@ describe("formatClosingComment", () => {
     expect(comment).toContain("## Released: 0.65.0");
     expect(comment).toContain("[`v0.65.0`](https://github.com/org/repo/tree/v0.65.0)");
     expect(comment).toContain("[`deadbee`](https://github.com/org/repo/commit/deadbeef1234567)");
+  });
+});
+
+// --- buildCompareUrl ---
+
+describe("buildCompareUrl", () => {
+  test("returns branch-based URL during active development", () => {
+    const url = buildCompareUrl({
+      repo: "org/repo",
+      branch: "feature/my-epic",
+      phase: "implement",
+      slug: "my-epic",
+    });
+    expect(url).toBe("https://github.com/org/repo/compare/main...feature/my-epic");
+  });
+
+  test("returns archive-based URL when phase is done and version is present", () => {
+    const url = buildCompareUrl({
+      repo: "org/repo",
+      branch: "feature/my-epic",
+      phase: "done",
+      slug: "my-epic",
+      versionTag: "v1.2.0",
+      hasArchiveTag: true,
+    });
+    expect(url).toBe("https://github.com/org/repo/compare/v1.2.0...archive/my-epic");
+  });
+
+  test("falls back to branch-based URL when done but no archive tag", () => {
+    const url = buildCompareUrl({
+      repo: "org/repo",
+      branch: "feature/my-epic",
+      phase: "done",
+      slug: "my-epic",
+      versionTag: "v1.2.0",
+      hasArchiveTag: false,
+    });
+    expect(url).toBe("https://github.com/org/repo/compare/main...feature/my-epic");
+  });
+
+  test("falls back to branch-based URL when done but no version tag", () => {
+    const url = buildCompareUrl({
+      repo: "org/repo",
+      branch: "feature/my-epic",
+      phase: "done",
+      slug: "my-epic",
+      hasArchiveTag: true,
+    });
+    expect(url).toBe("https://github.com/org/repo/compare/main...feature/my-epic");
+  });
+
+  test("returns undefined when repo is missing", () => {
+    const url = buildCompareUrl({
+      branch: "feature/my-epic",
+      phase: "implement",
+      slug: "my-epic",
+    });
+    expect(url).toBeUndefined();
+  });
+
+  test("returns undefined when branch is missing", () => {
+    const url = buildCompareUrl({
+      repo: "org/repo",
+      phase: "implement",
+      slug: "my-epic",
+    });
+    expect(url).toBeUndefined();
+  });
+
+  test("returns branch-based URL for all non-done phases", () => {
+    for (const phase of ["design", "plan", "implement", "validate", "release"] as const) {
+      const url = buildCompareUrl({
+        repo: "org/repo",
+        branch: "feature/my-epic",
+        phase,
+        slug: "my-epic",
+      });
+      expect(url).toBe("https://github.com/org/repo/compare/main...feature/my-epic");
+    }
   });
 });

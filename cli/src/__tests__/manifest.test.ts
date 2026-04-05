@@ -9,9 +9,8 @@ import {
   manifestExists,
   save,
 } from "../manifest/store";
-import type { PipelineManifest, ManifestFeature } from "../manifest/store";
+import type { PipelineManifest } from "../manifest/store";
 import {
-  enrich,
   getPendingFeatures,
 } from "../manifest/pure";
 
@@ -142,32 +141,6 @@ describe("manifest-store core operations", () => {
     const pending = getPendingFeatures(manifest);
     expect(pending).toHaveLength(2);
     expect(pending.map((f) => f.slug).sort()).toEqual(["feat-a", "feat-c"]);
-  });
-
-  test("enrich merges features (pure, then save roundtrip)", () => {
-    create(TEST_ROOT, "enrich-epic");
-    const initial = get(TEST_ROOT, "enrich-epic");
-
-    const features: ManifestFeature[] = [
-      { slug: "feat-x", plan: "x.md", status: "pending" },
-      { slug: "feat-y", plan: "y.md", status: "in-progress" },
-    ];
-
-    const enriched = enrich(initial, {
-      phase: "plan",
-      features,
-      artifacts: ["plan-output.md"],
-    });
-    save(TEST_ROOT, "enrich-epic", enriched);
-
-    expect(enriched.features).toHaveLength(2);
-    expect(enriched.features[0].slug).toBe("feat-x");
-    expect(enriched.features[1].slug).toBe("feat-y");
-    expect(enriched.artifacts["plan"]).toContain("plan-output.md");
-
-    // Verify persistence
-    const loaded = get(TEST_ROOT, "enrich-epic");
-    expect(loaded.features).toHaveLength(2);
   });
 
 });
