@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { TreeState, EpicNode } from "./tree-types.js";
+import type { TreeState, EpicNode, FeatureNode } from "./tree-types.js";
 import TreeView from "./TreeView.js";
 import { shouldShowEntry } from "./verbosity.js";
 
@@ -8,6 +8,12 @@ export interface LogPanelProps {
   state: TreeState;
   /** Current verbosity level (0=info, 1=debug). Default: 0 */
   verbosity?: number;
+  /** Scroll offset from top (line index). */
+  scrollOffset?: number;
+  /** Whether to auto-follow newest entries. Default: true */
+  autoFollow?: boolean;
+  /** Maximum visible lines to render. Default: 50 */
+  maxVisibleLines?: number;
 }
 
 /**
@@ -103,13 +109,124 @@ export function filterTreeByVerbosity(state: TreeState, verbosity: number): Tree
 }
 
 /**
+ * Filter tree entries by phase — only keeps entries matching the given phase.
+ * When phase is 'all', returns tree unchanged.
+ * Epic and feature skeleton nodes are preserved to maintain hierarchy context.
+ * CLI entries are never filtered.
+ */
+export function filterTreeByPhase(state: TreeState, phase: string): TreeState {
+  if (phase === "all") return state;
+  return {
+    cli: state.cli,
+    epics: state.epics.map((epic) => ({
+      ...epic,
+      entries: epic.entries.filter((e) => e.phase === phase),
+      features: epic.features.map((feat) => ({
+        ...feat,
+        entries: feat.entries.filter((e) => e.phase === phase),
+      })),
+    })),
+  };
+}
+
+/**
+ * Filter tree by blocked status.
+ * When showBlocked is true, returns tree unchanged.
+ * When false, removes epics/features with status "blocked".
+ */
+export function filterTreeByBlocked(state: TreeState, showBlocked: boolean): TreeState {
+  if (showBlocked) return state;
+  return {
+    cli: state.cli,
+    epics: state.epics
+      .filter((epic) => epic.status !== "blocked")
+      .map((epic) => ({
+        ...epic,
+        features: epic.features.filter((feat) => feat.status !== "blocked"),
+      })),
+  };
+}
+
+/**
+ * Drop the first N rendered lines from a tree state.
+ * Used for scroll offset rendering — skip lines before the viewport.
+ */
+export function trimTreeFromHead(state: TreeState, linesToDrop: number): TreeState {
+  if (linesToDrop <= 0) return state;
+
+  let toDrop = linesToDrop;
+
+  // Drop CLI root label
+  toDrop -= 1;
+  if (toDrop <= 0) return state;
+
+  // Drop CLI entries
+  let cliEntries = state.cli.entries;
+  if (toDrop > 0 && cliEntries.length > 0) {
+    const cliDrop = Math.min(toDrop, cliEntries.length);
+    cliEntries = cliEntries.slice(cliDrop);
+    toDrop -= cliDrop;
+  }
+
+  if (toDrop <= 0) return { cli: { entries: cliEntries }, epics: state.epics };
+
+  const epics: EpicNode[] = [];
+  for (const epic of state.epics) {
+    if (toDrop <= 0) {
+      epics.push(epic);
+      continue;
+    }
+
+    // Drop epic label line
+    toDrop -= 1;
+    if (toDrop <= 0) {
+      epics.push(epic);
+      continue;
+    }
+
+    // Drop epic direct entries
+    const epicEntryDrop = Math.min(toDrop, epic.entries.length);
+    const entries = epic.entries.slice(epicEntryDrop);
+    toDrop -= epicEntryDrop;
+
+    // Drop feature entries
+    const features: FeatureNode[] = [];
+    for (const feat of epic.features) {
+      if (toDrop <= 0) {
+        features.push(feat);
+        continue;
+      }
+
+      // Drop feature label line
+      toDrop -= 1;
+      if (toDrop <= 0) {
+        features.push(feat);
+        continue;
+      }
+
+      const featEntryDrop = Math.min(toDrop, feat.entries.length);
+      const fEntries = feat.entries.slice(featEntryDrop);
+      toDrop -= featEntryDrop;
+      features.push({ ...feat, entries: fEntries });
+    }
+
+    epics.push({ ...epic, entries, features });
+  }
+
+  return { cli: { entries: cliEntries }, epics };
+}
+
+/**
  * LogPanel — renders pipeline log entries as a hierarchical tree.
  *
- * Full scrollback — all entries rendered. No trim limit.
+ * Supports auto-follow (tail) and manual scroll via offset.
  */
 export default function LogPanel({
   state,
   verbosity = 0,
+  scrollOffset,
+  autoFollow = true,
+  maxVisibleLines = 50,
 }: LogPanelProps) {
   const filtered = filterTreeByVerbosity(state, verbosity);
   const hasContent = filtered.epics.length > 0 || filtered.cli.entries.length > 0;
@@ -122,9 +239,25 @@ export default function LogPanel({
     );
   }
 
+  // When auto-following or no scroll offset, show newest entries (trim from front)
+  if (autoFollow || scrollOffset === undefined) {
+    const trimmed = trimTreeToTail(filtered, maxVisibleLines);
+    return (
+      <Box flexDirection="column">
+        <TreeView state={trimmed} />
+      </Box>
+    );
+  }
+
+  // Manual scroll: drop lines before viewport, then trim to maxVisibleLines
+  const total = countTreeLines(filtered);
+  const clampedOffset = Math.min(scrollOffset, Math.max(0, total - maxVisibleLines));
+  const dropped = trimTreeFromHead(filtered, clampedOffset);
+  const trimmed = trimTreeToTail(dropped, maxVisibleLines);
+
   return (
     <Box flexDirection="column">
-      <TreeView state={filtered} />
+      <TreeView state={trimmed} />
     </Box>
   );
 }
