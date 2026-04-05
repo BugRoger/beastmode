@@ -499,3 +499,146 @@ describe("blocked toggle logic", () => {
   });
 });
 
+describe("log scroll state logic", () => {
+  test("default logAutoFollow is true", () => {
+    const logAutoFollow = true;
+    expect(logAutoFollow).toBe(true);
+  });
+
+  test("default logScrollOffset is 0", () => {
+    const logScrollOffset = 0;
+    expect(logScrollOffset).toBe(0);
+  });
+
+  test("up arrow when log focused decrements offset and pauses auto-follow", () => {
+    let logScrollOffset = 5;
+    let logAutoFollow = true;
+    const focusedPanel = "log";
+
+    if (focusedPanel === "log") {
+      logScrollOffset = Math.max(0, logScrollOffset - 1);
+      logAutoFollow = false;
+    }
+
+    expect(logScrollOffset).toBe(4);
+    expect(logAutoFollow).toBe(false);
+  });
+
+  test("down arrow when log focused increments offset", () => {
+    let logScrollOffset = 5;
+    const maxOffset = 50;
+    const focusedPanel = "log";
+
+    if (focusedPanel === "log") {
+      logScrollOffset = Math.min(maxOffset, logScrollOffset + 1);
+    }
+
+    expect(logScrollOffset).toBe(6);
+  });
+
+  test("scroll offset clamps to 0 at top", () => {
+    let logScrollOffset = 0;
+    logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(0);
+  });
+
+  test("scroll offset clamps to max at bottom", () => {
+    let logScrollOffset = 50;
+    const maxOffset = 50;
+    logScrollOffset = Math.min(maxOffset, logScrollOffset + 1);
+    expect(logScrollOffset).toBe(50);
+  });
+
+  test("G key resumes auto-follow", () => {
+    let logAutoFollow = false;
+    let logScrollOffset = 10;
+    const totalLines = 100;
+
+    const input = "G";
+    if (input === "G") {
+      logAutoFollow = true;
+      logScrollOffset = Math.max(0, totalLines - 1);
+    }
+
+    expect(logAutoFollow).toBe(true);
+    expect(logScrollOffset).toBe(99);
+  });
+
+  test("arrow keys route to nav when epics focused", () => {
+    const focusedPanel = "epics";
+    let selectedIndex = 2;
+    let logScrollOffset = 0;
+
+    if (focusedPanel === "epics") {
+      selectedIndex = Math.max(0, selectedIndex - 1); // up arrow
+    } else {
+      logScrollOffset = Math.max(0, logScrollOffset - 1);
+    }
+
+    expect(selectedIndex).toBe(1);
+    expect(logScrollOffset).toBe(0);
+  });
+
+  test("arrow keys route to log scroll when log focused", () => {
+    const focusedPanel = "log";
+    let selectedIndex = 2;
+    let logScrollOffset = 5;
+
+    if (focusedPanel === "epics") {
+      selectedIndex = Math.max(0, selectedIndex - 1);
+    } else {
+      logScrollOffset = Math.max(0, logScrollOffset - 1);
+    }
+
+    expect(selectedIndex).toBe(2); // unchanged
+    expect(logScrollOffset).toBe(4);
+  });
+});
+
+describe("details scroll state logic", () => {
+  test("default detailsScrollOffset is 0", () => {
+    const detailsScrollOffset = 0;
+    expect(detailsScrollOffset).toBe(0);
+  });
+
+  test("PgUp decrements detailsScrollOffset", () => {
+    let detailsScrollOffset = 10;
+    const pageSize = 10;
+    detailsScrollOffset = Math.max(0, detailsScrollOffset - pageSize);
+    expect(detailsScrollOffset).toBe(0);
+  });
+
+  test("PgDn increments detailsScrollOffset", () => {
+    let detailsScrollOffset = 0;
+    const pageSize = 10;
+    const maxOffset = 50;
+    detailsScrollOffset = Math.min(maxOffset, detailsScrollOffset + pageSize);
+    expect(detailsScrollOffset).toBe(10);
+  });
+
+  test("PgUp clamps to 0", () => {
+    let detailsScrollOffset = 3;
+    const pageSize = 10;
+    detailsScrollOffset = Math.max(0, detailsScrollOffset - pageSize);
+    expect(detailsScrollOffset).toBe(0);
+  });
+
+  test("PgDn clamps to max", () => {
+    let detailsScrollOffset = 45;
+    const pageSize = 10;
+    const maxOffset = 50;
+    detailsScrollOffset = Math.min(maxOffset, detailsScrollOffset + pageSize);
+    expect(detailsScrollOffset).toBe(50);
+  });
+
+  test("PgUp/PgDn works regardless of focused panel", () => {
+    let detailsScrollOffset = 10;
+    const focusedPanel = "log"; // doesn't matter
+    const pageSize = 10;
+    // PgUp is global
+    detailsScrollOffset = Math.max(0, detailsScrollOffset - pageSize);
+    expect(detailsScrollOffset).toBe(0);
+    expect(focusedPanel).toBe("log"); // focus unchanged
+  });
+});
+

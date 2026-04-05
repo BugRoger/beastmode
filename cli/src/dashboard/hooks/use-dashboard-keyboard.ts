@@ -65,6 +65,12 @@ export interface DashboardKeyboardDeps {
   onFilterClear: () => void;
   /** Initial verbosity level from CLI args (0-3) */
   initialVerbosity: number;
+  /** Total number of visible lines in the log tree (for scroll clamping) */
+  logTotalLines: number;
+  /** Total content height of the details panel (for scroll clamping) */
+  detailsContentHeight: number;
+  /** Visible height of the details panel */
+  detailsVisibleHeight: number;
 }
 
 export interface DashboardKeyboardState {
@@ -107,6 +113,9 @@ export function useDashboardKeyboard(
     onFilterApply,
     onFilterClear,
     initialVerbosity,
+    logTotalLines,
+    detailsContentHeight,
+    detailsVisibleHeight,
   } = deps;
 
   const nav = useKeyboardNav(itemCount);
@@ -191,7 +200,7 @@ export function useDashboardKeyboard(
             setLogAutoFollow(false);
             setLogScrollOffset((prev) => Math.max(0, prev - 1));
           } else {
-            setLogScrollOffset((prev) => prev + 1);
+            setLogScrollOffset((prev) => Math.min(Math.max(0, logTotalLines - 1), prev + 1));
           }
         }
         return;
@@ -242,20 +251,23 @@ export function useDashboardKeyboard(
 
       // Priority 13: PgUp — details panel scroll up
       if (key.pageUp) {
-        setDetailsScrollOffset((prev) => Math.max(0, prev - 10));
+        setDetailsScrollOffset((prev) => Math.max(0, prev - detailsVisibleHeight));
         return;
       }
 
       // Priority 14: PgDn — details panel scroll down
       if (key.pageDown) {
-        setDetailsScrollOffset((prev) => prev + 10);
+        setDetailsScrollOffset((prev) => {
+          const maxOffset = Math.max(0, detailsContentHeight - detailsVisibleHeight);
+          return Math.min(maxOffset, prev + detailsVisibleHeight);
+        });
         return;
       }
 
       // Priority 15: 'G'/End — resume log auto-follow
       if (input === "G" || key.end) {
         setLogAutoFollow(true);
-        setLogScrollOffset(0);
+        setLogScrollOffset(Math.max(0, logTotalLines - 1));
         return;
       }
     },
@@ -270,6 +282,9 @@ export function useDashboardKeyboard(
       logScrollOffset,
       logAutoFollow,
       detailsScrollOffset,
+      logTotalLines,
+      detailsContentHeight,
+      detailsVisibleHeight,
       cancelFlow,
       shutdown,
       nav,
