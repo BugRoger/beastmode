@@ -1,7 +1,7 @@
 ---
 phase: plan
 slug: github-issue-enrichment-5aa1b9
-epic: github-issue-enrichment
+epic: github-issue-enrichment-5aa1b9
 feature: enrichment-pipeline-fix
 wave: 2
 ---
