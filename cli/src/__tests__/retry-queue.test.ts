@@ -10,6 +10,8 @@ import {
   enqueuePendingOp,
   drainPendingOps,
   resolvePendingOp,
+  incrementRetry,
+  hasPendingOps,
   type PendingOp,
   type OpType,
 } from "../github/retry-queue";
@@ -280,5 +282,146 @@ describe("retry-queue: resolvePendingOp", () => {
     const updated = resolvePendingOp(refs, "bm-1234", op, "completed");
     expect(refs["bm-1234"].pendingOps).toHaveLength(1);
     expect(updated["bm-1234"].pendingOps).toHaveLength(0);
+  });
+});
+
+describe("retry-queue: incrementRetry", () => {
+  test("increments retryCount and updates nextRetryTick", () => {
+    const op: PendingOp = {
+      opType: "bodyEnrich",
+      retryCount: 1,
+      nextRetryTick: 3,
+      status: "pending",
+      context: {},
+    };
+    const refs: SyncRefs = { "bm-1234": { issue: 42, pendingOps: [op] } };
+
+    const updated = incrementRetry(refs, "bm-1234", op, 3);
+    const updatedOp = updated["bm-1234"].pendingOps![0];
+    expect(updatedOp.retryCount).toBe(2);
+    expect(updatedOp.nextRetryTick).toBe(7); // 3 + 2^2 = 7
+    expect(updatedOp.status).toBe("pending");
+  });
+
+  test("marks op as failed when retryCount reaches MAX_RETRIES", () => {
+    const op: PendingOp = {
+      opType: "bodyEnrich",
+      retryCount: 4,
+      nextRetryTick: 31,
+      status: "pending",
+      context: {},
+    };
+    const refs: SyncRefs = { "bm-1234": { issue: 42, pendingOps: [op] } };
+
+    const updated = incrementRetry(refs, "bm-1234", op, 31);
+    const updatedOp = updated["bm-1234"].pendingOps![0];
+    expect(updatedOp.retryCount).toBe(5);
+    expect(updatedOp.status).toBe("failed");
+  });
+
+  test("preserves other ops on same entity", () => {
+    const op1: PendingOp = {
+      opType: "bodyEnrich",
+      retryCount: 0,
+      nextRetryTick: 1,
+      status: "pending",
+      context: {},
+    };
+    const op2: PendingOp = {
+      opType: "labelSync",
+      retryCount: 0,
+      nextRetryTick: 1,
+      status: "pending",
+      context: {},
+    };
+    const refs: SyncRefs = { "bm-1234": { issue: 42, pendingOps: [op1, op2] } };
+
+    const updated = incrementRetry(refs, "bm-1234", op1, 1);
+    expect(updated["bm-1234"].pendingOps).toHaveLength(2);
+    expect(updated["bm-1234"].pendingOps![1].opType).toBe("labelSync");
+  });
+
+  test("returns new object (immutable)", () => {
+    const op: PendingOp = {
+      opType: "bodyEnrich",
+      retryCount: 0,
+      nextRetryTick: 1,
+      status: "pending",
+      context: {},
+    };
+    const refs: SyncRefs = { "bm-1234": { issue: 42, pendingOps: [op] } };
+
+    const updated = incrementRetry(refs, "bm-1234", op, 1);
+    expect(refs["bm-1234"].pendingOps![0].retryCount).toBe(0);
+    expect(updated["bm-1234"].pendingOps![0].retryCount).toBe(1);
+  });
+});
+
+describe("retry-queue: hasPendingOps", () => {
+  test("returns true when entity has pending ops", () => {
+    const refs: SyncRefs = {
+      "bm-1234": {
+        issue: 42,
+        pendingOps: [{
+          opType: "bodyEnrich",
+          retryCount: 0,
+          nextRetryTick: 1,
+          status: "pending" as const,
+          context: {},
+        }],
+      },
+    };
+    expect(hasPendingOps(refs, "bm-1234")).toBe(true);
+  });
+
+  test("returns false when all ops are failed", () => {
+    const refs: SyncRefs = {
+      "bm-1234": {
+        issue: 42,
+        pendingOps: [{
+          opType: "bodyEnrich",
+          retryCount: 5,
+          nextRetryTick: 0,
+          status: "failed" as const,
+          context: {},
+        }],
+      },
+    };
+    expect(hasPendingOps(refs, "bm-1234")).toBe(false);
+  });
+
+  test("returns false when no pendingOps array exists", () => {
+    const refs: SyncRefs = { "bm-1234": { issue: 42 } };
+    expect(hasPendingOps(refs, "bm-1234")).toBe(false);
+  });
+
+  test("returns false for non-existent entity", () => {
+    const refs: SyncRefs = {};
+    expect(hasPendingOps(refs, "bm-9999")).toBe(false);
+  });
+
+  test("returns true even if some ops are failed (at least one pending)", () => {
+    const refs: SyncRefs = {
+      "bm-1234": {
+        issue: 42,
+        pendingOps: [
+          {
+            opType: "bodyEnrich",
+            retryCount: 5,
+            nextRetryTick: 0,
+            status: "failed" as const,
+            context: {},
+          },
+          {
+            opType: "labelSync",
+            retryCount: 0,
+            nextRetryTick: 1,
+            status: "pending" as const,
+            context: {},
+          },
+        ],
+      },
+    };
+    expect(hasPendingOps(refs, "bm-1234")).toBe(true);
   });
 });

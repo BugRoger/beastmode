@@ -114,9 +114,7 @@ export function resolvePendingOp(
   const entry = refs[entityId];
   if (!entry?.pendingOps) return refs;
 
-  const remaining = entry.pendingOps.filter(
-    (p) => !(p.opType === op.opType && p.retryCount === op.retryCount && p.nextRetryTick === op.nextRetryTick),
-  );
+  const remaining = entry.pendingOps.filter((p) => p !== op);
 
   return {
     ...refs,
@@ -125,4 +123,46 @@ export function resolvePendingOp(
       pendingOps: remaining,
     },
   };
+}
+
+/**
+ * Increment retry count and recompute next-retry tick for a failed operation.
+ * If retryCount >= MAX_RETRIES, marks the op as "failed".
+ * Returns new SyncRefs with updated operation.
+ */
+export function incrementRetry(
+  refs: SyncRefs,
+  entityId: string,
+  op: PendingOp,
+  currentTick: number,
+): SyncRefs {
+  const entry = refs[entityId];
+  if (!entry?.pendingOps) return refs;
+
+  const newRetryCount = op.retryCount + 1;
+  const updatedOp: PendingOp = newRetryCount >= MAX_RETRIES
+    ? { ...op, retryCount: newRetryCount, status: "failed" }
+    : {
+        ...op,
+        retryCount: newRetryCount,
+        nextRetryTick: computeNextRetryTick(currentTick, newRetryCount),
+      };
+
+  const updatedOps = entry.pendingOps.map((p) => (p === op ? updatedOp : p));
+  return {
+    ...refs,
+    [entityId]: {
+      ...entry,
+      pendingOps: updatedOps,
+    },
+  };
+}
+
+/**
+ * Check if an entity has any pending (non-failed) operations.
+ */
+export function hasPendingOps(refs: SyncRefs, entityId: string): boolean {
+  const entry = refs[entityId];
+  if (!entry?.pendingOps) return false;
+  return entry.pendingOps.some((op) => op.status === "pending");
 }
