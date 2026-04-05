@@ -32,7 +32,7 @@ TypeScript CLI (`beastmode`) drives phase transitions via `beastmode <phase> <sl
 1. ALWAYS use `beastmode <phase> <slug>` as the phase entry point — no Justfile aliases, CLI is the sole orchestrator
 2. NEVER embed worktree or transition logic in skills — skills assume correct working directory
 3. ALWAYS print `beastmode <next-phase> <slug>` at checkpoint — human copies and runs (or watch loop auto-advances)
-4. NEVER auto-chain phases — each phase is a separate SDK session
+4. NEVER auto-chain phases — each phase is a separate Agent SDK session
 5. NEVER print transition guidance from retro agents — checkpoint is the sole authority
 6. ALWAYS STOP after printing transition output — no additional output
 7. ALWAYS use the phase detection matrix for `beastmode <phase> <slug>` — regression (requested < current), same-phase rerun (requested == current with prior commits), normal forward (requested == current, no prior), forward-jump blocked (requested > current)

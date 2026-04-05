@@ -1,9 +1,9 @@
 # Phase Transitions
 
 ## Transition Mechanism
-- ALWAYS use `beastmode <phase> <slug>` as the phase entry point — CLI owns worktree lifecycle and SDK session management
+- ALWAYS use `beastmode <phase> <slug>` as the phase entry point — CLI owns worktree lifecycle and Agent SDK session management
 - Justfile is deleted — CLI is the sole orchestration entry point, no alias layer
-- ALWAYS use fresh SDK session per phase — state files are the contract between phases, not conversation history
+- ALWAYS use fresh Agent SDK session per phase — state files are the contract between phases, not conversation history
 - NEVER auto-chain phases from within skills — human runs each command explicitly (or watch loop auto-advances)
 - CLI-owned worktree lifecycle: creates worktree at first phase encounter, persists through all phases, squash-merges to main and removes at release
 - Worktree directory is `.claude/worktrees/` (Claude Code default) — not `.beastmode/worktrees/`

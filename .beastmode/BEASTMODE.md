@@ -57,6 +57,8 @@
 - ALWAYS decompose multi-feature epics into a manifest JSON plus N independent feature plans
 - ALWAYS verify deletion targets have no active consumers before specifying file deletion in plans — grep for imports before listing files to delete
 - ALWAYS use wave injection (assign wave 1, bump all others +1) when inserting prerequisite features after decomposition — preserves dependency ordering
+- ALWAYS include test support files (World classes, fixtures, mocks) in file isolation analysis when plan tasks modify types they consume — config type changes propagate to BDD worlds and mock objects
+- ALWAYS use grep-based scope estimation for deletion epics before locking the plan — enumerate all references to deleted symbols/files across the entire tree, not just the primary source directories
 
 ## Implement Process
 
