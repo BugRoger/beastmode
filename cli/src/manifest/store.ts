@@ -40,6 +40,7 @@ export interface ManifestFeature {
   description?: string;
   wave?: number;
   status: "pending" | "in-progress" | "completed" | "blocked";
+  reDispatchCount?: number;
   github?: { issue: number; bodyHash?: string };
 }
 

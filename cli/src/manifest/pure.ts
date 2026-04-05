@@ -166,6 +166,58 @@ export function regress(
 }
 
 /**
+ * Regress only specific failing features to "pending" or "blocked" status.
+ * - Each failing feature's reDispatchCount is incremented by 1
+ * - If reDispatchCount exceeds 2, the feature is marked "blocked" instead of "pending"
+ * - Phase is set to "implement" to re-dispatch
+ * - Downstream artifacts (validate, release) are cleared
+ * - If failingFeatures is empty, returns the manifest unchanged
+ */
+export function regressFeatures(
+  manifest: PipelineManifest,
+  failingFeatures: string[],
+): PipelineManifest {
+  // If no failing features, return unchanged
+  if (failingFeatures.length === 0) return manifest;
+
+  const failingSet = new Set(failingFeatures);
+  const MAX_REDISPATCH = 2;
+
+  // Update only the failing features
+  const features = manifest.features.map((f) => {
+    if (!failingSet.has(f.slug)) return f;
+
+    // Increment reDispatchCount
+    const newCount = (f.reDispatchCount ?? 0) + 1;
+    // If exceeded max, mark as blocked; otherwise pending
+    const newStatus = newCount > MAX_REDISPATCH ? ("blocked" as const) : ("pending" as const);
+
+    return {
+      ...f,
+      status: newStatus,
+      reDispatchCount: newCount,
+    };
+  });
+
+  // Clear artifacts for phases after "implement"
+  const implementIdx = PHASE_ORDER.indexOf("implement");
+  const artifacts: Record<string, string[]> = {};
+  for (const [phase, files] of Object.entries(manifest.artifacts)) {
+    const phaseIdx = PHASE_ORDER.indexOf(phase as Phase);
+    if (phaseIdx !== -1 && phaseIdx > implementIdx) continue; // downstream — drop
+    artifacts[phase] = files;
+  }
+
+  return {
+    ...manifest,
+    phase: "implement",
+    features,
+    artifacts,
+    lastUpdated: now(),
+  };
+}
+
+/**
  * Get features that are pending or in-progress.
  */
 export function getPendingFeatures(
