@@ -83,7 +83,6 @@ export default function EpicsPanel({
   });
 
   // Keep selected index in view
-  const totalRows = epics.length + 1; // +1 for (all)
   useEffect(() => {
     if (selectedIndex < scrollOffset) {
       setScrollOffset(selectedIndex);
