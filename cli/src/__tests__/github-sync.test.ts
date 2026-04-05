@@ -1655,7 +1655,7 @@ describe("syncGitHub", () => {
       }
     });
 
-    test("epic body includes git metadata when manifest has worktree branch", async () => {
+    test("epic body does not include git metadata section (removed)", async () => {
       setupArtifacts({
         designContent: "## Problem Statement\n\nSome problem",
       });
@@ -1676,10 +1676,10 @@ describe("syncGitHub", () => {
 
       const editCalls = callsTo("ghIssueEdit");
       const bodyEdit = editCalls.find(c => (c.args[2] as any)?.body);
-      expect(bodyEdit).toBeDefined();
-      const body = (bodyEdit!.args[2] as any).body as string;
-      expect(body).toContain("## Git");
-      expect(body).toContain("**Branch:** `feature/test-branch`");
+      if (bodyEdit) {
+        const body = (bodyEdit!.args[2] as any).body as string;
+        expect(body).not.toContain("## Git");
+      }
 
       cleanupArtifacts();
     });
