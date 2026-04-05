@@ -34,13 +34,6 @@
 - Status table: Epic, Phase, Progress, Blocked, Last Activity
 - Next action: fan-out at implement, single dispatch for all other phases, null for done epics
 
-## Cmux Integration
-- CmuxClient is a class wrapping the cmux binary via Bun.spawn with injectable SpawnFn for testability
-- All operations shell out to cmux CLI with --json flag for structured responses; no direct socket programming
-- Error hierarchy: CmuxError base, CmuxConnectionError, CmuxProtocolError, CmuxTimeoutError
-- Close operations are idempotent — "not found" errors are swallowed, connection errors always rethrow
-- No retry logic or caching in the client — callers handle retry policy
-
 ## Pipeline Machine
 - Two XState v5 machines in cli/src/pipeline-machine/: epicMachine (7 states) and featureMachine (3 states)
 1. ALWAYS use the setup() API — declare guards, actions, and actors in setup() before createMachine()

@@ -1,7 +1,7 @@
 # Status Display
 
 ## Context
-The status command renders a table of all epics with their current state.
+The dashboard renders epic state information using shared data logic from `status-data.ts`.
 
 ## Decision
 Table columns are Epic, Phase, Progress, Blocked, Last Activity. Sort order is lastUpdated descending with alphabetical slug as tiebreaker. Progress shows completed/total count only during implement phase; all other phases show a dash. lastUpdated is read directly from manifest JSON.
