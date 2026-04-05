@@ -6,7 +6,6 @@
  */
 
 import type { EnrichedManifest, ScanResult, NextAction } from "../manifest/store.js";
-import type { SessionEmitter } from "./factory.js";
 export type { EnrichedManifest, ScanResult, NextAction };
 
 /** Tracks an active SDK session dispatched by the watch loop. */
@@ -27,8 +26,6 @@ export interface DispatchedSession {
   promise: Promise<SessionResult>;
   /** Timestamp when dispatched */
   startedAt: number;
-  /** EventEmitter for live SDK message streaming (undefined for non-SDK sessions). */
-  events?: SessionEmitter;
   /** TTY device path for terminal-dispatched sessions (undefined for SDK sessions). */
   tty?: string;
 }
