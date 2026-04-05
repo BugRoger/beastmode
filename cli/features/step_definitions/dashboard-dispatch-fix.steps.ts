@@ -274,7 +274,7 @@ Then("no dashboard restart is required", function (this: DashboardDispatchWorld)
   assert.ok(this.hasVerbosityCycling(), "App.tsx should have verbosity cycling without restart");
 });
 
-Then("only info-level log entries are visible", function (this: DashboardDispatchWorld) {
+Then("only info-level and above log entries are visible", function (this: DashboardDispatchWorld) {
   assert.strictEqual(
     this.verbosityName(),
     "info",
@@ -282,11 +282,11 @@ Then("only info-level log entries are visible", function (this: DashboardDispatc
   );
 });
 
-Then("info-level and detail-level log entries are visible", function (this: DashboardDispatchWorld) {
+Then("debug-level log entries are also visible", function (this: DashboardDispatchWorld) {
   assert.strictEqual(
     this.verbosityName(),
-    "detail",
-    "Info and detail-level entries visible when verbosity is detail",
+    "debug",
+    "Debug-level entries visible when verbosity is debug",
   );
 });
 

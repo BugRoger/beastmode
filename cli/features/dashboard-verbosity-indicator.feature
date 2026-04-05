@@ -1,4 +1,4 @@
-@dashboard-dispatch-fix
+@logging-cleanup
 Feature: Key hints bar displays current log verbosity level
 
   The dashboard key hints bar must show the current log verbosity level
@@ -14,7 +14,7 @@ Feature: Key hints bar displays current log verbosity level
     Given the dashboard is running
     And the current log verbosity level is "info"
     When the operator presses the verbosity toggle key
-    Then the key hints bar displays the verbosity level as "detail"
+    Then the key hints bar displays the verbosity level as "debug"
 
   Scenario: Key hints bar shows the verbosity toggle shortcut
     Given the dashboard is running
