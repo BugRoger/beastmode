@@ -19,6 +19,22 @@ const DISPATCH_TYPE: Record<string, "single" | "fan-out" | "skip"> = {
   cancelled: "skip",
 };
 
+/** Terminal statuses — sorted below active epics. */
+const TERMINAL_STATUSES = new Set(["done", "cancelled"]);
+
+/**
+ * Compare two epics for sorting:
+ * 1. Active epics before terminal (done/cancelled)
+ * 2. Within each group, newest first by created_at
+ */
+export function compareEpics(a: Epic, b: Epic): number {
+  const aTerminal = TERMINAL_STATUSES.has(a.status) ? 1 : 0;
+  const bTerminal = TERMINAL_STATUSES.has(b.status) ? 1 : 0;
+  if (aTerminal !== bTerminal) return aTerminal - bTerminal;
+  // Descending by created_at (newest first) — ISO 8601 strings compare lexicographically
+  return b.created_at.localeCompare(a.created_at);
+}
+
 /**
  * Derive next action from an epic and its features.
  * Pure function — no filesystem, no XState actor hydration needed
@@ -85,7 +101,7 @@ function deriveNextAction(epic: Epic, features: Feature[]): NextAction | null {
 export function listEnrichedFromStore(store: TaskStore): EnrichedEpic[] {
   const epics = store.listEpics();
 
-  return epics.map((epic) => {
+  const enriched = epics.map((epic) => {
     const features = store.listFeatures(epic.id);
     const nextAction = deriveNextAction(epic, features);
 
@@ -95,4 +111,6 @@ export function listEnrichedFromStore(store: TaskStore): EnrichedEpic[] {
       features,
     };
   });
+
+  return enriched.sort(compareEpics);
 }

@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.97.0 — Epic Sort by Date (Apr 2026)
+
+- **compareEpics comparator** — Sort epics by most recent commit timestamp (descending), with slug-based tiebreaker for deterministic ordering
+- **listEnrichedFromStore sort** — Apply compareEpics in the shared data layer so all consumers (dashboard, CLI) get sorted epics automatically
+- **Integration test** — BDD scenario covering date-based epic ordering contract
+
+---
+
 ### v0.96.0 — Static HITL Hooks (Apr 2026)
 
 - **Command-type hooks** — Replace prompt-based HITL hooks with static command-type hooks; `buildPreToolUseHook(phase)` emits `type: "command"` entries instead of prompt injection
