@@ -291,5 +291,15 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "version-display": {
+    "paths": ["features/version-display.feature"],
+    "import": [
+      "features/step_definitions/version-display.steps.ts",
+      "features/support/dashboard-world.ts",
+      "features/support/dashboard-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
