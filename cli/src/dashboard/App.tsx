@@ -126,6 +126,9 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
 
   // --- Keyboard hook (flat model — no view stack) ---
   // itemCount uses epics.length as upper bound; clamped below after filtering.
+  // onToggleExpand is a no-op until the epics-tree feature lands
+  const handleToggleExpand = useCallback((_slug: string | undefined) => {}, []);
+
   const keyboard = useDashboardKeyboard({
     itemCount: epics.length + 1, // +1 for "(all)" row
     onCancelEpic: handleCancelEpic,
@@ -137,7 +140,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     onToggleExpand: handleToggleExpand,
     logTotalLines: 0,
     detailsContentHeight: 0,
-    detailsVisibleHeight: 15,
+    detailsVisibleHeight: Math.max(1, Math.floor((rows ?? 24) * 0.4 * 0.6) - 2),
   });
 
   // --- Filter + toggle-all ---
@@ -460,7 +463,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           activeSessions={activeSessions.size}
           gitStatus={gitStatus}
           scrollOffset={keyboard.detailsScrollOffset}
-          visibleHeight={15}
+          visibleHeight={Math.max(1, Math.floor((rows ?? 24) * 0.4 * 0.6) - 2)}
         />
       }
       logSlot={<LogPanel state={treeState} verbosity={keyboard.verbosity} />}
