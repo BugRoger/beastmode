@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, Text, measureElement } from "ink";
 import type { EnrichedEpic } from "../store/index.js";
-import { PHASE_COLOR, CHROME, isDim, FEATURE_STATUS_COLOR, isFeatureDim } from "./monokai-palette.js";
-import { buildFlatRows } from "./epics-tree-model.js";
+import { PHASE_COLOR, CHROME, isDim } from "./monokai-palette.js";
 
 // --- Shared utilities ---
 
@@ -61,8 +60,6 @@ export interface EpicsPanelProps {
   selectedIndex: number;
   /** Slug currently in cancel-confirmation state */
   cancelConfirmingSlug?: string;
-  /** Slug of the currently expanded epic (if any) */
-  expandedEpicSlug?: string;
 }
 
 // --- Component ---
@@ -72,7 +69,6 @@ export default function EpicsPanel({
   activeSessions,
   selectedIndex,
   cancelConfirmingSlug,
-  expandedEpicSlug,
 }: EpicsPanelProps) {
   const ref = useRef(null);
   const [visibleRows, setVisibleRows] = useState(Infinity);
@@ -95,38 +91,42 @@ export default function EpicsPanel({
     }
   }, [selectedIndex, visibleRows]);
 
-  const flatRows = buildFlatRows(epics, expandedEpicSlug);
-
+  const allSelected = selectedIndex === 0;
   const slugWidth =
     Math.max(12, ...epics.map((e) => e.slug.length)) + 2;
 
-  // Build renderable rows from flat model
-  const renderedRows: React.ReactNode[] = [];
+  // Build all rows, then slice to viewport
+  const rows: React.ReactNode[] = [];
 
-  for (let i = 0; i < flatRows.length; i++) {
-    const row = flatRows[i];
-    const isSelected = i === selectedIndex;
+  // (all) entry — always index 0
+  rows.push(
+    <Box key="__all__">
+      <Box width={2}>
+        <Text color={CHROME.title}>{allSelected ? ">" : " "}</Text>
+      </Box>
+      <Text inverse={allSelected} color={allSelected ? CHROME.title : undefined}>
+        (all)
+      </Text>
+    </Box>
+  );
 
-    if (row.type === "all") {
-      renderedRows.push(
-        <Box key="__all__">
-          <Box width={2}>
-            <Text color={CHROME.title}>{isSelected ? ">" : " "}</Text>
-          </Box>
-          <Text inverse={isSelected} color={isSelected ? CHROME.title : undefined}>
-            (all)
-          </Text>
-        </Box>,
-      );
-    } else if (row.type === "epic") {
-      const epic = row.epic;
+  if (epics.length === 0) {
+    rows.push(
+      <Box key="__empty__" paddingLeft={2}>
+        <Text dimColor>no epics</Text>
+      </Box>
+    );
+  } else {
+    for (let i = 0; i < epics.length; i++) {
+      const epic = epics[i];
+      const rowIndex = i + 1;
+      const isSelected = rowIndex === selectedIndex;
       const isActive = activeSessions.has(epic.slug);
       const isConfirming = cancelConfirmingSlug === epic.slug;
       const dim = isDim(epic.status);
       const icon = getEpicIcon(isSelected, isActive, epic.status);
-      const isExpanded = expandedEpicSlug === epic.slug;
 
-      renderedRows.push(
+      rows.push(
         <Box key={epic.slug}>
           <Box width={2}>
             {icon.spinner ? (
@@ -142,7 +142,7 @@ export default function EpicsPanel({
           </Box>
           <Box width={slugWidth}>
             <Text inverse={isSelected} dimColor={dim}>
-              {isExpanded ? "\u25BE " : "\u25B8 "}{epic.slug}
+              {epic.slug}
             </Text>
           </Box>
           <Box>
@@ -159,45 +159,14 @@ export default function EpicsPanel({
               </Text>
             )}
           </Box>
-        </Box>,
-      );
-    } else if (row.type === "feature") {
-      const dim = isFeatureDim(row.featureStatus);
-      const color = FEATURE_STATUS_COLOR[row.featureStatus] as Parameters<typeof Text>[0]["color"];
-
-      renderedRows.push(
-        <Box key={`${row.epicSlug}/${row.slug}`} paddingLeft={4}>
-          <Box width={2}>
-            <Text color={isSelected ? CHROME.title : color} dimColor={!isSelected && dim}>
-              {isSelected ? ">" : "\u00b7"}
-            </Text>
-          </Box>
-          <Box width={slugWidth - 2}>
-            <Text inverse={isSelected} dimColor={dim}>
-              {row.slug}
-            </Text>
-          </Box>
-          <Box>
-            <Text color={color} dimColor={dim}>
-              {row.featureStatus}
-            </Text>
-          </Box>
-        </Box>,
+        </Box>
       );
     }
   }
 
-  if (epics.length === 0) {
-    renderedRows.push(
-      <Box key="__empty__" paddingLeft={2}>
-        <Text dimColor>no epics</Text>
-      </Box>,
-    );
-  }
-
   const visible = visibleRows < Infinity
-    ? renderedRows.slice(scrollOffset, scrollOffset + visibleRows)
-    : renderedRows;
+    ? rows.slice(scrollOffset, scrollOffset + visibleRows)
+    : rows;
 
   return (
     <Box ref={ref} flexDirection="column" flexGrow={1}>

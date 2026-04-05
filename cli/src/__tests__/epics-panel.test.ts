@@ -498,36 +498,3 @@ describe("slugAtIndex", () => {
     expect(slugAtIndex(5)).toBeUndefined();
   });
 });
-
-// ---------------------------------------------------------------------------
-// Group 7: Epics tree expansion
-// ---------------------------------------------------------------------------
-
-describe("epics tree expansion", () => {
-  test("feature rows are indented with 4-space prefix", () => {
-    const featureIndent = 4;
-    expect(featureIndent).toBe(4);
-  });
-
-  test("feature row shows slug and status badge", () => {
-    const featureSlug = "login-flow";
-    const featureStatus = "in-progress";
-    expect(featureSlug).toBeTruthy();
-    expect(featureStatus).toBeTruthy();
-  });
-
-  test("expanded epic's features increase total row count", () => {
-    const epicCount = 2;
-    const featureCount = 3;
-    const allRow = 1;
-    const totalRows = allRow + epicCount + featureCount;
-    expect(totalRows).toBe(6);
-  });
-
-  test("collapsed state has no feature rows", () => {
-    const epicCount = 2;
-    const allRow = 1;
-    const totalRows = allRow + epicCount;
-    expect(totalRows).toBe(3);
-  });
-});
