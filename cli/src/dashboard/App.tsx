@@ -19,6 +19,8 @@ import { FallbackEntryStore, lifecycleToLogEntry } from "./lifecycle-entries.js"
 import { createLogger } from "../logger.js";
 import { DashboardSink } from "./dashboard-sink.js";
 import type { SystemEntryRef } from "./dashboard-logger.js";
+import { NYAN_PALETTE } from "./nyan-colors.js";
+import { TICK_INTERVAL_MS } from "./NyanBanner.js";
 
 export interface AppProps {
   config: BeastmodeConfig;
@@ -48,6 +50,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const [activeFilter, setActiveFilter] = useState<string>("");
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   const { rows } = useTerminalSize();
+  const [tick, setTick] = useState(0);
   const loopRef = useRef(loop);
   loopRef.current = loop;
   // Use shared stores from dashboard command if provided, otherwise create local ones
@@ -153,6 +156,12 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   // --- Clock tick every 1s ---
   useEffect(() => {
     const timer = setInterval(() => setClock(formatClock()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // --- Nyan tick every 80ms — shared between banner and focus border ---
+  useEffect(() => {
+    const timer = setInterval(() => setTick((prev) => prev + 1), TICK_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
 
@@ -372,6 +381,8 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     slug: cancelConfirmingSlug,
     filterInput: keyboard.filterInput,
     verbosity: keyboard.verbosity,
+    phaseFilter: keyboard.phaseFilter,
+    showBlocked: keyboard.showBlocked,
   });
 
   // --- Cancel prompt ---
@@ -379,11 +390,19 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     <Text color="yellow">Cancel {cancelConfirmingSlug}? (y/n)</Text>
   ) : undefined;
 
+  // --- Focus border — animated color for the focused panel ---
+  const focusBorderColor = NYAN_PALETTE[tick % NYAN_PALETTE.length];
+  const epicsBorderColor = keyboard.focusedPanel === "epics" ? focusBorderColor : undefined;
+  const logBorderColor = keyboard.focusedPanel === "log" ? focusBorderColor : undefined;
+
   return (
     <ThreePanelLayout
       watchRunning={watchRunning}
       clock={clock}
       rows={rows}
+      tick={tick}
+      epicsBorderColor={epicsBorderColor}
+      logBorderColor={logBorderColor}
       epicsSlot={
         <EpicsPanel
           epics={filteredEpics}

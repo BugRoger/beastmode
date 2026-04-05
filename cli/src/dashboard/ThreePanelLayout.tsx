@@ -24,6 +24,12 @@ export interface ThreePanelLayoutProps {
   isShuttingDown?: boolean;
   /** Cancel confirmation prompt content. */
   cancelPrompt?: ReactNode;
+  /** External tick for NyanBanner — when provided, banner uses this instead of internal timer. */
+  tick?: number;
+  /** Border color for the epics panel (animated when focused). */
+  epicsBorderColor?: string;
+  /** Border color for the log panel (animated when focused). */
+  logBorderColor?: string;
 }
 
 /** Three-panel k9s-style dashboard layout. */
@@ -37,13 +43,16 @@ export default function ThreePanelLayout({
   keyHints,
   isShuttingDown,
   cancelPrompt,
+  tick,
+  epicsBorderColor,
+  logBorderColor,
 }: ThreePanelLayoutProps) {
   return (
     <MinSizeGate>
       <Box flexDirection="column" width="100%" height={rows ?? "100%"}>
         {/* Header bar — banner + watch status */}
         <Box flexDirection="row" justifyContent="space-between" paddingX={1} paddingY={1}>
-          <NyanBanner />
+          <NyanBanner tick={tick} />
           <Box flexDirection="column" alignItems="flex-end" justifyContent="flex-start">
             <Box>
               <Text color={watchRunning ? CHROME.watchRunning : CHROME.watchStopped}>
@@ -59,7 +68,7 @@ export default function ThreePanelLayout({
         <Box flexDirection="row" flexGrow={1}>
           {/* Left column — 35% width */}
           <Box flexDirection="column" width="35%">
-            <PanelBox title="EPICS" height="60%">
+            <PanelBox title="EPICS" height="60%" borderColor={epicsBorderColor}>
               {epicsSlot}
             </PanelBox>
             <PanelBox title="OVERVIEW" flexGrow={1}>
@@ -68,7 +77,7 @@ export default function ThreePanelLayout({
           </Box>
 
           {/* Right column — 65% width, LOG at full height */}
-          <PanelBox title="LOG" width="65%">
+          <PanelBox title="LOG" width="65%" borderColor={logBorderColor}>
             {logSlot}
           </PanelBox>
         </Box>

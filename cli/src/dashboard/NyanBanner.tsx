@@ -7,7 +7,7 @@ import { DEPTH } from "./monokai-palette.js";
 const BANNER_LINE_1 = " █▄▄ █▀▀ ▄▀█ █▀▀ ▀█▀ █▀▄▀█ █▀█ █▀▄ █▀▀";
 const BANNER_LINE_2 = " █▄█ ██▄ █▀█ ▄▄█  █  █ ▀ █ █▄█ █▄▀ ██▄";
 
-const TICK_INTERVAL_MS = 80;
+export const TICK_INTERVAL_MS = 80;
 const DOTS_START = BANNER_LINE_2.length;
 const FULL_DOTS = 15;
 const FADE_DOTS = 25;
@@ -22,17 +22,25 @@ function fadeToBg(hex: string, factor: number): string {
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 }
 
-export default function NyanBanner() {
+export interface NyanBannerProps {
+  /** External tick value. When provided, internal timer is disabled. */
+  tick?: number;
+}
+
+export default function NyanBanner({ tick: externalTick }: NyanBannerProps = {}) {
   const ref = useRef(null);
   const [w, setW] = useState(0);
-  const [tick, setTick] = useState(0);
+  const [internalTick, setInternalTick] = useState(0);
+
+  const tick = externalTick ?? internalTick;
 
   useEffect(() => {
+    if (externalTick !== undefined) return;
     const timer = setInterval(() => {
-      setTick((prev) => prev + 1);
+      setInternalTick((prev) => prev + 1);
     }, TICK_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [externalTick !== undefined]);
 
   useEffect(() => {
     if (ref.current) {

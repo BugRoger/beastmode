@@ -14,6 +14,8 @@ export interface PanelBoxProps {
   height?: string | number;
   /** Flex grow factor. */
   flexGrow?: number;
+  /** Override border color (default: CHROME.border). */
+  borderColor?: string;
 }
 
 /** Bordered panel with title embedded in the top border line. */
@@ -23,9 +25,11 @@ export default function PanelBox({
   width,
   height,
   flexGrow,
+  borderColor: borderColorProp,
 }: PanelBoxProps) {
   const ref = useRef(null);
   const [w, setW] = useState(0);
+  const effectiveBorder = borderColorProp ?? CHROME.border;
 
   useEffect(() => {
     if (ref.current) {
@@ -45,14 +49,14 @@ export default function PanelBox({
 
   return (
     <Box ref={ref} flexDirection="column" width={width} height={height} flexGrow={flexGrow}>
-      <Text wrap="truncate-end" color={CHROME.border}>
+      <Text wrap="truncate-end" color={effectiveBorder}>
         {topBorder}
       </Text>
 
       {/* Content area with side + bottom borders */}
       <Box
         borderStyle="single"
-        borderColor={CHROME.border}
+        borderColor={effectiveBorder}
         borderTop={false}
         flexDirection="column"
         flexGrow={1}
