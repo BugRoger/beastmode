@@ -686,6 +686,95 @@ describe("action effects", () => {
   });
 });
 
+// ── 10. REGRESS_FEATURES event ───────────────────────────────────
+
+describe("REGRESS_FEATURES event", () => {
+  test("validate -> implement when failingFeatures has entries", () => {
+    const ctx = makeContext({
+      phase: "validate",
+      features: [
+        { slug: "feat-a", plan: "", status: "completed" },
+        { slug: "feat-b", plan: "", status: "completed" },
+      ],
+    });
+    const resolvedSnapshot = epicMachine.resolveState({ value: "validate", context: ctx });
+    const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: ctx });
+    actor.start();
+
+    actor.send({ type: "REGRESS_FEATURES", failingFeatures: ["feat-b"] });
+
+    expect(actor.getSnapshot().value).toBe("implement");
+    expect(actor.getSnapshot().context.features[0]).toMatchObject({ slug: "feat-a", status: "completed" });
+    expect(actor.getSnapshot().context.features[1]).toMatchObject({ slug: "feat-b", status: "pending", reDispatchCount: 1 });
+    actor.stop();
+  });
+
+  test("stays in validate when failingFeatures is empty", () => {
+    const ctx = makeContext({
+      phase: "validate",
+      features: [
+        { slug: "feat-a", plan: "", status: "completed" },
+      ],
+    });
+    const resolvedSnapshot = epicMachine.resolveState({ value: "validate", context: ctx });
+    const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: ctx });
+    actor.start();
+
+    actor.send({ type: "REGRESS_FEATURES", failingFeatures: [] });
+
+    expect(actor.getSnapshot().value).toBe("validate");
+    actor.stop();
+  });
+
+  test("clears downstream artifacts on REGRESS_FEATURES", () => {
+    const ctx = makeContext({
+      phase: "validate",
+      features: [
+        { slug: "feat-a", plan: "", status: "completed" },
+      ],
+      artifacts: {
+        design: ["d.md"],
+        plan: ["p.md"],
+        implement: ["i.md"],
+        validate: ["v.md"],
+      },
+    });
+    const resolvedSnapshot = epicMachine.resolveState({ value: "validate", context: ctx });
+    const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: ctx });
+    actor.start();
+
+    actor.send({ type: "REGRESS_FEATURES", failingFeatures: ["feat-a"] });
+
+    const arts = actor.getSnapshot().context.artifacts;
+    expect(arts.design).toEqual(["d.md"]);
+    expect(arts.plan).toEqual(["p.md"]);
+    expect(arts.implement).toEqual(["i.md"]);
+    expect(arts.validate).toBeUndefined();
+    actor.stop();
+  });
+
+  test("REGRESS_FEATURES increments reDispatchCount", () => {
+    const ctx = makeContext({
+      phase: "validate",
+      features: [
+        { slug: "feat-a", plan: "", status: "completed", reDispatchCount: 1 },
+      ],
+    });
+    const resolvedSnapshot = epicMachine.resolveState({ value: "validate", context: ctx });
+    const actor = createActor(epicMachine, { snapshot: resolvedSnapshot, input: ctx });
+    actor.start();
+
+    actor.send({ type: "REGRESS_FEATURES", failingFeatures: ["feat-a"] });
+
+    expect(actor.getSnapshot().context.features[0]).toMatchObject({
+      slug: "feat-a",
+      status: "pending",
+      reDispatchCount: 2,
+    });
+    actor.stop();
+  });
+});
+
 // ── Artifact propagation ──────────────────────────────────────────
 
 describe("artifact propagation", () => {

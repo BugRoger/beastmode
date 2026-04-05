@@ -21,6 +21,7 @@ export type EpicEvent =
   | { type: "IMPLEMENT_COMPLETED" }
   | { type: "VALIDATE_COMPLETED" }
   | { type: "REGRESS"; targetPhase: Phase }
+  | { type: "REGRESS_FEATURES"; failingFeatures: string[] }
   | { type: "RELEASE_COMPLETED" }
   | { type: "CANCEL" };
 

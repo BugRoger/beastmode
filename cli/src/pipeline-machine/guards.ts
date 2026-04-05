@@ -64,6 +64,12 @@ export const regressTargetsImplement = ({ event }: { context: EpicContext; event
 export const regressTargetsValidate = ({ event }: { context: EpicContext; event: EpicEvent }) =>
   event.type === "REGRESS" && event.targetPhase === "validate";
 
-/** Guard: REGRESS targets the "release" phase specifically. */
+/** Guard: REGRESS_FEATURES targets the "release" phase specifically. */
 export const regressTargetsRelease = ({ event }: { context: EpicContext; event: EpicEvent }) =>
   event.type === "REGRESS" && event.targetPhase === "release";
+
+/** Guard: REGRESS_FEATURES is valid only if failingFeatures is non-empty. */
+export const hasFailingFeatures = ({ event }: { context: EpicContext; event: EpicEvent }) => {
+  if (event.type !== "REGRESS_FEATURES") return false;
+  return Array.isArray(event.failingFeatures) && event.failingFeatures.length > 0;
+};

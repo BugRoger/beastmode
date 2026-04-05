@@ -9,6 +9,7 @@ import {
   regressTargetsImplement,
   regressTargetsValidate,
   regressTargetsRelease,
+  hasFailingFeatures,
 } from "./guards";
 import {
   computeEnrichFeatures,
@@ -18,6 +19,7 @@ import {
   computeResetFeatures,
   computeMarkFeatureCompleted,
   computeRegress,
+  computeRegressFeatures,
   computeAccumulateArtifacts,
 } from "./actions";
 import { syncGitHubService } from "./services";
@@ -37,6 +39,7 @@ export const epicMachine = setup({
     regressTargetsImplement,
     regressTargetsValidate,
     regressTargetsRelease,
+    hasFailingFeatures,
   },
   actions: {
     enrichManifest: assign({
@@ -61,6 +64,13 @@ export const epicMachine = setup({
     }),
     applyRegress: assign(({ context, event }) => {
       const result = computeRegress(context, event);
+      return {
+        ...result,
+        lastUpdated: new Date().toISOString(),
+      };
+    }),
+    applyRegressFeatures: assign(({ context, event }) => {
+      const result = computeRegressFeatures(context, event);
       return {
         ...result,
         lastUpdated: new Date().toISOString(),
@@ -158,6 +168,11 @@ export const epicMachine = setup({
         VALIDATE_COMPLETED: {
           target: "release",
           actions: ["persist"],
+        },
+        REGRESS_FEATURES: {
+          target: "implement",
+          guard: "hasFailingFeatures",
+          actions: ["applyRegressFeatures", "persist"],
         },
         REGRESS: [
           {
