@@ -36,9 +36,7 @@ describe("formatTreeLogLine", () => {
   test("level labels are 5-char fixed width", () => {
     const levels: [LogLevel, string][] = [
       ["info", "INFO "],
-      ["detail", "DETL "],
       ["debug", "DEBUG"],
-      ["trace", "TRACE"],
       ["warn", "WARN "],
       ["error", "ERR  "],
     ];

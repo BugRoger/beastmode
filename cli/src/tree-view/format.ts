@@ -3,12 +3,10 @@ import type { LogLevel } from "../logger.js";
 
 /** Level labels — fixed 5-char width (matches logger.ts convention). */
 const LEVEL_LABELS: Record<LogLevel, string> = {
-  info:   "INFO ",
-  detail: "DETL ",
-  debug:  "DEBUG",
-  trace:  "TRACE",
-  warn:   "WARN ",
-  error:  "ERR  ",
+  info:  "INFO ",
+  debug: "DEBUG",
+  warn:  "WARN ",
+  error: "ERR  ",
 };
 
 /**
@@ -36,7 +34,7 @@ export function formatTreeLogLine(level: LogLevel, message: string): string {
   }
 
   const coloredTimestamp = chalk.dim(`[${timestamp}]`);
-  const coloredLabel = level === "info" || level === "detail"
+  const coloredLabel = level === "info"
     ? chalk.green(label)
     : chalk.blue(label);
 
