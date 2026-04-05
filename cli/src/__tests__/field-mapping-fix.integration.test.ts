@@ -12,7 +12,7 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { InMemoryTaskStore } from "../store/in-memory";
-import { saveSyncRefs, loadSyncRefs } from "../github/sync-refs";
+import { saveSyncRefs } from "../github/sync-refs";
 
 // --- Mock gh CLI ---
 const mockCalls: { fn: string; args: unknown[] }[] = [];
