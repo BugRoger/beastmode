@@ -1,8 +1,8 @@
 ## Context
-HITL needs PreToolUse and PostToolUse hooks injected at dispatch time, but settings.json already has a committed Stop hook. Two hook files that serve different purposes need coexistence without conflict.
+All hooks (Stop, HITL PreToolUse/PostToolUse, file-permission PostToolUse) are generated into `settings.local.json` at dispatch time. No static hook declarations exist in `settings.json` or `hooks/hooks.json` — static hooks were removed because they caused "Module not found" errors in non-beastmode projects where the plugin was installed.
 
 ## Decision
-Committed hooks (Stop) live in `settings.json`. Generated HITL hooks (PreToolUse on AskUserQuestion, PostToolUse on AskUserQuestion) live in `settings.local.json` which is gitignored. `cleanHitlSettings()` runs before `writeHitlSettings()` to prevent stale state between phases.
+All hooks live in `settings.local.json` (gitignored), generated at dispatch time. `cleanHitlSettings()` runs before `writeHitlSettings()` to prevent stale state between phases. No static hook entries exist in committed settings files — the CLI is the sole hook authority.
 
 The AskUserQuestion PreToolUse hook is a `type: "command"` entry invoking `hitl-auto.ts <phase>`. Prose is NOT baked into the hook entry — the script reads `config.yaml` at runtime via `loadConfig()` + `getPhaseHitlProse()`. The hook entry is stable; only the phase name argument differs between phases. File-permission PreToolUse hooks remain `type: "prompt"` — they still require LLM interpretation to map prose to allow/deny/defer decisions.
 

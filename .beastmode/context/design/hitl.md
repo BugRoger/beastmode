@@ -5,7 +5,7 @@
 - ALWAYS seed default HITL config with "always defer to human" for all phases at init — nothing automated until explicit opt-in
 
 ## Hook Composition
-- ALWAYS keep committed hooks in `settings.json` (Stop hook) and generated hooks in `settings.local.json` (HITL PreToolUse/PostToolUse) — different events, no conflict
+- ALWAYS generate all hooks (Stop, HITL PreToolUse/PostToolUse, file-permission PostToolUse) into `settings.local.json` at dispatch time — no static hook declarations in committed settings files
 - ALWAYS gitignore `settings.local.json` — generated at dispatch time, no git noise
 - ALWAYS clean HITL settings before writing new ones at each dispatch — `cleanHitlSettings()` before `writeHitlSettings()` prevents stale state between phases
 - ALWAYS pass phase name as the sole argument to `buildPreToolUseHook(phase)` — prose is read at runtime by the script from config.yaml, not templated into the hook entry

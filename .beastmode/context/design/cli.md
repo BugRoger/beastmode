@@ -66,11 +66,12 @@
 - PostToolUse command hook for `AskUserQuestion` is written alongside the PreToolUse hook — logs auto/human decisions to `artifacts/<phase>/hitl-log.md`
 - `cleanHitlSettings()` runs before `writeHitlSettings()` at each dispatch — prevents stale hooks from previous phases
 - `settings.local.json` is gitignored — generated per-dispatch, no version control noise
+- ALWAYS resolve hook script paths at write time using `import.meta.dir` — never shell substitution (`$(git rev-parse)`) or environment variables (`CLAUDE_PLUGIN_ROOT`); absolute paths embedded in command strings are portable across worktrees and CWD contexts
 - Manual `beastmode <phase>` dispatch goes through `phase.ts` for HITL settings injection. Dashboard dispatch goes through the pipeline runner which calls the same rebase + HITL sequence (rebase, cleanHitlSettings, getPhaseHitlProse, buildPreToolUseHook, writeHitlSettings) — uniform hook injection across both paths
 
 ## Phase Output Contract
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
-- A Stop hook (configured in `.claude/settings.json`) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
+- A Stop hook (generated into `.claude/settings.local.json` at dispatch time) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
 - output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
 - Standardized artifact frontmatter across all phases: `phase`, `slug` (immutable hex), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
