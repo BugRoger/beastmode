@@ -67,7 +67,7 @@ Feature: [capability-domain description] -- [behavioral summary]
 
 **Feature-name headings** must match the feature name from the input exactly (lowercase, hyphenated). This allows the plan skill to mechanically distribute scenarios by matching headings to feature names.
 
-**Capability domains** are determined from the existing test suite's natural groupings and the current epic's behavioral scope. Examples: @pipeline, @dashboard, @release, @config. A scenario may span multiple input features if it covers a capability that crosses feature boundaries.
+**Capability domains** are determined from the existing test suite's natural groupings and the current epic's behavioral scope. Examples: @pipeline, @dashboard, @release, @config. A scenario may span multiple input features if it covers a capability that crosses feature boundaries — place it under the primary feature (the one whose user stories most directly drive the scenario).
 
 **Dual tagging:** Every scenario carries both an epic tag (`@<epic-name>`) for traceability and a capability tag (`@<capability-domain>`) for logical grouping.
 
@@ -87,7 +87,7 @@ For each consolidation action on existing scenarios, describe:
 Format each entry as:
 
 ```markdown
-#### [Action]: [original scenario name]
+##### [Action]: [original scenario name]
 
 **File:** `[original file path]`
 **Action:** [merge | update | remove]
@@ -96,7 +96,7 @@ Format each entry as:
 [For merge/update only:]
 ​```gherkin
 @<epic-name> @<capability-domain>
-Feature: [capability-domain description]
+Feature: [capability-domain description] -- [behavioral summary]
 
   Scenario: [merged/updated scenario name]
     Given [initial state]
