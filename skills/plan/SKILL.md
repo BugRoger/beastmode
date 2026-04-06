@@ -117,7 +117,7 @@ Rules:
 
 ### 4. Generate Integration Tests
 
-After feature decomposition, spawn the plan-integration-tester agent to produce behavioral integration specs grouped by feature.
+After feature decomposition, evaluate each feature's behavioral impact and spawn the plan-integration-tester agent only for features that introduce new user-facing behavior.
 
 #### 4a. Collect Features
 
@@ -125,31 +125,90 @@ Build a feature batch from the decomposed features. For each feature, capture:
 - Feature name (lowercase, hyphenated identifier)
 - Associated user stories (the subset of PRD user stories this feature covers)
 
-#### 4b. Spawn Agent
+#### 4b. Classify Behavioral Impact
+
+Evaluate each feature in the batch for behavioral impact. A feature is **non-behavioral** if it matches any of these skip criteria:
+
+- **Documentation-only:** user stories describe content changes, README updates, comment improvements, or documentation restructuring with no functional change
+- **Refactoring / code cleanup:** user stories describe restructuring, renaming, extracting, or consolidating existing code without changing external behavior
+- **Configuration changes:** user stories describe changes to configuration values, schema adjustments, or settings without new user-facing behavior
+- **Bug fix with existing coverage:** user stories describe fixing a known bug where existing integration scenarios already cover the affected behavior
+
+Classification heuristic — examine each feature's user stories for:
+
+**Behavioral indicators** (feature IS behavioral):
+- New user-facing behavior ("As a user, I want to...")
+- Changed interaction patterns ("When the user does X, now Y happens instead of Z")
+- New error modes visible to users ("...so that the user sees an error when...")
+- New commands, options, or outputs
+
+**Non-behavioral indicators** (feature is NOT behavioral):
+- Restructuring language ("refactor", "extract", "consolidate", "rename", "move")
+- Documentation language ("document", "update README", "add comments", "clarify")
+- Configuration language ("change default", "add config option", "update schema")
+- Internal-only changes ("improve performance", "reduce coupling", "clean up")
+- Bug fix language with existing coverage ("fix bug where...", "correct behavior of...")
+
+When ambiguous, classify as behavioral — false positives (unnecessary agent dispatch) are cheaper than false negatives (missed integration tests).
+
+Partition the feature batch into two lists:
+- **behavioral_features:** features that introduce new user-facing behavior
+- **skipped_features:** features matching skip criteria
+
+#### 4c. Spawn Agent
+
+**If all features are non-behavioral (full skip):**
+
+Skip the agent dispatch entirely. Print a note:
+
+```
+Skip gate: all features non-behavioral — skipping integration test generation.
+Skipped: [list of feature names]
+```
+
+Proceed directly to step 4d with the full-skip flag set.
+
+**If at least one feature is behavioral (partial or full dispatch):**
+
+If any features were filtered out, print a note:
+
+```
+Skip gate: [N] non-behavioral features filtered.
+Dispatching: [list of behavioral feature names]
+Skipped: [list of skipped feature names]
+```
 
 Spawn the `plan-integration-tester` agent as a subagent:
 
 - **Agent:** `plan-integration-tester` (from `.claude/agents/plan-integration-tester.md`)
-- **Input:** Epic name and the feature batch (each feature with its name and user stories)
+- **Input:** Epic name and the **behavioral_features** batch only (each feature with its name and user stories)
 - **Method:** `Agent(subagent_type="general-purpose", prompt=<built prompt>)` — the prompt instructs the agent to follow the plan-integration-tester agent definition
 
 The agent reads the existing test tree, analyzes coverage against the feature-level user stories, and produces an integration artifact at `.beastmode/artifacts/plan/YYYY-MM-DD-<epic-name>-integration.md` with scenarios grouped by feature name.
 
 **Handle agent status:**
 
-- **DONE or DONE_WITH_CONCERNS:** proceed to step 4c (distribute scenarios)
+- **DONE or DONE_WITH_CONCERNS:** proceed to step 4d (distribute scenarios)
 - **NEEDS_CONTEXT or BLOCKED:** print a warning and skip integration test generation entirely. Proceed to step 5 (Finalize Features). This is warn-and-continue — not a hard gate.
 
-#### 4c. Distribute Scenarios into Feature Plans
+#### 4d. Distribute Scenarios into Feature Plans
 
-On agent success, read the integration artifact and distribute scenarios inline:
+**If full skip (no agent was dispatched):**
+
+For every feature in the batch, inject an empty `## Integration Test Scenarios` section with a comment: `<!-- No behavioral scenarios — skip gate classified this feature as non-behavioral -->`. No integration artifact is produced. Proceed to step 5.
+
+**If agent was dispatched and succeeded:**
+
+Read the integration artifact and distribute scenarios inline:
 
 1. **Read the integration artifact** produced by the agent
-2. **Parse per-feature sections** — match `### Feature: <feature-name>` headings in the "New Scenarios" section to the decomposed features
-3. **For each feature:**
+2. **Parse per-feature sections** — match `### Feature: <feature-name>` headings in the "New Scenarios" section to the behavioral features
+3. **For each behavioral feature:**
    - If matching scenarios exist: inject the Gherkin block into a `## Integration Test Scenarios` section in the feature's internal record
    - If no matching scenarios: inject an empty `## Integration Test Scenarios` section with a comment: `<!-- No behavioral scenarios produced for this feature -->` and record a warning for the missing coverage
-4. **Preserve the integration artifact** as an audit trail (do not delete it)
+4. **For each skipped (non-behavioral) feature:**
+   - Inject an empty `## Integration Test Scenarios` section with a comment: `<!-- No behavioral scenarios — skip gate classified this feature as non-behavioral -->`
+5. **Preserve the integration artifact** as an audit trail (do not delete it)
 
 The plan skill does not contain BDD domain knowledge — it delegates entirely to the agent and mechanically distributes the artifact's per-feature sections into feature plans.
 
