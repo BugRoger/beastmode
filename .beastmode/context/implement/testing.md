@@ -13,7 +13,7 @@
 - Core scenarios: brownfield execution, parallel agent spawning, content merge, atomic file writes — full coverage
 
 ## Test Runner
-- ALWAYS import test utilities from `bun:test` in new test files — NOT `vitest` — project runs on Bun, vitest imports silently diverge and are caught only at validate time
+- ALWAYS import test utilities from `vitest` in new test files — project uses vitest as the test framework with Bun as the runtime (`bun --bun vitest run`); 112 test files use vitest imports, zero use bun:test
 
 context/implement/testing/bun-test-runner-imports.md
 

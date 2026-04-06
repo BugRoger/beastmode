@@ -96,8 +96,11 @@
 
 ## Details Panel
 - Renamed from OverviewPanel — context-sensitive content driven by selection type
-- Selection `{ type: 'all' }` → aggregate overview; `{ type: 'epic' }` → PRD artifact content; `{ type: 'feature' }` → plan artifact content
+- `DetailsContentResult` discriminated union with `kind` variants: `"overview"`, `"artifact"`, `"not-found"`, `"stats"` — content resolution (`resolveDetailsContent`) matches selection type to the appropriate variant
+- Selection `{ type: 'all' }` → `kind: "stats"` carrying a `SessionStats` snapshot (three stacked sections: Sessions, Phase Duration, Retries); empty state shows dim "waiting for sessions..." placeholder before first session completes. `{ type: 'epic' }` → PRD artifact content; `{ type: 'feature' }` → plan artifact content
+- Phase names in duration breakdown use `PHASE_COLOR` colors; unseen phases display "--" placeholder
 - Artifact loading via `resolveArtifactPath()` utility
+- Duration formatting via `format-duration.ts` utility — converts milliseconds to human-readable strings (e.g., "2m 30s")
 - PgUp/PgDn scroll via `detailsScrollOffset` from keyboard hook
 - Scroll offset resets on selection change
 
@@ -125,3 +128,11 @@
 - Data sourced from `release:held` WatchLoop EventEmitter events — no manifest-level state, purely event-driven
 - Indicator clears on `session-started` or next `scan-complete` for the held epic
 - Only displayed for automated watch loop dispatch — manual releases are not tracked
+
+## Session Stats
+- SessionStatsAccumulator (`session-stats.ts`) subscribes to WatchLoop EventEmitter events (`session-started`, `session-completed`, `scan-complete`) and maintains running session metrics — pure logic module, decoupled from React rendering
+- Accumulator instantiated once in App component, connected to WatchLoop's EventEmitter, lives for the dashboard's lifetime
+- Stats snapshot (`SessionStats` interface) includes: total/active/success/failure counts, re-dispatch count, success rate (percentage), uptime (updated on scan-complete, not a timer), cumulative session time, per-phase average durations (plan/implement/validate/release, null for unseen phases), isEmpty flag
+- Re-dispatch detected when a session-completed fires for an epic+phase combination that already has a prior completion — tracked via completed key set
+- `nowFn` constructor option for deterministic uptime testing without real timers
+- `dispose()` method removes all event listeners for cleanup

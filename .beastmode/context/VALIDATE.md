@@ -18,6 +18,7 @@
 - ALWAYS record the pre-existing failure count baseline from main in validation reports — prevents re-triaging known failures across epics
 - Baseline as of 2026-04-06 (post fix-hook-paths): 96 unit test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing, not in scope), 1505 individual tests passing, 5 type errors (pre-existing in untouched files); BDD regression: 33 scenarios / 400 steps (pipeline-all profile)
 - Baseline as of 2026-04-06 (post dashboard-log-fixes): 93 test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing), 1483 individual tests passing, 5 type errors (pre-existing in untouched files)
+- Baseline as of 2026-04-06 (post details-panel-stats): 113 test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing), 1652 individual tests passing, 5 type errors (pre-existing in untouched files)
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:
