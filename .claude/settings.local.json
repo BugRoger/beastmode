@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-auto validate"
+            "command": "bunx beastmode hooks hitl-auto release"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log validate"
+            "command": "bunx beastmode hooks hitl-log release"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log validate"
+            "command": "bunx beastmode hooks hitl-log release"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log validate"
+            "command": "bunx beastmode hooks hitl-log release"
           }
         ]
       }

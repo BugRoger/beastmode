@@ -45,6 +45,7 @@ TypeScript CLI (`beastmode`) drives phase transitions via `beastmode <phase> <sl
 - CLI (`cli/`) is a separate package with its own `package.json` — Bun runtime, Claude Agent SDK, independent dependency story
 - ALWAYS use markdown + YAML frontmatter for skill definitions
 - Plugin distribution via Claude Code marketplace; CLI distribution via `bun link`
+- npx CLI (`src/npx-cli/`) is plain Node.js ESM (`.mjs`, no TypeScript, no build step, no external deps) — runs before bun is guaranteed available; separate runtime from the Bun-based CLI in `cli/`
 
 ## Init System
 5-phase bootstrapping system (skeleton, inventory, write, retro, synthesize) that detects 17 L2 domains and produces retro-compatible output. Writers and retros run in parallel. Greenfield mode installs skeleton only.
