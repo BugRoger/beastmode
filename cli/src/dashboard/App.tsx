@@ -23,6 +23,7 @@ import type { SystemEntryRef } from "./dashboard-logger.js";
 import { TICK_INTERVAL_MS } from "./NyanBanner.js";
 import { buildFlatRows, rowSlugAtIndex } from "./epics-tree-model.js";
 import type { SelectableRow } from "./epics-tree-model.js";
+import { SessionStatsAccumulator } from "./session-stats.js";
 
 export interface AppProps {
   config: BeastmodeConfig;
@@ -61,6 +62,8 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const fallbackStoreRef = useRef(fallbackStore ?? new FallbackEntryStore());
   const systemEntriesRef = useRef(systemRef?.entries ?? []);
   const systemSeqRef = useRef(0);
+  const [sessionStats, setSessionStats] = useState<ReturnType<SessionStatsAccumulator["getStats"]> | undefined>(undefined);
+  const statsAccRef = useRef<SessionStatsAccumulator | null>(null);
 
   // Dashboard logger for cancel actions (uses shared stores)
   const dashboardLoggerRef = useRef(
@@ -386,6 +389,30 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     };
   }, [loop]);
 
+  // --- Stats accumulator ---
+  useEffect(() => {
+    if (!loop) return;
+
+    const acc = new SessionStatsAccumulator(loop);
+    statsAccRef.current = acc;
+
+    const refreshStats = () => {
+      setSessionStats(acc.getStats());
+    };
+
+    loop.on("session-started", refreshStats);
+    loop.on("session-completed", refreshStats);
+    loop.on("scan-complete", refreshStats);
+
+    return () => {
+      loop.off("session-started", refreshStats);
+      loop.off("session-completed", refreshStats);
+      loop.off("scan-complete", refreshStats);
+      acc.dispose();
+      statsAccRef.current = null;
+    };
+  }, [loop]);
+
   // --- Refresh epics from store ---
   useEffect(() => {
     if (!loop || !projectRoot) return;
@@ -463,6 +490,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           gitStatus={gitStatus}
           scrollOffset={keyboard.detailsScrollOffset}
           visibleHeight={Math.max(1, Math.floor((rows ?? 24) * 0.4 * 0.6) - 2)}
+          stats={sessionStats}
         />
       }
       logSlot={
