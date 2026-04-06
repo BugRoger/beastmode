@@ -53,7 +53,7 @@ Three domains organize what gets persisted:
 
 - **Artifacts** — skill outputs (design specs, plans, validation records, release notes)
 - **Context** — project knowledge (architecture, conventions, product vision)
-- **Meta** — process insights (procedures, learnings, project-specific rules)
+- **Research** — research artifacts (competitive analyses, technology research, reference material)
 
 ## What's Different
 
