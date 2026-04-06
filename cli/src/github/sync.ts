@@ -1033,6 +1033,6 @@ export async function syncGitHubForEpic(opts: {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    opts.logger?.warn(`GitHub sync failed (non-blocking): ${message}`);
+    opts.logger?.warn(`GitHub sync failed (non-blocking): ${message}`, { epicId: opts.epicId });
   }
 }
