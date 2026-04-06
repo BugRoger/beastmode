@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-auto.ts\" validate"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-auto.ts\" release"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" validate"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" release"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" validate"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" release"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" validate"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" release"
           }
         ]
       }
