@@ -9,6 +9,7 @@ import {
   type GitStatus,
 } from "./overview-panel.js";
 import { resolveArtifactPath } from "../artifacts/reader.js";
+import type { SessionStats } from "./session-stats.js";
 
 /** Selection state for the Details panel. */
 export type DetailsPanelSelection =
@@ -36,7 +37,13 @@ export interface NotFoundContent {
   message: string;
 }
 
-export type DetailsContentResult = OverviewContent | ArtifactContent | NotFoundContent;
+/** Stats content — session metrics for the "(all)" view. */
+export interface StatsContent {
+  kind: "stats";
+  stats: SessionStats;
+}
+
+export type DetailsContentResult = OverviewContent | StatsContent | ArtifactContent | NotFoundContent;
 
 /** Context needed to resolve details content. */
 export interface DetailsContentContext {
@@ -44,6 +51,7 @@ export interface DetailsContentContext {
   activeSessions?: number;
   gitStatus?: GitStatus | null;
   projectRoot?: string;
+  stats?: SessionStats;
 }
 
 /**
@@ -58,6 +66,9 @@ export function resolveDetailsContent(
   ctx: DetailsContentContext,
 ): DetailsContentResult {
   if (selection.kind === "all") {
+    if (ctx.stats) {
+      return { kind: "stats", stats: ctx.stats };
+    }
     const epics = ctx.epics ?? [];
     const distribution = computePhaseDistribution(epics);
     const sessions = formatActiveSessions(ctx.activeSessions ?? 0);
