@@ -309,5 +309,13 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "portable-settings": {
+    "paths": ["features/portable-settings.feature"],
+    "import": [
+      "features/step_definitions/portable-settings.steps.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
