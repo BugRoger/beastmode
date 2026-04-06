@@ -79,8 +79,8 @@ Then("the worktree settings should contain a PreToolUse hook for {string}", func
   const commandHook = hitlEntry.hooks.find((h: any) => h.type === "command");
   assert.ok(commandHook, "No command-type hook found in AskUserQuestion PreToolUse entry");
   assert.ok(
-    commandHook.command.includes("hitl-auto.ts"),
-    `Command should reference hitl-auto.ts, got: ${commandHook.command}`,
+    commandHook.command.includes("hitl-auto"),
+    `Command should reference hitl-auto, got: ${commandHook.command}`,
   );
   assert.ok(
     commandHook.command.includes(phase),
@@ -112,8 +112,8 @@ Then("the worktree settings should contain a command-type PreToolUse hook for {s
   const commandHook = hitlEntry.hooks.find((h: any) => h.type === "command");
   assert.ok(commandHook, "No command-type hook found in AskUserQuestion PreToolUse entry");
   assert.ok(
-    commandHook.command.includes("hitl-auto.ts"),
-    `Command should reference hitl-auto.ts, got: ${commandHook.command}`,
+    commandHook.command.includes("hitl-auto"),
+    `Command should reference hitl-auto, got: ${commandHook.command}`,
   );
   assert.ok(
     commandHook.command.includes(phase),

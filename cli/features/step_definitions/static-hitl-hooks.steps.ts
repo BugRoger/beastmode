@@ -18,9 +18,9 @@ function getWorktreeSettingsPath(world: PipelineWorld): string {
   return join(wtPath, ".claude", "settings.local.json");
 }
 
-/** Resolve path to hitl-auto.ts from actual source tree (not temp repo). */
-function getHitlAutoScriptPath(): string {
-  return resolve(__dirname, "../../src/hooks/hitl-auto.ts");
+/** Resolve path to CLI entry point from actual source tree (not temp repo). */
+function getCliEntryPath(): string {
+  return resolve(__dirname, "../../src/index.ts");
 }
 
 // -- Given: HITL config prose setup --
@@ -88,10 +88,10 @@ When("the HITL auto hook runs for phase {string}", function (
     ],
   });
 
-  const scriptPath = getHitlAutoScriptPath();
+  const cliPath = getCliEntryPath();
 
   try {
-    const result = execSync(`bun run "${scriptPath}" ${phase}`, {
+    const result = execSync(`bun run "${cliPath}" hooks hitl-auto ${phase}`, {
       encoding: "utf-8",
       cwd: this.projectRoot,
       env: {
@@ -198,8 +198,8 @@ Then("the AskUserQuestion PreToolUse hook should be command-type", function (
   assert.ok(commandHook, "Expected command-type hook but found none");
   assert.ok(commandHook.command, "Command hook has no command field");
   assert.ok(
-    commandHook.command.includes("hitl-auto.ts"),
-    `Command should reference hitl-auto.ts, got: ${commandHook.command}`,
+    commandHook.command.includes("hitl-auto"),
+    `Command should reference hitl-auto, got: ${commandHook.command}`,
   );
 });
 
