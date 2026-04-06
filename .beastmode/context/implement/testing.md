@@ -13,7 +13,9 @@
 - Core scenarios: brownfield execution, parallel agent spawning, content merge, atomic file writes — full coverage
 
 ## Test Runner
-- ALWAYS import test utilities from `bun:test` in new test files — NOT `vitest` — project runs on Bun, vitest imports silently diverge and are caught only at validate time
+- ALWAYS use `bun:test` imports in `cli/src/store/` tests — these run via `bun test` directly
+- ALWAYS use `vitest` imports in `cli/src/__tests__/` tests — these run via `bun --bun vitest run`
+- ALWAYS match import style to test runner for new test files — check which directory the test lives in
 
 context/implement/testing/bun-test-runner-imports.md
 
@@ -28,6 +30,7 @@ context/implement/testing/bun-test-runner-imports.md
 context/implement/testing/cucumber-source-analysis-world.md
 context/implement/testing/cucumber-store-lifecycle-world.md
 context/implement/testing/cucumber-api-behavioral-world.md
+context/implement/testing/cucumber-source-analysis-inline-world.md
 
 ## Git-Initialized Temp Dirs for CLI Hook Tests
 - ALWAYS call `git init` in temp dirs used by integration tests that invoke CLI dispatch commands — hook handlers (hitl-auto, hitl-log, generate-output) call `git rev-parse --show-toplevel` internally; a plain `mkdtempSync` dir causes the command to fail with "not a git repository"
