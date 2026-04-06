@@ -310,10 +310,22 @@
     "format": ["progress-bar"],
     "publishQuiet": true
   },
-  "version-consolidation": {
-    "paths": ["features/version-consolidation.feature"],
+  "session-stats": {
+    "paths": ["features/session-stats.feature"],
     "import": [
-      "features/step_definitions/version-consolidation.steps.ts"
+      "features/step_definitions/session-stats.steps.ts",
+      "features/support/session-stats-world.ts",
+      "features/support/session-stats-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
+  "stats-panel": {
+    "paths": ["features/stats-panel-integration.feature"],
+    "import": [
+      "features/step_definitions/stats-panel.steps.ts",
+      "features/support/stats-panel-world.ts",
+      "features/support/stats-panel-hooks.ts"
     ],
     "format": ["progress-bar"],
     "publishQuiet": true

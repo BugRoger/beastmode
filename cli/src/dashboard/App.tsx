@@ -10,7 +10,7 @@ import EpicsPanel from "./EpicsPanel.js";
 import DetailsPanel from "./DetailsPanel.js";
 import type { DetailsPanelSelection } from "./details-panel.js";
 import type { GitStatus } from "./overview-panel.js";
-import LogPanel, { filterTreeByPhase, filterTreeByViewFilter, filterTreeByVerbosity, stripEmptyNodes, countTreeLines } from "./LogPanel.js";
+import LogPanel, { filterTreeByPhase, filterTreeByBlocked, countTreeLines } from "./LogPanel.js";
 import { useDashboardTreeState } from "./hooks/use-dashboard-tree-state.js";
 import { useDashboardKeyboard } from "./hooks/use-dashboard-keyboard.js";
 import { useTerminalSize } from "./hooks/use-terminal-size.js";
@@ -23,6 +23,7 @@ import type { SystemEntryRef } from "./dashboard-logger.js";
 import { TICK_INTERVAL_MS } from "./NyanBanner.js";
 import { buildFlatRows, rowSlugAtIndex } from "./epics-tree-model.js";
 import type { SelectableRow } from "./epics-tree-model.js";
+import { SessionStatsAccumulator } from "./session-stats.js";
 
 export interface AppProps {
   config: BeastmodeConfig;
@@ -35,8 +36,16 @@ export interface AppProps {
   systemRef?: SystemEntryRef;
 }
 
+function formatClock(): string {
+  const now = new Date();
+  return [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map((n) => String(n).padStart(2, "0"))
+    .join(":");
+}
+
 export default function App({ config, verbosity, loop, projectRoot, fallbackStore, systemRef }: AppProps) {
   const { exit } = useApp();
+  const [clock, setClock] = useState(formatClock());
   const [epics, setEpics] = useState<EnrichedEpic[]>([]);
   const [watchRunning, setWatchRunning] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
@@ -47,14 +56,14 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const { rows } = useTerminalSize();
   const [tick, setTick] = useState(0);
   const logTotalLinesRef = useRef(0);
-  const maxVisibleLinesRef = useRef(50);
-  const detailsVisibleLinesRef = useRef(10);
   const loopRef = useRef(loop);
   loopRef.current = loop;
   // Use shared stores from dashboard command if provided, otherwise create local ones
   const fallbackStoreRef = useRef(fallbackStore ?? new FallbackEntryStore());
   const systemEntriesRef = useRef(systemRef?.entries ?? []);
   const systemSeqRef = useRef(0);
+  const [sessionStats, setSessionStats] = useState<ReturnType<SessionStatsAccumulator["getStats"]> | undefined>(undefined);
+  const statsAccRef = useRef<SessionStatsAccumulator | null>(null);
 
   // Dashboard logger for cancel actions (uses shared stores)
   const dashboardLoggerRef = useRef(
@@ -131,26 +140,15 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     initialVerbosity: verbosity,
     onToggleExpand: handleToggleExpand,
     logTotalLines: logTotalLinesRef.current,
-    logVisibleLines: maxVisibleLinesRef.current,
     detailsContentHeight: 0,
-    detailsVisibleHeight: detailsVisibleLinesRef.current,
+    detailsVisibleHeight: Math.max(1, Math.floor((rows ?? 24) * 0.4 * 0.6) - 2),
   });
 
-  // --- Phase + view + name filtering (additive) ---
-  const terminal = new Set(["done", "cancelled", "blocked"]);
+  // --- Filter + toggle-all ---
   const filteredEpics = epics.filter((e) => {
-    // Phase filter
-    if (keyboard.phaseFilter !== "all" && e.status !== keyboard.phaseFilter) {
+    if (!keyboard.toggleAll.showAll && (e.status === "done" || e.status === "cancelled")) {
       return false;
     }
-    // View filter
-    if (keyboard.viewFilter === "active" && terminal.has(e.status)) {
-      return false;
-    }
-    if (keyboard.viewFilter === "running" && !activeSessions.has(e.slug)) {
-      return false;
-    }
-    // Name filter
     if (activeFilter && !e.slug.includes(activeFilter)) {
       return false;
     }
@@ -183,23 +181,14 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
       : selectedRowResult.epicSlug;
 
   // --- Details panel selection ---
-  const detailsSelection: DetailsPanelSelection =
-    selectedRowResult && typeof selectedRowResult !== "string"
-      ? { kind: "feature", epicSlug: selectedRowResult.epicSlug, featureSlug: selectedRowResult.featureSlug }
-      : selectedEpicSlug
-        ? { kind: "epic", slug: selectedEpicSlug }
-        : { kind: "all" };
-
-  const detailsKey = detailsSelection.kind === "feature"
-    ? detailsSelection.featureSlug
-    : detailsSelection.kind === "epic"
-      ? detailsSelection.slug
-      : "all";
+  const detailsSelection: DetailsPanelSelection = selectedEpicSlug
+    ? { kind: "epic", slug: selectedEpicSlug }
+    : { kind: "all" };
 
   // Reset details scroll on selection change
   useEffect(() => {
     keyboard.resetDetailsScroll();
-  }, [detailsKey]);
+  }, [selectedEpicSlug]);
 
   const { state: treeState } = useDashboardTreeState({
     sessions: trackerSessions,
@@ -211,34 +200,22 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
 
   // --- Filter pipeline for log tree ---
   const phaseFiltered = filterTreeByPhase(treeState, keyboard.phaseFilter);
-  // When a specific epic is selected, show all features regardless of view filter
-  const effectiveViewFilter = selectedEpicSlug ? "all" : keyboard.viewFilter;
-  const filteredTreeState = filterTreeByViewFilter(phaseFiltered, effectiveViewFilter, activeSessions);
-  const showSkeleton = !!selectedEpicSlug || keyboard.viewFilter === "all";
-  // Count lines after the same filters LogPanel applies (verbosity + empty-node stripping)
-  const verbFiltered = filterTreeByVerbosity(filteredTreeState, keyboard.verbosity);
-  const logTreeForCount = showSkeleton ? verbFiltered : stripEmptyNodes(verbFiltered);
-  const logTotalLines = countTreeLines(logTreeForCount);
+  const filteredTreeState = filterTreeByBlocked(phaseFiltered, keyboard.showBlocked);
+  const logTotalLines = countTreeLines(filteredTreeState);
   logTotalLinesRef.current = logTotalLines;
 
-  // Compute fixed row heights for all panels from terminal dimensions
-  // Layout: header (5 rows) + bottom bar (1)
-  // Each PanelBox uses 2 rows of chrome (top border + bottom border)
+  // Compute maxVisibleLines for log panel from terminal dimensions
+  // Layout: header (5 rows: padY top + banner + status×2 + padY bottom) + bottom bar (1) + panel border (2)
   const headerHeight = 5;
   const footerHeight = 1;
   const panelBorderHeight = 2;
-  const totalContent = Math.max(5, (rows ?? 24) - headerHeight - footerHeight);
-  // Left column: EPICS 60%, DETAILS 40%
-  const epicsPanelHeight = Math.floor(totalContent * 0.6);
-  const detailsPanelHeight = totalContent - epicsPanelHeight;
-  const epicsVisibleLines = Math.max(3, epicsPanelHeight - panelBorderHeight);
-  const detailsVisibleLines = Math.max(3, detailsPanelHeight - panelBorderHeight);
-  // Right column: LOG full height
-  const logPanelHeight = totalContent;
-  const maxVisibleLines = Math.max(5, logPanelHeight - panelBorderHeight);
-  maxVisibleLinesRef.current = maxVisibleLines;
-  detailsVisibleLinesRef.current = detailsVisibleLines;
+  const maxVisibleLines = Math.max(5, (rows ?? 24) - headerHeight - footerHeight - panelBorderHeight);
 
+  // --- Clock tick every 1s ---
+  useEffect(() => {
+    const timer = setInterval(() => setClock(formatClock()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // --- Nyan tick every 80ms — shared between banner and focus border ---
   useEffect(() => {
@@ -412,6 +389,30 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     };
   }, [loop]);
 
+  // --- Stats accumulator ---
+  useEffect(() => {
+    if (!loop) return;
+
+    const acc = new SessionStatsAccumulator(loop);
+    statsAccRef.current = acc;
+
+    const refreshStats = () => {
+      setSessionStats(acc.getStats());
+    };
+
+    loop.on("session-started", refreshStats);
+    loop.on("session-completed", refreshStats);
+    loop.on("scan-complete", refreshStats);
+
+    return () => {
+      loop.off("session-started", refreshStats);
+      loop.off("session-completed", refreshStats);
+      loop.off("scan-complete", refreshStats);
+      acc.dispose();
+      statsAccRef.current = null;
+    };
+  }, [loop]);
+
   // --- Refresh epics from store ---
   useEffect(() => {
     if (!loop || !projectRoot) return;
@@ -456,7 +457,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     filterInput: keyboard.filterInput,
     verbosity: keyboard.verbosity,
     phaseFilter: keyboard.phaseFilter,
-    viewFilter: keyboard.viewFilter,
+    showBlocked: keyboard.showBlocked,
   });
 
   // --- Cancel prompt ---
@@ -467,20 +468,17 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   return (
     <ThreePanelLayout
       watchRunning={watchRunning}
+      clock={clock}
       version={version ?? undefined}
       rows={rows}
       focusedPanel={keyboard.focusedPanel}
       nyanTick={tick}
-      epicsHeight={epicsPanelHeight}
-      detailsHeight={detailsPanelHeight}
-      logHeight={logPanelHeight}
       epicsSlot={
         <EpicsPanel
-          flatRows={flatRows}
+          epics={filteredEpics}
           activeSessions={activeSessions}
           selectedIndex={keyboard.nav.selectedIndex}
           cancelConfirmingSlug={cancelConfirmingSlug}
-          visibleHeight={epicsVisibleLines}
         />
       }
       detailsSlot={
@@ -491,7 +489,8 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           activeSessions={activeSessions.size}
           gitStatus={gitStatus}
           scrollOffset={keyboard.detailsScrollOffset}
-          visibleHeight={detailsVisibleLines}
+          visibleHeight={Math.max(1, Math.floor((rows ?? 24) * 0.4 * 0.6) - 2)}
+          stats={sessionStats}
         />
       }
       logSlot={
@@ -501,7 +500,6 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           scrollOffset={keyboard.logScrollOffset}
           autoFollow={keyboard.logAutoFollow}
           maxVisibleLines={maxVisibleLines}
-          showSkeleton={showSkeleton}
         />
       }
       keyHints={keyHintText}

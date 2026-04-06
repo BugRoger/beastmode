@@ -4,6 +4,7 @@ import {
   resolveDetailsContent,
 } from "../dashboard/details-panel.js";
 import type { EnrichedEpic } from "../store/types.js";
+import type { SessionStats } from "../dashboard/session-stats.js";
 
 function mockEpic(overrides: Partial<EnrichedEpic> = {}): EnrichedEpic {
   return {
@@ -117,5 +118,60 @@ describe("resolveDetailsContent", () => {
       {},
     );
     expect(result.kind).toBe("not-found");
+  });
+
+  test("returns stats content when selection is all and stats provided", () => {
+    const stats: SessionStats = {
+      total: 5,
+      active: 2,
+      successes: 4,
+      failures: 1,
+      reDispatches: 1,
+      successRate: 80,
+      uptimeMs: 300000,
+      cumulativeMs: 500000,
+      isEmpty: false,
+      phaseDurations: { plan: 30000, implement: 120000, validate: 45000, release: 15000 },
+    };
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 2, gitStatus: null, stats },
+    );
+    expect(result.kind).toBe("stats");
+    if (result.kind === "stats") {
+      expect(result.stats.total).toBe(5);
+      expect(result.stats.successRate).toBe(80);
+    }
+  });
+
+  test("returns stats content when selection is all and stats is empty", () => {
+    const stats: SessionStats = {
+      total: 0,
+      active: 0,
+      successes: 0,
+      failures: 0,
+      reDispatches: 0,
+      successRate: 0,
+      uptimeMs: 0,
+      cumulativeMs: 0,
+      isEmpty: true,
+      phaseDurations: { plan: null, implement: null, validate: null, release: null },
+    };
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 0, gitStatus: null, stats },
+    );
+    expect(result.kind).toBe("stats");
+    if (result.kind === "stats") {
+      expect(result.stats.isEmpty).toBe(true);
+    }
+  });
+
+  test("returns overview when selection is all and no stats provided", () => {
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 0, gitStatus: null },
+    );
+    expect(result.kind).toBe("overview");
   });
 });

@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.105.0 — Details Panel Stats (Apr 2026)
+
+- **Session stats accumulator** — Event-driven `SessionStatsAccumulator` subscribes to WatchLoop events (`session-started`, `session-completed`, `scan-complete`) and maintains running session metrics with dispose cleanup
+- **Stats content variant** — New `kind: "stats"` variant in `DetailsContentResult` discriminated union renders live session statistics in the details panel when `(all)` is selected
+- **Duration formatting** — `format-duration.ts` utility converts milliseconds to human-readable strings (e.g., "2m 30s")
+- **Details panel wiring** — Stats accumulator instantiated in App component, connected to WatchLoop EventEmitter, stats snapshot passed through to DetailsPanel rendering
+- **Test coverage** — +169 individual tests, +20 test files covering accumulator logic, duration formatting, and BDD integration scenarios
+- **Test runner context correction** — L2 testing rules corrected from stale `bun:test` to `vitest` (project uses `bun --bun vitest run`)
+
+---
+
 ### v0.104.0 — Version Awareness (Apr 2026)
 
 - **Shared version module** — Single `cli/src/version.ts` resolves version from plugin.json at runtime, eliminating scattered hardcoded version strings
