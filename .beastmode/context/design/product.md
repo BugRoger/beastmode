@@ -25,7 +25,7 @@
 - Pipeline orchestration via embedded WatchLoop — TypeScript CLI drives epics through plan -> release with parallel iTerm2 terminal dispatching, per-feature implement fan-out, and pre-merge conflict simulation; WatchLoop extends EventEmitter with typed events for subscriber-based consumption
 - Fullscreen TUI dashboard via `beastmode dashboard` — Ink v6 + React three-panel layout with embedded watch loop, keyboard navigation, inline epic cancellation with session abort, alternate screen buffer
 - Context tree compaction — retro value-add gate prevents redundant L3 creation at source, on-demand compaction agent removes stale L3s, folds restatements, and detects cross-phase duplicates for L0 promotion; runs via `beastmode compact`
-- BDD integration test generation via plan-integration-tester agent — plan skill spawns domain-specialist subagent post-decomposition to diff PRD user stories against existing `.feature` files and produce Gherkin integration artifact; warn-and-continue on agent failure
+- BDD integration test generation via plan-integration-tester agent — plan skill evaluates each feature's behavioral impact before dispatch (skip gate filters documentation-only, refactoring, config-change, and covered-fix epics); agent performs inline suite consolidation (merges overlapping scenarios, removes stale ones) on every run; new scenarios organized by capability domain with happy-path priority and risk-based error path inclusion; two-section artifact format (New Scenarios + Consolidation); warn-and-continue on agent failure
 
 ## Differentiators
 - Progressive hierarchy uses curated summaries — NEVER use embedding/vector retrieval

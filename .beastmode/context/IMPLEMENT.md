@@ -67,6 +67,7 @@
 - BDD verification escalation: independent from per-task escalation, same model ladder (haiku→sonnet→opus), 6 total retries
 - Convention-based test discovery: file naming (`<feature>.integration.test.ts`), tags (`@<epic>`), describe blocks — no config file
 - ALWAYS skip BDD verification if no Integration Test Scenarios section in feature plan
+- ALWAYS skip BDD verification when the target system is a markdown instruction file with no executable step definitions — the `.feature` file documents the behavioral contract declaratively but there is nothing runnable; record the skip reason explicitly in the implement report so it is not confused with missing coverage
 
 context/implement/write-plan.md
 

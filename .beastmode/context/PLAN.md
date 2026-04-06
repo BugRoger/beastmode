@@ -63,6 +63,13 @@ Plan skill may spawn domain-specialist subagents to produce planning artifacts t
 - ALWAYS use the four-status protocol (DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED) for plan-phase specialist agents — same contract as implement agents
 - ALWAYS use wave injection (assign wave 1, bump all others +1) when inserting prerequisite features after decomposition — preserves dependency ordering
 
+### plan-integration-tester Artifact Contract
+- Artifact format is two sections: `## New Scenarios` and `## Consolidation` — the prior three-section format (New/Modified/Deleted) is superseded
+- `## New Scenarios` uses `### Feature: <feature-name>` subheadings matching input feature names — the plan skill's distribution step reads these headings mechanically to inject Gherkin into each feature plan
+- `## Consolidation` absorbs all merges, updates, and deletions to existing scenarios — describes action taken (merge/update/remove), original file path, and reason; not distributed into feature plans
+- Scenarios within `### Feature:` subheadings use capability-domain names in their Gherkin `Feature:` lines (e.g., `Feature: Pipeline orchestration -- ...`) and carry both epic tags (`@<epic>`) and capability tags (`@<domain>`)
+- NEVER split distribution logic across both sections — step 4d reads only `## New Scenarios`
+
 ## File Collapse
 - ALWAYS audit exported symbol names across all source files being collapsed into a single target — name collisions from file merges are predictable and should be resolved in the plan, not auto-fixed during implementation
 - ALWAYS run full reverse-dependency analysis (grep for all import paths being changed) when planning file moves — enumerate every consumer, including transitive importers in unrelated domains (dashboard, lockfile, etc.)
@@ -81,4 +88,9 @@ context/plan/file-collapse.md
 - ALWAYS scan existing step definition files (`*.steps.ts`) for command string assertions when a feature changes module invocation paths — step definitions that construct or assert old command formats (e.g., `hitl-auto.ts`, `bun run <path>`) are not listed in the integration artifact's "Modified Scenarios" section (which covers `.feature` files only), but they fail at validate for the same reason
 - ALWAYS enumerate existing unit tests that encode the prior behavior when a feature reverses an existing contract — integration artifact's "Modified Scenarios" section covers `.feature` files; a parallel "Test Inversions" note in the feature plan covers unit tests that must flip, not delete
 - Agent failure (NEEDS_CONTEXT, BLOCKED) is warn-and-continue — skip integration test distribution entirely, proceed to feature finalization
+- ALWAYS evaluate each feature's behavioral impact before dispatching the agent — classify features as behavioral or non-behavioral using a heuristic on user story language
+- Skip criteria (non-behavioral): documentation-only, refactoring/code cleanup, configuration changes, bug fixes with existing test coverage
+- Full skip: if all features are non-behavioral, skip agent dispatch entirely — no integration artifact produced, all feature plans get empty Integration Test Scenarios sections with an explanatory comment
+- Partial dispatch: only behavioral features are sent to the agent — non-behavioral features still receive empty sections
+- When classification is ambiguous, classify as behavioral — false positives (unnecessary dispatch) are cheaper than false negatives (missed integration tests)
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it
