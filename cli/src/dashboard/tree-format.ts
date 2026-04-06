@@ -4,7 +4,7 @@
  * Builds tree prefixes (│ · connectors) and formats leaf lines
  * with timestamp + phase badge + level + message.
  *
- * Hierarchy: CLI > Epic > Feature > Entry
+ * Hierarchy: SYSTEM > Epic > Feature > Entry
  */
 
 import chalk from "chalk";
@@ -13,12 +13,12 @@ import { PHASE_COLOR } from "./monokai-palette.js";
 
 /** Depth level in the tree hierarchy. */
 export type TreeDepth =
-  | "cli"            // synthetic root — no prefix
+  | "cli"            // synthetic root — │ (same as epic)
   | "epic"           // │
   | "feature"        // │ │
   | "leaf-epic"      // │ ·        (entry directly under epic)
   | "leaf-feature"   // │ │ ·      (entry under feature)
-  | "system";        // flat — no prefix (legacy compat)
+  | "system";        // │ · (same as leaf-epic)
 
 /** Level labels — fixed 5-char width (matches logger.ts). */
 const LEVEL_LABELS: Record<LogLevel, string> = {
@@ -34,8 +34,9 @@ const LEVEL_LABELS: Record<LogLevel, string> = {
 export function buildTreePrefix(depth: TreeDepth): string {
   switch (depth) {
     case "cli":
+      return "│ ";
     case "system":
-      return "";
+      return "│ · ";
     case "epic":
       return "│ ";
     case "feature":
@@ -80,10 +81,10 @@ function formatPhaseBadge(phase: string | undefined): string {
 /**
  * Format a single tree line.
  *
- * For the CLI root label: renders "CLI" (no prefix).
+ * For the SYSTEM root label: renders │ + label (same prefix as epic).
  * For node labels (epic, feature): renders prefix + label.
  * For leaf entries: renders prefix + phase badge + HH:MM:SS + LEVEL + message.
- * For system entries: renders HH:MM:SS + LEVEL + message (no prefix, no badge).
+ * For system entries: renders │ · prefix + HH:MM:SS + LEVEL + message (same as leaf-epic, no badge).
  *
  * Warn/error: full-line yellow/red coloring.
  * Normal: phase-colored prefix, dimmed timestamp.
@@ -99,7 +100,7 @@ export function formatTreeLine(
 
   // Node labels — just prefix + message
   if (depth === "cli") {
-    return message;
+    return `${prefix}${message}`;
   }
   if (depth === "epic") {
     return `${colorPrefix(prefix, phase)}${message}`;
@@ -122,9 +123,5 @@ export function formatTreeLine(
   }
 
   // Normal: phase-colored prefix, dim timestamp
-  if (depth === "system") {
-    return `${chalk.dim(time)} ${chalk.green(label)} ${message}`;
-  }
-
   return `${colorPrefix(prefix, phase)}${badge}${chalk.dim(time)} ${chalk.green(label)} ${message}`;
 }

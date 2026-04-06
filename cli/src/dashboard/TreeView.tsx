@@ -1,7 +1,7 @@
 /**
  * TreeView — Ink component that renders pipeline hierarchy as a terminal tree.
  *
- * Renders: CLI > Epic > Feature with │ · connectors and phase-based coloring.
+ * Renders: SYSTEM > Epic > Feature with │ · connectors and phase-based coloring.
  * Phase is displayed as a colored badge on each entry line.
  * Blocked/upcoming nodes render dimmed with status badge visible.
  * Active nodes show a spinner indicator.
@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import type { TreeState, EpicNode, FeatureNode, TreeEntry } from "./tree-types.js";
 import { formatTreeLine } from "./tree-format.js";
-import { isDim, PHASE_COLOR } from "./monokai-palette.js";
+import { isDim, PHASE_COLOR, CHROME } from "./monokai-palette.js";
 import chalk from "chalk";
 
 export interface TreeViewProps {
@@ -113,10 +113,13 @@ export default function TreeView({ state }: TreeViewProps) {
 
   return (
     <Box flexDirection="column">
-      {/* CLI root node with system entries */}
+      {/* SYSTEM root node with system entries */}
       {state.cli.entries.length > 0 && (
         <>
-          <Text bold>{formatTreeLine("cli", "info", undefined, "CLI", 0)}</Text>
+          <Text bold>
+            <Text>{chalk.hex(CHROME.muted)("│ ")}</Text>
+            <Text color={CHROME.muted}>SYSTEM</Text>
+          </Text>
           {state.cli.entries.map((entry) => (
             <Text key={`sys-${entry.seq}`}>
               {formatTreeLine("system", entry.level, undefined, entry.message, entry.timestamp)}

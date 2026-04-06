@@ -4,6 +4,16 @@ All notable changes to beastmode.
 
 ---
 
+### v0.103.0 — Dashboard Log Fixes (Apr 2026)
+
+- **SYSTEM node rename** — Rename CLI root node to SYSTEM with hierarchical tree prefix connectors matching epic node formatting
+- **Dynamic status badges** — Use session phase for dynamic epic node status, in-progress badges for dynamically created feature nodes
+- **Event routing levels** — Classify watch-loop started as debug, prefer explicit `level` field in `entryTypeToLevel` mapping
+- **Dashboard wiring** — Pass enrichedEpics to `useDashboardTreeState`, compute `maxVisibleLines` from terminal rows, split session-started into info + debug entries
+- **Single-concern plan rule** — Add L0 process rule for single-concern feature decomposition during planning
+
+---
+
 ### v0.102.0 — Fix Worktree Paths (Apr 2026)
 
 - **Artifact path normalization** — Normalize absolute worktree paths to bare filenames via `basename()` in sync engine functions (`readPrdSections`, `syncFeature`, `buildArtifactsMap`), preventing filesystem path leakage into GitHub issue bodies

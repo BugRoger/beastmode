@@ -2,8 +2,8 @@ import { describe, test, expect } from "vitest";
 import { buildTreePrefix, formatTreeLine } from "../dashboard/tree-format.js";
 
 describe("buildTreePrefix — new hierarchy", () => {
-  test("cli depth has no prefix", () => {
-    expect(buildTreePrefix("cli")).toBe("");
+  test("cli depth has epic prefix", () => {
+    expect(buildTreePrefix("cli")).toBe("│ ");
   });
 
   test("epic depth has single connector", () => {
@@ -29,9 +29,9 @@ describe("formatTreeLine — phase badge", () => {
     expect(line).toContain("implement");
   });
 
-  test("cli node label renders without prefix", () => {
-    const line = formatTreeLine("cli", "info", undefined, "CLI", 0);
-    expect(line).toBe("CLI");
+  test("cli node label renders with prefix", () => {
+    const line = formatTreeLine("cli", "info", undefined, "SYSTEM", 0);
+    expect(line).toBe("│ SYSTEM");
   });
 
   test("epic node label renders with prefix", () => {

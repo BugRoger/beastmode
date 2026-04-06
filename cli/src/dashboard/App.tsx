@@ -192,6 +192,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     selectedEpicSlug,
     fallbackEntries: fallbackStoreRef.current,
     systemEntries: systemEntriesRef.current,
+    enrichedEpics: epics,
   });
 
   // --- Filter pipeline for log tree ---
@@ -199,6 +200,13 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const filteredTreeState = filterTreeByBlocked(phaseFiltered, keyboard.showBlocked);
   const logTotalLines = countTreeLines(filteredTreeState);
   logTotalLinesRef.current = logTotalLines;
+
+  // Compute maxVisibleLines for log panel from terminal dimensions
+  // Layout: header (5 rows: padY top + banner + status×2 + padY bottom) + bottom bar (1) + panel border (2)
+  const headerHeight = 5;
+  const footerHeight = 1;
+  const panelBorderHeight = 2;
+  const maxVisibleLines = Math.max(5, (rows ?? 24) - headerHeight - footerHeight - panelBorderHeight);
 
   // --- Clock tick every 1s ---
   useEffect(() => {
@@ -265,7 +273,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     const onStarted = (ev: WatchLoopEventMap["started"][0]) => {
       setVersion(ev.version);
       setWatchRunning(true);
-      pushSystemEntry("watch loop started");
+      pushSystemEntry("watch loop started", "debug");
     };
     const onStopped = () => {
       setWatchRunning(false);
@@ -275,12 +283,10 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     const onSessionStarted = (ev: WatchLoopEventMap["session-started"][0]) => {
       setActiveSessions((prev) => new Set([...prev, ev.epicSlug]));
       refreshSessions();
-      fallbackStoreRef.current.push(
-        ev.epicSlug,
-        ev.phase,
-        ev.featureSlug,
-        lifecycleToLogEntry("session-started", ev),
-      );
+      const entries = lifecycleToLogEntry("session-started", ev);
+      for (const entry of entries) {
+        fallbackStoreRef.current.push(ev.epicSlug, ev.phase, ev.featureSlug, entry);
+      }
     };
 
     const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
@@ -465,6 +471,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           verbosity={keyboard.verbosity}
           scrollOffset={keyboard.logScrollOffset}
           autoFollow={keyboard.logAutoFollow}
+          maxVisibleLines={maxVisibleLines}
         />
       }
       keyHints={keyHintText}

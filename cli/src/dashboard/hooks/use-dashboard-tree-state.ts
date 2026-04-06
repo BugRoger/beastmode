@@ -24,8 +24,9 @@ export interface UseDashboardTreeStateResult {
   state: TreeState;
 }
 
-/** Map a LogEntry.type to a LogLevel for the tree view. */
+/** Map a LogEntry to a LogLevel for the tree view. Prefers explicit level when present. */
 function entryTypeToLevel(entry: LogEntry): LogLevel {
+  if (entry.level) return entry.level;
   switch (entry.type) {
     case "text":
       return "info";
@@ -92,7 +93,7 @@ export function buildTreeState(
     // Get or create epic node (for sessions that reference epics not in store)
     let epic = epicMap.get(session.epicSlug);
     if (!epic) {
-      epic = { slug: session.epicSlug, status: "unknown", features: [], entries: [] };
+      epic = { slug: session.epicSlug, status: session.phase, features: [], entries: [] };
       epicMap.set(session.epicSlug, epic);
     }
 
@@ -107,7 +108,7 @@ export function buildTreeState(
       // Find or create feature node
       let feature = epic.features.find((f) => f.slug === session.featureSlug);
       if (!feature) {
-        feature = { slug: session.featureSlug, status: "unknown", entries: [] };
+        feature = { slug: session.featureSlug, status: "in-progress", entries: [] };
         epic.features.push(feature);
       }
       feature.entries.push(...treeEntries);

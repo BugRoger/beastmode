@@ -102,7 +102,7 @@ describe("TreeView", () => {
     const { lastFrame } = render(React.createElement(TreeView, { state }));
     const output = stripAnsi(lastFrame()!);
     expect(output).toContain("pipeline started");
-    expect(output).toContain("CLI");
+    expect(output).toContain("SYSTEM");
   });
 
   test("renders multiple epics sequentially", () => {

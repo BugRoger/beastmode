@@ -32,7 +32,7 @@ type LifecyclePayload =
 export function lifecycleToLogEntry(
   kind: "session-started",
   payload: SessionStartedEvent,
-): Omit<LogEntry, "seq">;
+): Omit<LogEntry, "seq">[];
 export function lifecycleToLogEntry(
   kind: "session-completed",
   payload: SessionCompletedEvent,
@@ -60,13 +60,16 @@ export function lifecycleToLogEntry(
 export function lifecycleToLogEntry(
   kind: string,
   payload: LifecyclePayload,
-): Omit<LogEntry, "seq"> {
+): Omit<LogEntry, "seq"> | Omit<LogEntry, "seq">[] {
   const timestamp = Date.now();
 
   switch (kind) {
     case "session-started": {
       const p = payload as SessionStartedEvent;
-      return { type: "text", timestamp, text: `dispatching (session: ${p.sessionId})`, level: "debug" };
+      return [
+        { type: "text", timestamp, text: "dispatching", level: "info" },
+        { type: "text", timestamp, text: `session: ${p.sessionId}`, level: "debug" },
+      ];
     }
 
     case "session-completed": {

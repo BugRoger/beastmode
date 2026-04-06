@@ -176,3 +176,40 @@ describe("buildTreeState with fallback entries", () => {
     expect(state.epics[0].entries).toHaveLength(0);
   });
 });
+
+describe("entryTypeToLevel respects explicit level", () => {
+  function makeEntryWithLevel(
+    type: "text" | "tool-start" | "tool-result" | "heartbeat" | "result",
+    level: "info" | "debug" | "warn" | "error",
+  ) {
+    return { seq: 0, timestamp: 1000, type, text: "test", level };
+  }
+
+  test("text entry with explicit debug level produces debug tree entry", () => {
+    const sessions = [{ epicSlug: "e", phase: "plan" }];
+    const entries = [makeEntryWithLevel("text", "debug")];
+    const state = buildTreeState(sessions, () => entries);
+    expect(state.epics[0].entries[0].level).toBe("debug");
+  });
+
+  test("text entry with explicit warn level produces warn tree entry", () => {
+    const sessions = [{ epicSlug: "e", phase: "plan" }];
+    const entries = [makeEntryWithLevel("text", "warn")];
+    const state = buildTreeState(sessions, () => entries);
+    expect(state.epics[0].entries[0].level).toBe("warn");
+  });
+
+  test("result entry with explicit warn level uses explicit level not type inference", () => {
+    const sessions = [{ epicSlug: "e", phase: "plan" }];
+    const entries = [makeEntryWithLevel("result", "warn")];
+    const state = buildTreeState(sessions, () => entries);
+    expect(state.epics[0].entries[0].level).toBe("warn");
+  });
+
+  test("entry without explicit level falls back to type-based inference", () => {
+    const sessions = [{ epicSlug: "e", phase: "plan" }];
+    const entries = [{ seq: 0, timestamp: 1000, type: "text" as const, text: "test" }];
+    const state = buildTreeState(sessions, () => entries);
+    expect(state.epics[0].entries[0].level).toBe("info");
+  });
+});

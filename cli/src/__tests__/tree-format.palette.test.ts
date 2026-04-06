@@ -17,12 +17,12 @@ describe("tree-format with monokai-palette", () => {
   });
 
   test("buildTreePrefix returns correct connectors", () => {
-    expect(buildTreePrefix("cli")).toBe("");
+    expect(buildTreePrefix("cli")).toBe("│ ");
     expect(buildTreePrefix("epic")).toBe("│ ");
     expect(buildTreePrefix("feature")).toBe("│ │ ");
     expect(buildTreePrefix("leaf-epic")).toBe("│ · ");
     expect(buildTreePrefix("leaf-feature")).toBe("│ │ · ");
-    expect(buildTreePrefix("system")).toBe("");
+    expect(buildTreePrefix("system")).toBe("│ · ");
   });
 
   test("formatTreeLine feature with phase prefix applies color", () => {
@@ -84,13 +84,13 @@ describe("tree-format with monokai-palette", () => {
     expect(line).toContain("\x1b[32m"); // green
   });
 
-  test("formatTreeLine system depth no prefix", () => {
+  test("formatTreeLine system depth has tree prefix", () => {
     const timestamp = new Date("2024-04-04T10:30:45Z").getTime();
     const localTime = new Date(timestamp).toLocaleTimeString("en-GB", { hour12: false });
     const line = formatTreeLine("system", "info", undefined, "System msg", timestamp);
 
     const plain = stripAnsi(line);
-    expect(plain).not.toContain("│");
+    expect(plain).toContain("│ ·");
     expect(plain).toContain(localTime);
     expect(plain).toContain("INFO");
     expect(plain).toContain("System msg");

@@ -12,6 +12,7 @@
 - Panel borders: Monokai gray #727072; panel titles: Monokai cyan #78DCE8
 - Outer Box receives explicit `height={rows}` from `useTerminalSize()` hook passed through App.tsx for fullscreen auto-expansion — does not rely on `height="100%"` alone
 - Watch status and clock rendered in top-right corner of NyanBanner header row
+- `maxVisibleLines` computed dynamically from terminal rows minus fixed chrome height (header + hints bar + borders) — prevents log content overflow that pushes banner and hints off screen
 - Key hints bar at bottom, outside the panel area
 - Minimum terminal size enforced at 80x24 — friendly message below that threshold
 
@@ -61,21 +62,24 @@
 - Entries use the same tree structure as other log entries — same panel, same format
 - ALWAYS implement via `FallbackEntryStore` that converts WatchLoop lifecycle events to `LogEntry` objects — separates event conversion from rendering logic
 - `LogEntry` carries an optional `level` field — when present, `entryTypeToLevel()` prefers it over the type-based mapping; set this field in `lifecycleToLogEntry()` for events where the correct level differs from the `"text"` type default (debug for heartbeats, warn for abnormal conditions)
+- `lifecycleToLogEntry("session-started")` returns an array of two entries: an info-level summary ("dispatching") visible at default verbosity and a debug-level detail ("session: {id}") hidden at default verbosity — callers push both entries from the array
 
 ## Verbosity Cycling
 - ALWAYS initialize verbosity state in the root App component from the CLI-provided verbosity arg — single source of truth, propagated down as props
 - `v` key cycles verbosity: info → detail → debug → trace → info (wrap); ignored in filter mode and confirm mode
 - Log entries are filtered at render time by the current verbosity level — entries remain in ring buffers so they reappear immediately when verbosity increases (no data loss)
+- SYSTEM root entries participate in verbosity filtering via `shouldShowEntry()` — same predicate as epic and feature entries, no passthrough exemption
 - Key hints bar shows current verbosity level: `v verb:info` / `v verb:detail` / `v verb:debug` / `v verb:trace` — updates reactively on keypress
 - Four verbosity levels map to numeric indices (0-3) — cycling uses modular increment
 
 ## Log Panel Tree View
 - ALWAYS use shared `<TreeView />` component for log panel rendering
-- Tree hierarchy: CLI > Epic > Feature — phase displayed as colored badge on each entry, not as a tree level
-- CliNode at root, EpicNode children, FeatureNode leaves — PhaseNode removed
+- Tree hierarchy: SYSTEM > Epic > Feature — phase displayed as colored badge on each entry, not as a tree level
+- SystemNode at root (renamed from CLI, rendered in Monokai muted gray with same hierarchical tree connectors as epic nodes), EpicNode children, FeatureNode leaves — PhaseNode removed
 - `useDashboardTreeState` adapter hook bridges existing data sources (ring buffers + session events) to tree state — rendering layer swap, data flow unchanged
 - Tree trimming for auto-follow within alternate screen buffer — newest entries visible at bottom
 - `isDim` function covers blocked and pending statuses in addition to done/cancelled
+- Dynamic epic nodes (created for sessions referencing unknown epic slugs) use `session.phase` as status instead of `"unknown"`; dynamic feature nodes use `"in-progress"` — eliminates uninformative "(unknown)" badges for active sessions
 
 ## Epics Tree Expansion
 - Flat row model (`buildFlatRows`, `rowSlugAtIndex`) — epics and their expanded features share a single flat selectable list

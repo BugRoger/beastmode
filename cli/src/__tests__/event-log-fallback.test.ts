@@ -6,26 +6,31 @@ import {
 
 describe("lifecycleToLogEntry", () => {
   test("session-started produces 'dispatching' text entry with sessionId", () => {
-    const entry = lifecycleToLogEntry("session-started", {
+    const entries = lifecycleToLogEntry("session-started", {
       epicSlug: "my-epic",
       featureSlug: undefined,
       phase: "plan",
       sessionId: "s-1",
     });
 
-    expect(entry.type).toBe("text");
-    expect(entry.text).toBe("dispatching (session: s-1)");
-    expect(entry.timestamp).toBeGreaterThan(0);
+    const arr = entries as Array<{ type: string; text: string; timestamp: number }>;
+    expect(arr[0].type).toBe("text");
+    expect(arr[0].text).toBe("dispatching");
+    expect(arr[0].timestamp).toBeGreaterThan(0);
+    expect(arr[1].type).toBe("text");
+    expect(arr[1].text).toContain("session: s-1");
   });
 
   test("session-started has debug level", () => {
-    const entry = lifecycleToLogEntry("session-started", {
+    const entries = lifecycleToLogEntry("session-started", {
       epicSlug: "my-epic",
       featureSlug: undefined,
       phase: "plan",
       sessionId: "s-1",
     });
-    expect(entry.level).toBe("debug");
+    const arr = entries as Array<{ level: string }>;
+    expect(arr[0].level).toBe("info");
+    expect(arr[1].level).toBe("debug");
   });
 
   test("session-completed success has debug level", () => {
