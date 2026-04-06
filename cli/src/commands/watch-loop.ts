@@ -31,8 +31,9 @@ import { discoverGitHub } from "../github/discovery.js";
 
 function resolveVersion(projectRoot: string): string {
   try {
-    const pkg = JSON.parse(readFileSync(resolve(projectRoot, "cli", "package.json"), "utf-8"));
-    const version = pkg.version ?? "unknown";
+    const pluginPath = resolve(projectRoot, ".claude-plugin", "plugin.json");
+    const plugin = JSON.parse(readFileSync(pluginPath, "utf-8"));
+    const version = plugin.version ?? "unknown";
     const hash = execSync("git rev-parse --short HEAD", { cwd: projectRoot, encoding: "utf-8" }).trim();
     return `v${version} (${hash})`;
   } catch {

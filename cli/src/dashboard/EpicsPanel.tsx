@@ -1,175 +1,166 @@
-import { useState, useEffect, useRef } from "react";
-import { Box, Text, measureElement } from "ink";
+import { useState, useEffect } from "react";
+import { Box, Text } from "ink";
 import type { EnrichedEpic } from "../store/index.js";
-import { PHASE_COLOR, CHROME, isDim } from "./monokai-palette.js";
+import { PHASE_COLOR, FEATURE_STATUS_COLOR, CHROME, isDim, isFeatureDim } from "./monokai-palette.js";
+import type { SelectableRow } from "./epics-tree-model.js";
 
 // --- Shared utilities ---
 
-const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+const EPIC_SPINNER = ["○", "◔", "◑", "◕", "●", "◕", "◑", "◔"];
+const FEATURE_SPINNER = ["◉", "◎", "○", "◎"];
+const SPINNER_INTERVAL_MS = 120;
 
-function InlineSpinner() {
+function useSpinnerFrame(): number {
   const [frame, setFrame] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
-      setFrame((prev) => (prev + 1) % SPINNER_FRAMES.length);
-    }, 80);
+      setFrame((f) => f + 1);
+    }, SPINNER_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
-  return <Text color="yellow">{SPINNER_FRAMES[frame]}</Text>;
-}
-
-// --- Icon logic ---
-
-export interface IconResult {
-  char: string;
-  color: string | undefined;
-  dim: boolean;
-  spinner: boolean;
-}
-
-export function getEpicIcon(
-  isSelected: boolean,
-  isActive: boolean,
-  phase: string,
-): IconResult {
-  if (isSelected) {
-    return { char: ">", color: CHROME.title, dim: false, spinner: false };
-  }
-  if (isActive) {
-    return { char: "", color: "yellow", dim: false, spinner: true };
-  }
-  if (isDim(phase)) {
-    return { char: "\u00b7", color: undefined, dim: true, spinner: false };
-  }
-  return {
-    char: "\u00b7",
-    color: PHASE_COLOR[phase],
-    dim: false,
-    spinner: false,
-  };
+  return frame;
 }
 
 // --- Props ---
 
 export interface EpicsPanelProps {
-  /** Epic list (already filtered/sorted by parent) */
-  epics: EnrichedEpic[];
+  /** Flat rows including (all), epics, and expanded features */
+  flatRows: SelectableRow[];
   /** Set of epic slugs with active sessions */
   activeSessions: Set<string>;
   /** Currently selected row index (0 = "(all)" entry) */
   selectedIndex: number;
   /** Slug currently in cancel-confirmation state */
   cancelConfirmingSlug?: string;
+  /** Maximum visible rows in the viewport */
+  visibleHeight: number;
 }
 
 // --- Component ---
 
 export default function EpicsPanel({
-  epics,
+  flatRows,
   activeSessions,
   selectedIndex,
   cancelConfirmingSlug,
+  visibleHeight,
 }: EpicsPanelProps) {
-  const ref = useRef(null);
-  const [visibleRows, setVisibleRows] = useState(Infinity);
+  const tick = useSpinnerFrame();
   const [scrollOffset, setScrollOffset] = useState(0);
-
-  // Measure available height for viewport scrolling
-  useEffect(() => {
-    if (ref.current) {
-      const { height } = measureElement(ref.current);
-      if (height !== visibleRows) setVisibleRows(height);
-    }
-  });
 
   // Keep selected index in view
   useEffect(() => {
     if (selectedIndex < scrollOffset) {
       setScrollOffset(selectedIndex);
-    } else if (selectedIndex >= scrollOffset + visibleRows) {
-      setScrollOffset(selectedIndex - visibleRows + 1);
+    } else if (selectedIndex >= scrollOffset + visibleHeight) {
+      setScrollOffset(selectedIndex - visibleHeight + 1);
     }
-  }, [selectedIndex, visibleRows]);
-
-  const allSelected = selectedIndex === 0;
-  const slugWidth =
-    Math.max(12, ...epics.map((e) => e.slug.length)) + 2;
+  }, [selectedIndex, visibleHeight]);
 
   // Build all rows, then slice to viewport
   const rows: React.ReactNode[] = [];
 
-  // (all) entry — always index 0
-  rows.push(
-    <Box key="__all__">
-      <Box width={2}>
-        <Text color={CHROME.title}>{allSelected ? ">" : " "}</Text>
-      </Box>
-      <Text inverse={allSelected} color={allSelected ? CHROME.title : undefined}>
-        (all)
-      </Text>
-    </Box>
-  );
+  for (let i = 0; i < flatRows.length; i++) {
+    const row = flatRows[i];
+    const isSelected = i === selectedIndex;
 
-  if (epics.length === 0) {
-    rows.push(
-      <Box key="__empty__" paddingLeft={2}>
-        <Text dimColor>no epics</Text>
-      </Box>
-    );
-  } else {
-    for (let i = 0; i < epics.length; i++) {
-      const epic = epics[i];
-      const rowIndex = i + 1;
-      const isSelected = rowIndex === selectedIndex;
+    if (row.type === "all") {
+      rows.push(
+        <Box key="__all__">
+          <Text>
+            <Text color={isSelected ? CHROME.title : CHROME.muted}>{"●"}</Text>
+            <Text>{" "}</Text>
+            <Text inverse={isSelected} color={isSelected ? CHROME.title : undefined}>
+              {"(all)"}
+            </Text>
+          </Text>
+        </Box>,
+      );
+    } else if (row.type === "epic") {
+      const epic = row.epic;
       const isActive = activeSessions.has(epic.slug);
       const isConfirming = cancelConfirmingSlug === epic.slug;
       const dim = isDim(epic.status);
-      const icon = getEpicIcon(isSelected, isActive, epic.status);
+      const color = PHASE_COLOR[epic.status];
+      const dotColor = isSelected ? CHROME.title : dim ? CHROME.muted : (color ?? CHROME.muted);
 
       rows.push(
-        <Box key={epic.slug}>
-          <Box width={2}>
-            {icon.spinner ? (
-              <InlineSpinner />
-            ) : (
-              <Text
-                color={icon.color as Parameters<typeof Text>[0]["color"]}
-                dimColor={icon.dim}
-              >
-                {icon.char}
-              </Text>
-            )}
-          </Box>
-          <Box width={slugWidth}>
-            <Text inverse={isSelected} dimColor={dim}>
-              {epic.slug}
+        <Box key={`e-${epic.slug}`}>
+          <Box flexGrow={1}>
+            <Text dimColor={dim} bold>
+              {isActive && !isSelected ? (
+                <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{EPIC_SPINNER[tick % EPIC_SPINNER.length]}</Text>
+              ) : (
+                <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{"●"}</Text>
+              )}
+              <Text>{" "}</Text>
+              <Text inverse={isSelected} dimColor={dim}>{epic.slug}</Text>
             </Text>
           </Box>
           <Box>
-            {isConfirming ? (
-              <Text color="red" bold>
-                Cancel {epic.slug}? y/n
-              </Text>
-            ) : (
-              <Text
-                color={PHASE_COLOR[epic.status] as Parameters<typeof Text>[0]["color"]}
-                dimColor={dim}
-              >
-                {epic.status}
-              </Text>
-            )}
+            <Text dimColor={dim} bold>
+              {isConfirming ? (
+                <Text color="red" bold>{"[cancel? y/n]"}</Text>
+              ) : color ? (
+                <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>
+                  {`[${epic.status}]`}
+                </Text>
+              ) : (
+                <Text dimColor>{`[${epic.status}]`}</Text>
+              )}
+            </Text>
           </Box>
-        </Box>
+        </Box>,
+      );
+    } else {
+      // feature row
+      const dim = isFeatureDim(row.featureStatus);
+      const color = FEATURE_STATUS_COLOR[row.featureStatus];
+      const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
+      const featureActive = row.featureStatus === "in-progress";
+
+      rows.push(
+        <Box key={`f-${row.epicSlug}-${row.slug}`}>
+          <Box flexGrow={1}>
+            <Text dimColor={dim}>
+              <Text color={CHROME.muted}>{"├─"}</Text>
+              <Text color={isSelected ? CHROME.title : dotColor as Parameters<typeof Text>[0]["color"]}>
+                {featureActive && !isSelected
+                  ? FEATURE_SPINNER[tick % FEATURE_SPINNER.length]
+                  : isSelected ? "●" : "○"}
+              </Text>
+              <Text>{" "}</Text>
+              <Text inverse={isSelected} dimColor={dim}>{row.slug}</Text>
+            </Text>
+          </Box>
+          <Box>
+            <Text dimColor={dim}>
+              {color ? (
+                <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>
+                  {`[${row.featureStatus}]`}
+                </Text>
+              ) : (
+                <Text dimColor>{`[${row.featureStatus}]`}</Text>
+              )}
+            </Text>
+          </Box>
+        </Box>,
       );
     }
   }
 
-  const visible = visibleRows < Infinity
-    ? rows.slice(scrollOffset, scrollOffset + visibleRows)
-    : rows;
+  if (flatRows.length <= 1) {
+    rows.push(
+      <Box key="__empty__" paddingLeft={2}>
+        <Text dimColor>no epics</Text>
+      </Box>,
+    );
+  }
+
+  const visible = rows.slice(scrollOffset, scrollOffset + visibleHeight);
 
   return (
-    <Box ref={ref} flexDirection="column" flexGrow={1}>
+    <Box flexDirection="column" flexGrow={1}>
       {visible}
     </Box>
   );

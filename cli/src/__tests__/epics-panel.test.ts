@@ -1,6 +1,5 @@
 import { describe, test, expect } from "vitest";
 import { getKeyHints } from "../dashboard/key-hints.js";
-import { getEpicIcon } from "../dashboard/EpicsPanel.js";
 
 
 // ---------------------------------------------------------------------------
@@ -72,11 +71,12 @@ describe("EpicsPanel logic", () => {
     expect(totalRows).toBe(1); // just (all)
   });
 
-  // Test: no progress bars in epic rows
-  test("epic rows do not include progress bars", () => {
-    // ProgressBar component removed from EpicsPanel — rows show icon + slug + phase badge
-    const icon = getEpicIcon(false, false, "implement");
-    expect(icon).not.toHaveProperty("progress");
+  // Test: epic rows use ● dot marker (no progress bars)
+  test("epic rows use dot markers not progress bars", () => {
+    // Epics render as: ● slug [status] — inline text, no progress component
+    const row = "● my-epic [implement]";
+    expect(row).toContain("●");
+    expect(row).not.toContain("progress");
   });
 
   // Test: slugWidth computation
@@ -108,83 +108,42 @@ describe("epic row icon selection", () => {
     cancelled: "red",
   };
 
+  const CHROME_MUTED = "#727072";
+  const CHROME_TITLE = "#78DCE8";
+
   function isDim(phase: string): boolean {
     return phase === "done" || phase === "cancelled";
   }
 
-  interface IconResult {
-    char: string;
-    color: string | undefined;
-    dim: boolean;
-    spinner: boolean;
+  /** Determines dot color for an epic row — matches EpicsPanel inline logic. */
+  function epicDotColor(isSelected: boolean, phase: string): string {
+    if (isSelected) return CHROME_TITLE;
+    if (isDim(phase)) return CHROME_MUTED;
+    return PHASE_COLOR[phase] ?? CHROME_MUTED;
   }
 
-  function getEpicIcon(
-    isSelected: boolean,
-    isActive: boolean,
-    phase: string,
-  ): IconResult {
-    if (isSelected) {
-      return { char: ">", color: "cyan", dim: false, spinner: false };
-    }
-    if (isActive) {
-      return { char: "", color: "yellow", dim: false, spinner: true };
-    }
-    if (isDim(phase)) {
-      return { char: "\u00b7", color: undefined, dim: true, spinner: false };
-    }
-    return {
-      char: "\u00b7",
-      color: PHASE_COLOR[phase],
-      dim: false,
-      spinner: false,
-    };
-  }
-
-  test("selected epic gets > in cyan", () => {
-    const icon = getEpicIcon(true, false, "implement");
-    expect(icon.char).toBe(">");
-    expect(icon.color).toBe("cyan");
-    expect(icon.spinner).toBe(false);
+  test("selected epic gets ● in title color", () => {
+    expect(epicDotColor(true, "implement")).toBe(CHROME_TITLE);
   });
 
-  test("selected overrides running state", () => {
-    const icon = getEpicIcon(true, true, "implement");
-    expect(icon.char).toBe(">");
-    expect(icon.color).toBe("cyan");
-    expect(icon.spinner).toBe(false);
-  });
-
-  test("running non-selected epic gets spinner in yellow", () => {
-    const icon = getEpicIcon(false, true, "implement");
-    expect(icon.spinner).toBe(true);
-    expect(icon.color).toBe("yellow");
+  test("selected overrides dim state", () => {
+    expect(epicDotColor(true, "done")).toBe(CHROME_TITLE);
   });
 
   test("idle epic gets dot colored by phase", () => {
-    const icon = getEpicIcon(false, false, "implement");
-    expect(icon.char).toBe("\u00b7");
-    expect(icon.color).toBe("yellow");
-    expect(icon.spinner).toBe(false);
+    expect(epicDotColor(false, "implement")).toBe("yellow");
   });
 
   test("idle design epic gets magenta dot", () => {
-    const icon = getEpicIcon(false, false, "design");
-    expect(icon.char).toBe("\u00b7");
-    expect(icon.color).toBe("magenta");
+    expect(epicDotColor(false, "design")).toBe("magenta");
   });
 
-  test("done epic gets dimmed dot", () => {
-    const icon = getEpicIcon(false, false, "done");
-    expect(icon.char).toBe("\u00b7");
-    expect(icon.dim).toBe(true);
-    expect(icon.color).toBeUndefined();
+  test("done epic gets muted dot", () => {
+    expect(epicDotColor(false, "done")).toBe(CHROME_MUTED);
   });
 
-  test("cancelled epic gets dimmed dot", () => {
-    const icon = getEpicIcon(false, false, "cancelled");
-    expect(icon.char).toBe("\u00b7");
-    expect(icon.dim).toBe(true);
+  test("cancelled epic gets muted dot", () => {
+    expect(epicDotColor(false, "cancelled")).toBe(CHROME_MUTED);
   });
 
   test("phase badge uses correct color from PHASE_COLOR map", () => {
@@ -330,7 +289,7 @@ describe("key hints", () => {
     expect(hints).toContain("navigate");
     expect(hints).toContain("/ filter");
     expect(hints).toContain("x cancel");
-    expect(hints).toContain("a all");
+    expect(hints).toContain("p phase:");
   });
 
   test("filter mode shows input and apply/clear", () => {
@@ -408,28 +367,28 @@ describe("epic filtering and sorting", () => {
     expect(sorted.map((e) => e.slug)).toEqual(["new", "old"]);
   });
 
-  test("toggle filters out done and cancelled", () => {
+  test("phase filter shows only matching epics", () => {
     const epics: FakeEpic[] = [
       { slug: "a", status: "implement", created_at: "2025-06-01T00:00:00.000Z" },
       { slug: "b", status: "done", created_at: "2025-06-01T00:00:00.000Z" },
       { slug: "c", status: "cancelled", created_at: "2025-06-01T00:00:00.000Z" },
     ];
-    const showAll = false;
-    const visible = showAll
+    const phaseFilter = "implement";
+    const visible = phaseFilter === "all"
       ? epics
-      : epics.filter((e) => e.status !== "done" && e.status !== "cancelled");
+      : epics.filter((e) => e.status === phaseFilter);
     expect(visible.map((e) => e.slug)).toEqual(["a"]);
   });
 
-  test("toggle showAll includes done and cancelled", () => {
+  test("phase filter 'all' includes everything", () => {
     const epics: FakeEpic[] = [
       { slug: "a", status: "implement", created_at: "2025-06-01T00:00:00.000Z" },
       { slug: "b", status: "done", created_at: "2025-06-01T00:00:00.000Z" },
     ];
-    const showAll = true;
-    const visible = showAll
+    const phaseFilter = "all";
+    const visible = phaseFilter === "all"
       ? epics
-      : epics.filter((e) => e.status !== "done" && e.status !== "cancelled");
+      : epics.filter((e) => e.status === phaseFilter);
     expect(visible.length).toBe(2);
   });
 

@@ -35,7 +35,7 @@ export const DEPTH = {
 
 /** Returns true for phases/statuses that should render dimmed. */
 export function isDim(status: string): boolean {
-  return status === "done" || status === "cancelled" || status === "blocked" || status === "pending";
+  return status === "done" || status === "cancelled" || status === "blocked" || status === "pending" || status === "completed";
 }
 
 /** FeatureStatus-to-hex-color mapping. */
@@ -48,5 +48,5 @@ export const FEATURE_STATUS_COLOR: Record<string, string> = {
 
 /** Returns true for feature statuses that should render dimmed. */
 export function isFeatureDim(status: string): boolean {
-  return status === "completed";
+  return status === "completed" || status === "blocked";
 }

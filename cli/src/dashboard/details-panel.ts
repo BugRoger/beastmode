@@ -46,6 +46,24 @@ export interface DetailsContentContext {
   projectRoot?: string;
 }
 
+/** Strip YAML front-matter (--- ... ---) from markdown content. */
+function stripFrontMatter(text: string): string {
+  const match = text.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+  if (!match) return text;
+  return text.slice(match[0].length);
+}
+
+/** Extract a named section from markdown by heading. */
+function extractSection(text: string, ...headings: string[]): string {
+  const pattern = new RegExp(`^#{1,2}\\s+(${headings.join("|")})`, "m");
+  const start = text.match(pattern);
+  if (!start) return text;
+  const body = text.slice(start.index! + start[0].length);
+  const nextHeading = body.match(/^#{1,2}\s+/m);
+  const section = nextHeading ? body.slice(0, nextHeading.index!) : body;
+  return section.trim();
+}
+
 /**
  * Resolve the details panel content based on the current selection.
  *
@@ -75,7 +93,7 @@ export function resolveDetailsContent(
     }
     try {
       const content = readFileSync(resolve(ctx.projectRoot, artifactRelPath), "utf-8");
-      return { kind: "artifact", text: content };
+      return { kind: "artifact", text: extractSection(stripFrontMatter(content), "Solution", "Summary") };
     } catch {
       return { kind: "not-found", message: `no PRD found for "${selection.slug}"` };
     }
@@ -105,7 +123,7 @@ export function resolveDetailsContent(
     }
 
     const content = readFileSync(join(planDir, match), "utf-8");
-    return { kind: "artifact", text: content };
+    return { kind: "artifact", text: extractSection(stripFrontMatter(content), "User Stories") };
   } catch {
     return { kind: "not-found", message: `no plan found for "${selection.featureSlug}"` };
   }

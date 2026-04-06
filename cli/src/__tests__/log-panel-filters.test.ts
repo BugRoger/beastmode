@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { filterTreeByPhase, filterTreeByBlocked, trimTreeFromHead, countTreeLines } from "../dashboard/LogPanel.js";
+import { filterTreeByPhase, filterTreeByViewFilter, countTreeLines } from "../dashboard/LogPanel.js";
 import type { TreeState, EpicNode, FeatureNode, TreeEntry, SystemEntry } from "../dashboard/tree-types.js";
 
 function makeEntry(msg: string, seq: number, phase = "implement"): TreeEntry {
@@ -80,75 +80,93 @@ describe("filterTreeByPhase", () => {
   });
 });
 
-describe("filterTreeByBlocked", () => {
-  test("returns tree unchanged when showBlocked is true", () => {
+describe("filterTreeByViewFilter", () => {
+  const noSessions = new Set<string>();
+
+  test("returns tree unchanged when viewFilter is 'all'", () => {
     const state = makeState([
       makeEpic("e1", "blocked"),
       makeEpic("e2", "implement"),
     ]);
-    const result = filterTreeByBlocked(state, true);
+    const result = filterTreeByViewFilter(state, "all", noSessions);
     expect(result).toBe(state);
   });
 
-  test("removes blocked epics when showBlocked is false", () => {
+  test("active: removes done/cancelled/blocked epics", () => {
     const state = makeState([
       makeEpic("e1", "blocked"),
-      makeEpic("e2", "implement"),
+      makeEpic("e2", "done"),
+      makeEpic("e3", "cancelled"),
+      makeEpic("e4", "implement"),
     ]);
-    const result = filterTreeByBlocked(state, false);
+    const result = filterTreeByViewFilter(state, "active", noSessions);
+    expect(result.epics).toHaveLength(1);
+    expect(result.epics[0].slug).toBe("e4");
+  });
+
+  test("active: removes blocked/completed features", () => {
+    const state = makeState([
+      makeEpic("e1", "implement", [
+        makeFeature("f1", "blocked"),
+        makeFeature("f2", "completed"),
+        makeFeature("f3", "in-progress"),
+        makeFeature("f4", "pending"),
+      ]),
+    ]);
+    const result = filterTreeByViewFilter(state, "active", noSessions);
+    expect(result.epics[0].features).toHaveLength(2);
+    expect(result.epics[0].features.map(f => f.slug)).toEqual(["f3", "f4"]);
+  });
+
+  test("running: only shows epics with active sessions", () => {
+    const sessions = new Set(["e2"]);
+    const state = makeState([
+      makeEpic("e1", "implement"),
+      makeEpic("e2", "implement"),
+      makeEpic("e3", "design"),
+    ]);
+    const result = filterTreeByViewFilter(state, "running", sessions);
     expect(result.epics).toHaveLength(1);
     expect(result.epics[0].slug).toBe("e2");
   });
 
-  test("removes blocked features when showBlocked is false", () => {
+  test("running: filters features to in-progress/pending only", () => {
+    const sessions = new Set(["e1"]);
     const state = makeState([
       makeEpic("e1", "implement", [
-        makeFeature("f1", "blocked"),
+        makeFeature("f1", "completed"),
         makeFeature("f2", "in-progress"),
+        makeFeature("f3", "pending"),
+        makeFeature("f4", "blocked"),
       ]),
     ]);
-    const result = filterTreeByBlocked(state, false);
-    expect(result.epics[0].features).toHaveLength(1);
-    expect(result.epics[0].features[0].slug).toBe("f2");
+    const result = filterTreeByViewFilter(state, "running", sessions);
+    expect(result.epics[0].features).toHaveLength(2);
+    expect(result.epics[0].features.map(f => f.slug)).toEqual(["f2", "f3"]);
   });
 });
 
-describe("trimTreeFromHead", () => {
-  test("returns tree unchanged when linesToDrop is 0", () => {
-    const state = makeState([makeEpic("e1")]);
-    const result = trimTreeFromHead(state, 0);
-    expect(result).toBe(state);
+describe("countTreeLines", () => {
+  test("counts lines matching TreeView flattenTree output", () => {
+    // No CLI entries = no SYSTEM label
+    const noCliState = makeState([
+      makeEpic("e1", "implement", [
+        makeFeature("f1", "in-progress", [makeEntry("x", 1)]),
+      ], [makeEntry("y", 2)]),
+    ], []);
+    // epic label (1) + 1 entry + feature label (1) + 1 entry = 4
+    expect(countTreeLines(noCliState)).toBe(4);
+
+    // With CLI entries = SYSTEM label + entries
+    const withCliState = makeState([
+      makeEpic("e1", "implement"),
+    ], [makeSystem("s1", 0), makeSystem("s2", 1)]);
+    // SYSTEM label (1) + 2 entries + epic label (1) = 4
+    expect(countTreeLines(withCliState)).toBe(4);
   });
 
-  test("drops CLI entries before epic entries", () => {
-    const state = makeState(
-      [makeEpic("e1", "implement", [], [makeEntry("x", 1)])],
-      [makeSystem("s1", 0), makeSystem("s2", 1)],
-    );
-    // CLI root label (1) + 2 CLI entries + epic label (1) + 1 entry = 5 total
-    const total = countTreeLines(state);
-    expect(total).toBe(5);
-
-    // Drop 2 lines: CLI label + 1 CLI entry
-    const result = trimTreeFromHead(state, 2);
-    expect(result.cli.entries).toHaveLength(1);
-    expect(result.epics).toHaveLength(1);
-  });
-
-  test("drops lines from epics after CLI is exhausted", () => {
-    const state = makeState(
-      [makeEpic("e1", "implement", [], [
-        makeEntry("x1", 1),
-        makeEntry("x2", 2),
-        makeEntry("x3", 3),
-      ])],
-      [],
-    );
-    // CLI label (1) + 0 CLI entries + epic label (1) + 3 entries = 5
-    expect(countTreeLines(state)).toBe(5);
-
-    // Drop 3: CLI label + epic label + 1 entry
-    const result = trimTreeFromHead(state, 3);
-    expect(result.epics[0].entries).toHaveLength(2);
+  test("empty CLI entries produces no SYSTEM lines", () => {
+    const state = makeState([], []);
+    expect(countTreeLines(state)).toBe(0);
   });
 });

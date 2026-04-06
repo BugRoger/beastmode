@@ -14,15 +14,17 @@ export interface LogPanelProps {
   autoFollow?: boolean;
   /** Maximum visible lines to render. Default: 50 */
   maxVisibleLines?: number;
+  /** When true, preserve skeleton nodes (epic/feature labels) even without entries. */
+  showSkeleton?: boolean;
 }
 
 /**
  * Count total rendered lines in a tree state.
- * SYSTEM root label + SYSTEM entries + for each epic (1 label + direct entries + for each feature (1 label + entries)).
+ * Must match flattenTree in TreeView: SYSTEM label only when entries exist.
  */
 export function countTreeLines(state: TreeState): number {
-  // SYSTEM root: always 1 label + N entries
-  let count = 1 + state.cli.entries.length;
+  // SYSTEM root: label + entries only when entries exist
+  let count = state.cli.entries.length > 0 ? 1 + state.cli.entries.length : 0;
 
   for (const epic of state.epics) {
     count += 1; // epic label
@@ -131,19 +133,43 @@ export function filterTreeByPhase(state: TreeState, phase: string): TreeState {
 }
 
 /**
- * Filter tree by blocked status.
- * When showBlocked is true, returns tree unchanged.
- * When false, removes epics/features with status "blocked".
+ * Filter tree by view filter mode.
+ * - "all": no filtering, show everything
+ * - "active": hide done/cancelled epics and blocked/completed features
+ * - "running": only show epics with active sessions and in-progress features
  */
-export function filterTreeByBlocked(state: TreeState, showBlocked: boolean): TreeState {
-  if (showBlocked) return state;
+export function filterTreeByViewFilter(
+  state: TreeState,
+  viewFilter: string,
+  activeSessions: Set<string>,
+): TreeState {
+  if (viewFilter === "all") return state;
+
+  const inactive = new Set(["blocked", "completed"]);
+
+  if (viewFilter === "running") {
+    return {
+      cli: state.cli,
+      epics: state.epics
+        .filter((epic) => activeSessions.has(epic.slug))
+        .map((epic) => ({
+          ...epic,
+          features: epic.features.filter(
+            (feat) => feat.status === "in-progress" || feat.status === "pending",
+          ),
+        })),
+    };
+  }
+
+  // "active" — hide done/cancelled epics and blocked/completed features
+  const terminal = new Set(["done", "cancelled", "blocked"]);
   return {
     cli: state.cli,
     epics: state.epics
-      .filter((epic) => epic.status !== "blocked")
+      .filter((epic) => !terminal.has(epic.status))
       .map((epic) => ({
         ...epic,
-        features: epic.features.filter((feat) => feat.status !== "blocked"),
+        features: epic.features.filter((feat) => !inactive.has(feat.status)),
       })),
   };
 }
@@ -218,6 +244,22 @@ export function trimTreeFromHead(state: TreeState, linesToDrop: number): TreeSta
 }
 
 /**
+ * Strip epic/feature nodes that have no log entries.
+ * Skeleton-only nodes (status labels with no activity) are noise in the log panel.
+ */
+export function stripEmptyNodes(state: TreeState): TreeState {
+  return {
+    cli: state.cli,
+    epics: state.epics
+      .map((epic) => ({
+        ...epic,
+        features: epic.features.filter((f) => f.entries.length > 0),
+      }))
+      .filter((epic) => epic.entries.length > 0 || epic.features.length > 0),
+  };
+}
+
+/**
  * LogPanel — renders pipeline log entries as a hierarchical tree.
  *
  * Supports auto-follow (tail) and manual scroll via offset.
@@ -228,8 +270,10 @@ export default function LogPanel({
   scrollOffset,
   autoFollow = true,
   maxVisibleLines = 50,
+  showSkeleton = false,
 }: LogPanelProps) {
-  const filtered = filterTreeByVerbosity(state, verbosity);
+  const verbFiltered = filterTreeByVerbosity(state, verbosity);
+  const filtered = showSkeleton ? verbFiltered : stripEmptyNodes(verbFiltered);
   const hasContent = filtered.epics.length > 0 || filtered.cli.entries.length > 0;
 
   if (!hasContent) {
@@ -240,25 +284,16 @@ export default function LogPanel({
     );
   }
 
-  // When auto-following or no scroll offset, show newest entries (trim from front)
-  if (autoFollow || scrollOffset === undefined) {
-    const trimmed = trimTreeToTail(filtered, maxVisibleLines);
-    return (
-      <Box flexDirection="column">
-        <TreeView state={trimmed} />
-      </Box>
-    );
-  }
-
-  // Manual scroll: drop lines before viewport, then trim to maxVisibleLines
+  // Auto-follow: pin to the tail by computing offset from the end
   const total = countTreeLines(filtered);
-  const clampedOffset = Math.min(scrollOffset, Math.max(0, total - maxVisibleLines));
-  const dropped = trimTreeFromHead(filtered, clampedOffset);
-  const trimmed = trimTreeToTail(dropped, maxVisibleLines);
+  const tailOffset = Math.max(0, total - maxVisibleLines);
+  const effectiveOffset = (autoFollow || scrollOffset === undefined)
+    ? tailOffset
+    : Math.min(scrollOffset, tailOffset);
 
   return (
     <Box flexDirection="column">
-      <TreeView state={trimmed} />
+      <TreeView state={filtered} maxLines={maxVisibleLines} scrollOffset={effectiveOffset} />
     </Box>
   );
 }

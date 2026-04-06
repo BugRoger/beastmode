@@ -50,14 +50,14 @@ function slugAtIndex(epics: EnrichedEpic[], index: number): string | undefined {
   return epics[index - 1]?.slug;
 }
 
-/** Mirrors App.tsx: filteredEpics — filters by showAll toggle and active filter */
+/** Mirrors App.tsx: filteredEpics — filters by phase and active filter */
 function filterEpics(
   epics: EnrichedEpic[],
-  showAll: boolean,
+  phaseFilter: string,
   activeFilter: string,
 ): EnrichedEpic[] {
   return epics.filter((e) => {
-    if (!showAll && (e.status === "done" || e.status === "cancelled")) {
+    if (phaseFilter !== "all" && e.status !== phaseFilter) {
       return false;
     }
     if (activeFilter && !e.slug.includes(activeFilter)) {
@@ -101,9 +101,9 @@ describe("App integration — ThreePanelLayout wiring", () => {
       mockEpic({ slug: "gamma", status: "design" }),
     ];
 
-    // showAll = false filters out "done"
-    const filtered = filterEpics(epics, false, "");
-    expect(filtered.map((e) => e.slug)).toEqual(["alpha", "gamma"]);
+    // phaseFilter = "implement" filters to only implement epics
+    const filtered = filterEpics(epics, "implement", "");
+    expect(filtered.map((e) => e.slug)).toEqual(["alpha"]);
 
     // Both EpicsPanel and DetailsPanel receive the same filtered list
     const epicsForPanel = filtered;
@@ -261,21 +261,21 @@ describe("App integration — end-to-end data flow", () => {
     mockEpic({ slug: "api-cleanup", status: "cancelled" }),
   ];
 
-  test("filter + toggle produces correct visible list", () => {
-    const visible = filterEpics(allEpics, false, "");
-    expect(visible.map((e) => e.slug)).toEqual(["dashboard-rework", "auth-flow"]);
+  test("phase filter produces correct visible list", () => {
+    const visible = filterEpics(allEpics, "implement", "");
+    expect(visible.map((e) => e.slug)).toEqual(["dashboard-rework"]);
 
-    const allVisible = filterEpics(allEpics, true, "");
+    const allVisible = filterEpics(allEpics, "all", "");
     expect(allVisible.length).toBe(4);
   });
 
   test("name filter narrows visible list", () => {
-    const filtered = filterEpics(allEpics, true, "dashboard");
+    const filtered = filterEpics(allEpics, "all", "dashboard");
     expect(filtered.map((e) => e.slug)).toEqual(["dashboard-rework", "dashboard-v2"]);
   });
 
   test("selection on filtered list maps to correct epic", () => {
-    const filtered = filterEpics(allEpics, false, "");
+    const filtered = filterEpics(allEpics, "all", "");
 
     const slug1 = deriveSelectedEpicSlug(filtered, 1);
     expect(slug1).toBe("dashboard-rework");
@@ -285,15 +285,16 @@ describe("App integration — end-to-end data flow", () => {
   });
 
   test("slugAtIndex maps correctly with offset", () => {
-    const filtered = filterEpics(allEpics, false, "");
+    const filtered = filterEpics(allEpics, "all", "");
     expect(slugAtIndex(filtered, 0)).toBeUndefined();
     expect(slugAtIndex(filtered, 1)).toBe("dashboard-rework");
     expect(slugAtIndex(filtered, 2)).toBe("auth-flow");
-    expect(slugAtIndex(filtered, 3)).toBeUndefined();
+    expect(slugAtIndex(filtered, 3)).toBe("dashboard-v2");
+    expect(slugAtIndex(filtered, 4)).toBe("api-cleanup");
   });
 
   test("selected epic feeds into tree state filtering", () => {
-    const filtered = filterEpics(allEpics, false, "");
+    const filtered = filterEpics(allEpics, "all", "");
     const selectedSlug = deriveSelectedEpicSlug(filtered, 1);
     expect(selectedSlug).toBe("dashboard-rework");
 
@@ -310,7 +311,7 @@ describe("App integration — end-to-end data flow", () => {
   });
 
   test("(all) selection feeds aggregate tree state", () => {
-    const filtered = filterEpics(allEpics, false, "");
+    const filtered = filterEpics(allEpics, "all", "");
     const selectedSlug = deriveSelectedEpicSlug(filtered, 0);
     expect(selectedSlug).toBeUndefined();
 

@@ -1,10 +1,12 @@
 /**
  * TreeView — Ink component that renders pipeline hierarchy as a terminal tree.
  *
- * Renders: SYSTEM > Epic > Feature with │ · connectors and phase-based coloring.
+ * Renders: SYSTEM > Epic > Feature with ● dot connectors and phase-based coloring.
  * Phase is displayed as a colored badge on each entry line.
  * Blocked/upcoming nodes render dimmed with status badge visible.
  * Active nodes show a spinner indicator.
+ *
+ * Output is flattened to a line array and sliced to maxLines to prevent overflow.
  */
 
 import { useState, useEffect } from "react";
@@ -12,26 +14,31 @@ import { Box, Text } from "ink";
 import type { TreeState, EpicNode, FeatureNode, TreeEntry } from "./tree-types.js";
 import { formatTreeLine } from "./tree-format.js";
 import { isDim, PHASE_COLOR, CHROME } from "./monokai-palette.js";
-import chalk from "chalk";
 
 export interface TreeViewProps {
   /** Full tree state to render. */
   state: TreeState;
+  /** Maximum lines to render. Omit for unlimited. */
+  maxLines?: number;
+  /** Scroll offset — skip this many lines from the top before rendering. */
+  scrollOffset?: number;
 }
 
-/** Braille spinner frames (same as InlineSpinner in EpicsPanel). */
-const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-const SPINNER_INTERVAL_MS = 80;
+/** Pie spinner for epic dots. */
+const EPIC_SPINNER = ["○", "◔", "◑", "◕", "●", "◕", "◑", "◔"];
+/** Fisheye spinner for feature dots. */
+const FEATURE_SPINNER = ["◉", "◎", "○", "◎"];
+const SPINNER_INTERVAL_MS = 120;
 
-function useSpinnerFrame(): string {
-  const [frame, setFrame] = useState(0);
+function useSpinnerTick(): number {
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
-      setFrame((f) => (f + 1) % SPINNER_FRAMES.length);
+      setTick((t) => t + 1);
     }, SPINNER_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
-  return SPINNER_FRAMES[frame];
+  return tick;
 }
 
 function isActive(status: string): boolean {
@@ -39,68 +46,126 @@ function isActive(status: string): boolean {
     status === "plan" || status === "validate" || status === "release";
 }
 
-function EntryLine({ depth, entry }: {
-  depth: "leaf-epic" | "leaf-feature" | "system";
-  entry: TreeEntry;
-}) {
-  const formatted = formatTreeLine(depth, entry.level, entry.phase, entry.message, entry.timestamp);
-  return <Text>{formatted}</Text>;
+/** A single renderable line with a stable key. */
+interface FlatLine {
+  key: string;
+  node: React.ReactNode;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const color = PHASE_COLOR[status];
-  const badge = `[${status}]`;
-  return color ? <Text color={color}>{badge}</Text> : <Text dimColor>{badge}</Text>;
-}
+function flattenFeature(feat: FeatureNode, tick: number): FlatLine[] {
+  const dim = isDim(feat.status);
+  const active = feat.status === "in-progress";
+  const color = PHASE_COLOR[feat.status];
+  const badge = `[${feat.status}]`;
+  const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
+  const dot = active ? FEATURE_SPINNER[tick % FEATURE_SPINNER.length] : "○";
 
-function FeatureNodeView({ node, spinnerFrame }: { node: FeatureNode; spinnerFrame: string }) {
-  const dim = isDim(node.status);
-  const active = node.status === "in-progress";
-  const prefix = "│ │ ";
+  const lines: FlatLine[] = [];
 
-  return (
-    <>
+  lines.push({
+    key: `f-${feat.slug}`,
+    node: (
       <Text dimColor={dim}>
-        <Text>{chalk.hex(PHASE_COLOR.implement || "#727072")(prefix)}</Text>
-        {active ? <Text color="cyan">{spinnerFrame} </Text> : null}
-        <Text dimColor={dim}>{node.slug}</Text>
+        <Text color={CHROME.muted}>{"├─"}</Text>
+        <Text color={dotColor}>{dot}</Text>
+        <Text>{" "}</Text>
+        <Text dimColor={dim}>{feat.slug}</Text>
         {" "}
-        <StatusBadge status={node.status} />
+        {color ? <Text color={color}>{badge}</Text> : <Text dimColor>{badge}</Text>}
       </Text>
-      {node.entries.map((entry) => (
-        <EntryLine key={entry.seq} depth="leaf-feature" entry={entry} />
-      ))}
-    </>
-  );
+    ),
+  });
+
+  for (const entry of feat.entries) {
+    lines.push({
+      key: `fe-${feat.slug}-${entry.seq}`,
+      node: (
+        <Text>
+          {formatTreeLine("leaf-feature", entry.level, entry.phase, entry.message, entry.timestamp)}
+        </Text>
+      ),
+    });
+  }
+
+  return lines;
 }
 
-function EpicNodeView({ node, spinnerFrame }: { node: EpicNode; spinnerFrame: string }) {
-  const dim = isDim(node.status);
-  const active = isActive(node.status) && !isDim(node.status);
-  const prefix = "│ ";
-  const color = PHASE_COLOR[node.status];
+function flattenEpic(epic: EpicNode, tick: number): FlatLine[] {
+  const dim = isDim(epic.status);
+  const active = isActive(epic.status) && !isDim(epic.status);
+  const color = PHASE_COLOR[epic.status];
+  const badge = `[${epic.status}]`;
+  const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
+  const dot = active ? EPIC_SPINNER[tick % EPIC_SPINNER.length] : "●";
 
-  return (
-    <>
+  const lines: FlatLine[] = [];
+
+  lines.push({
+    key: `e-${epic.slug}`,
+    node: (
       <Text dimColor={dim} bold>
-        <Text>{color ? chalk.hex(color)(prefix) : prefix}</Text>
-        {active ? <Text color="cyan">{spinnerFrame} </Text> : null}
-        <Text dimColor={dim}>{node.slug}</Text>
+        <Text color={dotColor}>{dot}</Text>
+        <Text>{" "}</Text>
+        <Text dimColor={dim}>{epic.slug}</Text>
         {" "}
-        <StatusBadge status={node.status} />
+        {color ? <Text color={color}>{badge}</Text> : <Text dimColor>{badge}</Text>}
       </Text>
-      {node.entries.map((entry) => (
-        <EntryLine key={entry.seq} depth="leaf-epic" entry={entry} />
-      ))}
-      {node.features.map((feat) => (
-        <FeatureNodeView key={feat.slug} node={feat} spinnerFrame={spinnerFrame} />
-      ))}
-    </>
-  );
+    ),
+  });
+
+  for (const entry of epic.entries) {
+    lines.push({
+      key: `ee-${epic.slug}-${entry.seq}`,
+      node: (
+        <Text>
+          {formatTreeLine("leaf-epic", entry.level, entry.phase, entry.message, entry.timestamp)}
+        </Text>
+      ),
+    });
+  }
+
+  for (const feat of epic.features) {
+    lines.push(...flattenFeature(feat, tick));
+  }
+
+  return lines;
 }
 
-export default function TreeView({ state }: TreeViewProps) {
-  const spinnerFrame = useSpinnerFrame();
+function flattenTree(state: TreeState, tick: number): FlatLine[] {
+  const lines: FlatLine[] = [];
+
+  if (state.cli.entries.length > 0) {
+    lines.push({
+      key: "sys-root",
+      node: (
+        <Text bold>
+          <Text color={CHROME.muted}>{"● "}</Text>
+          <Text color={CHROME.muted}>SYSTEM</Text>
+        </Text>
+      ),
+    });
+
+    for (const entry of state.cli.entries) {
+      lines.push({
+        key: `sys-${entry.seq}`,
+        node: (
+          <Text>
+            {formatTreeLine("system", entry.level, undefined, entry.message, entry.timestamp)}
+          </Text>
+        ),
+      });
+    }
+  }
+
+  for (const epic of state.epics) {
+    lines.push(...flattenEpic(epic, tick));
+  }
+
+  return lines;
+}
+
+export default function TreeView({ state, maxLines, scrollOffset = 0 }: TreeViewProps) {
+  const tick = useSpinnerTick();
   const hasContent = state.epics.length > 0 || state.cli.entries.length > 0;
 
   if (!hasContent) {
@@ -111,25 +176,15 @@ export default function TreeView({ state }: TreeViewProps) {
     );
   }
 
+  const allLines = flattenTree(state, tick);
+  const start = Math.min(scrollOffset, allLines.length);
+  const end = maxLines !== undefined ? start + maxLines : allLines.length;
+  const visible = allLines.slice(start, end);
+
   return (
     <Box flexDirection="column">
-      {/* SYSTEM root node with system entries */}
-      {state.cli.entries.length > 0 && (
-        <>
-          <Text bold>
-            <Text>{chalk.hex(CHROME.muted)("│ ")}</Text>
-            <Text color={CHROME.muted}>SYSTEM</Text>
-          </Text>
-          {state.cli.entries.map((entry) => (
-            <Text key={`sys-${entry.seq}`}>
-              {formatTreeLine("system", entry.level, undefined, entry.message, entry.timestamp)}
-            </Text>
-          ))}
-        </>
-      )}
-      {/* Epic trees */}
-      {state.epics.map((epic) => (
-        <EpicNodeView key={epic.slug} node={epic} spinnerFrame={spinnerFrame} />
+      {visible.map((line) => (
+        <Box key={line.key}>{line.node}</Box>
       ))}
     </Box>
   );

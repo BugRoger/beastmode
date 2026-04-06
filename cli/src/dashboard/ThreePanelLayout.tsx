@@ -10,8 +10,6 @@ import { NYAN_PALETTE } from "./nyan-colors.js";
 export interface ThreePanelLayoutProps {
   /** Watch loop running state. */
   watchRunning: boolean;
-  /** Current clock string (HH:MM:SS). */
-  clock: string;
   /** Current version string (e.g., "v0.96.0 (a1b2c3d)"). */
   version?: string;
   /** Terminal row count for full-height rendering. */
@@ -32,12 +30,17 @@ export interface ThreePanelLayoutProps {
   focusedPanel?: FocusedPanel;
   /** Current nyan animation tick for border color computation. */
   nyanTick?: number;
+  /** Fixed row height for the EPICS panel (including border chrome). */
+  epicsHeight?: number;
+  /** Fixed row height for the DETAILS panel (including border chrome). */
+  detailsHeight?: number;
+  /** Fixed row height for the LOG panel (including border chrome). */
+  logHeight?: number;
 }
 
 /** Three-panel k9s-style dashboard layout. */
 export default function ThreePanelLayout({
   watchRunning,
-  clock,
   version,
   rows,
   epicsSlot,
@@ -48,6 +51,9 @@ export default function ThreePanelLayout({
   cancelPrompt,
   focusedPanel,
   nyanTick,
+  epicsHeight,
+  detailsHeight,
+  logHeight,
 }: ThreePanelLayoutProps) {
   const focusBorderColor = nyanTick !== undefined
     ? NYAN_PALETTE[nyanTick % NYAN_PALETTE.length]
@@ -59,16 +65,12 @@ export default function ThreePanelLayout({
         {/* Header bar — banner + watch status */}
         <Box flexDirection="row" justifyContent="space-between" paddingX={1} paddingY={1}>
           <NyanBanner tick={nyanTick} />
-          <Box flexDirection="column" alignItems="flex-end" justifyContent="flex-start">
-            <Box>
-              <Text color={watchRunning ? CHROME.watchRunning : CHROME.watchStopped}>
-                {watchRunning ? "watch: running" : "watch: stopped"}
-              </Text>
-              <Text> </Text>
-              <Text color={CHROME.muted}>{clock}</Text>
-            </Box>
+          <Box flexDirection="column" alignItems="flex-end">
+            <Text color={watchRunning ? CHROME.watchRunning : CHROME.watchStopped}>
+              {watchRunning ? "watch: running" : "watch: stopped"}
+            </Text>
             {version && (
-              <Text color={CHROME.muted}>{version}</Text>
+              <Text color={CHROME.muted} wrap="truncate-end">{version}</Text>
             )}
           </Box>
         </Box>
@@ -77,16 +79,16 @@ export default function ThreePanelLayout({
         <Box flexDirection="row" flexGrow={1}>
           {/* Left column — 35% width */}
           <Box flexDirection="column" width="35%">
-            <PanelBox title="EPICS" height="60%" borderColor={focusedPanel === "epics" ? focusBorderColor : undefined}>
+            <PanelBox title="EPICS" height={epicsHeight} borderColor={focusedPanel === "epics" ? focusBorderColor : undefined}>
               {epicsSlot}
             </PanelBox>
-            <PanelBox title="DETAILS" flexGrow={1}>
+            <PanelBox title="DETAILS" height={detailsHeight}>
               {detailsSlot}
             </PanelBox>
           </Box>
 
           {/* Right column — 65% width, LOG at full height */}
-          <PanelBox title="LOG" width="65%" borderColor={focusedPanel === "log" ? focusBorderColor : undefined}>
+          <PanelBox title="LOG" width="65%" height={logHeight} borderColor={focusedPanel === "log" ? focusBorderColor : undefined}>
             {logSlot}
           </PanelBox>
         </Box>

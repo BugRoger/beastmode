@@ -30,21 +30,22 @@ const LEVEL_LABELS: Record<LogLevel, string> = {
 
 /**
  * Build the tree connector prefix for a given depth.
+ * ● marks nodes, │ connects them in the same column.
  */
 export function buildTreePrefix(depth: TreeDepth): string {
   switch (depth) {
     case "cli":
-      return "│ ";
+      return "● ";
     case "system":
-      return "│ · ";
-    case "epic":
       return "│ ";
+    case "epic":
+      return "● ";
     case "feature":
-      return "│ │ ";
+      return "├─○ ";
     case "leaf-epic":
-      return "│ · ";
+      return "│ ";
     case "leaf-feature":
-      return "│ │ · ";
+      return "│ │ ";
   }
 }
 
@@ -59,13 +60,11 @@ function formatTime(ts: number): string {
 }
 
 /**
- * Colorize tree prefix connectors with the phase color.
+ * Colorize tree prefix connectors — always dimmed.
  */
-function colorPrefix(prefix: string, phase: string | undefined): string {
-  if (!prefix || !phase) return prefix;
-  const color = PHASE_COLOR[phase];
-  if (!color) return prefix;
-  return chalk.hex(color)(prefix);
+function colorPrefix(prefix: string): string {
+  if (!prefix) return prefix;
+  return chalk.dim(prefix);
 }
 
 /**
@@ -103,10 +102,10 @@ export function formatTreeLine(
     return `${prefix}${message}`;
   }
   if (depth === "epic") {
-    return `${colorPrefix(prefix, phase)}${message}`;
+    return `${colorPrefix(prefix)}${message}`;
   }
   if (depth === "feature") {
-    return `${colorPrefix(prefix, phase)}${message}`;
+    return `${colorPrefix(prefix)}${message}`;
   }
 
   // Leaf and system entries — phase badge + timestamp + level + message
@@ -123,5 +122,5 @@ export function formatTreeLine(
   }
 
   // Normal: phase-colored prefix, dim timestamp
-  return `${colorPrefix(prefix, phase)}${badge}${chalk.dim(time)} ${chalk.green(label)} ${message}`;
+  return `${colorPrefix(prefix)}${badge}${chalk.dim(time)} ${chalk.green(label)} ${message}`;
 }

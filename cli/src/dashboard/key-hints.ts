@@ -9,7 +9,7 @@ export interface KeyHintContext {
   filterInput?: string;
   verbosity?: number;
   phaseFilter?: string;
-  showBlocked?: boolean;
+  viewFilter?: string;
 }
 
 const MODE_HINTS: Record<
@@ -17,10 +17,10 @@ const MODE_HINTS: Record<
   string | ((ctx: KeyHintContext) => string)
 > = {
   normal: (ctx) =>
-    `q quit  ↑↓ navigate  Tab focus  / filter  x cancel  a all  ` +
+    `q quit  ↑↓ navigate  j/k log  Tab focus  / filter  x cancel  ` +
     `v verb:${verbosityLabel(ctx?.verbosity ?? 0)}  ` +
     `p phase:${ctx?.phaseFilter ?? "all"}  ` +
-    `b blocked:${ctx?.showBlocked !== false ? "on" : "off"}`,
+    `b view:${ctx?.viewFilter ?? "active"}`,
   filter: (ctx) => `/${ctx?.filterInput ?? ""}  ↵ apply  ⎋ clear`,
   confirm: (ctx) => `Cancel ${ctx?.slug ?? ""}? y confirm  n/⎋ abort`,
 };

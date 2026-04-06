@@ -308,36 +308,6 @@ describe("graceful shutdown logic", () => {
   });
 });
 
-describe("toggle all logic", () => {
-  test("'a' toggles showAll from false to true", () => {
-    let showAll = false;
-    const input: string = "a";
-    if (input === "a" || input === "A") showAll = !showAll;
-    expect(showAll).toBe(true);
-  });
-
-  test("'a' toggles showAll from true to false", () => {
-    let showAll = true;
-    const input: string = "a";
-    if (input === "a" || input === "A") showAll = !showAll;
-    expect(showAll).toBe(false);
-  });
-
-  test("'A' also toggles", () => {
-    let showAll = false;
-    const input: string = "A";
-    if (input === "a" || input === "A") showAll = !showAll;
-    expect(showAll).toBe(true);
-  });
-
-  test("other keys don't toggle", () => {
-    let showAll = false;
-    const input: string = "b";
-    if (input === "a" || input === "A") showAll = !showAll;
-    expect(showAll).toBe(false);
-  });
-});
-
 describe("verbosity cycling logic", () => {
   test("'v' cycles verbosity 0 -> 1", () => {
     let verbosity = 0;
@@ -381,39 +351,52 @@ describe("verbosity cycling logic", () => {
   });
 });
 
-describe("focus panel logic", () => {
-  test("default focused panel is 'epics'", () => {
-    const focusedPanel: "epics" | "log" = "epics";
-    expect(focusedPanel).toBe("epics");
+describe("log scroll j/k logic", () => {
+  test("'k' scrolls log up (decrements offset)", () => {
+    let logScrollOffset = 5;
+    logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(4);
   });
 
-  test("Tab toggles from epics to log", () => {
-    let focusedPanel: "epics" | "log" = "epics";
-    focusedPanel = focusedPanel === "epics" ? "log" : "epics";
-    expect(focusedPanel).toBe("log");
+  test("'j' scrolls log down (increments offset)", () => {
+    let logScrollOffset = 5;
+    const maxOffset = 50;
+    logScrollOffset = Math.min(maxOffset, logScrollOffset + 1);
+    expect(logScrollOffset).toBe(6);
   });
 
-  test("Tab toggles from log to epics", () => {
-    const toggle = (p: "epics" | "log") => p === "epics" ? "log" as const : "epics" as const;
-    expect(toggle("log")).toBe("epics");
+  test("'k' clamps at 0", () => {
+    let logScrollOffset = 0;
+    logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(0);
   });
 
-  test("Tab is ignored in filter mode", () => {
-    let focusedPanel: "epics" | "log" = "epics";
+  test("'j' clamps at maxOffset", () => {
+    let logScrollOffset = 50;
+    const maxOffset = 50;
+    logScrollOffset = Math.min(maxOffset, logScrollOffset + 1);
+    expect(logScrollOffset).toBe(50);
+  });
+
+  test("'j'/'k' disables auto-follow", () => {
+    let logAutoFollow = true;
+    // j or k pressed
+    logAutoFollow = false;
+    expect(logAutoFollow).toBe(false);
+  });
+
+  test("'j'/'k' is ignored in filter mode", () => {
+    let logScrollOffset = 5;
     const mode: string = "filter";
-    if (mode === "normal") {
-      focusedPanel = focusedPanel === "epics" ? "log" : "epics";
-    }
-    expect(focusedPanel).toBe("epics");
+    if (mode === "normal") logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(5);
   });
 
-  test("Tab is ignored in confirm mode", () => {
-    let focusedPanel: "epics" | "log" = "epics";
+  test("'j'/'k' is ignored in confirm mode", () => {
+    let logScrollOffset = 5;
     const mode: string = "confirm";
-    if (mode === "normal") {
-      focusedPanel = focusedPanel === "epics" ? "log" : "epics";
-    }
-    expect(focusedPanel).toBe("epics");
+    if (mode === "normal") logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(5);
   });
 });
 
@@ -465,36 +448,44 @@ describe("phase filter logic", () => {
   });
 });
 
-describe("blocked toggle logic", () => {
-  test("default showBlocked is true", () => {
-    const showBlocked = true;
-    expect(showBlocked).toBe(true);
+describe("view filter cycling logic", () => {
+  const VIEW_ORDER = ["active", "running", "all"] as const;
+  type ViewFilter = (typeof VIEW_ORDER)[number];
+
+  function cycleView(current: ViewFilter): ViewFilter {
+    const idx = VIEW_ORDER.indexOf(current);
+    return VIEW_ORDER[(idx + 1) % VIEW_ORDER.length];
+  }
+
+  test("default viewFilter is 'active'", () => {
+    const viewFilter: ViewFilter = "active";
+    expect(viewFilter).toBe("active");
   });
 
-  test("'b' toggles showBlocked from true to false", () => {
-    let showBlocked = true;
-    showBlocked = !showBlocked;
-    expect(showBlocked).toBe(false);
+  test("'b' cycles active -> running", () => {
+    expect(cycleView("active")).toBe("running");
   });
 
-  test("'b' toggles showBlocked from false to true", () => {
-    let showBlocked = false;
-    showBlocked = !showBlocked;
-    expect(showBlocked).toBe(true);
+  test("'b' cycles running -> all", () => {
+    expect(cycleView("running")).toBe("all");
+  });
+
+  test("'b' wraps all -> active", () => {
+    expect(cycleView("all")).toBe("active");
   });
 
   test("'b' is ignored in filter mode", () => {
-    let showBlocked = true;
+    let viewFilter: ViewFilter = "active";
     const mode: string = "filter";
-    if (mode === "normal") showBlocked = !showBlocked;
-    expect(showBlocked).toBe(true);
+    if (mode === "normal") viewFilter = cycleView(viewFilter);
+    expect(viewFilter).toBe("active");
   });
 
   test("'b' is ignored in confirm mode", () => {
-    let showBlocked = true;
+    let viewFilter: ViewFilter = "active";
     const mode: string = "confirm";
-    if (mode === "normal") showBlocked = !showBlocked;
-    expect(showBlocked).toBe(true);
+    if (mode === "normal") viewFilter = cycleView(viewFilter);
+    expect(viewFilter).toBe("active");
   });
 });
 
@@ -507,32 +498,6 @@ describe("log scroll state logic", () => {
   test("default logScrollOffset is 0", () => {
     const logScrollOffset = 0;
     expect(logScrollOffset).toBe(0);
-  });
-
-  test("up arrow when log focused decrements offset and pauses auto-follow", () => {
-    let logScrollOffset = 5;
-    let logAutoFollow = true;
-    const focusedPanel = "log";
-
-    if (focusedPanel === "log") {
-      logScrollOffset = Math.max(0, logScrollOffset - 1);
-      logAutoFollow = false;
-    }
-
-    expect(logScrollOffset).toBe(4);
-    expect(logAutoFollow).toBe(false);
-  });
-
-  test("down arrow when log focused increments offset", () => {
-    let logScrollOffset = 5;
-    const maxOffset = 50;
-    const focusedPanel = "log";
-
-    if (focusedPanel === "log") {
-      logScrollOffset = Math.min(maxOffset, logScrollOffset + 1);
-    }
-
-    expect(logScrollOffset).toBe(6);
   });
 
   test("scroll offset clamps to 0 at top", () => {
@@ -578,32 +543,19 @@ describe("log scroll state logic", () => {
     expect(logScrollOffset).toBe(99);
   });
 
-  test("arrow keys route to nav when epics focused", () => {
-    const focusedPanel = "epics";
+  test("up/down always controls epic nav, j/k always controls log", () => {
     let selectedIndex = 2;
-    let logScrollOffset = 0;
+    let logScrollOffset = 5;
 
-    if (focusedPanel === "epics") {
-      selectedIndex = Math.max(0, selectedIndex - 1);
-    } else {
-      logScrollOffset = Math.max(0, logScrollOffset - 1);
-    }
-
+    // up arrow → epic nav
+    selectedIndex = Math.max(0, selectedIndex - 1);
     expect(selectedIndex).toBe(1);
-    expect(logScrollOffset).toBe(0);
-  });
+    expect(logScrollOffset).toBe(5); // unchanged
 
-  test("arrow keys route to log scroll when log focused", () => {
-    function handleArrow(panel: "epics" | "log", selIdx: number, scrollOff: number) {
-      if (panel === "epics") {
-        return { selectedIndex: Math.max(0, selIdx - 1), logScrollOffset: scrollOff };
-      }
-      return { selectedIndex: selIdx, logScrollOffset: Math.max(0, scrollOff - 1) };
-    }
-
-    const result = handleArrow("log", 2, 5);
-    expect(result.selectedIndex).toBe(2);
-    expect(result.logScrollOffset).toBe(4);
+    // k → log scroll
+    logScrollOffset = Math.max(0, logScrollOffset - 1);
+    expect(logScrollOffset).toBe(4);
+    expect(selectedIndex).toBe(1); // unchanged
   });
 });
 
@@ -643,13 +595,11 @@ describe("details scroll state logic", () => {
     expect(detailsScrollOffset).toBe(50);
   });
 
-  test("PgUp/PgDn works regardless of focused panel", () => {
+  test("PgUp/PgDn always controls details panel", () => {
     let detailsScrollOffset = 10;
-    const focusedPanel = "log";
     const pageSize = 10;
     detailsScrollOffset = Math.max(0, detailsScrollOffset - pageSize);
     expect(detailsScrollOffset).toBe(0);
-    expect(focusedPanel).toBe("log");
   });
 });
 
