@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-auto design"
+            "command": "bunx beastmode hooks hitl-auto plan"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log design"
+            "command": "bunx beastmode hooks hitl-log plan"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log design"
+            "command": "bunx beastmode hooks hitl-log plan"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log design"
+            "command": "bunx beastmode hooks hitl-log plan"
           }
         ]
       }
