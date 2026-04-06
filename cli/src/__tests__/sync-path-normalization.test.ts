@@ -183,3 +183,129 @@ describe("readPrdSections path normalization", () => {
     expect(body).toContain("Store migration");
   });
 });
+
+const PLAN_CONTENT = `---
+phase: plan
+---
+
+## User Stories
+
+1. As a user, I want plan paths to resolve.
+
+## What to Build
+
+Build the plan resolver.
+
+## Acceptance Criteria
+
+- [ ] Plan resolves from any format
+`;
+
+describe("syncFeature plan path normalization", () => {
+  let tmpDir: string;
+  let store: InMemoryTaskStore;
+
+  beforeEach(() => {
+    mockCalls.length = 0;
+    tmpDir = mkdtempSync(join(tmpdir(), "sync-plan-norm-"));
+    store = new InMemoryTaskStore();
+
+    const planDir = join(tmpDir, ".beastmode", "artifacts", "plan");
+    mkdirSync(planDir, { recursive: true });
+    writeFileSync(join(planDir, "2026-04-05-test-my-feat.md"), PLAN_CONTENT);
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test("resolves bare filename to correct plan file", async () => {
+    const epic = store.addEpic({ name: "Test", slug: "test" });
+    store.updateEpic(epic.id, { status: "implement" });
+    const feat = store.addFeature({
+      parent: epic.id,
+      name: "my-feat",
+      slug: "my-feat",
+      description: "Desc",
+    });
+    store.updateFeature(feat.id, { plan: "2026-04-05-test-my-feat.md" });
+    saveSyncRefs(tmpDir, { [epic.id]: { issue: 10 } });
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const featureCreate = callsTo("ghIssueCreate").find((c) =>
+      (c.args[1] as string).includes("my-feat"),
+    );
+    expect(featureCreate).toBeDefined();
+    const body = featureCreate!.args[2] as string;
+    expect(body).toContain("As a user, I want plan paths to resolve");
+    expect(body).toContain("Build the plan resolver");
+    expect(body).toContain("Plan resolves from any format");
+  });
+
+  test("resolves repo-relative path to correct plan file", async () => {
+    const epic = store.addEpic({ name: "Test", slug: "test" });
+    store.updateEpic(epic.id, { status: "implement" });
+    const feat = store.addFeature({
+      parent: epic.id,
+      name: "my-feat",
+      slug: "my-feat",
+      description: "Desc",
+    });
+    store.updateFeature(feat.id, {
+      plan: ".beastmode/artifacts/plan/2026-04-05-test-my-feat.md",
+    });
+    saveSyncRefs(tmpDir, { [epic.id]: { issue: 10 } });
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const featureCreate = callsTo("ghIssueCreate").find((c) =>
+      (c.args[1] as string).includes("my-feat"),
+    );
+    expect(featureCreate).toBeDefined();
+    const body = featureCreate!.args[2] as string;
+    expect(body).toContain("As a user, I want plan paths to resolve");
+    expect(body).toContain("Build the plan resolver");
+  });
+
+  test("resolves absolute worktree path to correct plan file", async () => {
+    const epic = store.addEpic({ name: "Test", slug: "test" });
+    store.updateEpic(epic.id, { status: "implement" });
+    const feat = store.addFeature({
+      parent: epic.id,
+      name: "my-feat",
+      slug: "my-feat",
+      description: "Desc",
+    });
+    const absPath = join(tmpDir, ".beastmode", "artifacts", "plan", "2026-04-05-test-my-feat.md");
+    store.updateFeature(feat.id, { plan: absPath });
+    saveSyncRefs(tmpDir, { [epic.id]: { issue: 10 } });
+
+    await syncGitHubForEpic({
+      projectRoot: tmpDir,
+      epicId: epic.id,
+      epicSlug: "test",
+      store,
+      resolved: { repo: "org/repo" },
+    });
+
+    const featureCreate = callsTo("ghIssueCreate").find((c) =>
+      (c.args[1] as string).includes("my-feat"),
+    );
+    expect(featureCreate).toBeDefined();
+    const body = featureCreate!.args[2] as string;
+    expect(body).toContain("As a user, I want plan paths to resolve");
+  });
+});

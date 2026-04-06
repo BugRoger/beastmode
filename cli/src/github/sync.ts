@@ -353,12 +353,21 @@ const ALL_PHASE_LABELS = [
 function readPrdSections(
   epic: EpicSyncInput,
   projectRoot: string,
+  logger?: Logger,
 ): EpicBodyInput["prdSections"] | undefined {
   const designPaths = epic.artifacts?.["design"];
   if (!designPaths || designPaths.length === 0) return undefined;
 
-  const designPath = join(projectRoot, ".beastmode", "artifacts", "design", basename(designPaths[0]));
-  if (!existsSync(designPath)) return undefined;
+  const storedPath = designPaths[0];
+  logger?.debug("readPrdSections: stored artifact path", { path: storedPath });
+
+  const designPath = join(projectRoot, ".beastmode", "artifacts", "design", basename(storedPath));
+  logger?.debug("readPrdSections: resolved absolute path", { path: designPath });
+
+  if (!existsSync(designPath)) {
+    logger?.warn("readPrdSections: design artifact file does not exist", { path: designPath });
+    return undefined;
+  }
 
   try {
     const content = readFileSync(designPath, "utf-8");
@@ -379,8 +388,13 @@ function readPrdSections(
     if (sections["Testing Decisions"]) result.testingDecisions = sections["Testing Decisions"];
     if (sections["Out of Scope"]) result.outOfScope = sections["Out of Scope"];
 
+    const extracted = Object.keys(result);
+    logger?.debug(`readPrdSections: extracted ${extracted.length} sections`, { path: storedPath, sections: extracted });
+
     return Object.keys(result).length > 0 ? result : undefined;
-  } catch {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger?.error(`readPrdSections: failed to read design artifact: ${message}`, { path: designPath });
     return undefined;
   }
 }
@@ -494,7 +508,7 @@ export async function syncGitHub(
 
   // Compute enrichment data if projectRoot available
   const prdSections = opts.projectRoot
-    ? readPrdSections(epic, opts.projectRoot)
+    ? readPrdSections(epic, opts.projectRoot, opts.logger)
     : undefined;
   const artifactLinks = resolveArtifactLinks(epic, repo);
 
@@ -686,7 +700,7 @@ async function syncFeature(
   let whatToBuild: string | undefined;
   let acceptanceCriteria: string | undefined;
   if (opts.projectRoot && feature.plan) {
-    const planPath = resolve(opts.projectRoot, feature.plan);
+    const planPath = join(opts.projectRoot, ".beastmode", "artifacts", "plan", basename(feature.plan));
     try {
       if (existsSync(planPath)) {
         const planContent = readFileSync(planPath, "utf-8");
