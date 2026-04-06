@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-auto.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-auto.ts\" plan"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" design"
+            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" plan"
           }
         ]
       }
