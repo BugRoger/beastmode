@@ -26,7 +26,7 @@ import type { SyncRefs } from "./sync-refs.js";
 import { loadSyncRefs, saveSyncRefs, getSyncRef, setSyncRef } from "./sync-refs.js";
 import { extractSection, extractSections } from "../artifacts/reader.js";
 import { existsSync, readFileSync } from "fs";
-import { resolve, relative, isAbsolute } from "path";
+import { resolve, relative, isAbsolute, basename, join } from "path";
 import {
   ghIssueCreate,
   ghIssueEdit,
@@ -357,7 +357,7 @@ function readPrdSections(
   const designPaths = epic.artifacts?.["design"];
   if (!designPaths || designPaths.length === 0) return undefined;
 
-  const designPath = resolve(projectRoot, designPaths[0]);
+  const designPath = join(projectRoot, ".beastmode", "artifacts", "design", basename(designPaths[0]));
   if (!existsSync(designPath)) return undefined;
 
   try {
