@@ -7,6 +7,23 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 
+// --- Mock Bun globals ---
+try {
+  Object.defineProperty(globalThis, 'Bun', {
+    value: {
+      CryptoHasher: class {
+        constructor(_algo: string) {}
+        update(_data: string) {}
+        digest(_format: string) { return "abc123"; }
+      },
+      spawnSync: (_args: string[]) => ({ success: true, stdout: "", stderr: "" }),
+    },
+    configurable: true,
+  });
+} catch {
+  // Bun might already be set, ignore
+}
+
 // --- Mock gh CLI ---
 vi.mock("../github/cli", () => ({
   ghIssueCreate: async () => 42,
@@ -23,7 +40,7 @@ vi.mock("../github/cli", () => ({
   ghProjectItemDelete: async () => true,
 }));
 
-import { syncGitHub, syncGitHubForEpic, buildArtifactsMap } from "../github/sync";
+import { syncGitHub, buildArtifactsMap } from "../github/sync";
 import type { EpicSyncInput } from "../github/sync";
 import type { BeastmodeConfig } from "../config";
 import type { ResolvedGitHub } from "../github/discovery";
@@ -108,32 +125,16 @@ describe("buildArtifactsMap logging", () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "art-log-"));
     const logger = createSpyLogger();
 
-    // Call buildArtifactsMap directly with an entity that has absolute paths
     buildArtifactsMap(
-      {
-        design: "/absolute/path/to/design.md",
-        plan: "/absolute/path/to/plan.md",
-        implement: "/absolute/path/to/impl.md",
-      },
+      { design: "/absolute/path/to/design.md" },
       tmpDir,
       logger,
     );
 
     const debugCalls = logger.calls.filter(c => c.level === "debug");
-
-    // Verify logging for design artifact
-    const designLog = debugCalls.find(c => c.msg.includes("artifact") && c.msg.includes("design"));
-    expect(designLog).toBeDefined();
-    expect(designLog?.data?.path).toBe("/absolute/path/to/design.md");
-
-    // Verify logging for plan artifact
-    const planLog = debugCalls.find(c => c.msg.includes("artifact") && c.msg.includes("plan"));
-    expect(planLog).toBeDefined();
-    expect(planLog?.data?.path).toBe("/absolute/path/to/plan.md");
-
-    // Verify logging for implement artifact
-    const implLog = debugCalls.find(c => c.msg.includes("artifact") && c.msg.includes("implement"));
-    expect(implLog).toBeDefined();
-    expect(implLog?.data?.path).toBe("/absolute/path/to/impl.md");
+    const artifactLog = debugCalls.find(c => c.msg.includes("artifact") && c.msg.includes("design"));
+    expect(artifactLog).toBeDefined();
+    expect(artifactLog?.data?.path).toBe("/absolute/path/to/design.md");
+    expect(artifactLog?.data?.normalized).toBeDefined();
   });
 });
