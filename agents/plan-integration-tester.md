@@ -41,11 +41,13 @@ Write a single artifact to: `.beastmode/artifacts/plan/YYYY-MM-DD-<epic-name>-in
 
 Where `YYYY-MM-DD` is today's date and `<epic-name>` is the epic name you received.
 
-The artifact has three sections:
+The artifact has two sections:
 
 #### New Scenarios
 
-Organize new scenarios by feature. For each feature that has user stories with no existing coverage, write a section with the feature name as a heading, followed by the Gherkin feature block:
+Organize new scenarios by feature name (for plan skill distribution) with capability-domain grouping inside the Gherkin blocks.
+
+For each feature that has user stories requiring new scenarios, write a section with the feature name as a heading, followed by Gherkin feature blocks organized by capability domain:
 
 ```markdown
 ### Feature: <feature-name>
@@ -53,8 +55,8 @@ Organize new scenarios by feature. For each feature that has user stories with n
 Covers user stories [N, M].
 
 ​```gherkin
-@<epic-name>
-Feature: [descriptive feature name]
+@<epic-name> @<capability-domain>
+Feature: [capability-domain description] -- [behavioral summary]
 
   Scenario: [behavioral description]
     Given [initial state]
@@ -63,26 +65,47 @@ Feature: [descriptive feature name]
 ​```
 ```
 
-The feature-name heading must match the feature name from the input exactly (lowercase, hyphenated). This allows the plan skill to mechanically distribute scenarios by matching headings to feature names.
+**Feature-name headings** must match the feature name from the input exactly (lowercase, hyphenated). This allows the plan skill to mechanically distribute scenarios by matching headings to feature names.
+
+**Capability domains** are determined from the existing test suite's natural groupings and the current epic's behavioral scope. Examples: @pipeline, @dashboard, @release, @config. A scenario may span multiple input features if it covers a capability that crosses feature boundaries.
+
+**Dual tagging:** Every scenario carries both an epic tag (`@<epic-name>`) for traceability and a capability tag (`@<capability-domain>`) for logical grouping.
 
 For features with no behavioral scenarios (e.g., purely structural or infrastructure features), omit the feature section entirely — the plan skill handles the empty-section case.
 
 Use scenario outlines with Examples tables when a story has multiple input variations. Use Background blocks when multiple scenarios in a feature share setup steps.
 
-#### Modified Scenarios
+#### Consolidation
 
-For each existing scenario that needs updates:
+For each consolidation action on existing scenarios, describe:
 
-- Reference the original file path and scenario name
-- Describe what changed and why
-- Include the complete updated Gherkin (not a diff)
+- **Original file path** and scenario name
+- **Action:** merge, update, or remove
+- **Reason:** why the consolidation is needed (overlap description, staleness explanation, or superseding change reference)
+- **Resulting Gherkin:** for merges and updates, include the complete resulting scenario (not a diff). For removals, omit.
 
-#### Deleted Scenarios
+Format each entry as:
 
-For each existing scenario that should be removed:
+```markdown
+#### [Action]: [original scenario name]
 
-- Reference the original file path and scenario name
-- Explain why the scenario is obsolete (which PRD change supersedes it)
+**File:** `[original file path]`
+**Action:** [merge | update | remove]
+**Reason:** [explanation]
+
+[For merge/update only:]
+​```gherkin
+@<epic-name> @<capability-domain>
+Feature: [capability-domain description]
+
+  Scenario: [merged/updated scenario name]
+    Given [initial state]
+    When [action]
+    Then [expected outcome]
+​```
+```
+
+If no consolidation actions are needed (no overlaps, no stale scenarios), include the section with a note: "No consolidation actions identified."
 
 ### Gherkin Style Rules
 
