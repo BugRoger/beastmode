@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-auto.ts\" plan"
+            "command": "bunx beastmode hooks hitl-auto validate"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" plan"
+            "command": "bunx beastmode hooks hitl-log validate"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" plan"
+            "command": "bunx beastmode hooks hitl-log validate"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" plan"
+            "command": "bunx beastmode hooks hitl-log validate"
           }
         ]
       }
@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/generate-output.ts\""
+            "command": "bunx beastmode hooks generate-output"
           }
         ]
       }
