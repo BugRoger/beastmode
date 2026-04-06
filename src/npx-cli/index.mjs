@@ -22,6 +22,15 @@ switch (command) {
     break;
   }
 
+  case 'uninstall': {
+    const { uninstall } = await import('./uninstall.mjs');
+    const result = await uninstall({
+      homeDir: homedir(),
+    });
+    process.exit(result.success ? 0 : 1);
+    break;
+  }
+
   case '--version':
   case '-v': {
     const pluginJson = JSON.parse(
@@ -38,6 +47,7 @@ switch (command) {
     console.log('');
     console.log('Commands:');
     console.log('  install     Install beastmode (plugin + CLI)');
+    console.log('  uninstall   Remove beastmode (preserves project data)');
     console.log('  --version   Show version');
     console.log('  --help      Show this help');
     break;
