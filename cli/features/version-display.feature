@@ -1,8 +1,8 @@
 @dashboard-log-fixes
-Feature: Dashboard header displays current version and git hash
+Feature: Dashboard header displays current version
 
-  The dashboard header shows the current build version and abbreviated
-  git commit hash below the clock in the top-right region, so the
+  The dashboard header shows the current build version from
+  plugin.json below the clock in the top-right region, so the
   operator can identify which build is running.
 
   Scenario: Version string is captured from started event
