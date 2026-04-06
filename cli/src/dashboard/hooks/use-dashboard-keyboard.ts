@@ -291,9 +291,11 @@ export function useDashboardKeyboard(
         return;
       }
 
-      // Priority 12: verbosity cycling
+      // Priority 12: verbosity cycling — reset log to auto-follow
       if (input === "v" || input === "V") {
         setVerbosity((prev) => cycleVerbosity(prev));
+        setLogAutoFollow(true);
+        setLogScrollOffset(0);
         return;
       }
 
