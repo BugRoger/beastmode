@@ -10,9 +10,9 @@ describe("buildPreToolUseHook", () => {
     expect(entry.hooks[0].type).toBe("command");
   });
 
-  test("command references hitl-auto.ts", () => {
+  test("command references hitl-auto hook", () => {
     const entry = buildPreToolUseHook("design");
-    expect(entry.hooks[0].command).toContain("hitl-auto.ts");
+    expect(entry.hooks[0].command).toContain("hitl-auto");
   });
 
   test("command includes phase argument", () => {
@@ -20,15 +20,14 @@ describe("buildPreToolUseHook", () => {
     expect(entry.hooks[0].command).toContain("implement");
   });
 
-  test("command uses bun run", () => {
+  test("command uses bunx beastmode hooks", () => {
     const entry = buildPreToolUseHook("plan");
-    expect(entry.hooks[0].command).toContain("bun run");
+    expect(entry.hooks[0].command).toContain("bunx beastmode hooks");
   });
 
-  test("command uses absolute path, not shell substitution", () => {
+  test("command uses portable CLI pattern", () => {
     const entry = buildPreToolUseHook("validate");
-    expect(entry.hooks[0].command).toMatch(/^bun run "\/.*hitl-auto\.ts"/);
-    expect(entry.hooks[0].command).not.toContain("git rev-parse");
+    expect(entry.hooks[0].command).toBe("bunx beastmode hooks hitl-auto validate");
   });
 
   test("does not contain prompt field", () => {
