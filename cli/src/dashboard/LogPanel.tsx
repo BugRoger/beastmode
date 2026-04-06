@@ -18,10 +18,10 @@ export interface LogPanelProps {
 
 /**
  * Count total rendered lines in a tree state.
- * CLI root label + CLI entries + for each epic (1 label + direct entries + for each feature (1 label + entries)).
+ * SYSTEM root label + SYSTEM entries + for each epic (1 label + direct entries + for each feature (1 label + entries)).
  */
 export function countTreeLines(state: TreeState): number {
-  // CLI root: always 1 label + N entries
+  // SYSTEM root: always 1 label + N entries
   let count = 1 + state.cli.entries.length;
 
   for (const epic of state.epics) {

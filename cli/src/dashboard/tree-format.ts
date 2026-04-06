@@ -4,7 +4,7 @@
  * Builds tree prefixes (│ · connectors) and formats leaf lines
  * with timestamp + phase badge + level + message.
  *
- * Hierarchy: CLI > Epic > Feature > Entry
+ * Hierarchy: SYSTEM > Epic > Feature > Entry
  */
 
 import chalk from "chalk";
@@ -81,7 +81,7 @@ function formatPhaseBadge(phase: string | undefined): string {
 /**
  * Format a single tree line.
  *
- * For the CLI root label: renders │ + label (same prefix as epic).
+ * For the SYSTEM root label: renders │ + label (same prefix as epic).
  * For node labels (epic, feature): renders prefix + label.
  * For leaf entries: renders prefix + phase badge + HH:MM:SS + LEVEL + message.
  * For system entries: renders │ · prefix + HH:MM:SS + LEVEL + message (same as leaf-epic, no badge).

@@ -1,7 +1,7 @@
 /**
  * Tree data types for the hierarchical log view.
  *
- * Two-level hierarchy under synthetic CLI root: CLI > Epic > Feature.
+ * Two-level hierarchy under synthetic SYSTEM root: SYSTEM > Epic > Feature.
  * Phase is a label on entries, not a tree level.
  */
 
@@ -43,7 +43,7 @@ export interface EpicNode {
   entries: TreeEntry[];
 }
 
-/** System-level entry — renders under the CLI root node. */
+/** System-level entry — renders under the SYSTEM root node. */
 export interface SystemEntry {
   timestamp: number;
   level: LogLevel;
@@ -51,7 +51,7 @@ export interface SystemEntry {
   seq: number;
 }
 
-/** CLI root node — synthetic root holding system-level entries. */
+/** SYSTEM root node — synthetic root holding system-level entries. */
 export interface CliNode {
   /** System-level entries (watch loop start/stop, scan events, errors). */
   entries: SystemEntry[];
@@ -59,7 +59,7 @@ export interface CliNode {
 
 /** Full tree state passed to the TreeView component. */
 export interface TreeState {
-  /** CLI root node with system entries. */
+  /** SYSTEM root node with system entries. */
   cli: CliNode;
   /** Epic trees, ordered by creation time. */
   epics: EpicNode[];
