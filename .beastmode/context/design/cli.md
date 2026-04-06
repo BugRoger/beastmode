@@ -66,7 +66,7 @@
 - PostToolUse command hook for `AskUserQuestion` is written alongside the PreToolUse hook — logs auto/human decisions to `artifacts/<phase>/hitl-log.md`
 - `cleanHitlSettings()` runs before `writeHitlSettings()` at each dispatch — prevents stale hooks from previous phases
 - `settings.local.json` is gitignored — generated per-dispatch, no version control noise
-- ALWAYS resolve hook script paths at write time using `import.meta.dir` — never shell substitution (`$(git rev-parse)`) or environment variables (`CLAUDE_PLUGIN_ROOT`); absolute paths embedded in command strings are portable across worktrees and CWD contexts
+- ALWAYS emit `bunx beastmode hooks <name> [phase]` as the hook command string — never absolute paths via `import.meta.dir`, never shell substitution (`$(git rev-parse)`), never environment variables; the CLI binary resolves at runtime via PATH, making hooks portable across machines, worktrees, and installation paths
 - Manual `beastmode <phase>` dispatch goes through `phase.ts` for HITL settings injection. Dashboard dispatch goes through the pipeline runner which calls the same rebase + HITL sequence (rebase, cleanHitlSettings, getPhaseHitlProse, buildPreToolUseHook, writeHitlSettings) — uniform hook injection across both paths
 
 ## Phase Output Contract

@@ -28,3 +28,9 @@ context/implement/testing/bun-test-runner-imports.md
 context/implement/testing/cucumber-source-analysis-world.md
 context/implement/testing/cucumber-store-lifecycle-world.md
 context/implement/testing/cucumber-api-behavioral-world.md
+
+## Git-Initialized Temp Dirs for CLI Hook Tests
+- ALWAYS call `git init` in temp dirs used by integration tests that invoke CLI dispatch commands — hook handlers (hitl-auto, hitl-log, generate-output) call `git rev-parse --show-toplevel` internally; a plain `mkdtempSync` dir causes the command to fail with "not a git repository"
+- Applies to any test that shells out to `bun run src/index.ts hooks <name>` or `bunx beastmode hooks <name>`
+
+context/implement/testing/git-initialized-temp-dirs.md
