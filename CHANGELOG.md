@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.101.0 — npx Installer (Apr 2026)
+
+- **Install command** — `npx @anthropic-ai/claude-code-beastmode install` provides zero-friction plugin setup: prerequisite checks, bun auto-install, CLI linking, JSON config merging, and post-install verification
+- **Uninstall command** — `npx @anthropic-ai/claude-code-beastmode uninstall` cleanly removes plugin config entries and CLI links
+- **Plain Node.js entry point** — npx CLI (`src/npx-cli/`) runs as pure ESM `.mjs` with no TypeScript, no build step, and no external dependencies — works before bun is available
+- **README update** — Add system requirements, npx install command, and uninstall instructions
+
+---
+
 ### v0.100.0 — CLI Hook Commands (Apr 2026)
 
 - **Portable hook commands** — Replace absolute `import.meta.dir` paths with `bunx beastmode hooks <name> [phase]` CLI commands in all settings builders, making hooks portable across machines, worktrees, and installation paths

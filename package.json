@@ -1,0 +1,34 @@
+{
+  "name": "beastmode",
+  "version": "0.99.0",
+  "description": "Agentic workflow skills for Claude Code. Activate beastmode.",
+  "type": "module",
+  "bin": {
+    "beastmode": "src/npx-cli/index.mjs"
+  },
+  "files": [
+    "src/npx-cli/",
+    "plugin/",
+    "cli/"
+  ],
+  "scripts": {
+    "test:npx": "node --test src/npx-cli/__tests__/*.test.mjs",
+    "test:integration": "node --test src/npx-cli/__tests__/*.integration.test.mjs"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "beastmode",
+    "ai",
+    "workflow"
+  ],
+  "author": "bugroger",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BugRoger/beastmode"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

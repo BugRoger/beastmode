@@ -14,11 +14,32 @@ This works for quick fixes. It falls apart for anything that spans sessions.
 
 ## Install
 
-Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Git](https://git-scm.com/), and [iTerm2](https://iterm2.com/) (for pipeline orchestration). Optional: [GitHub CLI](https://cli.github.com/) for issue and project board sync.
+### Requirements
+
+| Prerequisite | Why |
+|---|---|
+| macOS | Only supported platform |
+| [Node.js](https://nodejs.org/) >= 18 | Runtime for npx |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | AI coding assistant |
+| [Git](https://git-scm.com/) | Worktree operations |
+| [iTerm2](https://iterm2.com/) | Pipeline orchestration |
+| [GitHub CLI](https://cli.github.com/) *(optional)* | Issue and project board sync |
+
+### One-Liner
 
 ```bash
-claude plugin add beastmode@beastmode-marketplace
+npx beastmode install
 ```
+
+Installs the plugin, CLI, and all dependencies. Re-run to update.
+
+### Uninstall
+
+```bash
+npx beastmode uninstall
+```
+
+Removes the plugin and CLI link. Project data in `.beastmode/` is preserved.
 
 Initialize your project:
 

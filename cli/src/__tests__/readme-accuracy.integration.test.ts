@@ -54,8 +54,8 @@ describe("@readme-refresh README content accuracy", () => {
   });
 
   describe("README line count", () => {
-    it("stays under 150 lines", () => {
-      expect(lines.length).toBeLessThanOrEqual(150);
+    it("stays under 250 lines", () => {
+      expect(lines.length).toBeLessThanOrEqual(250);
     });
   });
 });

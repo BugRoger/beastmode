@@ -11,6 +11,7 @@
 - ALWAYS grep for all mock sites of a module when adding new exports — mocks in unrelated test files break silently until the full suite runs
 - ALWAYS include Cucumber step definition files (`*.steps.ts`) in migration scope analysis — they import module paths at runtime (e.g., `require('../manifest/store.js')`) that differ from TypeScript source import paths, making them invisible to TypeScript-import grep patterns
 - Four-status model: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED — replaces three-tier deviation system
+- ALWAYS enforce per-task dispatch for implementation agents — agents that batch all tasks into a single dispatch bypass the spec-review and quality-review pipeline, even if the resulting code passes tests; the review pipeline is a quality gate, not optional optimization
 
 ## Testing
 - ALWAYS verify L2 files contain project-specific content, not placeholder patterns
@@ -74,6 +75,7 @@ context/implement/write-plan.md
 - ALWAYS produce complete code in every step — no placeholders, no "add appropriate handling", no "similar to Task N"
 - ALWAYS duplicate context from feature plan into .tasks.md header — makes the document self-contained for agents
 - ALWAYS author wiring task implementations from current source on the worktree branch — plan artifact descriptions become stale as parallel waves complete; source is the ground truth for type signatures, import paths, and component props
+- ALWAYS match the test runner to the target runtime in Write Plan tasks — `node:test` for plain Node.js modules (`*.mjs`), vitest for Bun/TypeScript modules (`*.ts`) — mixing runners with incompatible module systems causes silent import failures
 
 context/implement/write-plan.md
 
