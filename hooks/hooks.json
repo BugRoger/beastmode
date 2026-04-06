@@ -1,15 +1,3 @@
 {
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/generate-output.ts\""
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }
