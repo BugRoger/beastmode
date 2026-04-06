@@ -211,7 +211,7 @@ describe("cleanHitlSettings", () => {
             { matcher: "AskUserQuestion", hooks: [{ type: "command", command: "test" }] },
           ],
           Stop: [
-            { matcher: "", hooks: [{ type: "command", command: "bun run generate-output.ts" }] },
+            { matcher: "", hooks: [{ type: "command", command: "bunx beastmode hooks generate-output" }] },
           ],
         },
       }),
