@@ -319,5 +319,15 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "stats-panel": {
+    "paths": ["features/stats-panel-integration.feature"],
+    "import": [
+      "features/step_definitions/stats-panel.steps.ts",
+      "features/support/stats-panel-world.ts",
+      "features/support/stats-panel-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
