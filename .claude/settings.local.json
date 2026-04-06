@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-auto.ts\" release"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-auto.ts\" design"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" release"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" design"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" release"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" design"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/hitl-log.ts\" release"
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/hitl-log.ts\" design"
           }
         ]
       }
@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"$(git rev-parse --show-toplevel)/cli/src/hooks/generate-output.ts\""
+            "command": "bun run \"/Users/D038720/Code/github.com/bugroger/beastmode/cli/src/hooks/generate-output.ts\""
           }
         ]
       }
