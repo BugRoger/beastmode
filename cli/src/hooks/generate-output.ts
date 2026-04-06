@@ -79,7 +79,7 @@ export function buildOutput(
         : undefined;
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
-        artifacts: { design: artifactPath, slug: fm.epic ?? fm.slug, epic: fm.epic, summary },
+        artifacts: { design: basename(artifactPath), slug: fm.epic ?? fm.slug, epic: fm.epic, summary },
       };
     }
 
@@ -111,7 +111,7 @@ export function buildOutput(
       return {
         status: passed ? "completed" : "error",
         artifacts: {
-          report: artifactPath,
+          report: basename(artifactPath),
           passed,
           ...(failedFeatures && failedFeatures.length > 0 ? { failedFeatures } : {}),
         },
@@ -123,7 +123,7 @@ export function buildOutput(
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
         artifacts: {
           version: fm.bump ?? "patch",
-          changelog: artifactPath,
+          changelog: basename(artifactPath),
         },
       };
 

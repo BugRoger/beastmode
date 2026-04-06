@@ -78,7 +78,7 @@ describe("buildOutput", () => {
     const output = buildOutput("path/to/design.md", { phase: "design", slug: "abc123", epic: "my-epic" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "path/to/design.md", slug: "my-epic", epic: "my-epic", summary: undefined },
+      artifacts: { design: "design.md", slug: "my-epic", epic: "my-epic", summary: undefined },
     });
   });
 
@@ -91,7 +91,7 @@ describe("buildOutput", () => {
     const output = buildOutput("path/to/design.md", { phase: "design" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "path/to/design.md" },
+      artifacts: { design: "design.md" },
     });
   });
 
@@ -140,6 +140,60 @@ describe("buildOutput", () => {
   test("unknown phase returns undefined", () => {
     const output = buildOutput("x.md", { phase: "unknown" }, ARTIFACTS_DIR);
     expect(output).toBeUndefined();
+  });
+
+  test("design phase strips directory prefix from absolute path", () => {
+    const output = buildOutput(
+      "/worktree/.beastmode/artifacts/design/2026-04-06-epic.md",
+      { phase: "design", slug: "abc123", epic: "my-epic" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
+  });
+
+  test("design phase preserves bare filename unchanged", () => {
+    const output = buildOutput(
+      "2026-04-06-epic.md",
+      { phase: "design", slug: "abc123", epic: "my-epic" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
+  });
+
+  test("validate phase strips directory prefix from absolute path", () => {
+    const output = buildOutput(
+      "/worktree/.beastmode/artifacts/validate/2026-04-06-report.md",
+      { phase: "validate" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ report: "2026-04-06-report.md" });
+  });
+
+  test("validate phase preserves bare filename unchanged", () => {
+    const output = buildOutput(
+      "2026-04-06-report.md",
+      { phase: "validate" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ report: "2026-04-06-report.md" });
+  });
+
+  test("release phase strips directory prefix from absolute path", () => {
+    const output = buildOutput(
+      "/worktree/.beastmode/artifacts/release/2026-04-06-changelog.md",
+      { phase: "release", bump: "minor" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ changelog: "2026-04-06-changelog.md" });
+  });
+
+  test("release phase preserves bare filename unchanged", () => {
+    const output = buildOutput(
+      "2026-04-06-changelog.md",
+      { phase: "release", bump: "minor" },
+      ARTIFACTS_DIR,
+    );
+    expect(output?.artifacts).toMatchObject({ changelog: "2026-04-06-changelog.md" });
   });
 });
 
@@ -267,7 +321,7 @@ describe("processArtifact", () => {
 
     const output = readOutputJson("design", "2026-03-30-my-epic");
     expect(output.status).toBe("completed");
-    expect((output.artifacts as Record<string, string>).design).toBe(path);
+    expect((output.artifacts as Record<string, string>).design).toBe("2026-03-30-my-epic.md");
   });
 
   test("generates output.json for a plan artifact with features", () => {

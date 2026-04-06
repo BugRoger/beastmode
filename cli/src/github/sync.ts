@@ -26,7 +26,7 @@ import type { SyncRefs } from "./sync-refs.js";
 import { loadSyncRefs, saveSyncRefs, getSyncRef, setSyncRef } from "./sync-refs.js";
 import { extractSection, extractSections } from "../artifacts/reader.js";
 import { existsSync, readFileSync } from "fs";
-import { resolve, relative, isAbsolute } from "path";
+import { resolve, basename, join } from "path";
 import {
   ghIssueCreate,
   ghIssueEdit,
@@ -353,12 +353,21 @@ const ALL_PHASE_LABELS = [
 function readPrdSections(
   epic: EpicSyncInput,
   projectRoot: string,
+  logger?: Logger,
 ): EpicBodyInput["prdSections"] | undefined {
   const designPaths = epic.artifacts?.["design"];
   if (!designPaths || designPaths.length === 0) return undefined;
 
-  const designPath = resolve(projectRoot, designPaths[0]);
-  if (!existsSync(designPath)) return undefined;
+  const storedPath = designPaths[0];
+  logger?.debug("readPrdSections: stored artifact path", { path: storedPath });
+
+  const designPath = join(projectRoot, ".beastmode", "artifacts", "design", basename(storedPath));
+  logger?.debug("readPrdSections: resolved absolute path", { path: designPath });
+
+  if (!existsSync(designPath)) {
+    logger?.warn("readPrdSections: design artifact file does not exist", { path: designPath });
+    return undefined;
+  }
 
   try {
     const content = readFileSync(designPath, "utf-8");
@@ -379,8 +388,13 @@ function readPrdSections(
     if (sections["Testing Decisions"]) result.testingDecisions = sections["Testing Decisions"];
     if (sections["Out of Scope"]) result.outOfScope = sections["Out of Scope"];
 
+    const extracted = Object.keys(result);
+    logger?.debug(`readPrdSections: extracted ${extracted.length} sections`, { path: storedPath, sections: extracted });
+
     return Object.keys(result).length > 0 ? result : undefined;
-  } catch {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger?.error(`readPrdSections: failed to read design artifact: ${message}`, { path: designPath });
     return undefined;
   }
 }
@@ -494,7 +508,7 @@ export async function syncGitHub(
 
   // Compute enrichment data if projectRoot available
   const prdSections = opts.projectRoot
-    ? readPrdSections(epic, opts.projectRoot)
+    ? readPrdSections(epic, opts.projectRoot, opts.logger)
     : undefined;
   const artifactLinks = resolveArtifactLinks(epic, repo);
 
@@ -686,7 +700,9 @@ async function syncFeature(
   let whatToBuild: string | undefined;
   let acceptanceCriteria: string | undefined;
   if (opts.projectRoot && feature.plan) {
-    const planPath = resolve(opts.projectRoot, feature.plan);
+    const planPath = join(opts.projectRoot, ".beastmode", "artifacts", "plan", basename(feature.plan));
+    opts.logger?.debug("syncFeature: stored plan path", { path: feature.plan });
+    opts.logger?.debug("syncFeature: resolved plan path", { path: planPath });
     try {
       if (existsSync(planPath)) {
         const planContent = readFileSync(planPath, "utf-8");
@@ -696,9 +712,12 @@ async function syncFeature(
         if (wtb) whatToBuild = wtb;
         const ac = extractSection(planContent, "Acceptance Criteria");
         if (ac) acceptanceCriteria = ac;
+      } else {
+        opts.logger?.warn("syncFeature: plan file does not exist", { path: planPath });
       }
-    } catch {
-      // Graceful degradation
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      opts.logger?.error(`syncFeature: failed to read plan file: ${message}`, { path: planPath });
     }
   }
 
@@ -916,18 +935,18 @@ async function syncProjectStatus(
  * Build an artifacts record from the store epic's flat phase fields.
  * Maps { design?: string, plan?: string, ... } to Record<string, string[]>.
  */
-function buildArtifactsMap(
+export function buildArtifactsMap(
   entity: { design?: string; plan?: string; implement?: string; validate?: string; release?: string },
-  projectRoot?: string,
+  _projectRoot?: string,
+  logger?: Logger,
 ): Record<string, string[]> | undefined {
   const map: Record<string, string[]> = {};
   const phases = ["design", "plan", "implement", "validate", "release"] as const;
   for (const phase of phases) {
     const rawPath = entity[phase];
     if (rawPath) {
-      const normalized = projectRoot && isAbsolute(rawPath)
-        ? relative(projectRoot, rawPath)
-        : rawPath;
+      const normalized = `.beastmode/artifacts/${phase}/${basename(rawPath)}`;
+      logger?.debug(`buildArtifactsMap: ${phase} artifact`, { path: rawPath, normalized });
       map[phase] = [normalized];
     }
   }
@@ -978,7 +997,7 @@ export async function syncGitHubForEpic(opts: {
         description: f.description,
         plan: f.plan,
       })),
-      artifacts: buildArtifactsMap(epicEntity, opts.projectRoot),
+      artifacts: buildArtifactsMap(epicEntity, opts.projectRoot, opts.logger),
     };
 
     const result = await syncGitHub(epicInput, syncRefs, config, resolved, {
@@ -1014,6 +1033,6 @@ export async function syncGitHubForEpic(opts: {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    opts.logger?.warn(`GitHub sync failed (non-blocking): ${message}`);
+    opts.logger?.warn(`GitHub sync failed (non-blocking): ${message}`, { epicId: opts.epicId });
   }
 }

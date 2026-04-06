@@ -4,6 +4,14 @@ All notable changes to beastmode.
 
 ---
 
+### v0.102.0 — Fix Worktree Paths (Apr 2026)
+
+- **Artifact path normalization** — Normalize absolute worktree paths to bare filenames via `basename()` in sync engine functions (`readPrdSections`, `syncFeature`, `buildArtifactsMap`), preventing filesystem path leakage into GitHub issue bodies
+- **Output path sanitization** — Apply `basename()` to `buildOutput` for design, validate, and release artifact paths before storing in the manifest
+- **Sync debug logging** — Add error logging to sync catch blocks and diagnostic logging to `syncFeature`, `buildArtifactsMap`, and `readPrdSections` for future troubleshooting
+
+---
+
 ### v0.101.0 — npx Installer (Apr 2026)
 
 - **Install command** — `npx @anthropic-ai/claude-code-beastmode install` provides zero-friction plugin setup: prerequisite checks, bun auto-install, CLI linking, JSON config merging, and post-install verification

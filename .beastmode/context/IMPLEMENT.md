@@ -33,6 +33,9 @@
 - ALWAYS amend all commits since last phase tag with issue refs before push — range-based rebase, no force-push needed from CLI
 - ALWAYS link branches to issues via `createLinkedBranch` GraphQL — gated on `github.enabled`, warn-and-continue
 - ALWAYS add Bun global mocks (CryptoHasher, spawnSync) to integration tests that exercise sync engine code — vitest runs in Node mode where `globalThis.Bun` is undefined; the sync engine's `hashBody()` silently catches the ReferenceError, causing body updates to silently skip
+- ALWAYS store bare filenames (no directory prefix, no absolute path) in epic/feature store fields for artifact paths — readers prefix the known artifact directory at read time using `basename(storedPath)` + `join(projectRoot, ".beastmode", "artifacts", "<phase>")`. This tolerates absolute worktree paths, repo-relative paths, and bare filenames equally with no store migration needed
+- ALWAYS scope additive tasks (logging-only, metrics-only) with explicit "DO NOT change existing logic" guards in the task spec — agents drift into fixing adjacent code when they encounter it; the task must make the boundary explicit
+- ALWAYS add unused-import check to the quality-reviewer checklist for new test files — TypeScript test files routinely accumulate unused imports (type imports, helper imports) that fail the type gate at validate; catching them at review is cheaper than validate fixup
 
 ## State Scanning
 - ALWAYS discover epics from store entities — never from design files or date heuristics

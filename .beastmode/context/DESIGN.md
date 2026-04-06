@@ -73,6 +73,7 @@ Retry queue metadata (`pendingOps` array) extends SyncRef entries in `github-syn
 
 9. ALWAYS use retry queue for failed GitHub operations — enqueue in sync engine error paths, drain via reconciliation on each watch loop tick
 10. ALWAYS use `bodyHash: undefined` as the reconciliation trigger — bootstrap and stub creation both use this sentinel to force full body sync
+11. ALWAYS store bare filenames (not absolute paths) in epic/feature artifact fields — design, validate, and release phases call `basename(artifactPath)` before storing; readers reconstruct the full path at sync time by prepending `.beastmode/artifacts/<phase>/`; this contract survives worktree renames and cleanups with no store migration
 
 context/design/github-state-model.md
 
