@@ -1,7 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { EventEmitter } from "node:events";
 import { SessionStatsAccumulator } from "../dashboard/session-stats.js";
-import type { SessionStats } from "../dashboard/session-stats.js";
 
 function createAccumulator(): { emitter: EventEmitter; acc: SessionStatsAccumulator } {
   const emitter = new EventEmitter();
@@ -188,6 +187,31 @@ describe("SessionStatsAccumulator", () => {
       now = 120000;
       emitter.emit("scan-complete", { epicsScanned: 1, dispatched: 0 });
       expect(acc.getStats().uptimeMs).toBe(120000);
+    });
+  });
+
+  describe("dispose", () => {
+    test("stops processing events after disposal", () => {
+      const { emitter, acc } = createAccumulator();
+      emitter.emit("session-started", { epicSlug: "e1", phase: "plan", sessionId: "s1" });
+      expect(acc.getStats().active).toBe(1);
+
+      acc.dispose();
+
+      // After disposal, events should no longer be processed
+      emitter.emit("session-started", { epicSlug: "e2", phase: "plan", sessionId: "s2" });
+      expect(acc.getStats().active).toBe(1); // Still 1, not 2
+
+      emitter.emit("session-completed", { epicSlug: "e1", phase: "plan", success: true, durationMs: 5000 });
+      expect(acc.getStats().total).toBe(0); // Session not counted
+    });
+
+    test("allows multiple dispose calls without error", () => {
+      const { acc } = createAccumulator();
+      expect(() => {
+        acc.dispose();
+        acc.dispose();
+      }).not.toThrow();
     });
   });
 });
