@@ -1,0 +1,113 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Mock the hook modules to verify dispatch without side effects
+vi.mock("../hooks/hitl-auto.js", () => ({
+  decideResponse: vi.fn(() => '{"permissionDecision":"allow","updatedInput":{}}'),
+}));
+
+vi.mock("../hooks/hitl-log.js", () => ({
+  routeAndFormat: vi.fn(() => "## 2026-01-01\n**Tag:** auto\n"),
+}));
+
+vi.mock("../hooks/generate-output.js", () => ({
+  generateAll: vi.fn(() => 0),
+}));
+
+vi.mock("../config.js", () => ({
+  loadConfig: vi.fn(() => ({
+    hitl: { implement: "approve all" },
+    github: { enabled: false },
+    "file-permissions": {},
+  })),
+}));
+
+vi.mock("../hooks/hitl-settings.js", () => ({
+  getPhaseHitlProse: vi.fn(() => "approve all"),
+}));
+
+// Mock child_process.execSync for git rev-parse
+vi.mock("node:child_process", () => ({
+  execSync: vi.fn(() => "/tmp/fake-repo"),
+}));
+
+// Mock fs functions used by hitl-log handler
+vi.mock("node:fs", async () => {
+  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
+  return {
+    ...actual,
+    existsSync: vi.fn(() => true),
+    mkdirSync: vi.fn(),
+    appendFileSync: vi.fn(),
+    statSync: vi.fn(() => ({ isFile: () => false })),
+  };
+});
+
+import { hooksCommand } from "../commands/hooks";
+import { decideResponse } from "../hooks/hitl-auto.js";
+import { routeAndFormat } from "../hooks/hitl-log.js";
+import { generateAll } from "../hooks/generate-output.js";
+
+describe("hooksCommand", () => {
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    exitSpy = vi.spyOn(process, "exit").mockImplementation((() => { throw new Error("exit"); }) as any);
+    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    process.env.TOOL_INPUT = '{"questions":[{"question":"Test?"}]}';
+    process.env.TOOL_OUTPUT = '{"answers":{"Test?":"Yes"}}';
+  });
+
+  afterEach(() => {
+    exitSpy.mockRestore();
+    stdoutSpy.mockRestore();
+    stderrSpy.mockRestore();
+    delete process.env.TOOL_INPUT;
+    delete process.env.TOOL_OUTPUT;
+  });
+
+  test("hitl-auto dispatches to decideResponse", async () => {
+    try {
+      await hooksCommand(["hitl-auto", "implement"]);
+    } catch { /* exit mock */ }
+
+    expect(decideResponse).toHaveBeenCalled();
+  });
+
+  test("hitl-log dispatches to routeAndFormat", async () => {
+    try {
+      await hooksCommand(["hitl-log", "design"]);
+    } catch { /* exit mock */ }
+
+    expect(routeAndFormat).toHaveBeenCalled();
+  });
+
+  test("generate-output dispatches to generateAll", async () => {
+    try {
+      await hooksCommand(["generate-output"]);
+    } catch { /* exit mock */ }
+
+    expect(generateAll).toHaveBeenCalled();
+  });
+
+  test("unknown subcommand writes error and exits 1", async () => {
+    try {
+      await hooksCommand(["nonexistent"]);
+    } catch { /* exit mock */ }
+
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown hook"));
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  test("missing subcommand writes error and exits 1", async () => {
+    try {
+      await hooksCommand([]);
+    } catch { /* exit mock */ }
+
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Usage"));
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+});
