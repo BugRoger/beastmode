@@ -67,22 +67,30 @@ export class SessionStatsAccumulator {
 
   private readonly startTime: number;
   private readonly nowFn: () => number;
+  private readonly emitter: EventEmitter;
+  private readonly boundStarted: (ev: SessionStartedEvent) => void;
+  private readonly boundCompleted: (ev: SessionCompletedEvent) => void;
+  private readonly boundScan: (ev: ScanCompleteEvent) => void;
 
   constructor(emitter: EventEmitter, options?: AccumulatorOptions) {
     this.nowFn = options?.nowFn ?? (() => Date.now());
     this.startTime = this.nowFn();
+    this.emitter = emitter;
 
-    emitter.on("session-started", (event: SessionStartedEvent) => {
-      this.onSessionStarted(event);
-    });
+    this.boundStarted = (ev) => this.onSessionStarted(ev);
+    this.boundCompleted = (ev) => this.onSessionCompleted(ev);
+    this.boundScan = () => this.onScanComplete();
 
-    emitter.on("session-completed", (event: SessionCompletedEvent) => {
-      this.onSessionCompleted(event);
-    });
+    emitter.on("session-started", this.boundStarted);
+    emitter.on("session-completed", this.boundCompleted);
+    emitter.on("scan-complete", this.boundScan);
+  }
 
-    emitter.on("scan-complete", (_event: ScanCompleteEvent) => {
-      this.onScanComplete();
-    });
+  /** Remove all event listeners. */
+  dispose(): void {
+    this.emitter.off("session-started", this.boundStarted);
+    this.emitter.off("session-completed", this.boundCompleted);
+    this.emitter.off("scan-complete", this.boundScan);
   }
 
   /** Return a snapshot of all accumulated metrics. */
@@ -111,7 +119,7 @@ export class SessionStatsAccumulator {
     };
   }
 
-  private onSessionStarted(event: SessionStartedEvent): void {
+  private onSessionStarted(_event: SessionStartedEvent): void {
     this.active++;
   }
 
