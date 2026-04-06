@@ -3,7 +3,7 @@ import { buildTreeState } from "../dashboard/hooks/use-dashboard-tree-state.js";
 import { FallbackEntryStore, lifecycleToLogEntry } from "../dashboard/lifecycle-entries.js";
 import { filterTreeByVerbosity } from "../dashboard/LogPanel.js";
 import type { EnrichedEpic, Feature } from "../store/types.js";
-import type { SystemEntry } from "../dashboard/tree-types.js";
+
 
 function mockFeature(slug: string, status: Feature["status"], parent: string): Feature {
   return {
