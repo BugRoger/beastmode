@@ -26,7 +26,7 @@ import type { SyncRefs } from "./sync-refs.js";
 import { loadSyncRefs, saveSyncRefs, getSyncRef, setSyncRef } from "./sync-refs.js";
 import { extractSection, extractSections } from "../artifacts/reader.js";
 import { existsSync, readFileSync } from "fs";
-import { resolve, relative, isAbsolute, basename, join } from "path";
+import { resolve, basename, join } from "path";
 import {
   ghIssueCreate,
   ghIssueEdit,
