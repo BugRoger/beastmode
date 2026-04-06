@@ -152,7 +152,7 @@ export function cleanHitlSettings(claudeDir: string): void {
   // Remove Stop hook for output.json generation
   if (settings.hooks.Stop) {
     settings.hooks.Stop = settings.hooks.Stop.filter(
-      (h) => !h.hooks?.some((hk) => hk.command?.includes("generate-output.ts")),
+      (h) => !h.hooks?.some((hk) => hk.command?.includes("generate-output")),
     );
     if (settings.hooks.Stop.length === 0) {
       delete settings.hooks.Stop;
@@ -183,16 +183,15 @@ function replaceHitlHook(
 
 /**
  * Build the PostToolUse command hook for AskUserQuestion decision logging.
- * Calls hitl-log.ts with the phase argument.
+ * Calls hitl-log via portable CLI with the phase argument.
  */
 function buildPostToolUseHook(phase: string): HookEntry {
-  const scriptPath = resolve(import.meta.dirname, "hitl-log.ts");
   return {
     matcher: "AskUserQuestion",
     hooks: [
       {
         type: "command",
-        command: `bun run "${scriptPath}" ${phase}`,
+        command: `bunx beastmode hooks hitl-log ${phase}`,
       },
     ],
   };
@@ -200,16 +199,15 @@ function buildPostToolUseHook(phase: string): HookEntry {
 
 /**
  * Build the Stop hook for output.json generation.
- * Calls generate-output.ts after Claude finishes responding.
+ * Calls generate-output via portable CLI after Claude finishes responding.
  */
 function buildStopHook(): HookEntry {
-  const scriptPath = resolve(import.meta.dirname, "generate-output.ts");
   return {
     matcher: "",
     hooks: [
       {
         type: "command",
-        command: `bun run "${scriptPath}"`,
+        command: `bunx beastmode hooks generate-output`,
       },
     ],
   };
@@ -224,13 +222,12 @@ function buildStopHook(): HookEntry {
  * @returns A single hook entry targeting AskUserQuestion with a command hook
  */
 export function buildPreToolUseHook(phase: string): PromptHookEntry {
-  const scriptPath = resolve(import.meta.dirname, "hitl-auto.ts");
   return {
     matcher: "AskUserQuestion",
     hooks: [
       {
         type: "command",
-        command: `bun run "${scriptPath}" ${phase}`,
+        command: `bunx beastmode hooks hitl-auto ${phase}`,
       },
     ],
   };
