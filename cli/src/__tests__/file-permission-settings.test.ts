@@ -96,21 +96,20 @@ describe("buildFilePermissionPostToolUseHooks", () => {
     expect(matchers).toContain("Edit");
   });
 
-  test("each hook is a command type calling hitl-log.ts with phase", () => {
+  test("each hook uses portable CLI command with phase", () => {
     const hooks = buildFilePermissionPostToolUseHooks("validate");
     for (const hook of hooks) {
       expect(hook.hooks[0].type).toBe("command");
-      expect(hook.hooks[0].command).toContain("hitl-log.ts");
-      expect(hook.hooks[0].command).toContain("validate");
+      expect(hook.hooks[0].command).toBe("bunx beastmode hooks hitl-log validate");
     }
   });
 
-  test("hook commands use absolute paths, not shell substitution", () => {
+  test("hook commands use portable CLI pattern, no absolute paths", () => {
     const hooks = buildFilePermissionPostToolUseHooks("implement");
     for (const hook of hooks) {
       const cmd = hook.hooks[0].command as string;
-      expect(cmd).toMatch(/^bun run "\/.*hitl-log\.ts"/);
-      expect(cmd).not.toContain("git rev-parse");
+      expect(cmd).toBe("bunx beastmode hooks hitl-log implement");
+      expect(cmd).not.toContain('"/');
     }
   });
 });

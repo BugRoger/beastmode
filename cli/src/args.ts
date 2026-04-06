@@ -1,7 +1,7 @@
 import { VALID_PHASES, type Command } from "./types";
 
 /** Utility commands (not phases) */
-const UTILITY_COMMANDS = new Set(["watch", "status", "cancel", "compact", "dashboard", "store", "help"]);
+const UTILITY_COMMANDS = new Set(["watch", "status", "cancel", "compact", "dashboard", "store", "hooks", "help"]);
 
 /** All recognized top-level commands: phases + utilities */
 const ALL_COMMANDS = new Set([...VALID_PHASES, ...UTILITY_COMMANDS]);

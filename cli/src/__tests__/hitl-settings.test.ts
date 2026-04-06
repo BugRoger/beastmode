@@ -73,7 +73,7 @@ describe("writeHitlSettings", () => {
     expect(hooks.PreToolUse[0].matcher).toBe("AskUserQuestion");
   });
 
-  test("PostToolUse hook calls hitl-log.ts with phase", () => {
+  test("PostToolUse hook uses portable CLI command with phase", () => {
     const claudeDir = makeTempClaudeDir();
     writeHitlSettings({
       claudeDir,
@@ -84,11 +84,10 @@ describe("writeHitlSettings", () => {
     const settings = readSettings(claudeDir);
     const hooks = settings.hooks as Record<string, Array<{matcher: string; hooks: Array<{command?: string}>}>>;
     expect(hooks.PostToolUse[0].matcher).toBe("AskUserQuestion");
-    expect(hooks.PostToolUse[0].hooks[0].command).toContain("hitl-log.ts");
-    expect(hooks.PostToolUse[0].hooks[0].command).toContain("validate");
+    expect(hooks.PostToolUse[0].hooks[0].command).toBe("bunx beastmode hooks hitl-log validate");
   });
 
-  test("Stop hook calls generate-output.ts", () => {
+  test("Stop hook uses portable CLI command", () => {
     const claudeDir = makeTempClaudeDir();
     writeHitlSettings({
       claudeDir,
@@ -100,7 +99,7 @@ describe("writeHitlSettings", () => {
     const hooks = settings.hooks as Record<string, Array<{matcher: string; hooks: Array<{command?: string}>}>>;
     expect(hooks.Stop).toHaveLength(1);
     expect(hooks.Stop[0].matcher).toBe("");
-    expect(hooks.Stop[0].hooks[0].command).toContain("generate-output.ts");
+    expect(hooks.Stop[0].hooks[0].command).toBe("bunx beastmode hooks generate-output");
   });
 
   test("replaces existing HITL hooks on re-write", () => {
@@ -172,7 +171,7 @@ describe("writeHitlSettings", () => {
     expect(settings.hooks).toBeDefined();
   });
 
-  test("hook commands use absolute paths, not shell substitution", () => {
+  test("hook commands use portable CLI pattern, no absolute paths", () => {
     const claudeDir = makeTempClaudeDir();
     writeHitlSettings({
       claudeDir,
@@ -185,18 +184,15 @@ describe("writeHitlSettings", () => {
 
     // PreToolUse
     const preCmd = hooks.PreToolUse[0].hooks[0].command!;
-    expect(preCmd).toMatch(/^bun run "\/.*hitl-auto\.ts"/);
-    expect(preCmd).not.toContain("git rev-parse");
+    expect(preCmd).toBe("bunx beastmode hooks hitl-auto design");
 
     // PostToolUse
     const postCmd = hooks.PostToolUse[0].hooks[0].command!;
-    expect(postCmd).toMatch(/^bun run "\/.*hitl-log\.ts"/);
-    expect(postCmd).not.toContain("git rev-parse");
+    expect(postCmd).toBe("bunx beastmode hooks hitl-log design");
 
     // Stop
     const stopCmd = hooks.Stop[0].hooks[0].command!;
-    expect(stopCmd).toMatch(/^bun run "\/.*generate-output\.ts"/);
-    expect(stopCmd).not.toContain("git rev-parse");
+    expect(stopCmd).toBe("bunx beastmode hooks generate-output");
   });
 });
 
@@ -215,7 +211,7 @@ describe("cleanHitlSettings", () => {
             { matcher: "AskUserQuestion", hooks: [{ type: "command", command: "test" }] },
           ],
           Stop: [
-            { matcher: "", hooks: [{ type: "command", command: "bun run generate-output.ts" }] },
+            { matcher: "", hooks: [{ type: "command", command: "bunx beastmode hooks generate-output" }] },
           ],
         },
       }),

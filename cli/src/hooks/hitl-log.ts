@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 /**
  * hitl-log.ts — PostToolUse command hook for AskUserQuestion.
  *
@@ -10,10 +9,6 @@
  *
  * Exits 0 always — hook failure must never block Claude.
  */
-
-import { mkdirSync, appendFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { execSync } from "node:child_process";
 
 // --- Types ---
 
@@ -196,50 +191,4 @@ export function routeAndFormat(rawInput: string, rawOutput: string): string | nu
   }
 
   return null;
-}
-
-// --- CLI entry point ---
-
-if (import.meta.main) {
-  try {
-    const phase = process.argv[2];
-    if (!phase) {
-      process.exit(0);
-    }
-
-    const rawInput = process.env.TOOL_INPUT;
-    const rawOutput = process.env.TOOL_OUTPUT;
-    if (!rawInput || !rawOutput) {
-      process.exit(0);
-    }
-
-    const entry = routeAndFormat(rawInput, rawOutput);
-    if (!entry) {
-      process.exit(0);
-    }
-
-    // Resolve log path relative to git repo root
-    const repoRoot = execSync("git rev-parse --show-toplevel", {
-      encoding: "utf-8",
-    }).trim();
-    const logPath = resolve(
-      repoRoot,
-      ".beastmode",
-      "artifacts",
-      phase,
-      "hitl-log.md",
-    );
-
-    // Ensure directory exists
-    const logDir = dirname(logPath);
-    if (!existsSync(logDir)) {
-      mkdirSync(logDir, { recursive: true });
-    }
-
-    // Append entry (creates file if missing)
-    appendFileSync(logPath, entry + "\n");
-  } catch {
-    // Silent exit — hook failure must never block Claude
-  }
-  process.exit(0);
 }

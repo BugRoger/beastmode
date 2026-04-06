@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 /**
  * hitl-auto.ts — PreToolUse command hook for AskUserQuestion.
  *
@@ -9,10 +8,6 @@
  *
  * Exits 0 always — hook failure must never block Claude.
  */
-
-import { execSync } from "node:child_process";
-import { loadConfig } from "../config.js";
-import { getPhaseHitlProse } from "./hitl-settings.js";
 
 // --- Core logic (exported for testing) ---
 
@@ -52,34 +47,4 @@ export function decideResponse(prose: string, rawToolInput: string): string | nu
       annotations,
     },
   });
-}
-
-// --- CLI entry point ---
-
-if (import.meta.main) {
-  try {
-    const phase = process.argv[2];
-    if (!phase) {
-      process.exit(0);
-    }
-
-    const rawToolInput = process.env.TOOL_INPUT;
-    if (!rawToolInput) {
-      process.exit(0);
-    }
-
-    const repoRoot = execSync("git rev-parse --show-toplevel", {
-      encoding: "utf-8",
-    }).trim();
-    const config = loadConfig(repoRoot);
-    const prose = getPhaseHitlProse(config.hitl, phase);
-
-    const response = decideResponse(prose, rawToolInput);
-    if (response) {
-      process.stdout.write(response);
-    }
-  } catch {
-    // Silent exit — hook failure must never block Claude
-  }
-  process.exit(0);
 }

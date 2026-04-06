@@ -8,6 +8,7 @@ import { cancelCommand } from "./commands/cancel";
 import { compactCommand } from "./commands/compact";
 import { dashboardCommand } from "./commands/dashboard";
 import { storeCommand } from "./commands/store";
+import { hooksCommand } from "./commands/hooks";
 import { isValidPhase } from "./types";
 
 const VERSION = "0.1.0";
@@ -25,6 +26,7 @@ Usage:
   beastmode compact                    Audit and compact the context tree
   beastmode dashboard                  Fullscreen pipeline dashboard
   beastmode store <subcommand>         Structured task store operations
+  beastmode hooks <name> [phase]       Run a hook handler
   beastmode help                       Show this help message
 
 Store subcommands:
@@ -72,6 +74,9 @@ async function main(): Promise<void> {
       break;
     case "store":
       await storeCommand(args);
+      break;
+    case "hooks":
+      await hooksCommand(args);
       break;
     case "help":
       printHelp();

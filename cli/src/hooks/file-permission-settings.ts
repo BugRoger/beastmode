@@ -134,13 +134,12 @@ export function buildFilePermissionPreToolUseHooks(
  * Calls hitl-log.ts with the phase argument — reuses same log infrastructure.
  */
 export function buildFilePermissionPostToolUseHooks(phase: string): Array<{ matcher: string; hooks: Array<Record<string, unknown>> }> {
-  const scriptPath = resolve(import.meta.dirname, "hitl-log.ts");
   return FILE_PERMISSION_MATCHERS.map((tool) => ({
     matcher: tool,
     hooks: [
       {
         type: "command",
-        command: `bun run "${scriptPath}" ${phase}`,
+        command: `bunx beastmode hooks hitl-log ${phase}`,
       },
     ],
   }));

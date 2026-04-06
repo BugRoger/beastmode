@@ -4,7 +4,7 @@ All hooks (Stop, HITL PreToolUse/PostToolUse, file-permission PostToolUse) are g
 ## Decision
 All hooks live in `settings.local.json` (gitignored), generated at dispatch time. `cleanHitlSettings()` runs before `writeHitlSettings()` to prevent stale state between phases. No static hook entries exist in committed settings files — the CLI is the sole hook authority.
 
-The AskUserQuestion PreToolUse hook is a `type: "command"` entry invoking `hitl-auto.ts <phase>`. Prose is NOT baked into the hook entry — the script reads `config.yaml` at runtime via `loadConfig()` + `getPhaseHitlProse()`. The hook entry is stable; only the phase name argument differs between phases. File-permission PreToolUse hooks remain `type: "prompt"` — they still require LLM interpretation to map prose to allow/deny/defer decisions.
+The AskUserQuestion PreToolUse hook is a `type: "command"` entry invoking `bunx beastmode hooks hitl-auto <phase>`. Prose is NOT baked into the hook entry — the dispatch command reads `config.yaml` at runtime via `loadConfig()` + `getPhaseHitlProse()`. The hook entry is stable; only the phase name argument differs between phases. Hook modules (`hitl-auto.ts`, `hitl-log.ts`, `generate-output.ts`) are pure library exports with no standalone entry points — the CLI `hooks` dispatch command is the sole invocation path. File-permission PreToolUse hooks remain `type: "prompt"` — they still require LLM interpretation to map prose to allow/deny/defer decisions.
 
 ## Rationale
 Separating committed vs generated hooks by file avoids merge conflicts and git noise. Different hook events (Stop vs PreToolUse/PostToolUse) means no override conflict. The clean-then-write pattern ensures each dispatch starts fresh.

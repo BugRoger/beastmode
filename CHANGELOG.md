@@ -4,6 +4,15 @@ All notable changes to beastmode.
 
 ---
 
+### v0.100.0 — CLI Hook Commands (Apr 2026)
+
+- **Portable hook dispatch** — Replace absolute hook paths with `bunx beastmode hooks <name> [phase]` CLI commands in all settings builders, making hook configuration portable across machines and worktrees
+- **Hooks command module** — Add `beastmode hooks` dispatch command wired into the CLI entry point, supporting hitl-auto, hitl-log, hitl-settings, file-permission-settings, and generate-output hooks
+- **HITL builder migration** — Update HITL prompt and auto builders to emit `bunx beastmode hooks` commands instead of direct script paths
+- **File-permission builder migration** — Update file-permission settings builder to emit CLI commands with hook modules as pure library exports
+
+---
+
 ### v0.99.0 — Fix Hook Paths (Apr 2026)
 
 - **Absolute hook paths** — Replace fragile shell `$(dirname "$0")` substitution with `import.meta.dirname` in HITL and file-permission hook builders, making hook paths absolute and portable across worktrees

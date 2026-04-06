@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 /**
  * generate-output.ts — Stop hook that reads artifact frontmatter and
  * generates output.json completion contracts.
@@ -314,27 +313,4 @@ function generateChanged(artifactsDir: string, worktreeSlug?: string): number {
     }
   }
   return count;
-}
-
-// --- CLI entry point ---
-
-if (import.meta.main) {
-  try {
-    const repoRoot = execSync("git rev-parse --show-toplevel", { encoding: "utf-8" }).trim();
-    const artifactsDir = resolve(repoRoot, ".beastmode", "artifacts");
-
-    // Worktree detection: .git is a file (not a directory) containing "gitdir: ..."
-    let isWorktree = false;
-    try {
-      const dotGit = resolve(repoRoot, ".git");
-      isWorktree = statSync(dotGit).isFile();
-    } catch {
-      // not a worktree
-    }
-    const worktreeSlug = isWorktree ? basename(repoRoot) : undefined;
-    generateAll(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug);
-  } catch {
-    // Silent exit — hook failure must never block Claude
-  }
-  process.exit(0);
 }
