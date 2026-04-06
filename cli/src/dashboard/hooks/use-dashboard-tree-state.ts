@@ -24,8 +24,9 @@ export interface UseDashboardTreeStateResult {
   state: TreeState;
 }
 
-/** Map a LogEntry.type to a LogLevel for the tree view. */
+/** Map a LogEntry to a LogLevel for the tree view. Prefers explicit level when present. */
 function entryTypeToLevel(entry: LogEntry): LogLevel {
+  if (entry.level) return entry.level;
   switch (entry.type) {
     case "text":
       return "info";
