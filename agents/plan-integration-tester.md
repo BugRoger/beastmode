@@ -21,13 +21,19 @@ Glob for all existing feature files in the project:
 
 Read each discovered file to understand what scenarios already exist. If no `.feature` files are found, this is a greenfield project — all user stories will produce new scenarios.
 
-### 2. Analyze Coverage
+### 2. Analyze Coverage and Consolidation
 
 For each user story across all features:
 
 1. **Check existing coverage** — is this story already covered by an existing scenario? Match on behavioral intent, not exact wording.
-2. **Identify modifications** — does an existing scenario need updates to match the current PRD's intent?
-3. **Identify deletions** — are there existing scenarios that are now obsolete because the PRD supersedes their behavior?
+2. **Identify new scenarios needed** — user stories with no existing coverage require new scenarios.
+
+Then analyze the full existing test suite for consolidation opportunities:
+
+3. **Identify overlapping scenarios** — find scenarios across the entire suite that cover the same behavioral intent, potentially from different epics. Two scenarios overlap when they test the same user-visible behavior through equivalent Given/When/Then flows, even if they use different wording or originate from different feature files.
+4. **Identify stale scenarios** — find scenarios that cover behavior no longer present in the system or superseded by the current epic's changes. A scenario is stale when the behavior it describes has been removed, replaced, or fundamentally changed such that the scenario no longer reflects reality.
+
+Consolidation decisions are authoritative — merge overlapping scenarios into one canonical scenario and mark stale scenarios for removal without requiring human review.
 
 ### 3. Produce Integration Artifact
 
