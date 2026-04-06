@@ -309,5 +309,15 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "session-stats": {
+    "paths": ["features/session-stats.feature"],
+    "import": [
+      "features/step_definitions/session-stats.steps.ts",
+      "features/support/session-stats-world.ts",
+      "features/support/session-stats-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
