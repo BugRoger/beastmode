@@ -83,8 +83,9 @@ describe("@manifest-absorption: Store import migrates manifests into the store",
 
     expect(result.features.length).toBe(2);
     const slugs = result.features.map((f: any) => f.slug);
-    expect(slugs).toContain("login-flow");
-    expect(slugs).toContain("token-cache");
+    // Slugs are derived as: slugify(name) + "-" + ordinal
+    expect(slugs.some((s: string) => s.startsWith("login-flow-"))).toBe(true);
+    expect(slugs.some((s: string) => s.startsWith("token-cache-"))).toBe(true);
   });
 
   it("converts wave ordering to dependency relationships", async () => {
@@ -98,8 +99,9 @@ describe("@manifest-absorption: Store import migrates manifests into the store",
     const { importTestable } = await import("../commands/store-import.js");
     const result = await importTestable(store, projectRoot);
 
-    const tokenCache = result.features.find((f: any) => f.slug === "token-cache")!;
-    const authProvider = result.features.find((f: any) => f.slug === "auth-provider")!;
+    // Find features by matching slug prefixes (since slugs are derived as name-ordinal)
+    const tokenCache = result.features.find((f: any) => f.slug.startsWith("token-cache-"))!;
+    const authProvider = result.features.find((f: any) => f.slug.startsWith("auth-provider-"))!;
     expect(tokenCache.depends_on).toContain(authProvider.id);
   });
 
@@ -162,6 +164,7 @@ describe("@manifest-absorption: Store import migrates manifests into the store",
     writeManifest(projectRoot, "auth-system", makeManifest());
     const result2 = await importTestable(store, projectRoot);
 
+    // The skipped list contains the manifest slug (from source), not the derived entity slug
     expect(result2.skipped).toContain("auth-system");
     const allEpics = await store.transact(s => s.listEpics());
     expect(allEpics.length).toBe(1);

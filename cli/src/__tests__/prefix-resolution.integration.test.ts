@@ -11,19 +11,25 @@ import { resolveIdentifier } from "../store/resolve.js";
 
 describe("CLI prefix resolution", () => {
   let store: InMemoryTaskStore;
+  let dashboardSlug: string;
+  let dashboardId: string;
+  let authSlug: string;
 
   beforeEach(() => {
     store = new InMemoryTaskStore();
-    // Background: two epics with collision-proof slugs
-    store.addEpic({ name: "Dashboard Redesign", slug: "dashboard-redesign-f3a7" });
-    store.addEpic({ name: "Auth System", slug: "auth-system-b2c4" });
+    // Background: two epics — slugs are derived (name + short hex)
+    const dashboard = store.addEpic({ name: "Dashboard Redesign" });
+    const auth = store.addEpic({ name: "Auth System" });
+    dashboardSlug = dashboard.slug;
+    dashboardId = dashboard.id;
+    authSlug = auth.slug;
   });
 
   it("Exact slug match takes priority over prefix match", () => {
-    const result = resolveIdentifier(store, "dashboard-redesign-f3a7");
+    const result = resolveIdentifier(store, dashboardSlug);
     expect(result.kind).toBe("found");
     if (result.kind === "found") {
-      expect(result.entity.slug).toBe("dashboard-redesign-f3a7");
+      expect(result.entity.slug).toBe(dashboardSlug);
     }
   });
 
@@ -33,7 +39,7 @@ describe("CLI prefix resolution", () => {
     });
     expect(result.kind).toBe("found");
     if (result.kind === "found") {
-      expect(result.entity.slug).toBe("dashboard-redesign-f3a7");
+      expect(result.entity.slug).toBe(dashboardSlug);
     }
   });
 
@@ -43,13 +49,13 @@ describe("CLI prefix resolution", () => {
     });
     expect(result.kind).toBe("found");
     if (result.kind === "found") {
-      expect(result.entity.slug).toBe("dashboard-redesign-f3a7");
+      expect(result.entity.slug).toBe(dashboardSlug);
     }
   });
 
   it("Ambiguous prefix match returns an error", () => {
     // Add a second dashboard-prefixed epic
-    store.addEpic({ name: "Dashboard Metrics", slug: "dashboard-metrics-e5f6" });
+    const metrics = store.addEpic({ name: "Dashboard Metrics" });
 
     const result = resolveIdentifier(store, "dashboard", {
       allowPrefix: true,
@@ -57,26 +63,23 @@ describe("CLI prefix resolution", () => {
     expect(result.kind).toBe("ambiguous");
     if (result.kind === "ambiguous") {
       const slugs = result.matches.map((e) => e.slug).sort();
-      expect(slugs).toContain("dashboard-redesign-f3a7");
-      expect(slugs).toContain("dashboard-metrics-e5f6");
+      expect(slugs).toContain(dashboardSlug);
+      expect(slugs).toContain(metrics.slug);
     }
   });
 
   it("Exact entity ID match takes priority over prefix", () => {
-    // Look up by entity ID — should match by ID, not prefix
-    const epics = store.listEpics();
-    const target = epics.find((e) => e.slug === "dashboard-redesign-f3a7")!;
-    const result = resolveIdentifier(store, target.id, {
+    const result = resolveIdentifier(store, dashboardId, {
       allowPrefix: true,
     });
     expect(result.kind).toBe("found");
     if (result.kind === "found") {
-      expect(result.entity.id).toBe(target.id);
+      expect(result.entity.id).toBe(dashboardId);
     }
   });
 
   it("Internal callers use exact match only (no prefix expansion)", () => {
-    // Without allowPrefix, "dashboard-redesign" should NOT match "dashboard-redesign-f3a7"
+    // Without allowPrefix, "dashboard-redesign" should NOT match "dashboard-redesign-XXXX"
     const result = resolveIdentifier(store, "dashboard-redesign");
     expect(result.kind).toBe("not-found");
   });

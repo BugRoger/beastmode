@@ -182,15 +182,16 @@ export async function importTestable(
 
   await store.transact((s) => {
     for (const { path, manifest } of discovered) {
-      // Idempotency: skip if epic with this slug already exists
-      const existing = s.find(manifest.slug);
-      if (existing && existing.type === "epic") {
+      // Idempotency: skip if epic with this name already exists
+      // (epic slugs are now derived as slugify(name) + "-" + hex, so we search by name)
+      const epicName = manifest.epic || manifest.slug;
+      const existing = s.listEpics().find((e) => e.name === epicName);
+      if (existing) {
         result.skipped.push(manifest.slug);
         continue;
       }
 
       // --- Create Epic ---
-      const epicName = manifest.epic || manifest.slug;
       const epic = s.addEpic({ name: epicName, slug: manifest.slug });
 
       // Update epic fields
