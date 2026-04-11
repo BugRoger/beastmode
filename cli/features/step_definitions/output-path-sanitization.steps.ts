@@ -9,7 +9,7 @@ import { Given, When, Then, Before, After } from "@cucumber/cucumber";
 import { strict as assert } from "node:assert";
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { buildOutput, scanPlanFeatures } from "../../src/hooks/generate-output.js";
+import { buildOutput, scanPlanFeatures } from "../../src/hooks/session-stop.js";
 
 interface OutputPathWorld {
   artifactPath: string;

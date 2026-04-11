@@ -73,16 +73,16 @@ describe("hooks-command integration", () => {
     });
   });
 
-  describe("hooks generate-output dispatches to handler", () => {
-    test("generate-output exits cleanly", () => {
+  describe("hooks session-stop dispatches to handler", () => {
+    test("session-stop exits cleanly", () => {
       const tempDir = makeTempProjectWithGit();
 
       execSync(
-        `bun run "${CLI_PATH}" hooks generate-output`,
+        `bun run "${CLI_PATH}" hooks session-stop`,
         {
           encoding: "utf-8",
           cwd: tempDir,
-          env: { ...process.env },
+          env: { ...process.env, BEASTMODE_EPIC_SLUG: "test-epic" },
         },
       );
     });
@@ -144,9 +144,9 @@ describe("hooks-command integration", () => {
       expect(src).not.toContain("import.meta.main");
     });
 
-    test("generate-output.ts has no import.meta.main block", () => {
+    test("session-stop.ts has no import.meta.main block", () => {
       const src = readFileSync(
-        resolve(import.meta.dirname, "../../src/hooks/generate-output.ts"),
+        resolve(import.meta.dirname, "../../src/hooks/session-stop.ts"),
         "utf-8",
       );
       expect(src).not.toContain("import.meta.main");

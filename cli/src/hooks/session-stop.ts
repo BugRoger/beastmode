@@ -1,8 +1,8 @@
 /**
- * generate-output.ts — Stop hook that reads artifact frontmatter and
+ * session-stop.ts — Stop hook that reads artifact frontmatter and
  * generates output.json completion contracts.
  *
- * Replaces generate-output-json.sh with typed, testable TypeScript.
+ * Renamed from generate-output.ts for symmetry with session-start.
  *
  * Runs after Claude finishes responding. Scans .beastmode/artifacts/<phase>/
  * for all .md files with YAML frontmatter, parses each, and writes the
@@ -249,11 +249,11 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
  *
  * Returns the number of files generated/updated.
  */
-export function generateAll(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string, featureOverride?: string): number {
+export function runSessionStop(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string): number {
   if (!existsSync(artifactsDir)) return 0;
 
   if (scope === "changed") {
-    return generateChanged(artifactsDir, worktreeSlug, featureOverride);
+    return generateChanged(artifactsDir, worktreeSlug);
   }
 
   let count = 0;
@@ -264,7 +264,7 @@ export function generateAll(artifactsDir: string, scope?: "changed" | "all", wor
     for (const filename of readdirSync(phaseDir)) {
       if (!filename.endsWith(".md")) continue;
       const filePath = join(phaseDir, filename);
-      if (processArtifact(filePath, artifactsDir, worktreeSlug, featureOverride)) {
+      if (processArtifact(filePath, artifactsDir, worktreeSlug)) {
         count++;
       }
     }
@@ -277,7 +277,7 @@ export function generateAll(artifactsDir: string, scope?: "changed" | "all", wor
  * modified. Uses `git diff HEAD --name-only` (committed changes on branch)
  * plus `git diff --name-only` (uncommitted changes).
  */
-function generateChanged(artifactsDir: string, worktreeSlug?: string, featureOverride?: string): number {
+function generateChanged(artifactsDir: string, worktreeSlug?: string): number {
   const repoRoot = resolve(artifactsDir, "..", "..");
   const artifactsPrefix = ".beastmode/artifacts/";
 
@@ -304,14 +304,14 @@ function generateChanged(artifactsDir: string, worktreeSlug?: string, featureOve
     );
   } catch {
     // git diff failed — fall back to full scan
-    return generateAll(artifactsDir, "all", worktreeSlug, featureOverride);
+    return runSessionStop(artifactsDir, "all", worktreeSlug);
   }
 
   let count = 0;
   for (const relPath of changedFiles) {
     const filePath = resolve(repoRoot, relPath);
     if (existsSync(filePath)) {
-      if (processArtifact(filePath, artifactsDir, worktreeSlug, featureOverride)) count++;
+      if (processArtifact(filePath, artifactsDir, worktreeSlug)) count++;
     }
   }
   return count;

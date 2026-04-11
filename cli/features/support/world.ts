@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join, resolve, basename } from "node:path";
 import { git } from "../../src/git/worktree.js";
 import { JsonFileStore } from "../../src/store/json-file-store.js";
-import { generateAll } from "../../src/hooks/generate-output.js";
+import { runSessionStop } from "../../src/hooks/session-stop.js";
 import { run } from "../../src/pipeline/runner.js";
 import { createNullLogger } from "../../src/logger.js";
 import type { BeastmodeConfig } from "../../src/config.js";
@@ -245,7 +245,7 @@ export class PipelineWorld extends World {
   runStopHook(wtPath: string): void {
     const artifactsDir = join(wtPath, ".beastmode", "artifacts");
     const worktreeSlug = basename(wtPath);
-    generateAll(artifactsDir, "all", worktreeSlug);
+    runSessionStop(artifactsDir, "all", worktreeSlug);
   }
 
   // -- Pipeline execution --

@@ -9,8 +9,8 @@ vi.mock("../hooks/hitl-log.js", () => ({
   routeAndFormat: vi.fn(() => "## 2026-01-01\n**Tag:** auto\n"),
 }));
 
-vi.mock("../hooks/generate-output.js", () => ({
-  generateAll: vi.fn(() => 0),
+vi.mock("../hooks/session-stop.js", () => ({
+  runSessionStop: vi.fn(() => 0),
 }));
 
 vi.mock("../config.js", () => ({
@@ -59,7 +59,7 @@ vi.mock("node:fs", async () => {
 import { hooksCommand } from "../commands/hooks";
 import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
-import { generateAll } from "../hooks/generate-output.js";
+import { runSessionStop } from "../hooks/session-stop.js";
 
 describe("hooksCommand", () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
@@ -83,7 +83,9 @@ describe("hooksCommand", () => {
     delete process.env.TOOL_OUTPUT;
     delete process.env.BEASTMODE_PHASE;
     delete process.env.BEASTMODE_EPIC;
-    delete process.env.BEASTMODE_ID;
+    delete process.env.BEASTMODE_EPIC_ID;
+    delete process.env.BEASTMODE_SLUG;
+    delete process.env.BEASTMODE_EPIC_SLUG;
   });
 
   test("hitl-auto dispatches to decideResponse", async () => {
@@ -102,12 +104,14 @@ describe("hooksCommand", () => {
     expect(routeAndFormat).toHaveBeenCalled();
   });
 
-  test("generate-output dispatches to generateAll", async () => {
+  test("session-stop dispatches to runSessionStop", async () => {
+    process.env.BEASTMODE_EPIC_SLUG = "test-epic";
     try {
-      await hooksCommand(["generate-output"]);
+      await hooksCommand(["session-stop"]);
     } catch { /* exit mock */ }
 
-    expect(generateAll).toHaveBeenCalled();
+    expect(runSessionStop).toHaveBeenCalled();
+    delete process.env.BEASTMODE_EPIC_SLUG;
   });
 
   test("unknown subcommand writes error and exits 1", async () => {
@@ -130,8 +134,8 @@ describe("hooksCommand", () => {
 
   test("session-start writes JSON to stdout when env vars present", async () => {
     process.env.BEASTMODE_PHASE = "design";
-    process.env.BEASTMODE_EPIC = "test-epic";
-    process.env.BEASTMODE_ID = "abc123";
+    process.env.BEASTMODE_EPIC_ID = "abc123";
+    process.env.BEASTMODE_EPIC_SLUG = "test-epic";
 
     try {
       await hooksCommand(["session-start"]);
@@ -144,8 +148,8 @@ describe("hooksCommand", () => {
 
   test("session-start exits non-zero when BEASTMODE_PHASE is missing", async () => {
     delete process.env.BEASTMODE_PHASE;
-    delete process.env.BEASTMODE_EPIC;
-    delete process.env.BEASTMODE_ID;
+    delete process.env.BEASTMODE_EPIC_ID;
+    delete process.env.BEASTMODE_EPIC_SLUG;
 
     try {
       await hooksCommand(["session-start"]);
@@ -157,8 +161,8 @@ describe("hooksCommand", () => {
 
   test("session-start is recognized as valid hook name", async () => {
     process.env.BEASTMODE_PHASE = "plan";
-    process.env.BEASTMODE_EPIC = "my-epic";
-    process.env.BEASTMODE_ID = "def456";
+    process.env.BEASTMODE_EPIC_ID = "def456";
+    process.env.BEASTMODE_EPIC_SLUG = "my-epic";
 
     try {
       await hooksCommand(["session-start"]);

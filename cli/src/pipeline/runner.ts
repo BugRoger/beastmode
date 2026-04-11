@@ -135,6 +135,40 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // The runner only needs the worktree path for post-dispatch steps (5-9).
     worktreePath = resolve(config.projectRoot, ".claude", "worktrees", epicSlug);
   } else {
+    // -- Step 0: pre-dispatch entity creation ---------------------------------
+    // Load or create the store entity before dispatch so the entity ID is
+    // available from the first hook invocation.
+    try {
+      const storeFile = resolve(config.projectRoot, ".beastmode", "state", "store.json");
+      const store = new JsonFileStore(storeFile);
+      store.load();
+
+      // For design phase: check if entity exists. If not, create it.
+      // For other phases: look up existing entity.
+      if (config.phase === "design") {
+        const existingEntity = store.find(epicSlug);
+        if (!existingEntity) {
+          const newEpic = store.addEpic({ name: epicSlug });
+          config.epicId = newEpic.id;
+          logger.debug?.(`created store entity: ${newEpic.id}`);
+        } else {
+          config.epicId = existingEntity.id;
+          logger.debug?.(`found existing entity: ${existingEntity.id}`);
+        }
+      } else {
+        // Non-design phases: look up existing entity
+        const entity = store.find(epicSlug);
+        if (entity) {
+          config.epicId = entity.id;
+        }
+      }
+
+      store.save();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn(`store entity creation failed: ${message}`);
+    }
+
     // -- Step 1: git.worktree.prepare -----------------------------------------
     if (config.skipWorktreeSetup) {
       // Cmux / manual already created the worktree
@@ -144,6 +178,28 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       worktreePath = wt.path;
     }
     logger.info(`worktree: ${worktreePath}`);
+
+    // -- Step 0b: update store entity with worktree metadata -------------------
+    // After worktree is created, update the store entity with the worktree path
+    // and branch info so the entity has complete metadata from the start.
+    if (config.epicId && config.phase === "design") {
+      try {
+        const storeFile = resolve(config.projectRoot, ".beastmode", "state", "store.json");
+        const store = new JsonFileStore(storeFile);
+        store.load();
+        store.updateEpic(config.epicId, {
+          worktree: {
+            branch: `feature/${epicSlug}`,
+            path: worktreePath,
+          },
+        });
+        store.save();
+        logger.debug?.(`updated store entity with worktree metadata`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.warn(`store worktree metadata update failed: ${message}`);
+      }
+    }
 
     // -- Step 2: git.worktree.rebase ------------------------------------------
     const rebaseResult = await rebase(config.phase, { cwd: worktreePath, logger });
@@ -155,8 +211,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // -- Step 3: settings.create ----------------------------------------------
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
-    const preToolUseHook = buildPreToolUseHook(config.phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase, feature: config.featureSlug });
+    const envContext = { phase: config.phase, epicId: config.epicId ?? config.epicSlug, epicSlug: config.epicSlug, featureSlug: config.featureSlug };
+    const preToolUseHook = buildPreToolUseHook(envContext);
+    writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
@@ -171,9 +228,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     writeSessionStartHook({
       claudeDir,
       phase: config.phase,
-      epic: config.epicSlug,
-      id: config.epicSlug,
-      feature: config.featureSlug,
+      epicId: config.epicId ?? config.epicSlug,
+      epicSlug: config.epicSlug,
+      featureSlug: config.featureSlug,
     });
   }
 

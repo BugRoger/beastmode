@@ -220,25 +220,21 @@ export async function reconcileDesign(
     store.load();
 
     let epic = resolveEpic(store, epicId);
+    if (!epic) {
+      // Entity must exist — pre-created by pipeline runner at Step 0
+      return undefined;
+    }
 
     // Try file lookup with both the passed identifier and the resolved slug
     const output =
       loadWorktreePhaseOutput(wtPath, "design", epicId) ??
-      (epic && epic.slug !== epicId ? loadWorktreePhaseOutput(wtPath, "design", epic.slug) : undefined);
+      (epic.slug !== epicId ? loadWorktreePhaseOutput(wtPath, "design", epic.slug) : undefined);
     if (!output || output.status !== "completed") return undefined;
 
     const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
     const realSlug = artifacts?.slug as string | undefined;
     const summary = artifacts?.summary as { problem: string; solution: string } | undefined;
     const designPath = artifacts?.design as string | undefined;
-
-    if (!epic) {
-      // Create the epic entity during design reconciliation
-      const newEpic = store.addEpic({
-        name: realSlug ?? epicId,
-      });
-      epic = newEpic;
-    }
 
     const actor = hydrateActor(epic, store);
     const eventArtifacts: Record<string, string[]> | undefined = designPath
