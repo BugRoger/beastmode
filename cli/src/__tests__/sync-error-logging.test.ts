@@ -73,7 +73,7 @@ function makeResolved(): ResolvedGitHub {
 }
 
 describe("sync error catch block logging", () => {
-  test("readPrdSections logs error with path context when readFileSync throws", async () => {
+  test("readPrdSections logs warn with path context when readFileSync throws", async () => {
     const tmpDir = mkdtempSync(join(tmpdir(), "err-log-"));
     const designDir = join(tmpDir, ".beastmode", "artifacts", "design");
     mkdirSync(designDir, { recursive: true });
@@ -85,15 +85,15 @@ describe("sync error catch block logging", () => {
       id: "bm-1",
       slug: "s",
       name: "N",
-      phase: "design",
+      phase: "plan",
       features: [],
       artifacts: { design: ["bad-artifact.md"] },
     };
 
     await syncGitHub(epic, {}, makeConfig(), makeResolved(), { logger, projectRoot: tmpDir });
 
-    const errors = logger.calls.filter(c => c.level === "error");
-    const readErr = errors.find(c => c.data?.path !== undefined);
+    const warns = logger.calls.filter(c => c.level === "warn");
+    const readErr = warns.find(c => c.data?.path !== undefined);
     expect(readErr).toBeDefined();
   });
 
@@ -109,7 +109,7 @@ describe("sync error catch block logging", () => {
       id: "bm-1",
       slug: "s",
       name: "N",
-      phase: "plan",
+      phase: "implement",
       features: [{ id: "bm-1.1", slug: "feat-a", status: "pending", plan: "bad-plan.md" }],
     };
 

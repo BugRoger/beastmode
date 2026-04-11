@@ -56,7 +56,7 @@ function createSpyLogger(): Logger & {
           calls.push({ level: "warn", msg, data: { ...ctx, ...data } }),
         error: (msg: string, data?: Record<string, unknown>) =>
           calls.push({ level: "error", msg, data: { ...ctx, ...data } }),
-        child: (ctx2: Record<string, unknown>) => childLogger,
+        child: (_ctx2: Record<string, unknown>) => childLogger,
       };
       return childLogger;
     },

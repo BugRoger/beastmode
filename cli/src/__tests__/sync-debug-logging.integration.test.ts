@@ -85,7 +85,7 @@ describe("GitHub sync path emits structured debug logs", () => {
       id: "bm-test",
       slug: "test",
       name: "Test",
-      phase: "design",
+      phase: "plan",
       features: [],
       artifacts: { design: [designFile] },
     };
@@ -107,7 +107,7 @@ describe("GitHub sync path emits structured debug logs", () => {
       id: "bm-test",
       slug: "test",
       name: "Test",
-      phase: "design",
+      phase: "plan",
       features: [],
       artifacts: { design: ["nonexistent.md"] },
     };
@@ -126,7 +126,7 @@ describe("GitHub sync path emits structured debug logs", () => {
       id: "bm-test",
       slug: "test",
       name: "Test",
-      phase: "plan",
+      phase: "implement",
       features: [{ id: "bm-test.1", slug: "feat-a", status: "pending", plan: "nonexistent-plan.md" }],
     };
 
@@ -148,7 +148,7 @@ describe("GitHub sync path emits structured debug logs", () => {
       id: "bm-test",
       slug: "test",
       name: "Test",
-      phase: "design",
+      phase: "plan",
       features: [],
       artifacts: { design: [designFile] },
     };
@@ -171,7 +171,7 @@ describe("GitHub sync path emits structured debug logs", () => {
       id: "bm-test",
       slug: "test",
       name: "Test",
-      phase: "design",
+      phase: "plan",
       features: [],
       artifacts: { design: [designFile] },
     };
