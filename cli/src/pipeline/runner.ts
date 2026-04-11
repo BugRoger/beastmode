@@ -211,7 +211,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // -- Step 3: settings.create ----------------------------------------------
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
-    const envContext = { phase: config.phase, epicId: config.epicSlug, epicSlug: config.epicSlug, featureId: config.featureSlug, featureSlug: config.featureSlug };
+    const envContext = { phase: config.phase, epicId: config.epicId ?? config.epicSlug, epicSlug: config.epicSlug, featureSlug: config.featureSlug };
     const preToolUseHook = buildPreToolUseHook(envContext);
     writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
