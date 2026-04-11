@@ -28,7 +28,7 @@ export function resolveIssueNumber(
   branchName: string,
   syncRefs: SyncRefs,
   epicId: string,
-  features: IssueRefFeature[],
+  _features: IssueRefFeature[],
 ): number | undefined {
   // Feature branch → epic issue
   if (branchName.startsWith("feature/")) {

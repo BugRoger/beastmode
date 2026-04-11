@@ -37,7 +37,7 @@ export interface LinkBranchesOpts {
  */
 export async function linkBranches(opts: LinkBranchesOpts): Promise<void> {
   const log = (opts.logger ?? createLogger(createStdioSink(0), {})).child({ phase: opts.phase });
-  const { repo, epicSlug, epicIssueNumber, featureSlug, featureIssueNumber, phase, cwd } = opts;
+  const { repo, epicSlug, epicIssueNumber, cwd } = opts;
 
   // Skip if no epic issue number
   if (!epicIssueNumber) return;
