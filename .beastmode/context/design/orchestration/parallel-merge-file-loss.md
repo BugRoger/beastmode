@@ -1,5 +1,7 @@
 # Parallel Feature Merge File Loss
 
+**Status:** Historical -- impl branches removed in remove-impl-branches epic (2026-04-11). Parallel features now commit directly to the shared feature branch; no merge step exists.
+
 ## Context
 flashy-dashboard ran three parallel features (nyan-banner, layout-polish, overview-panel). After sequential merging, files created by one feature were absent from the final tree — the merge-tree conflict simulation passed (no text conflicts), but a file newly added by one feature was not present in the merge base of a subsequent feature's branch.
 

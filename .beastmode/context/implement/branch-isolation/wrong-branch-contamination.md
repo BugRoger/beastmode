@@ -1,5 +1,7 @@
 # Wrong Branch Contamination
 
+**Status:** Historical -- impl branches removed in remove-impl-branches epic (2026-04-11). This pattern no longer applies since all agents commit to the shared feature branch.
+
 **Context:** manifest-absorption github-sync-separation (2026-04-05). Agents committed to `impl/manifest-absorption--xstate-store-bridge` (adjacent wave-2 feature) instead of `impl/manifest-absorption--github-sync-separation`. Caught only because Task 6 was controller-level verification; cherry-pick required.
 
 **Decision:** Controller MUST verify `git branch --show-current` matches the expected `impl/<slug>--<feature-name>` at the start of Write Plan, before any task is written or dispatched — not just at agent dispatch time in Prime.

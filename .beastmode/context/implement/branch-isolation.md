@@ -1,25 +1,23 @@
 # Branch Isolation
 
 ## Branch Model
-- CLI creates `impl/<slug>--<feature-name>` from the worktree branch before dispatch
-- Skill assumes the branch exists and is checked out — verified in Prime
-- Agents commit per task on the impl branch: `feat(<feature>): <task description>`
-- Worktree branch (`feature/<slug>`) stays clean until checkpoint rebase
+- All agents commit directly to the feature branch (feature/<slug>)
+- No separate implementation branches -- wave file isolation is the concurrency mechanism
+- Agents commit per task: `feat(<feature>): <task description>`
+- Feature branch accumulates all task commits from all parallel agents
 
-## Checkpoint Rebase
-- Rebase `impl/<slug>--<feature-name>` onto `feature/<slug>` (worktree branch)
-- On success: fast-forward worktree branch to rebased head, write deviation log, commit
-- On rebase failure: spawn conflict resolution agent with conflict markers
-- Max 2 conflict resolution attempts before abort and user escalation
-- Deviation log committed on worktree branch after successful rebase
+## Checkpoint
+- Commit artifact report directly on the feature branch
+- No rebase or merge step -- all commits are already on the correct branch
+- git add .beastmode/artifacts/implement/ && git commit
 
 ## Resume Model
 - Controller reads .tasks.md and finds first unchecked task on re-entry
-- Prior tasks have commits on impl branch — no re-execution needed
-- Per-task commits enable `git bisect` per feature — each commit is a known-good checkpoint
+- Prior tasks have commits on the feature branch -- no re-execution needed
+- Per-task commits enable git bisect per feature -- each commit is a known-good checkpoint
 
 ## Subagent Safety
-- Agents commit on the impl branch only — never on the worktree branch
+- Agents commit only their task's files using git add <files> + git commit
 - Commit message format enforced: `feat(<feature>): <task description>`
-- Branch verification in Prime: check `impl/<slug>--<feature-name>` exists and is checked out before dispatch
-- ALWAYS verify the correct impl branch is still checked out immediately before each agent task commit — linter hooks and parallel wave completions can silently switch branches between tasks
+- NEVER switch branches -- all agents work on the feature branch
+- Wave file isolation guarantees disjoint file sets across parallel agents within the same wave

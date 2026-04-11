@@ -20,9 +20,9 @@
 - Completion detection via output.json — Stop hook generates it from artifact frontmatter on session exit; factory watches `artifacts/<phase>/` for `*.output.json` via `fs.watch`
 
 ## Merge Strategy
-- ALWAYS merge implement worktrees sequentially after all agents for an epic finish — ordering prevents conflicts
-- ALWAYS run pre-merge conflict simulation via `git merge-tree` to determine optimal merge order — avoids preventable conflicts
-- ALWAYS verify manifest completeness after merging — all features must show completed
+- Parallel feature agents commit directly to the shared feature branch -- no post-implementation merge step
+- Wave file isolation guarantees disjoint file sets across parallel agents -- git index.lock serializes concurrent commits
+- ALWAYS verify store completeness after all features complete -- all features must show completed
 - When merge conflicts arise, spawn a dedicated Claude session to resolve — automated conflict resolution
 
 ## Recovery

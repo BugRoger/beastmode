@@ -50,20 +50,19 @@
 
 ## Commit Issue References
 - ALWAYS amend all commits since the last phase tag with issue references via range-based rebase — `(#N)` trailing format on the subject line
-- Three commit types get refs: phase checkpoint commits (epic issue), impl branch commits (feature issue, resolved from branch name or message prefix), release squash-merge commits (epic issue)
+- Three commit types get refs: phase checkpoint commits (epic issue), feature task commits (feature issue, resolved from commit message prefix), release squash-merge commits (epic issue)
 - Commits without a known issue number are left unchanged — no-op, not an error
 - Amend runs before push in the pipeline — rewrites local-only history, no force-push needed from CLI
 - Module uses pure functions (`shouldAmendCommit`, `buildAmendedMessage`, `resolveCommitIssueNumber`) plus range orchestrator (`amendCommitsInRange`, `resolveRangeStart`)
 
 ## Git Push
 - ALWAYS push feature branches after every phase checkpoint — pure git operation, not gated on `github.enabled`
-- ALWAYS push impl branches during implement phase
 - ALWAYS push all tags after each checkpoint — phase tags and archive tags
 - Push failures warn and continue — never block the pipeline
 - No push attempted when no remote is configured
 
 ## Branch Linking
-- ALWAYS link feature branches to epic issues and impl branches to feature issues via `createLinkedBranch` GraphQL mutation
+- ALWAYS link feature branches to epic issues via `createLinkedBranch` GraphQL mutation
 - Gated on `github.enabled` — unlike push, this is a GitHub API operation
 - Delete-then-recreate workaround for branches already on remote — mutation returns null for existing branches
 - GraphQL node IDs resolved via `ghRepoNodeId()` and `ghIssueNodeId()`
