@@ -19,31 +19,6 @@ No release without passing validation.
 - **Warn-and-continue for non-blocking failures** — report problems, attempt fixes, only hard-stop on critical validation failures
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
-## Phase 0: Prime
-
-### 1. Resolve Epic Name
-
-The epic name comes from the skill arguments. Use it directly for all artifact paths in this phase.
-
-### 2. Announce Skill
-
-Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
-
-### 3. Load Project Context
-
-Read (if they exist):
-- `.beastmode/context/RELEASE.md`
-
-Follow L2 convention paths (`context/release/{domain}.md`) when relevant to the current topic.
-Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
-
-### 4. Load Artifacts
-
-Locate:
-- Design doc path (`.beastmode/artifacts/design/YYYY-MM-DD-<epic-name>.md`)
-- Plan doc path (`.beastmode/artifacts/plan/YYYY-MM-DD-<epic-name>.md`)
-- Validation report path (`.beastmode/artifacts/validate/YYYY-MM-DD-<epic-name>.md`)
-
 ## Phase 1: Execute
 
 ### 1. Stage Uncommitted Changes
