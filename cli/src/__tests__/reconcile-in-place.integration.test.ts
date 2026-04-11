@@ -18,7 +18,7 @@ describe("Design reconciliation updates slug in-place", () => {
   describe("Reconcile design updates slug without changing entity ID", () => {
     it("should update slug in-place and preserve entity ID", () => {
       // Seed an epic with hex-only slug
-      const seeded = store.addEpic({ name: "a1b2", slug: "a1b2" });
+      const seeded = store.addEpic({ name: "a1b2" });
       const originalId = seeded.id;
 
       // Simulate: updateEpic with new slug
@@ -38,7 +38,7 @@ describe("Design reconciliation updates slug in-place", () => {
 
   describe("Reconcile design preserves summary metadata", () => {
     it("should retain summary fields through slug rename", () => {
-      const seeded = store.addEpic({ name: "a1b2", slug: "a1b2" });
+      const seeded = store.addEpic({ name: "a1b2" });
       const originalId = seeded.id;
 
       // Update with slug + summary in one call
@@ -59,7 +59,7 @@ describe("Design reconciliation updates slug in-place", () => {
 
   describe("No orphaned entities after reconciliation", () => {
     it("should not leave old entities in the store", () => {
-      const seeded = store.addEpic({ name: "a1b2", slug: "a1b2" });
+      const seeded = store.addEpic({ name: "a1b2" });
 
       store.updateEpic(seeded.id, { slug: "oauth-redesign-a1b2" });
 
@@ -69,7 +69,7 @@ describe("Design reconciliation updates slug in-place", () => {
       expect(allEpics[0].slug).toBe("oauth-redesign-a1b2");
 
       // Old slug should not resolve
-      const oldLookup = store.find("a1b2");
+      const oldLookup = store.find(seeded.slug);
       expect(oldLookup).toBeUndefined();
 
       // New slug should resolve

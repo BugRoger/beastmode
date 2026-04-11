@@ -61,7 +61,7 @@ describe("Feature slug field", () => {
   it("addFeature accepts and stores slug", async () => {
     const epic = await store.transact(s => s.addEpic({ name: "Test Epic" }));
     const feature = await store.transact(s =>
-      s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
+      s.addFeature({ parent: epic.id, name: "Login Flow" })
     );
     // Slug is auto-generated from name + ordinal, ignoring the slug param
     expect(feature.slug).toMatch(/^login-flow-\d+$/);
@@ -79,7 +79,7 @@ describe("Feature slug field", () => {
   it("slug persists through save/load cycle", async () => {
     const epic = await store.transact(s => s.addEpic({ name: "Test Epic" }));
     const feature = await store.transact(s =>
-      s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
+      s.addFeature({ parent: epic.id, name: "Login Flow" })
     );
     const expectedSlug = feature.slug;
 
@@ -91,7 +91,7 @@ describe("Feature slug field", () => {
   it("slug is immutable via updateFeature", async () => {
     const epic = await store.transact(s => s.addEpic({ name: "Test Epic" }));
     const feature = await store.transact(s =>
-      s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
+      s.addFeature({ parent: epic.id, name: "Login Flow" })
     );
     const originalSlug = feature.slug;
 

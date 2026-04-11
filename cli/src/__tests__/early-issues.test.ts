@@ -42,7 +42,7 @@ describe("ensureEarlyIssues", () => {
     mockDiscoverGitHub.mockResolvedValue({ repo: "owner/repo" });
     mockLoadSyncRefs.mockReturnValue({});
     store = new InMemoryTaskStore();
-    const epic = store.addEpic({ name: "My Epic", slug: "my-epic" });
+    const epic = store.addEpic({ name: "My Epic" });
     epicId = epic.id;
   });
 

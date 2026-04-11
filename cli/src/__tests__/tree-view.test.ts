@@ -70,7 +70,7 @@ describe("TreeView", () => {
     };
     const { lastFrame } = render(React.createElement(TreeView, { state }));
     const output = stripAnsi(lastFrame()!);
-    expect(output).toContain("│ │");
+    expect(output).toContain("├─");
     expect(output).toContain("write-plan");
   });
 

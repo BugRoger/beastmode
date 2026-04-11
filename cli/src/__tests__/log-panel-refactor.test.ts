@@ -15,8 +15,8 @@ function makeState(overrides?: Partial<TreeState>): TreeState {
 }
 
 describe("countTreeLines — flat structure", () => {
-  test("empty state has 1 line (CLI label only)", () => {
-    expect(countTreeLines(makeState())).toBe(1);
+  test("empty state has 0 lines (no CLI label when no entries)", () => {
+    expect(countTreeLines(makeState())).toBe(0);
   });
 
   test("counts CLI entries", () => {
@@ -41,8 +41,8 @@ describe("countTreeLines — flat structure", () => {
         entries: [],
       }],
     });
-    // 1 cli + 1 epic + 2 features + 2 entries = 6
-    expect(countTreeLines(state)).toBe(6);
+    // 1 epic + 2 features + 2 entries = 5
+    expect(countTreeLines(state)).toBe(5);
   });
 
   test("counts epic direct entries", () => {
@@ -53,8 +53,8 @@ describe("countTreeLines — flat structure", () => {
         entries: [makeEntry("planning", 0)],
       }],
     });
-    // 1 cli + 1 epic + 1 entry = 3
-    expect(countTreeLines(state)).toBe(3);
+    // 1 epic + 1 entry = 2
+    expect(countTreeLines(state)).toBe(2);
   });
 });
 
@@ -90,8 +90,8 @@ describe("trimTreeToTail — flat structure", () => {
         entries: [makeEntry("old", 0), makeEntry("mid", 1), makeEntry("new", 2)],
       }],
     });
-    // 1 cli + 1 epic + 3 entries = 5 total. Trim to 3 drops 2 entries.
-    const result = trimTreeToTail(state, 3);
+    // 1 epic + 3 entries = 4 total. Trim to 2 drops 2 entries.
+    const result = trimTreeToTail(state, 2);
     expect(result.epics[0].entries).toHaveLength(1);
     expect(result.epics[0].entries[0].message).toBe("new");
   });
@@ -106,8 +106,8 @@ describe("trimTreeToTail — flat structure", () => {
         entries: [],
       }],
     });
-    // 1 cli + 1 epic + 1 feature + 3 entries = 6 total. Trim to 4 drops 2 entries.
-    const result = trimTreeToTail(state, 4);
+    // 1 epic + 1 feature + 3 entries = 5 total. Trim to 3 drops 2 entries.
+    const result = trimTreeToTail(state, 3);
     expect(result.epics[0].features[0].entries).toHaveLength(1);
     expect(result.epics[0].features[0].entries[0].message).toBe("new");
   });

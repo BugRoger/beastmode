@@ -65,7 +65,7 @@ function seedEntity(
 ): void {
   const store = new JsonFileStore(storePath());
   store.load();
-  store.addEpic({ name: overrides?.epicName ?? slug, slug });
+  store.addEpic({ name: overrides?.epicName ?? slug });
   store.save();
 }
 

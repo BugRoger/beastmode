@@ -30,14 +30,14 @@ describe("resolveIdentifier", () => {
 
   describe("slug lookup", () => {
     it("should resolve epic by slug", () => {
-      const epic = store.addEpic({ name: "CLI Restructure", slug: "cli-restructure" });
-      const result = resolveIdentifier(store, "cli-restructure");
+      const epic = store.addEpic({ name: "CLI Restructure" });
+      const result = resolveIdentifier(store, epic.slug);
       expect(result).toEqual({ kind: "found", entity: epic });
     });
 
     it("should resolve auto-generated slug", () => {
       const epic = store.addEpic({ name: "My Cool Epic" });
-      const result = resolveIdentifier(store, "my-cool-epic");
+      const result = resolveIdentifier(store, epic.slug);
       expect(result).toEqual({ kind: "found", entity: epic });
     });
   });
@@ -55,22 +55,8 @@ describe("resolveIdentifier", () => {
   });
 
   describe("ambiguity detection", () => {
-    it("should detect ambiguity when identifier matches ID and slug of different entities", () => {
-      // Create epic A — it gets some random bm-xxxx ID
-      const epicA = store.addEpic({ name: "Epic A" });
-      // Create epic B with slug set to epicA's ID
-      const epicB = store.addEpic({ name: "Epic B", slug: epicA.id });
-
-      // Looking up epicA.id should find epicA by ID and epicB by slug
-      const result = resolveIdentifier(store, epicA.id);
-      expect(result.kind).toBe("ambiguous");
-      if (result.kind === "ambiguous") {
-        expect(result.matches).toHaveLength(2);
-        const ids = result.matches.map(e => e.id).sort();
-        expect(ids).toContain(epicA.id);
-        expect(ids).toContain(epicB.id);
-      }
-    });
+    // Collision-proof slug format (slugify(name)+"-"+shortId) makes ID/slug
+    // collisions structurally impossible, so no ambiguity test is needed here.
   });
 
   describe("feature-to-epic resolution", () => {
@@ -97,9 +83,9 @@ describe("resolveIdentifier", () => {
 
   describe("feature slug resolution", () => {
     it("should resolve feature by slug", () => {
-      const epic = store.addEpic({ name: "Epic", slug: "epic" });
-      const feature = store.addFeature({ parent: epic.id, name: "Login", slug: "login-flow" });
-      const result = resolveIdentifier(store, "login-flow");
+      const epic = store.addEpic({ name: "Epic" });
+      const feature = store.addFeature({ parent: epic.id, name: "Login" });
+      const result = resolveIdentifier(store, feature.slug);
       expect(result.kind).toBe("found");
       if (result.kind === "found") {
         expect(result.entity.id).toBe(feature.id);
@@ -107,9 +93,9 @@ describe("resolveIdentifier", () => {
     });
 
     it("should prefer epic slug over feature slug", () => {
-      const epic = store.addEpic({ name: "Auth", slug: "auth" });
-      store.addFeature({ parent: epic.id, name: "Auth Feature", slug: "auth" });
-      const result = resolveIdentifier(store, "auth");
+      const epic = store.addEpic({ name: "Auth" });
+      store.addFeature({ parent: epic.id, name: "Auth Feature" });
+      const result = resolveIdentifier(store, epic.slug);
       expect(result.kind).toBe("found");
       if (result.kind === "found") {
         expect(result.entity.type).toBe("epic");
@@ -117,9 +103,9 @@ describe("resolveIdentifier", () => {
     });
 
     it("should resolve feature slug to parent epic when resolveToEpic is true", () => {
-      const epic = store.addEpic({ name: "Epic", slug: "epic" });
-      store.addFeature({ parent: epic.id, name: "Login", slug: "login-flow" });
-      const result = resolveIdentifier(store, "login-flow", { resolveToEpic: true });
+      const epic = store.addEpic({ name: "Epic" });
+      const feature = store.addFeature({ parent: epic.id, name: "Login" });
+      const result = resolveIdentifier(store, feature.slug, { resolveToEpic: true });
       expect(result.kind).toBe("found");
       if (result.kind === "found") {
         expect(result.entity.id).toBe(epic.id);

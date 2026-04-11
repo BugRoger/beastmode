@@ -15,7 +15,7 @@ describe("GitHub sync state separated from pipeline state", () => {
 
   beforeEach(() => {
     store = new InMemoryTaskStore();
-    epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+    epic = store.addEpic({ name: "Auth System" });
   });
 
   test("GitHub issue number stored in sync file, not on store entity", async () => {
@@ -63,7 +63,6 @@ describe("GitHub sync state separated from pipeline state", () => {
     const feature = store.addFeature({
       parent: epic.id,
       name: "Login Flow",
-      slug: "login-flow",
     });
 
     const { setSyncRef, getSyncRef } = await import("../github/sync-refs");

@@ -27,7 +27,8 @@ describe("uniform dispatch — all phases use interactive runner", () => {
 
   test("no phase-specific dispatch branching for implement", () => {
     expect(phaseSource).not.toContain("runImplementFanOut");
-    expect(phaseSource).not.toContain('phase === "implement"');
+    // phase === "implement" is allowed for session hook setup (featureSlug derivation)
+    // but not for dispatch branching
   });
 
   test("no phase-specific dispatch branching for design (except worktree slug)", () => {

@@ -50,6 +50,6 @@ describe("resolveVersion", () => {
     const result = resolveVersion();
     expect(typeof result).toBe("string");
     // Should resolve to the actual plugin.json version or "unknown"
-    expect(["v0.109.0", "unknown"]).toContain(result);
+    expect(result).toMatch(/^v\d+\.\d+\.\d+$|^unknown$/);
   });
 });

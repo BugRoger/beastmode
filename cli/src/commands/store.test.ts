@@ -54,7 +54,7 @@ describe("epic commands", () => {
     const result = await store.transact(s => s.addEpic({ name: "My Epic" }));
     expect(result.type).toBe("epic");
     expect(result.name).toBe("My Epic");
-    expect(result.slug).toBe("my-epic");
+    expect(result.slug).toMatch(/^my-epic-[0-9a-f]{4}$/);
     expect(result.id).toMatch(/^bm-[0-9a-f]{4}$/);
   });
 
@@ -72,8 +72,8 @@ describe("epic commands", () => {
   });
 
   it("epic show accepts slug", async () => {
-    await store.transact(s => s.addEpic({ name: "Slug Test" }));
-    const result = await epicShowTestable(store, ["slug-test"]);
+    const epic = await store.transact(s => s.addEpic({ name: "Slug Test" }));
+    const result = await epicShowTestable(store, [epic.slug]);
     expect(result.name).toBe("Slug Test");
   });
 
@@ -160,8 +160,9 @@ describe("feature commands", () => {
   });
 
   it("feature ls accepts slug", async () => {
+    const epic = await store.transact(s => s.getEpic(epicId)!);
     await store.transact(s => s.addFeature({ parent: epicId, name: "F1" }));
-    const result = await featureLsTestable(store, ["parent-epic"]);
+    const result = await featureLsTestable(store, [epic!.slug]);
     expect(result).toHaveLength(1);
   });
 
@@ -334,7 +335,8 @@ describe("error handling and output contract", () => {
     expect(result).toHaveProperty("id");
     expect(result).toHaveProperty("type", "epic");
     expect(result).toHaveProperty("name", "Full Fields");
-    expect(result).toHaveProperty("slug", "full-fields");
+    expect(result).toHaveProperty("slug");
+    expect(result.slug).toMatch(/^full-fields-[0-9a-f]{4}$/);
     expect(result).toHaveProperty("status", "design");
     expect(result).toHaveProperty("depends_on");
     expect(result).toHaveProperty("created_at");

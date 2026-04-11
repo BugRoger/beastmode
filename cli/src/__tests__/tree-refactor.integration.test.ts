@@ -127,8 +127,8 @@ describe("Tree Refactor Integration", () => {
   test("countTreeLines works with new flat structure", () => {
     const state = buildTreeState([], () => [], undefined, undefined, enrichedEpics);
     const lines = countTreeLines(state);
-    // 1 cli + 2 epics + 3 features = 6 (no phases)
-    expect(lines).toBe(6);
+    // 2 epics + 3 features = 5 (no CLI label when no CLI entries)
+    expect(lines).toBe(5);
   });
 
   test("tree-format produces phase badge on leaf entries", () => {

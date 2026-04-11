@@ -79,18 +79,19 @@ describe("InMemoryTaskStore", () => {
     });
 
     it("should allow slug mutation via updateEpic", () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "old-slug" });
+      const epic = store.addEpic({ name: "Test Epic" });
       const updated = store.updateEpic(epic.id, { slug: "new-slug" });
       expect(updated.slug).toBe("new-slug");
       expect(store.getEpic(epic.id)!.slug).toBe("new-slug");
     });
 
     it("should make epic findable by new slug after slug mutation", () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "old-slug" });
+      const epic = store.addEpic({ name: "Test Epic" });
+      const oldSlug = epic.slug;
       store.updateEpic(epic.id, { slug: "new-slug" });
       expect(store.find("new-slug")).toBeDefined();
       expect(store.find("new-slug")!.id).toBe(epic.id);
-      expect(store.find("old-slug")).toBeUndefined();
+      expect(store.find(oldSlug)).toBeUndefined();
     });
   });
 

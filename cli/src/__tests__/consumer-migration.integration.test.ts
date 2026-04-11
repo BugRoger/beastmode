@@ -17,10 +17,10 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Watch loop discovers epics by scanning the store", () => {
     it("finds all epics from the store", async () => {
-      const epic1 = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic1 = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic1.id, { status: "plan" });
 
-      const epic2 = store.addEpic({ name: "Data Pipeline", slug: "data-pipeline" });
+      const epic2 = store.addEpic({ name: "Data Pipeline" });
       store.updateEpic(epic2.id, { status: "implement" });
 
       // Import the store-based scan function
@@ -33,7 +33,7 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
     });
 
     it("each epic has a machine-derived next action", async () => {
-      const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic.id, { status: "plan" });
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
@@ -49,13 +49,13 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Watch loop derives dispatch decisions from machine snapshots", () => {
     it("identifies ready features based on dependency completion", async () => {
-      const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic.id, { status: "implement" });
 
-      const f1 = store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
+      const f1 = store.addFeature({ parent: epic.id, name: "Login Flow" });
       store.updateFeature(f1.id, { status: "completed" });
 
-      const f2 = store.addFeature({ parent: epic.id, name: "Token Cache", slug: "token-cache" });
+      const f2 = store.addFeature({ parent: epic.id, name: "Token Cache" });
       // token-cache depends on f1 — but f1 completed, so token-cache is pending and dispatchable
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
@@ -71,9 +71,9 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Watch loop scan is a single store parse", () => {
     it("all epic discovery happens from a single store read", async () => {
-      const e1 = store.addEpic({ name: "Epic 1", slug: "epic-1" });
-      const e2 = store.addEpic({ name: "Epic 2", slug: "epic-2" });
-      const e3 = store.addEpic({ name: "Epic 3", slug: "epic-3" });
+      const e1 = store.addEpic({ name: "Epic 1" });
+      const e2 = store.addEpic({ name: "Epic 2" });
+      const e3 = store.addEpic({ name: "Epic 3" });
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       // Single call — no manifest files consulted
@@ -84,12 +84,12 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Dashboard renders epic state from store entities", () => {
     it("displays epic phase from store entity", async () => {
-      const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic.id, { status: "implement" });
 
-      const f1 = store.addFeature({ parent: epic.id, name: "Login", slug: "login" });
+      const f1 = store.addFeature({ parent: epic.id, name: "Login" });
       store.updateFeature(f1.id, { status: "completed" });
-      store.addFeature({ parent: epic.id, name: "Signup", slug: "signup" });
+      store.addFeature({ parent: epic.id, name: "Signup" });
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
@@ -102,10 +102,10 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Dashboard shows XState-derived enrichment", () => {
     it("shows machine-derived next action", async () => {
-      const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic.id, { status: "implement" });
 
-      store.addFeature({ parent: epic.id, name: "Login", slug: "login" });
+      store.addFeature({ parent: epic.id, name: "Login" });
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
@@ -118,13 +118,13 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
   describe("Dashboard and store commands show consistent data", () => {
     it("both views show same epic phase and feature statuses", async () => {
-      const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+      const epic = store.addEpic({ name: "Auth System" });
       store.updateEpic(epic.id, { status: "implement" });
 
-      const f1 = store.addFeature({ parent: epic.id, name: "Login", slug: "login" });
+      const f1 = store.addFeature({ parent: epic.id, name: "Login" });
       store.updateFeature(f1.id, { status: "completed" });
-      store.addFeature({ parent: epic.id, name: "Signup", slug: "signup" });
-      store.addFeature({ parent: epic.id, name: "Reset", slug: "reset" });
+      store.addFeature({ parent: epic.id, name: "Signup" });
+      store.addFeature({ parent: epic.id, name: "Reset" });
 
       // Store tree view
       const storeEpic = store.getEpic(epic.id);

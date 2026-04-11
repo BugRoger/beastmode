@@ -14,18 +14,17 @@ describe("@dashboard-log-fixes: System-level entries as SYSTEM node", () => {
   test("watch loop event renders under a SYSTEM tree node with hierarchical formatting", () => {
     const state = buildTreeState([], () => [], undefined, systemEntries, []);
     expect(state.cli.entries).toHaveLength(3);
-    // SYSTEM node uses hierarchical tree formatting — system entries get leaf-epic prefix
+    // SYSTEM node uses hierarchical tree formatting — system entries get system prefix
     const prefix = buildTreePrefix("system");
-    expect(prefix).toBe("│ · ");
+    expect(prefix).toBe("│ ");
   });
 
   test("scan result renders under SYSTEM node indented as child", () => {
     const state = buildTreeState([], () => [], undefined, systemEntries, []);
     expect(state.cli.entries[1].message).toBe("scan complete: 3 epics");
-    // System entries use leaf-epic depth (│ ·) — same as epic leaf entries
+    // System entries use system depth (│) — same as leaf-epic entries
     const formatted = formatTreeLine("system", "info", undefined, "scan complete", 1000);
     expect(formatted).toContain("│");
-    expect(formatted).toContain("·");
   });
 
   test("multiple system entries nest under single SYSTEM node without duplication", () => {

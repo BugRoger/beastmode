@@ -141,14 +141,14 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Epic body contains full PRD when design path is an absolute worktree path", () => {
     test("body contains all six PRD sections", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       const absPath = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-test.md");
       store.updateEpic(epic.id, { status: "plan", design: absPath });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -167,13 +167,13 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Epic body contains full PRD when design path is a bare filename", () => {
     test("body contains PRD sections", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "plan", design: "2026-04-05-test.md" });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -190,7 +190,7 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Epic body contains full PRD when design path is repo-relative", () => {
     test("body contains PRD sections", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, {
         status: "plan",
         design: ".beastmode/artifacts/design/2026-04-05-test.md",
@@ -199,7 +199,7 @@ describe("Artifact Path Normalization Integration", () => {
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -216,12 +216,11 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Feature body contains plan sections when plan path is a bare filename", () => {
     test("body contains user story, what to build, acceptance criteria", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "implement" });
       const feat = store.addFeature({
         parent: epic.id,
         name: "my-feat",
-        slug: "my-feat",
         description: "A feature",
       });
       store.updateFeature(feat.id, { plan: "2026-04-05-test-my-feat.md" });
@@ -230,7 +229,7 @@ describe("Artifact Path Normalization Integration", () => {
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -250,12 +249,11 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Feature body contains plan sections when plan path is repo-relative", () => {
     test("body contains user story and what to build", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "implement" });
       const feat = store.addFeature({
         parent: epic.id,
         name: "my-feat",
-        slug: "my-feat",
         description: "A feature",
       });
       store.updateFeature(feat.id, {
@@ -266,7 +264,7 @@ describe("Artifact Path Normalization Integration", () => {
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -287,14 +285,14 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Artifact table shows clean repo-relative paths from absolute inputs", () => {
     test("artifact rows use repo-relative paths, no worktree prefix", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       const absDesign = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-test.md");
       store.updateEpic(epic.id, { status: "plan", design: absDesign });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -312,13 +310,13 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Artifact table shows clean paths from bare filename inputs", () => {
     test("artifact rows display repo-relative paths", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "plan", design: "2026-04-05-test.md" });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });
@@ -334,14 +332,14 @@ describe("Artifact Path Normalization Integration", () => {
 
   describe("Epic body never contains absolute filesystem paths", () => {
     test("no absolute paths in rendered body when stored as absolute worktree paths", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       const absDesign = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-test.md");
       store.updateEpic(epic.id, { status: "plan", design: absDesign });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
         epicId: epic.id,
-        epicSlug: "test-epic",
+        epicSlug: epic.slug,
         store,
         resolved: { repo: "org/repo" },
       });

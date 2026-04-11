@@ -98,7 +98,7 @@ describe("field-mapping-fix integration", () => {
 
   describe("Issue creation succeeds with correct phase label from store", () => {
     test("Epic issue creation uses correct phase label from store status", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "design" });
       epicId = epic.id;
 
@@ -122,7 +122,7 @@ describe("field-mapping-fix integration", () => {
     });
 
     test("Feature issue creation uses correct phase label from store", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "implement" });
       epicId = epic.id;
 
@@ -130,8 +130,8 @@ describe("field-mapping-fix integration", () => {
       saveSyncRefs(tmpDir, { [epicId]: { issue: 10 } });
 
       // Add features
-      store.addFeature({ parent: epicId, name: "Feature A", slug: "feature-a" });
-      store.addFeature({ parent: epicId, name: "Feature B", slug: "feature-b" });
+      store.addFeature({ parent: epicId, name: "Feature A" });
+      store.addFeature({ parent: epicId, name: "Feature B" });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
@@ -150,7 +150,7 @@ describe("field-mapping-fix integration", () => {
     });
 
     test("Phase label updates when status changes in store", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, { status: "plan" });
       epicId = epic.id;
 
@@ -182,12 +182,12 @@ describe("field-mapping-fix integration", () => {
 
   describe("Feature issue titles include epic name prefix", () => {
     test("Feature issue title uses epic-prefixed format", async () => {
-      const epic = store.addEpic({ name: "auth-system", slug: "auth-system" });
+      const epic = store.addEpic({ name: "auth-system" });
       store.updateEpic(epic.id, { status: "implement" });
       epicId = epic.id;
 
       saveSyncRefs(tmpDir, { [epicId]: { issue: 10 } });
-      store.addFeature({ parent: epicId, name: "login-flow", slug: "login-flow" });
+      store.addFeature({ parent: epicId, name: "login-flow" });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
@@ -209,14 +209,14 @@ describe("field-mapping-fix integration", () => {
     });
 
     test("Multiple features in same epic have distinct epic-prefixed titles", async () => {
-      const epic = store.addEpic({ name: "data-pipeline", slug: "data-pipeline" });
+      const epic = store.addEpic({ name: "data-pipeline" });
       store.updateEpic(epic.id, { status: "implement" });
       epicId = epic.id;
 
       saveSyncRefs(tmpDir, { [epicId]: { issue: 10 } });
-      store.addFeature({ parent: epicId, name: "ingestion", slug: "ingestion" });
-      store.addFeature({ parent: epicId, name: "transform", slug: "transform" });
-      store.addFeature({ parent: epicId, name: "export", slug: "export" });
+      store.addFeature({ parent: epicId, name: "ingestion" });
+      store.addFeature({ parent: epicId, name: "transform" });
+      store.addFeature({ parent: epicId, name: "export" });
 
       await syncGitHubForEpic({
         projectRoot: tmpDir,
@@ -238,7 +238,7 @@ describe("field-mapping-fix integration", () => {
 
   describe("Artifact link URLs use repo-relative paths on GitHub", () => {
     test("Epic issue body contains repo-relative artifact link", async () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+      const epic = store.addEpic({ name: "Test Epic" });
       store.updateEpic(epic.id, {
         status: "plan",
         design: ".beastmode/artifacts/design/2026-04-05-example.md",

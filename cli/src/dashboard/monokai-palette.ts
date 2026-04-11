@@ -48,5 +48,5 @@ export const FEATURE_STATUS_COLOR: Record<string, string> = {
 
 /** Returns true for feature statuses that should render dimmed. */
 export function isFeatureDim(status: string): boolean {
-  return status === "completed" || status === "blocked";
+  return status === "completed";
 }

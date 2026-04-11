@@ -540,20 +540,21 @@ describe("ITermSessionFactory", () => {
   });
 
   test("reconciliation closes live session when epic phase is done", async () => {
-    const liveSessions: It2Session[] = [
-      { id: "orphan-tab-1", name: "bm-done-epic", tabId: "w0t10", isAlive: true },
-    ];
-    mockClient = createMockIt2Client({ sessions: liveSessions });
-
-    // Write a "done" store entity for the epic
+    // Write a "done" store entity for the epic first so we know its generated slug
     const stateDir = resolve(TEST_ROOT, ".beastmode", "state");
     mkdirSync(stateDir, { recursive: true });
     const storePath = resolve(stateDir, "store.json");
     const store = new JsonFileStore(storePath);
     store.load();
-    const epic = store.addEpic({ name: "done-epic", slug: "done-epic" });
+    const epic = store.addEpic({ name: "done-epic" });
     store.updateEpic(epic.id, { status: "done" as any });
     store.save();
+
+    // Use the actual generated slug in the session name so reconciliation can match it
+    const liveSessions: It2Session[] = [
+      { id: "orphan-tab-1", name: `bm-${epic.slug}`, tabId: "w0t10", isAlive: true },
+    ];
+    mockClient = createMockIt2Client({ sessions: liveSessions });
 
     const factory = new ITermSessionFactory(mockClient, {
       watchTimeoutMs: 2000,
@@ -588,7 +589,7 @@ describe("ITermSessionFactory", () => {
     const storePath = resolve(stateDir, "store.json");
     const store = new JsonFileStore(storePath);
     store.load();
-    store.addEpic({ name: "active-epic", slug: "active-epic" });
+    store.addEpic({ name: "active-epic" });
     // Status defaults to "design" which is an active phase, not done/cancelled
     store.save();
 

@@ -82,14 +82,14 @@ export interface TaskStore {
   // Epic CRUD
   getEpic(id: string): Epic | undefined;
   listEpics(): Epic[];
-  addEpic(opts: { name: string; slug?: string }): Epic;
+  addEpic(opts: { name: string }): Epic;
   updateEpic(id: string, patch: EpicPatch): Epic;
   deleteEpic(id: string): void;
 
   // Feature CRUD
   getFeature(id: string): Feature | undefined;
   listFeatures(epicId: string): Feature[];
-  addFeature(opts: { parent: string; name: string; slug?: string; description?: string }): Feature;
+  addFeature(opts: { parent: string; name: string; description?: string }): Feature;
   updateFeature(id: string, patch: FeaturePatch): Feature;
   deleteFeature(id: string): void;
 

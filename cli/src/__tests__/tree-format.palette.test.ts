@@ -17,12 +17,12 @@ describe("tree-format with monokai-palette", () => {
   });
 
   test("buildTreePrefix returns correct connectors", () => {
-    expect(buildTreePrefix("cli")).toBe("│ ");
-    expect(buildTreePrefix("epic")).toBe("│ ");
-    expect(buildTreePrefix("feature")).toBe("│ │ ");
-    expect(buildTreePrefix("leaf-epic")).toBe("│ · ");
-    expect(buildTreePrefix("leaf-feature")).toBe("│ │ · ");
-    expect(buildTreePrefix("system")).toBe("│ · ");
+    expect(buildTreePrefix("cli")).toBe("● ");
+    expect(buildTreePrefix("epic")).toBe("● ");
+    expect(buildTreePrefix("feature")).toBe("├─○ ");
+    expect(buildTreePrefix("leaf-epic")).toBe("│ ");
+    expect(buildTreePrefix("leaf-feature")).toBe("│ │ ");
+    expect(buildTreePrefix("system")).toBe("│ ");
   });
 
   test("formatTreeLine feature with phase prefix applies color", () => {
@@ -34,7 +34,7 @@ describe("tree-format with monokai-palette", () => {
 
     // Plain text should have the tree prefix and message
     const plain = stripAnsi(line);
-    expect(plain).toContain("│ │");
+    expect(plain).toContain("├─○");
     expect(plain).toContain("Feature X");
   });
 
@@ -44,7 +44,7 @@ describe("tree-format with monokai-palette", () => {
     const line = formatTreeLine("leaf-feature", "info", "implement", "Leaf message", timestamp);
 
     const plain = stripAnsi(line);
-    expect(plain).toContain("│ │ ·");
+    expect(plain).toContain("│ │");
     expect(plain).toContain(localTime);
     expect(plain).toContain("INFO");
     expect(plain).toContain("Leaf message");
@@ -56,7 +56,7 @@ describe("tree-format with monokai-palette", () => {
 
     const plain = stripAnsi(line);
     expect(plain).toContain("Epic Name");
-    expect(plain).toContain("│");
+    expect(plain).toContain("●");
   });
 
   test("formatTreeLine warn level is colored yellow", () => {
@@ -90,7 +90,7 @@ describe("tree-format with monokai-palette", () => {
     const line = formatTreeLine("system", "info", undefined, "System msg", timestamp);
 
     const plain = stripAnsi(line);
-    expect(plain).toContain("│ ·");
+    expect(plain).toContain("│");
     expect(plain).toContain(localTime);
     expect(plain).toContain("INFO");
     expect(plain).toContain("System msg");

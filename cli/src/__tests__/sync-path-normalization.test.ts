@@ -107,14 +107,14 @@ describe("readPrdSections path normalization", () => {
   });
 
   test("resolves absolute worktree path to correct design file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     const absPath = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-slug.md");
     store.updateEpic(epic.id, { status: "plan", design: absPath });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -125,13 +125,13 @@ describe("readPrdSections path normalization", () => {
   });
 
   test("resolves bare filename to correct design file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, { status: "plan", design: "2026-04-05-slug.md" });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -142,7 +142,7 @@ describe("readPrdSections path normalization", () => {
   });
 
   test("resolves repo-relative path to correct design file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, {
       status: "plan",
       design: ".beastmode/artifacts/design/2026-04-05-slug.md",
@@ -151,7 +151,7 @@ describe("readPrdSections path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -162,14 +162,14 @@ describe("readPrdSections path normalization", () => {
   });
 
   test("extracts all six PRD sections from absolute path", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     const absPath = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-slug.md");
     store.updateEpic(epic.id, { status: "plan", design: absPath });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -220,12 +220,11 @@ describe("syncFeature plan path normalization", () => {
   });
 
   test("resolves bare filename to correct plan file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, { status: "implement" });
     const feat = store.addFeature({
       parent: epic.id,
       name: "my-feat",
-      slug: "my-feat",
       description: "Desc",
     });
     store.updateFeature(feat.id, { plan: "2026-04-05-test-my-feat.md" });
@@ -234,7 +233,7 @@ describe("syncFeature plan path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -250,12 +249,11 @@ describe("syncFeature plan path normalization", () => {
   });
 
   test("resolves repo-relative path to correct plan file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, { status: "implement" });
     const feat = store.addFeature({
       parent: epic.id,
       name: "my-feat",
-      slug: "my-feat",
       description: "Desc",
     });
     store.updateFeature(feat.id, {
@@ -266,7 +264,7 @@ describe("syncFeature plan path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -281,12 +279,11 @@ describe("syncFeature plan path normalization", () => {
   });
 
   test("resolves absolute worktree path to correct plan file", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, { status: "implement" });
     const feat = store.addFeature({
       parent: epic.id,
       name: "my-feat",
-      slug: "my-feat",
       description: "Desc",
     });
     const absPath = join(tmpDir, ".beastmode", "artifacts", "plan", "2026-04-05-test-my-feat.md");
@@ -296,7 +293,7 @@ describe("syncFeature plan path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -333,14 +330,14 @@ describe("buildArtifactsMap path normalization", () => {
   });
 
   test("normalizes absolute worktree path to repo-relative display path", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     const absPath = "/Users/someone/.claude/worktrees/old-slug/.beastmode/artifacts/design/2026-04-05-slug.md";
     store.updateEpic(epic.id, { status: "plan", design: absPath });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -354,13 +351,13 @@ describe("buildArtifactsMap path normalization", () => {
   });
 
   test("normalizes bare filename to repo-relative display path", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, { status: "plan", design: "2026-04-05-slug.md" });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -370,7 +367,7 @@ describe("buildArtifactsMap path normalization", () => {
   });
 
   test("preserves already-correct repo-relative path", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, {
       status: "plan",
       design: ".beastmode/artifacts/design/2026-04-05-slug.md",
@@ -379,7 +376,7 @@ describe("buildArtifactsMap path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -389,7 +386,7 @@ describe("buildArtifactsMap path normalization", () => {
   });
 
   test("normalizes paths for all phase types", async () => {
-    const epic = store.addEpic({ name: "Test", slug: "test" });
+    const epic = store.addEpic({ name: "Test" });
     store.updateEpic(epic.id, {
       status: "validate",
       design: "/abs/path/.beastmode/artifacts/design/design-file.md",
@@ -399,7 +396,7 @@ describe("buildArtifactsMap path normalization", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });

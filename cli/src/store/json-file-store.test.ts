@@ -54,7 +54,7 @@ describe("JsonFileStore", () => {
     });
 
     it("should preserve all entity fields through save/load", () => {
-      const epic = store.addEpic({ name: "My Epic", slug: "my-epic" });
+      const epic = store.addEpic({ name: "My Epic" });
       store.updateEpic(epic.id, {
         status: "implement",
         summary: "A summary",
@@ -106,7 +106,7 @@ describe("JsonFileStore", () => {
       const epic = store.addEpic({ name: "Test Epic" });
       expect(epic.id).toMatch(/^bm-[0-9a-f]{4}$/);
       expect(epic.name).toBe("Test Epic");
-      expect(epic.slug).toBe("test-epic");
+      expect(epic.slug).toMatch(/^test-epic-[0-9a-f]{4}$/);
       expect(epic.status).toBe("design");
       expect(epic.type).toBe("epic");
       expect(epic.depends_on).toEqual([]);
@@ -194,8 +194,8 @@ describe("JsonFileStore", () => {
     });
 
     it("should find epic by slug", () => {
-      const epic = store.addEpic({ name: "Test Epic", slug: "test-slug" });
-      expect(store.find("test-slug")).toEqual(epic);
+      const epic = store.addEpic({ name: "Test Epic" });
+      expect(store.find(epic.slug)).toEqual(epic);
     });
 
     it("should return undefined for unknown", () => {

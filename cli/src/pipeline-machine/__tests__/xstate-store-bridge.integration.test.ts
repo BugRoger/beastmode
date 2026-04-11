@@ -89,8 +89,8 @@ describe("XState Store Bridge Integration", () => {
   test("machine snapshot metadata provides dispatch info", () => {
     const { store, epic } = createTestStore();
     store.updateEpic(epic.id, { status: "implement" });
-    store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
-    store.addFeature({ parent: epic.id, name: "Signup Flow", slug: "signup-flow" });
+    store.addFeature({ parent: epic.id, name: "Login Flow" });
+    store.addFeature({ parent: epic.id, name: "Signup Flow" });
 
     const updatedEpic = store.getEpic(epic.id)!;
     const ctx = epicToContext(updatedEpic) as EpicContext;
@@ -149,7 +149,7 @@ describe("XState Store Bridge Integration", () => {
   test("feature completion updates store feature status", () => {
     const { store, epic } = createTestStore();
     store.updateEpic(epic.id, { status: "implement" });
-    const f1 = store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
+    const f1 = store.addFeature({ parent: epic.id, name: "Login Flow" });
 
     store.updateFeature(f1.id, { status: "completed" });
 
@@ -161,8 +161,8 @@ describe("XState Store Bridge Integration", () => {
   test("multiple feature completions in single transaction", () => {
     const { store, epic } = createTestStore();
     store.updateEpic(epic.id, { status: "implement" });
-    const f1 = store.addFeature({ parent: epic.id, name: "Login", slug: "login" });
-    const f2 = store.addFeature({ parent: epic.id, name: "Signup", slug: "signup" });
+    const f1 = store.addFeature({ parent: epic.id, name: "Login" });
+    const f2 = store.addFeature({ parent: epic.id, name: "Signup" });
 
     store.updateFeature(f1.id, { status: "completed" });
     store.updateFeature(f2.id, { status: "completed" });
@@ -187,22 +187,22 @@ describe("XState Store Bridge Integration", () => {
     store.updateEpic(epic.id, { status: "plan" });
 
     // plan -> implement (add features to store)
-    const f1 = store.addFeature({ parent: epic.id, name: "Feature A", slug: "feat-a" });
-    const f2 = store.addFeature({ parent: epic.id, name: "Feature B", slug: "feat-b" });
+    const f1 = store.addFeature({ parent: epic.id, name: "Feature A" });
+    const f2 = store.addFeature({ parent: epic.id, name: "Feature B" });
     actor.send({
       type: "PLAN_COMPLETED",
       features: [
-        { slug: "feat-a", plan: "plan-a" },
-        { slug: "feat-b", plan: "plan-b" },
+        { slug: f1.slug, plan: "plan-a" },
+        { slug: f2.slug, plan: "plan-b" },
       ],
     });
     expect(actor.getSnapshot().value).toBe("implement");
     store.updateEpic(epic.id, { status: "implement" });
 
     // complete features
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-a" });
+    actor.send({ type: "FEATURE_COMPLETED", featureSlug: f1.slug });
     store.updateFeature(f1.id, { status: "completed" });
-    actor.send({ type: "FEATURE_COMPLETED", featureSlug: "feat-b" });
+    actor.send({ type: "FEATURE_COMPLETED", featureSlug: f2.slug });
     store.updateFeature(f2.id, { status: "completed" });
 
     // implement -> validate

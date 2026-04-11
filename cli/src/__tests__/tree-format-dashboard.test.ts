@@ -2,24 +2,24 @@ import { describe, test, expect } from "vitest";
 import { buildTreePrefix, formatTreeLine } from "../dashboard/tree-format.js";
 
 describe("buildTreePrefix — new hierarchy", () => {
-  test("cli depth has epic prefix", () => {
-    expect(buildTreePrefix("cli")).toBe("│ ");
+  test("cli depth has bullet prefix", () => {
+    expect(buildTreePrefix("cli")).toBe("● ");
   });
 
-  test("epic depth has single connector", () => {
-    expect(buildTreePrefix("epic")).toBe("│ ");
+  test("epic depth has bullet connector", () => {
+    expect(buildTreePrefix("epic")).toBe("● ");
   });
 
-  test("feature depth has double connector", () => {
-    expect(buildTreePrefix("feature")).toBe("│ │ ");
+  test("feature depth has box-drawing connector", () => {
+    expect(buildTreePrefix("feature")).toBe("├─○ ");
   });
 
-  test("leaf-epic has dot connector", () => {
-    expect(buildTreePrefix("leaf-epic")).toBe("│ · ");
+  test("leaf-epic has bar connector", () => {
+    expect(buildTreePrefix("leaf-epic")).toBe("│ ");
   });
 
-  test("leaf-feature has nested dot connector", () => {
-    expect(buildTreePrefix("leaf-feature")).toBe("│ │ · ");
+  test("leaf-feature has nested bar connector", () => {
+    expect(buildTreePrefix("leaf-feature")).toBe("│ │ ");
   });
 });
 
@@ -31,12 +31,12 @@ describe("formatTreeLine — phase badge", () => {
 
   test("cli node label renders with prefix", () => {
     const line = formatTreeLine("cli", "info", undefined, "SYSTEM", 0);
-    expect(line).toBe("│ SYSTEM");
+    expect(line).toBe("● SYSTEM");
   });
 
   test("epic node label renders with prefix", () => {
     const line = formatTreeLine("epic", "info", undefined, "auth", 0);
     expect(line).toContain("auth");
-    expect(line).toContain("│");
+    expect(line).toContain("●");
   });
 });

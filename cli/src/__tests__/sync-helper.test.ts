@@ -70,14 +70,16 @@ describe("syncGitHubForEpic", () => {
   let tmpDir: string;
   let store: InMemoryTaskStore;
   let epicId: string;
+  let epicSlug: string;
 
   beforeEach(() => {
     mockCalls.length = 0;
     tmpDir = mkdtempSync(join(tmpdir(), "sync-helper-test-"));
     store = new InMemoryTaskStore();
-    const epic = store.addEpic({ name: "Test Epic", slug: "test-epic" });
+    const epic = store.addEpic({ name: "Test Epic" });
     store.updateEpic(epic.id, { status: "implement" });
     epicId = epic.id;
+    epicSlug = epic.slug;
   });
 
   afterEach(() => {
@@ -95,7 +97,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: "nonexistent",
-      epicSlug: "test-epic",
+      epicSlug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -109,7 +111,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId,
-      epicSlug: "test-epic",
+      epicSlug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -130,7 +132,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId,
-      epicSlug: "test-epic",
+      epicSlug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -144,12 +146,12 @@ describe("syncGitHubForEpic", () => {
     saveSyncRefs(tmpDir, { [epicId]: { issue: 10 } });
 
     // Add a feature to the store
-    const feat = store.addFeature({ parent: epicId, name: "New Feat", slug: "new-feat" });
+    const feat = store.addFeature({ parent: epicId, name: "New Feat" });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId,
-      epicSlug: "test-epic",
+      epicSlug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -170,7 +172,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId,
-      epicSlug: "test-epic",
+      epicSlug,
       store,
       resolved: { repo: "pre/resolved" },
     });
@@ -188,7 +190,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId,
-      epicSlug: "test-epic",
+      epicSlug,
       store: badStore,
       resolved: { repo: "org/repo" },
     });
@@ -197,13 +199,13 @@ describe("syncGitHubForEpic", () => {
   });
 
   test("maps epicEntity.status to EpicSyncInput.phase", async () => {
-    const epic = store.addEpic({ name: "Phase Test", slug: "phase-test" });
+    const epic = store.addEpic({ name: "Phase Test" });
     store.updateEpic(epic.id, { status: "design" });
 
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "phase-test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -216,7 +218,7 @@ describe("syncGitHubForEpic", () => {
   });
 
   test("builds artifacts record from flat store fields", async () => {
-    const epic = store.addEpic({ name: "Artifacts Test", slug: "artifacts-test" });
+    const epic = store.addEpic({ name: "Artifacts Test" });
     store.updateEpic(epic.id, {
       status: "plan",
       design: ".beastmode/artifacts/design/2026-04-05-test.md",
@@ -233,7 +235,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "artifacts-test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -245,7 +247,7 @@ describe("syncGitHubForEpic", () => {
   });
 
   test("normalizes absolute artifact paths to repo-relative", async () => {
-    const epic = store.addEpic({ name: "Path Test", slug: "path-test" });
+    const epic = store.addEpic({ name: "Path Test" });
     const absPath = join(tmpDir, ".beastmode", "artifacts", "design", "2026-04-05-test.md");
     store.updateEpic(epic.id, {
       status: "plan",
@@ -260,7 +262,7 @@ describe("syncGitHubForEpic", () => {
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "path-test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });
@@ -272,14 +274,13 @@ describe("syncGitHubForEpic", () => {
   });
 
   test("feature plan content populates feature body enrichment", async () => {
-    const epic = store.addEpic({ name: "Enrich Test", slug: "enrich-test" });
+    const epic = store.addEpic({ name: "Enrich Test" });
     store.updateEpic(epic.id, { status: "implement" });
 
     // Add feature with plan path
     const feat = store.addFeature({
       parent: epic.id,
       name: "my-feat",
-      slug: "my-feat",
       description: "A cool feature",
     });
     store.updateFeature(feat.id, {
@@ -316,7 +317,7 @@ Build the enrichment pipeline.
     await syncGitHubForEpic({
       projectRoot: tmpDir,
       epicId: epic.id,
-      epicSlug: "enrich-test",
+      epicSlug: epic.slug,
       store,
       resolved: { repo: "org/repo" },
     });

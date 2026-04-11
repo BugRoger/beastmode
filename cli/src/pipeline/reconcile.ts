@@ -168,7 +168,6 @@ export async function reconcileDesign(
       // Create the epic entity during design reconciliation
       const newEpic = store.addEpic({
         name: realSlug ?? slug,
-        slug: realSlug ?? slug,
       });
       epic = newEpic;
     }
@@ -267,7 +266,6 @@ export async function reconcilePlan(
         const newFeature = store.addFeature({
           parent: epic.id,
           name: f.slug,
-          slug: f.slug,
           description: f.description,
         });
         // Update plan path and wave if provided

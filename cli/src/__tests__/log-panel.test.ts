@@ -85,8 +85,8 @@ describe("countTreeLines", () => {
     return { timestamp: 1000, level: "info", message: msg, seq, phase: "plan" };
   }
 
-  test("empty state has 1 line (CLI root label)", () => {
-    expect(countTreeLines({ cli: { entries: [] }, epics: [] })).toBe(1);
+  test("empty state has 0 lines (no CLI label when no entries)", () => {
+    expect(countTreeLines({ cli: { entries: [] }, epics: [] })).toBe(0);
   });
 
   test("counts CLI entries", () => {
@@ -113,8 +113,8 @@ describe("countTreeLines", () => {
         entries: [makeEntry("msg", 0)],
       }],
     };
-    // 1 CLI label + 1 epic + 1 entry = 3
-    expect(countTreeLines(state)).toBe(3);
+    // 1 epic + 1 entry = 2
+    expect(countTreeLines(state)).toBe(2);
   });
 
   test("counts features and their entries", () => {
@@ -130,8 +130,8 @@ describe("countTreeLines", () => {
         entries: [],
       }],
     };
-    // 1 CLI label + 1 epic + 2 features + 3 entries = 7
-    expect(countTreeLines(state)).toBe(7);
+    // 1 epic + 2 features + 3 entries = 6
+    expect(countTreeLines(state)).toBe(6);
   });
 });
 
@@ -180,8 +180,8 @@ describe("trimTreeToTail", () => {
         entries: [makeEntry("old", 0), makeEntry("mid", 1), makeEntry("new", 2)],
       }],
     };
-    // Total: 1 CLI label + 1 epic + 3 entries = 5. Trim to 4 drops 1 entry.
-    const result = trimTreeToTail(state, 4);
+    // Total: 1 epic + 3 entries = 4. Trim to 3 drops 1 entry.
+    const result = trimTreeToTail(state, 3);
     expect(result.epics[0].entries).toHaveLength(2);
     expect(result.epics[0].entries[0].message).toBe("mid");
   });
@@ -198,8 +198,8 @@ describe("trimTreeToTail", () => {
         entries: [],
       }],
     };
-    // Total: 1 CLI label + 1 epic + 1 feature + 2 entries = 5. Trim to 4.
-    const result = trimTreeToTail(state, 4);
+    // Total: 1 epic + 1 feature + 2 entries = 4. Trim to 3.
+    const result = trimTreeToTail(state, 3);
     expect(result.epics[0].features[0].entries).toHaveLength(1);
     expect(result.epics[0].features[0].entries[0].message).toBe("new");
   });

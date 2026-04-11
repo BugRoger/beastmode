@@ -99,7 +99,7 @@ export async function epicCommand(store: JsonFileStore, args: string[]): Promise
     case "add": {
       const { flags } = parseFlags(actionArgs);
       if (!flags["name"]) jsonError("Usage: beastmode store epic add --name=\"X\"");
-      const result = await store.transact(s => s.addEpic({ name: flags["name"], slug: flags["slug"] }));
+      const result = await store.transact(s => s.addEpic({ name: flags["name"] }));
       jsonOut(result);
       break;
     }

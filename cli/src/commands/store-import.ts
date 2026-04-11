@@ -192,7 +192,7 @@ export async function importTestable(
       }
 
       // --- Create Epic ---
-      const epic = s.addEpic({ name: epicName, slug: manifest.slug });
+      const epic = s.addEpic({ name: epicName });
 
       // Update epic fields
       const epicPatch: Record<string, unknown> = {
@@ -245,7 +245,6 @@ export async function importTestable(
         const feature = s.addFeature({
           parent: epic.id,
           name: mf.slug,
-          slug: mf.slug,
           description: mf.description,
         });
 
