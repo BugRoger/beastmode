@@ -67,6 +67,9 @@ describe("hooksCommand", () => {
     stderrSpy.mockRestore();
     delete process.env.TOOL_INPUT;
     delete process.env.TOOL_OUTPUT;
+    delete process.env.BEASTMODE_PHASE;
+    delete process.env.BEASTMODE_EPIC;
+    delete process.env.BEASTMODE_SLUG;
   });
 
   test("hitl-auto dispatches to decideResponse", async () => {
@@ -109,5 +112,46 @@ describe("hooksCommand", () => {
 
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Usage"));
     expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  test("session-start writes JSON to stdout when env vars present", async () => {
+    process.env.BEASTMODE_PHASE = "design";
+    process.env.BEASTMODE_EPIC = "test-epic";
+    process.env.BEASTMODE_SLUG = "abc123";
+
+    try {
+      await hooksCommand(["session-start"]);
+    } catch { /* exit mock */ }
+
+    const output = stdoutSpy.mock.calls[0]?.[0] as string;
+    const parsed = JSON.parse(output);
+    expect(parsed.hookSpecificOutput.hookEventName).toBe("SessionStart");
+    expect(parsed.hookSpecificOutput.additionalContext).toContain("design");
+  });
+
+  test("session-start exits non-zero when env vars missing", async () => {
+    delete process.env.BEASTMODE_PHASE;
+    delete process.env.BEASTMODE_EPIC;
+    delete process.env.BEASTMODE_SLUG;
+
+    try {
+      await hooksCommand(["session-start"]);
+    } catch { /* exit mock */ }
+
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("missing required env vars"));
+    expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  test("session-start is recognized as valid hook name", async () => {
+    process.env.BEASTMODE_PHASE = "plan";
+    process.env.BEASTMODE_EPIC = "my-epic";
+    process.env.BEASTMODE_SLUG = "def456";
+
+    try {
+      await hooksCommand(["session-start"]);
+    } catch { /* exit mock */ }
+
+    const stderrCalls = stderrSpy.mock.calls.map((c: unknown[]) => c[0]);
+    expect(stderrCalls.some((c: unknown) => typeof c === "string" && c.includes("Unknown hook"))).toBe(false);
   });
 });
