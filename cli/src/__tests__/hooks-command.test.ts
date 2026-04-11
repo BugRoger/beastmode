@@ -27,7 +27,7 @@ vi.mock("../hooks/hitl-settings.js", () => ({
 
 // Mock session-start hook module
 vi.mock("../hooks/session-start.js", () => ({
-  runSessionStart: vi.fn((repoRoot: string) => {
+  runSessionStart: vi.fn((_repoRoot: string) => {
     const phase = process.env.BEASTMODE_PHASE;
     if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
     const output = JSON.stringify({
