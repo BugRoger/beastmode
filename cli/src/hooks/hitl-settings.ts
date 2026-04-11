@@ -44,6 +44,8 @@ export interface WriteSettingsOptions {
   preToolUseHook: HookEntry;
   /** Phase name for the PostToolUse logging hook */
   phase: string;
+  /** Store feature slug (with ordinal suffix) for the Stop hook */
+  feature?: string;
 }
 
 // --- Types from hitl-prompt.ts ---
@@ -66,7 +68,7 @@ export interface PromptHookEntry {
  * only the HITL-related hook entries.
  */
 export function writeHitlSettings(options: WriteSettingsOptions): void {
-  const { claudeDir, preToolUseHook, phase } = options;
+  const { claudeDir, preToolUseHook, phase, feature } = options;
   const settingsPath = resolve(claudeDir, "settings.local.json");
 
   // Read existing settings or start fresh
@@ -101,7 +103,7 @@ export function writeHitlSettings(options: WriteSettingsOptions): void {
   );
 
   // Add Stop hook for output.json generation
-  const stopHook = buildStopHook();
+  const stopHook = buildStopHook(feature);
   settings.hooks.Stop = replaceHitlHook(
     settings.hooks.Stop,
     "",
@@ -201,13 +203,14 @@ function buildPostToolUseHook(phase: string): HookEntry {
  * Build the Stop hook for output.json generation.
  * Calls generate-output via portable CLI after Claude finishes responding.
  */
-function buildStopHook(): HookEntry {
+function buildStopHook(feature?: string): HookEntry {
+  const envPrefix = feature ? `BEASTMODE_FEATURE=${feature} ` : "";
   return {
     matcher: "",
     hooks: [
       {
         type: "command",
-        command: `bunx beastmode hooks generate-output`,
+        command: `${envPrefix}bunx beastmode hooks generate-output`,
       },
     ],
   };

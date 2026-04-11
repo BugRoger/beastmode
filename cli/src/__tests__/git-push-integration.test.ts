@@ -27,7 +27,7 @@ vi.mock("../git/worktree.js", () => ({
   rebase: mockRebase,
   archive: vi.fn(async () => "archive/test-epic"),
   remove: vi.fn(async () => {}),
-  createImplBranch: vi.fn(async (slug: string, feature: string) => `impl/${slug}--${feature}`),
+
 }));
 
 vi.mock("../artifacts/reader.js", () => ({
@@ -134,8 +134,8 @@ describe("@github-sync-polish: git-push integration", () => {
     });
   });
 
-  describe("Impl branch pushed after implement phase checkpoint", () => {
-    it("pushes impl branch during implement phase", async () => {
+  describe("Feature branch pushed after implement phase checkpoint", () => {
+    it("pushes feature branch during implement phase", async () => {
       await run(makeConfig({ phase: "implement", featureSlug: "my-feature" }));
 
       expect(mockPushBranches).toHaveBeenCalled();

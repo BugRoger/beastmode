@@ -6,7 +6,6 @@
  */
 
 import { git } from "./worktree.js";
-import { implBranchName } from "./worktree.js";
 
 /**
  * Check whether a remote named "origin" is configured.
@@ -30,23 +29,11 @@ export interface PushBranchesOpts {
 }
 
 /**
- * Push branches to origin after a phase checkpoint.
- *
- * Feature branch (`feature/<slug>`) is always pushed.
- * Impl branch (`impl/<slug>--<feature>`) is additionally pushed
- * during the implement phase when a featureSlug is provided.
+ * Pushes the feature branch (`feature/<slug>`) to origin.
  */
 export async function pushBranches(opts: PushBranchesOpts): Promise<void> {
-  const { epicSlug, phase, featureSlug, cwd } = opts;
-
-  // Always push the feature branch
+  const { epicSlug, cwd } = opts;
   await git(["push", "origin", `feature/${epicSlug}`], { cwd, allowFailure: true });
-
-  // Push impl branch during implement phase
-  if (phase === "implement" && featureSlug) {
-    const implBranch = implBranchName(epicSlug, featureSlug);
-    await git(["push", "origin", implBranch], { cwd, allowFailure: true });
-  }
 }
 
 /**

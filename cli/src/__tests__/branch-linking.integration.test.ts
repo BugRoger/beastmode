@@ -29,7 +29,6 @@ const mockGit = vi.hoisted(() => vi.fn(async () => ({ stdout: "abc123def", stder
 
 vi.mock("../git/worktree.js", () => ({
   git: mockGit,
-  implBranchName: (slug: string, feature: string) => `impl/${slug}--${feature}`,
 }));
 
 describe("Branch Linking Integration", () => {
@@ -68,12 +67,10 @@ describe("Branch Linking Integration", () => {
     });
   });
 
-  describe("Impl branch linked to feature issue", () => {
-    test("impl branch appears in the feature issue's Development sidebar", async () => {
+  describe("Feature branch linked during implement phase", () => {
+    test("only feature branch is linked during implement phase (no impl branch)", async () => {
       mockGhRepoNodeId.mockResolvedValue("R_repo123");
-      mockGhIssueNodeId
-        .mockResolvedValueOnce("I_epic456")
-        .mockResolvedValueOnce("I_feat789");
+      mockGhIssueNodeId.mockResolvedValue("I_epic456");
       mockGhCreateLinkedBranch.mockResolvedValue("LB_1");
 
       const { linkBranches } = await import("../github/branch-link.js");
@@ -87,8 +84,8 @@ describe("Branch Linking Integration", () => {
         phase: "implement",
       });
 
-      expect(mockGhCreateLinkedBranch).toHaveBeenCalledTimes(2);
-      expect(mockGhCreateLinkedBranch.mock.calls[1][2]).toBe("impl/my-epic--my-feature");
+      expect(mockGhCreateLinkedBranch).toHaveBeenCalledTimes(1);
+      expect(mockGhCreateLinkedBranch.mock.calls[0][2]).toBe("feature/my-epic");
     });
   });
 

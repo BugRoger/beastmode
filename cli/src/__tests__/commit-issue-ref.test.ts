@@ -3,7 +3,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  parseImplBranch,
   resolveIssueNumber,
   appendIssueRef,
   amendCommitWithIssueRef,
@@ -17,34 +16,6 @@ import type { SyncRefs } from "../github/sync-refs.js";
 
 // --- Pure function tests (no git repo needed) ---
 
-describe("parseImplBranch", () => {
-  test("parses valid impl branch name", () => {
-    const result = parseImplBranch("impl/my-epic-5aa1b9--commit-issue-refs");
-    expect(result).toEqual({ slug: "my-epic-5aa1b9", feature: "commit-issue-refs" });
-  });
-
-  test("parses impl branch with hyphenated slug and feature", () => {
-    const result = parseImplBranch("impl/foo-bar-baz--my-feature");
-    expect(result).toEqual({ slug: "foo-bar-baz", feature: "my-feature" });
-  });
-
-  test("returns undefined for feature branch", () => {
-    expect(parseImplBranch("feature/my-epic")).toBeUndefined();
-  });
-
-  test("returns undefined for main branch", () => {
-    expect(parseImplBranch("main")).toBeUndefined();
-  });
-
-  test("returns undefined for empty string", () => {
-    expect(parseImplBranch("")).toBeUndefined();
-  });
-
-  test("returns undefined for impl/ without double-dash", () => {
-    expect(parseImplBranch("impl/no-double-dash")).toBeUndefined();
-  });
-});
-
 describe("resolveIssueNumber", () => {
   const syncRefs: SyncRefs = {
     "epic-id-42": { issue: 42 },
@@ -57,18 +28,6 @@ describe("resolveIssueNumber", () => {
   ];
 
   const epicId = "epic-id-42";
-
-  test("resolves feature issue for impl branch", () => {
-    expect(resolveIssueNumber("impl/my-epic-5aa1b9--commit-issue-refs", syncRefs, epicId, features)).toBe(99);
-  });
-
-  test("returns epic issue for impl branch with unknown feature (fallback)", () => {
-    expect(resolveIssueNumber("impl/my-epic-5aa1b9--unknown-feature", syncRefs, epicId, features)).toBe(42);
-  });
-
-  test("returns undefined for impl branch feature without sync ref", () => {
-    expect(resolveIssueNumber("impl/my-epic-5aa1b9--other-feature", syncRefs, epicId, features)).toBeUndefined();
-  });
 
   test("resolves epic issue for feature branch", () => {
     expect(resolveIssueNumber("feature/my-epic-5aa1b9", syncRefs, epicId, features)).toBe(42);
@@ -150,10 +109,6 @@ describe("resolveCommitIssueNumber", () => {
     expect(resolveCommitIssueNumber("feat(commit-traceability): add parsing", syncRefs, epicId, features)).toBe(99);
   });
 
-  test("returns feature issue for implement(<slug>--<feature>): prefix", () => {
-    expect(resolveCommitIssueNumber("implement(my-epic-5aa1b9--commit-traceability): checkpoint", syncRefs, epicId, features)).toBe(99);
-  });
-
   test("returns epic issue for unrecognized commit message format", () => {
     expect(resolveCommitIssueNumber("some random commit", syncRefs, epicId, features)).toBe(42);
   });
@@ -214,24 +169,6 @@ describe("amendCommitWithIssueRef", () => {
 
     await git(["checkout", "main"], { cwd: repoDir });
     await git(["branch", "-D", "feature/test-epic-abc123"], { cwd: repoDir });
-  });
-
-  test("amends impl task commit on impl branch with feature ref", async () => {
-    await git(["checkout", "-b", "impl/test-epic-abc123--my-feature"], { cwd: repoDir });
-    await Bun.write(join(repoDir, "impl.txt"), "impl content\n");
-    await git(["add", "."], { cwd: repoDir });
-    await git(["commit", "-m", "feat(my-feature): add parsing"], { cwd: repoDir });
-
-    const result = await amendCommitWithIssueRef(syncRefs, epicId, features, { cwd: repoDir });
-
-    expect(result.amended).toBe(true);
-    expect(result.issueNumber).toBe(77);
-
-    const log = await git(["log", "-1", "--format=%s"], { cwd: repoDir });
-    expect(log.stdout).toBe("feat(my-feature): add parsing (#77)");
-
-    await git(["checkout", "main"], { cwd: repoDir });
-    await git(["branch", "-D", "impl/test-epic-abc123--my-feature"], { cwd: repoDir });
   });
 
   test("amends release commit on main with epic ref", async () => {

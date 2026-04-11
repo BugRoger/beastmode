@@ -11,12 +11,6 @@ import { tagName } from "./tags.js";
 import type { SyncRefs } from "../github/sync-refs.js";
 import { getSyncRef } from "../github/sync-refs.js";
 
-/** Result of parsing an impl branch name. */
-export interface ImplBranchParts {
-  slug: string;
-  feature: string;
-}
-
 /** Minimal feature info needed for issue resolution. */
 export interface IssueRefFeature {
   id: string;
@@ -24,19 +18,8 @@ export interface IssueRefFeature {
 }
 
 /**
- * Parse an impl branch name into slug and feature parts.
- * Returns undefined if the branch doesn't match `impl/<slug>--<feature>`.
- */
-export function parseImplBranch(branchName: string): ImplBranchParts | undefined {
-  const match = branchName.match(/^impl\/(.+?)--(.+)$/);
-  if (!match) return undefined;
-  return { slug: match[1], feature: match[2] };
-}
-
-/**
  * Resolve the issue number for the current branch from sync refs.
  *
- * - impl/<slug>--<feature> → feature issue number
  * - feature/<slug> → epic issue number
  * - main/master → epic issue number
  * - anything else → undefined (no-op)
@@ -45,16 +28,8 @@ export function resolveIssueNumber(
   branchName: string,
   syncRefs: SyncRefs,
   epicId: string,
-  features: IssueRefFeature[],
+  _features: IssueRefFeature[],
 ): number | undefined {
-  // Impl branch → feature issue
-  const implParts = parseImplBranch(branchName);
-  if (implParts) {
-    const feature = features.find((f) => f.slug === implParts.feature);
-    if (feature) return getSyncRef(syncRefs, feature.id)?.issue;
-    return getSyncRef(syncRefs, epicId)?.issue;
-  }
-
   // Feature branch → epic issue
   if (branchName.startsWith("feature/")) {
     return getSyncRef(syncRefs, epicId)?.issue;
@@ -96,7 +71,6 @@ const PHASE_ORDER = ["design", "plan", "implement", "validate", "release"] as co
  *
  * Routing:
  * - `feat(<feature>): ...` → feature issue (impl task commit)
- * - `implement(<slug>--<feature>): ...` → feature issue (impl checkpoint)
  * - Everything else → epic issue (phase checkpoints, misc)
  *
  * Falls back to epic issue if feature not found.
@@ -115,18 +89,6 @@ export function resolveCommitIssueNumber(
   const featMatch = commitMessage.match(/^feat\(([^)]+)\):/);
   if (featMatch) {
     const featureSlug = featMatch[1];
-    const feature = features.find((f) => f.slug === featureSlug);
-    if (feature) {
-      const featureIssue = getSyncRef(syncRefs, feature.id)?.issue;
-      if (featureIssue) return featureIssue;
-    }
-    return epicIssue;
-  }
-
-  // implement(<slug>--<feature>): pattern — impl branch checkpoint
-  const implMatch = commitMessage.match(/^implement\([^)]*--([^)]+)\):/);
-  if (implMatch) {
-    const featureSlug = implMatch[1];
     const feature = features.find((f) => f.slug === featureSlug);
     if (feature) {
       const featureIssue = getSyncRef(syncRefs, feature.id)?.issue;

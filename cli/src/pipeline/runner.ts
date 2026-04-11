@@ -24,7 +24,7 @@ import type { Phase, PhaseResult } from "../types.js";
 import type { Logger } from "../logger.js";
 import { createLogger, createStdioSink } from "../logger.js";
 import * as worktree from "../git/worktree.js";
-import { rebase, createImplBranch } from "../git/worktree.js";
+import { rebase } from "../git/worktree.js";
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
 import { syncGitHubForEpic } from "../github/sync.js";
 import { discoverGitHub } from "../github/discovery.js";
@@ -156,7 +156,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
     const preToolUseHook = buildPreToolUseHook(config.phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase });
+    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase, feature: config.featureSlug });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
@@ -175,17 +175,6 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       slug: config.epicSlug,
       feature: config.featureSlug,
     });
-  }
-
-  // Create impl branch for implement phase (idempotent — skips if exists)
-  if (config.phase === "implement" && config.featureSlug) {
-    try {
-      const implBranch = await createImplBranch(config.epicSlug, config.featureSlug, { cwd: worktreePath });
-      logger.info(`impl branch: ${implBranch}`);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      logger.warn(`impl branch creation failed: ${message}`);
-    }
   }
 
   // -- Step 3.5: github.early-issues -----------------------------------------
