@@ -10,6 +10,7 @@
 - ALWAYS follow the standard report structure for validation artifacts
 - ALWAYS trace custom gates back to design acceptance criteria
 - NEVER assert PASS without verifiable evidence
+- ALWAYS scope consumer test migration as an explicit plan task when a feature changes a derivation or identity contract -- grep for old-format assertions across all test files at plan time
 - ALWAYS check for null/undefined on optional config sections when fix epics remove static declarations that previously guaranteed presence — removal of static hooks exposed missing null guards in config accessors and pipeline runner timeout lookups
 - In migration epics that replace a module's persistence contract, expect reconciler/bridge logic bugs to surface only at validate — individual feature BDD tests exercise each consumer in isolation and cannot catch the full round-trip (XState event -> store write -> store read -> correct state). Budget validate time for reconciler fixup when the epic includes a bridge feature.
 
@@ -22,6 +23,7 @@
 - Baseline as of 2026-04-07 (post integration-test-hygiene): 104 unit test files passing, 14 file-level failures (pre-existing on main), 1621 individual tests passing; 8 type errors in src/dashboard/App.tsx caused by branch divergence from dashboard refactors on main — resolve by rebasing onto main before release
 - Baseline as of 2026-04-11 (post release-rebase-fix): 97 unit test files passing, 21 file-level failures (pre-existing on main + branch divergence), 1569 individual tests passing; 8 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-11 (post sync-log-hygiene): 122 test files passing, ~1660 individual tests passing, 14 file-level failures (pre-existing, none sync-related), 8 type errors (pre-existing in untouched files)
+- Baseline as of 2026-04-11 (post collision-proof-slugs): 112 test files passing, 15 file-level failures, 1721 individual tests passing, 33 individual test failures, 7 type errors -- all pre-existing in untouched files
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:

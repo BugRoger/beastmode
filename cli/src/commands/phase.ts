@@ -59,7 +59,7 @@ export async function phaseCommand(
     const taskStore = new JsonFileStore(storePath);
     taskStore.load();
 
-    const resolution = resolveIdentifier(taskStore, worktreeSlug, { resolveToEpic: true });
+    const resolution = resolveIdentifier(taskStore, worktreeSlug, { resolveToEpic: true, allowPrefix: true });
 
     if (resolution.kind === "ambiguous") {
       const ids = resolution.matches.map(e => e.id).join(", ");

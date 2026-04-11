@@ -8,7 +8,7 @@ import type { EpicContext } from "../types";
 // Helper: create a minimal store with an epic
 function createTestStore(epicOverrides: Partial<Epic> = {}) {
   const store = new InMemoryTaskStore();
-  const epic = store.addEpic({ name: "Auth System", slug: "auth-system" });
+  const epic = store.addEpic({ name: "Auth System" });
   if (epicOverrides.status) store.updateEpic(epic.id, { status: epicOverrides.status });
   if (epicOverrides.summary) store.updateEpic(epic.id, { summary: epicOverrides.summary });
   if (epicOverrides.worktree) store.updateEpic(epic.id, { worktree: epicOverrides.worktree });
@@ -51,7 +51,7 @@ describe("XState Store Bridge Integration", () => {
 
     const snapshot = actor.getSnapshot();
     expect(snapshot.value).toBe("design");
-    expect(snapshot.context.slug).toBe("auth-system");
+    expect(snapshot.context.slug).toBe(epic.slug);
     // NEW TYPE: machine context has name field
     expect((snapshot.context as any).name).toBe("Auth System");
     actor.stop();

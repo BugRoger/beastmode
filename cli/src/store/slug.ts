@@ -28,26 +28,3 @@ export function slugify(input: string): string {
   }
   return slug;
 }
-
-/**
- * Simple hash function for generating deterministic suffixes from entity IDs.
- * Returns a 4-character hex string.
- */
-function hashId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    const char = id.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
-  }
-  return (hash >>> 0).toString(16).padStart(4, "0").slice(0, 4);
-}
-
-/**
- * Deduplicate a slug by appending a suffix derived from the entity ID hash.
- * Returns the original slug if no collision, or `slug-xxxx` if collision detected.
- */
-export function deduplicateSlug(slug: string, entityId: string, existingSlugs: Set<string>): string {
-  if (!existingSlugs.has(slug)) return slug;
-  const suffix = hashId(entityId);
-  return `${slug}-${suffix}`;
-}

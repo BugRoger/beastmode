@@ -13,7 +13,7 @@ import {
   EntityType,
 } from "./types.js";
 
-import { slugify, deduplicateSlug } from "./slug.js";
+import { slugify } from "./slug.js";
 
 export class InMemoryTaskStore implements TaskStore {
   private entities = new Map<string, Entity>();
@@ -49,19 +49,6 @@ export class InMemoryTaskStore implements TaskStore {
     return new Date().toISOString();
   }
 
-  /**
-   * Collect all existing slugs from entities
-   */
-  private collectSlugs(): Set<string> {
-    const slugs = new Set<string>();
-    for (const entity of this.entities.values()) {
-      if ("slug" in entity) {
-        slugs.add(entity.slug);
-      }
-    }
-    return slugs;
-  }
-
   // --- Epic CRUD ---
 
   getEpic(id: string): Epic | undefined {
@@ -77,11 +64,12 @@ export class InMemoryTaskStore implements TaskStore {
 
   addEpic(opts: { name: string; slug?: string }): Epic {
     const id = this.generateEpicId();
+    const shortId = id.replace("bm-", "");
     const epic: Epic = {
       id,
       type: "epic",
       name: opts.name,
-      slug: opts.slug || opts.name.toLowerCase().replace(/\s+/g, "-"),
+      slug: slugify(opts.name) + "-" + shortId,
       status: "design",
       depends_on: [],
       created_at: this.now(),
@@ -101,7 +89,6 @@ export class InMemoryTaskStore implements TaskStore {
       ...patch,
       id: epic.id, // immutable
       type: "epic", // immutable
-      slug: epic.slug, // immutable
       created_at: epic.created_at, // immutable
       updated_at: this.now(),
     };
@@ -146,8 +133,8 @@ export class InMemoryTaskStore implements TaskStore {
     const id = this.generateFeatureId(opts.parent);
     const rawSlug = opts.slug ?? opts.name;
     const normalizedSlug = slugify(rawSlug);
-    const existingSlugs = this.collectSlugs();
-    const finalSlug = deduplicateSlug(normalizedSlug, id, existingSlugs);
+    const ordinal = id.split(".").pop()!;
+    const finalSlug = `${normalizedSlug}-${ordinal}`;
 
     const feature: Feature = {
       id,

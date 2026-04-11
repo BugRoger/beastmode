@@ -4,6 +4,23 @@ All notable changes to beastmode.
 
 ---
 
+### v0.111.0 — Collision-Proof Slugs (Apr 2026)
+
+- **Collision-proof epic slugs** — Epic slugs now embed the entity's 4-char hex short ID (e.g., `dashboard-redesign-f3a7`), making slug collisions structurally impossible
+- **Ordinal feature slugs** — Feature slugs embed their ordinal suffix (e.g., `auth-flow-1`), replacing hash-based deduplication
+- **CLI prefix resolution** — Opt-in prefix matching in `resolveIdentifier()` lets CLI users type `dashboard-redesign` to resolve `dashboard-redesign-f3a7`
+- **In-place design reconciliation** — `reconcileDesign()` updates slug via `updateEpic()` instead of delete/recreate, preserving entity ID stability
+- **Dead code removal** — Deleted `hashId()`, `deduplicateSlug()`, and `collectSlugs()` — structurally unreachable after ordinal-based derivation
+- **Backward compatibility** — Old-format slugs continue working without migration; `slug?` parameter retained in signatures
+
+---
+
+### v0.110.0 — Wave Field Persistence (Apr 2026)
+
+- **Wave field persistence** — `addFeature()` now persists the `wave` field on store features so dispatch respects wave ordering
+
+---
+
 ### v0.109.0 — Session Start Hook (Apr 2026)
 
 - **SessionStart hook** — New `session-start` hook assembles phase context automatically when a skill session begins, replacing the manual Phase 0 prime step across all five workflow skills

@@ -88,7 +88,7 @@ export async function cancelEpic(config: CancelConfig): Promise<CancelResult> {
   if (!config.taskStore && taskStore instanceof JsonFileStore) {
     taskStore.load();
   }
-  const resolution = resolveIdentifier(taskStore, identifier, { resolveToEpic: true });
+  const resolution = resolveIdentifier(taskStore, identifier, { resolveToEpic: true, allowPrefix: true });
   const entity = resolution.kind === "found" ? resolution.entity : undefined;
   const slug = entity?.slug ?? identifier;
   const epic = entity?.name ?? entity?.slug ?? identifier;

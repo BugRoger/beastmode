@@ -94,3 +94,4 @@ context/plan/file-collapse.md
 - Partial dispatch: only behavioral features are sent to the agent — non-behavioral features still receive empty sections
 - When classification is ambiguous, classify as behavioral — false positives (unnecessary dispatch) are cheaper than false negatives (missed integration tests)
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it
+- ALWAYS include consumer test migration in plan scope when changing value derivation contracts -- when a value shifts from user-provided to auto-derived, all test files asserting the old explicit value become broken; grep for the old pattern at plan time

@@ -26,13 +26,13 @@ function setupTempProject(slug: string, opts?: { epic?: string; phase?: string; 
   const stateDir = resolve(tmpDir, ".beastmode", "state");
   mkdirSync(stateDir, { recursive: true });
 
-  const epic = opts?.epic ?? slug;
+  const epicName = opts?.epic ?? slug;
 
   // Create store entity instead of manifest file
   const storePath = resolve(stateDir, "store.json");
   const store = new JsonFileStore(storePath);
   store.load();
-  store.addEpic({ name: epic, slug });
+  const epic = store.addEpic({ name: epicName });
   store.save();
 
   if (opts?.withArtifacts) {
@@ -40,12 +40,12 @@ function setupTempProject(slug: string, opts?: { epic?: string; phase?: string; 
     for (const p of ["design", "plan", "implement"]) {
       const dir = resolve(tmpDir, ".beastmode", "artifacts", p);
       mkdirSync(dir, { recursive: true });
-      writeFileSync(resolve(dir, `${date}-${epic}.md`), `# ${p} artifact`);
-      writeFileSync(resolve(dir, `${date}-${epic}.output.json`), "{}");
+      writeFileSync(resolve(dir, `${date}-${epicName}.md`), `# ${p} artifact`);
+      writeFileSync(resolve(dir, `${date}-${epicName}.output.json`), "{}");
     }
   }
 
-  return { tmpDir, storePath };
+  return { tmpDir, storePath, epicSlug: epic.slug, epicId: epic.id };
 }
 
 function makeConfig(tmpDir: string, identifier: string, overrides?: Partial<CancelConfig>): CancelConfig {
@@ -104,21 +104,21 @@ describe("cancel command parsing", () => {
 
 describe("cancelEpic shared module", () => {
   test("deletes store entity on cancel", async () => {
-    const { tmpDir, storePath } = setupTempProject("test-slug");
+    const { tmpDir, storePath, epicSlug } = setupTempProject("test-slug");
 
-    await cancelEpic(makeConfig(tmpDir, "test-slug"));
+    await cancelEpic(makeConfig(tmpDir, epicSlug));
 
     // Verify store entity is gone
     const store = new JsonFileStore(storePath);
     store.load();
-    const entity = store.find("test-slug");
+    const entity = store.find(epicSlug);
     expect(entity).toBeUndefined();
   });
 
   test("deletes artifacts matching epic name", async () => {
-    const { tmpDir } = setupTempProject("abc123", { epic: "my-feature", withArtifacts: true });
+    const { tmpDir, epicSlug } = setupTempProject("abc123", { epic: "my-feature", withArtifacts: true });
 
-    await cancelEpic(makeConfig(tmpDir, "abc123"));
+    await cancelEpic(makeConfig(tmpDir, epicSlug));
 
     // All artifact dirs should be empty
     for (const phase of ["design", "plan", "implement"]) {
@@ -130,21 +130,21 @@ describe("cancelEpic shared module", () => {
   });
 
   test("idempotent — second cancel succeeds with no store entity", async () => {
-    const { tmpDir } = setupTempProject("idem-test");
+    const { tmpDir, epicSlug } = setupTempProject("idem-test");
 
-    const first = await cancelEpic(makeConfig(tmpDir, "idem-test"));
+    const first = await cancelEpic(makeConfig(tmpDir, epicSlug));
     expect(first.cleaned).toContain("store-entity");
 
     // Second run — entity already gone
-    const second = await cancelEpic(makeConfig(tmpDir, "idem-test"));
+    const second = await cancelEpic(makeConfig(tmpDir, epicSlug));
     // Should not throw, just succeed
     expect(second.warned.length + second.cleaned.length).toBeGreaterThan(0);
   });
 
   test("returns cleaned and warned arrays", async () => {
-    const { tmpDir } = setupTempProject("result-test");
+    const { tmpDir, epicSlug } = setupTempProject("result-test");
 
-    const result = await cancelEpic(makeConfig(tmpDir, "result-test"));
+    const result = await cancelEpic(makeConfig(tmpDir, epicSlug));
 
     expect(Array.isArray(result.cleaned)).toBe(true);
     expect(Array.isArray(result.warned)).toBe(true);
@@ -162,10 +162,10 @@ describe("cancelEpic shared module", () => {
   });
 
   test("warns on missing artifact dirs", async () => {
-    const { tmpDir } = setupTempProject("no-artifacts");
+    const { tmpDir, epicSlug } = setupTempProject("no-artifacts");
     // No artifact dirs created — should not throw
 
-    const result = await cancelEpic(makeConfig(tmpDir, "no-artifacts"));
+    const result = await cancelEpic(makeConfig(tmpDir, epicSlug));
     expect(result.cleaned).toContain("artifacts");
   });
 });

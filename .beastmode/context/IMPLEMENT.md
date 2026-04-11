@@ -109,6 +109,7 @@ context/implement/agent-review-pipeline.md
 - CLI creates `impl/<slug>--<feature-name>` branch before dispatch; agents commit per task on the impl branch
 - ALWAYS verify the correct impl branch (`impl/<slug>--<feature-name>`) is checked out before writing the Write Plan — parallel wave execution leaves the prior feature's impl branch checked out; writing tasks on the wrong branch silently contaminates an adjacent feature's history
 - ALWAYS verify the correct impl branch is still checked out immediately before each agent task commit — linter hooks and parallel wave completions can silently switch branches between tasks
+- ALWAYS verify branch identity between sequential feature dispatches within the same session, not just at wave boundaries -- sequential features can inherit the prior feature's impl branch when branch creation/checkout is skipped or fails silently
 - Checkpoint rebases impl branch onto worktree branch — fast-forward on success, conflict resolution agent on failure
 - Max 2 conflict resolution attempts before aborting and reporting to user
 - Resume model: first unchecked task in .tasks.md; prior tasks have commits on impl branch
