@@ -9,7 +9,7 @@ describe("generatePlaceholderName", () => {
 
   it("embeds the provided hex suffix", () => {
     const name = generatePlaceholderName("f3a7");
-    expect(name).toEndWith("-f3a7");
+    expect(name).toMatch(/-f3a7$/);
   });
 
   it("uses a word from the adjective list", () => {
