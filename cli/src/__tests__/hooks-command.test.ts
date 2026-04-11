@@ -83,7 +83,7 @@ describe("hooksCommand", () => {
     delete process.env.TOOL_OUTPUT;
     delete process.env.BEASTMODE_PHASE;
     delete process.env.BEASTMODE_EPIC;
-    delete process.env.BEASTMODE_SLUG;
+    delete process.env.BEASTMODE_ID;
   });
 
   test("hitl-auto dispatches to decideResponse", async () => {
@@ -131,7 +131,7 @@ describe("hooksCommand", () => {
   test("session-start writes JSON to stdout when env vars present", async () => {
     process.env.BEASTMODE_PHASE = "design";
     process.env.BEASTMODE_EPIC = "test-epic";
-    process.env.BEASTMODE_SLUG = "abc123";
+    process.env.BEASTMODE_ID = "abc123";
 
     try {
       await hooksCommand(["session-start"]);
@@ -145,7 +145,7 @@ describe("hooksCommand", () => {
   test("session-start exits non-zero when BEASTMODE_PHASE is missing", async () => {
     delete process.env.BEASTMODE_PHASE;
     delete process.env.BEASTMODE_EPIC;
-    delete process.env.BEASTMODE_SLUG;
+    delete process.env.BEASTMODE_ID;
 
     try {
       await hooksCommand(["session-start"]);
@@ -158,7 +158,7 @@ describe("hooksCommand", () => {
   test("session-start is recognized as valid hook name", async () => {
     process.env.BEASTMODE_PHASE = "plan";
     process.env.BEASTMODE_EPIC = "my-epic";
-    process.env.BEASTMODE_SLUG = "def456";
+    process.env.BEASTMODE_ID = "def456";
 
     try {
       await hooksCommand(["session-start"]);
