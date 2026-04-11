@@ -4,7 +4,7 @@
 GitHub's Development sidebar shows branches associated with an issue, but only when linked via the API. Pushed branches are not automatically linked. The `createLinkedBranch` GraphQL mutation both creates a remote branch and links it to an issue in one step.
 
 ## Decision
-After pushing branches, a branch-link pipeline step calls `createLinkedBranch` to link feature branches to epic issues and impl branches to feature issues. This step is gated on `github.enabled` (unlike push, which is pure git). The GraphQL mutation requires node IDs (not REST API numbers), so two helpers resolve them: `ghRepoNodeId(repo)` and `ghIssueNodeId(repo, issueNumber)`.
+After pushing branches, a branch-link pipeline step calls `createLinkedBranch` to link feature branches to epic issues. This step is gated on `github.enabled` (unlike push, which is pure git). The GraphQL mutation requires node IDs (not REST API numbers), so two helpers resolve them: `ghRepoNodeId(repo)` and `ghIssueNodeId(repo, issueNumber)`.
 
 The `createLinkedBranch` mutation silently returns `linkedBranch: null` when the branch already exists on the remote — the workaround is to delete the remote ref first (`git push origin --delete <branch>`), then call `createLinkedBranch` to recreate at the same SHA, which establishes the link. If the branch does not exist on remote, `createLinkedBranch` creates it directly. Error handling uses warn-and-continue — linking failures never block the pipeline. Epics/features without issue numbers in the manifest are skipped silently.
 

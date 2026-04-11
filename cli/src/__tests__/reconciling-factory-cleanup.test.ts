@@ -20,8 +20,8 @@ vi.mock("../git/worktree.js", () => ({
   enter: vi.fn(() => {}),
   merge: vi.fn(() => Promise.resolve()),
   cleanArtifactOutputs: vi.fn(() => {}),
-  implBranchName: vi.fn((slug: string, feature: string) => `impl/${slug}--${feature}`),
-  createImplBranch: vi.fn((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
+
+
 }));
 
 vi.mock("../manifest/store.js", () => ({

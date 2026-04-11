@@ -120,9 +120,9 @@ If any item fails, fix it before reporting. If you cannot fix it, report BLOCKED
 ## Constraints
 
 - Do NOT read the plan file (you receive task text directly)
-- Do NOT switch branches — stay on your impl branch
+- Do NOT switch branches — stay on the current branch
 - Do NOT push to remote
-- Do NOT commit to any branch except your current impl branch
+- Commit only your task's files using `git add <files>` + `git commit` on the current branch
 - Do NOT modify files outside the task's file list
 - Do NOT read unrelated files
 - It is always acceptable to stop and report BLOCKED or NEEDS_CONTEXT if the task is genuinely too complex or missing information

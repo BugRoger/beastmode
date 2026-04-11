@@ -4,6 +4,24 @@ All notable changes to beastmode.
 
 ---
 
+## v0.112.0 — Remove Impl Branches (2026-04-11)
+
+### Highlights
+
+Remove implementation branches (`impl/<slug>--<feature>`) entirely from the pipeline. Parallel feature agents now commit directly to the shared feature branch, eliminating checkout races, rebase conflicts at checkpoint, and push failures caused by concurrent branch switching in the same worktree.
+
+### Features
+
+- Remove `implBranchName()` and `createImplBranch()` from worktree module and delete corresponding tests
+- Remove `parseImplBranch()`, `ImplBranchParts` interface, and impl-specific commit routing from commit-issue-ref module
+- Remove impl branch creation from pipeline runner and watch-loop fan-out dispatch
+- Remove impl branch pushing from git push module
+- Remove impl-to-feature-issue linking from branch-link orchestrator
+- Remove impl branch cleanup loop from `worktree.remove()`
+- Update implement skill: remove Phase 0 branch verification, Phase 3 rebase/merge, and impl branch agent constraints
+- Update implement-dev agent: constraints reference `git add <files>` + `git commit` on the current branch
+- Clean stale impl branch mocks from all test files
+
 ### v0.111.0 — Collision-Proof Slugs (Apr 2026)
 
 - **Collision-proof epic slugs** — Epic slugs now embed the entity's 4-char hex short ID (e.g., `dashboard-redesign-f3a7`), making slug collisions structurally impossible

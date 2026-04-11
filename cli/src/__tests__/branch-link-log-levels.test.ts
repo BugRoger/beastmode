@@ -20,8 +20,6 @@ const mockGit = vi.hoisted(() =>
 
 vi.mock("../git/worktree.js", () => ({
   git: mockGit,
-  implBranchName: (slug: string, feature: string) =>
-    `impl/${slug}--${feature}`,
 }));
 
 import { linkBranches } from "../github/branch-link.js";

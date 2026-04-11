@@ -25,7 +25,6 @@ vi.mock("../git/worktree.js", () => ({
   rebase: mockRebase,
   archive: mockArchive,
   remove: mockRemove,
-  createImplBranch: vi.fn((slug: string, feature: string) => Promise.resolve(`impl/${slug}--${feature}`)),
 }));
 
 // Mock artifacts/reader

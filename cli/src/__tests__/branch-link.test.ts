@@ -16,7 +16,6 @@ const mockGit = vi.hoisted(() => vi.fn(async () => ({ stdout: "", stderr: "", ex
 
 vi.mock("../git/worktree.js", () => ({
   git: mockGit,
-  implBranchName: (slug: string, feature: string) => `impl/${slug}--${feature}`,
 }));
 
 import { linkBranches } from "../github/branch-link.js";
@@ -55,11 +54,9 @@ describe("branch-link", () => {
       );
     });
 
-    it("links both feature and impl branches during implement phase", async () => {
+    it("links only feature branch during implement phase", async () => {
       mockGhRepoNodeId.mockResolvedValue("R_repo123");
-      mockGhIssueNodeId
-        .mockResolvedValueOnce("I_epic456")
-        .mockResolvedValueOnce("I_feat789");
+      mockGhIssueNodeId.mockResolvedValue("I_epic456");
       mockGhCreateLinkedBranch.mockResolvedValue("LB_1");
 
       await linkBranches({
@@ -71,9 +68,8 @@ describe("branch-link", () => {
         phase: "implement",
       });
 
-      expect(mockGhCreateLinkedBranch).toHaveBeenCalledTimes(2);
+      expect(mockGhCreateLinkedBranch).toHaveBeenCalledTimes(1);
       expect(mockGhCreateLinkedBranch.mock.calls[0][2]).toBe("feature/my-epic");
-      expect(mockGhCreateLinkedBranch.mock.calls[1][2]).toBe("impl/my-epic--my-feature");
     });
 
     it("skips entirely when no epic issue number", async () => {
@@ -88,7 +84,7 @@ describe("branch-link", () => {
       expect(mockGhCreateLinkedBranch).not.toHaveBeenCalled();
     });
 
-    it("skips impl branch when no feature issue number", async () => {
+    it("links only feature branch when no feature issue number", async () => {
       mockGhRepoNodeId.mockResolvedValue("R_repo123");
       mockGhIssueNodeId.mockResolvedValue("I_epic456");
       mockGhCreateLinkedBranch.mockResolvedValue("LB_1");
