@@ -82,7 +82,7 @@ describe("hooks-command integration", () => {
         {
           encoding: "utf-8",
           cwd: tempDir,
-          env: { ...process.env },
+          env: { ...process.env, BEASTMODE_EPIC_SLUG: "test-epic" },
         },
       );
     });

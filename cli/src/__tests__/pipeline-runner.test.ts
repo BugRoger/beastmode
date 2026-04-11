@@ -712,7 +712,7 @@ describe("pipeline/runner", () => {
   describe("pre-dispatch entity creation (Step 0)", () => {
     it("creates store entity for design phase before dispatch", async () => {
       const storeState = (mockJsonFileStore as any).__storeState;
-      storeState.find = vi.fn((idOrSlug: string) => {
+      storeState.find = vi.fn((_idOrSlug: string) => {
         // Entity doesn't exist yet
         return undefined;
       });
@@ -765,7 +765,7 @@ describe("pipeline/runner", () => {
       const storeState = (mockJsonFileStore as any).__storeState;
       const updateCalls: Array<[string, any]> = [];
 
-      storeState.find = vi.fn((idOrSlug: string) => {
+      storeState.find = vi.fn((_idOrSlug: string) => {
         // Entity doesn't exist initially
         return undefined;
       });
@@ -777,7 +777,6 @@ describe("pipeline/runner", () => {
 
       // Mock the updateEpic call
       const JsonFileStoreClass = mockJsonFileStore;
-      const originalUpdateEpic = JsonFileStoreClass.prototype.updateEpic;
       JsonFileStoreClass.prototype.updateEpic = vi.fn(function(_id: string, patch: any) {
         updateCalls.push([_id, patch]);
         return { id: _id, type: "epic" };

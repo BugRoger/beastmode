@@ -7,7 +7,6 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { assembleContext, formatOutput, computeOutputTarget, buildMetadataSection } from "../hooks/session-start";
-import type { MetadataInput } from "../hooks/session-start";
 import {
   writeSessionStartHook,
   cleanSessionStartHook,

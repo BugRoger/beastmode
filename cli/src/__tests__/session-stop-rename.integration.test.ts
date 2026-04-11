@@ -31,12 +31,13 @@ describe("session-stop-rename integration", () => {
     const tempDir = makeTempProjectWithGit();
     const artifactsDir = join(tempDir, ".beastmode", "artifacts");
     mkdirSync(join(artifactsDir, "design"), { recursive: true });
+    // Commit a baseline so git diff has a reference
+    execSync("git add . && git commit -m baseline", { cwd: tempDir, encoding: "utf-8" });
+    // Write the artifact AFTER the commit so it shows as a changed file
     writeFileSync(
       join(artifactsDir, "design", "2026-04-11-my-epic.md"),
-      "---\nphase: design\nslug: my-epic\nepic: my-epic\n---\n# Design\n",
+      "---\nphase: design\nslug: my-epic\nepic: my-epic\nstatus: completed\n---\n# Design\n",
     );
-    // Commit so git diff works
-    execSync("git add . && git commit -m init", { cwd: tempDir, encoding: "utf-8" });
 
     execSync(
       `bun run "${CLI_PATH}" hooks session-stop`,
@@ -49,17 +50,18 @@ describe("session-stop-rename integration", () => {
     expect(output.status).toBe("completed");
   });
 
-  test("session-stop exits cleanly even when BEASTMODE_EPIC_SLUG is missing", () => {
+  test("session-stop exits non-zero when BEASTMODE_EPIC_SLUG is missing", () => {
     const tempDir = makeTempProjectWithGit();
-    // session-stop scans artifact directories, does not require env vars
-    execSync(
-      `bun run "${CLI_PATH}" hooks session-stop`,
-      {
-        encoding: "utf-8",
-        cwd: tempDir,
-        env: { ...process.env, BEASTMODE_EPIC_SLUG: undefined },
-      },
-    );
+    expect(() => {
+      execSync(
+        `bun run "${CLI_PATH}" hooks session-stop`,
+        {
+          encoding: "utf-8",
+          cwd: tempDir,
+          env: { ...process.env, BEASTMODE_EPIC_SLUG: undefined },
+        },
+      );
+    }).toThrow();
   });
 
   test("generate-output subcommand is no longer recognized", () => {

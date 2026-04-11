@@ -11,7 +11,7 @@ import { strict as assert } from "node:assert";
 import { readFileSync, mkdirSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { buildPreToolUseHook, writeHitlSettings } from "../../src/hooks/hitl-settings.js";
+import { buildPreToolUseHook, writeHitlSettings, type EnvPrefixContext } from "../../src/hooks/hitl-settings.js";
 import {
   buildFilePermissionPostToolUseHooks,
   buildFilePermissionPreToolUseHooks,
@@ -31,8 +31,9 @@ function buildSettingsInTempDir(phase: string): { claudeDir: string; settings: R
   const claudeDir = join(tempDir, ".claude");
   mkdirSync(claudeDir, { recursive: true });
 
-  const preToolUseHook = buildPreToolUseHook(phase);
-  writeHitlSettings({ claudeDir, preToolUseHook, phase });
+  const envContext: EnvPrefixContext = { phase, epicId: "bm-test", epicSlug: "test-epic" };
+  const preToolUseHook = buildPreToolUseHook(envContext);
+  writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
   const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
   return { claudeDir, settings };
@@ -75,19 +76,19 @@ Given("file-permission PostToolUse hooks are generated for phase {string}", func
 
 // --- Then ---
 
-Then("the PreToolUse hook command should be {string}", function (this: PortableSettingsWorld, expected: string) {
+Then("the PreToolUse hook command should contain {string}", function (this: PortableSettingsWorld, expected: string) {
   assert.ok(this.preToolUseCommand, "No PreToolUse hook command captured");
-  assert.strictEqual(this.preToolUseCommand, expected);
+  assert.ok(this.preToolUseCommand.includes(expected), `Expected "${this.preToolUseCommand}" to contain "${expected}"`);
 });
 
-Then("the PostToolUse hook command should be {string}", function (this: PortableSettingsWorld, expected: string) {
+Then("the PostToolUse hook command should contain {string}", function (this: PortableSettingsWorld, expected: string) {
   assert.ok(this.postToolUseCommand, "No PostToolUse hook command captured");
-  assert.strictEqual(this.postToolUseCommand, expected);
+  assert.ok(this.postToolUseCommand.includes(expected), `Expected "${this.postToolUseCommand}" to contain "${expected}"`);
 });
 
-Then("the Stop hook command should be {string}", function (this: PortableSettingsWorld, expected: string) {
+Then("the Stop hook command should contain {string}", function (this: PortableSettingsWorld, expected: string) {
   assert.ok(this.stopCommand, "No Stop hook command captured");
-  assert.strictEqual(this.stopCommand, expected);
+  assert.ok(this.stopCommand.includes(expected), `Expected "${this.stopCommand}" to contain "${expected}"`);
 });
 
 Then("no hook command in the settings should reference an absolute file path", function (this: PortableSettingsWorld) {
@@ -108,7 +109,7 @@ Then("no hook command in the settings should reference an absolute file path", f
   }
 });
 
-Then("all command-type hooks should use the portable CLI invocation pattern", function (this: PortableSettingsWorld) {
+Then("all command-type hooks should use the portable CLI pattern {string}", function (this: PortableSettingsWorld, pattern: string) {
   assert.ok(this.settings, "No settings captured");
   const hooks = this.settings.hooks;
   for (const [_category, entries] of Object.entries(hooks)) {
@@ -117,7 +118,7 @@ Then("all command-type hooks should use the portable CLI invocation pattern", fu
       for (const hook of (entry as any).hooks ?? []) {
         if (hook.type === "command" && hook.command) {
           assert.ok(
-            hook.command.startsWith("bunx beastmode hooks "),
+            hook.command.includes(pattern),
             `Command does not use portable pattern: ${hook.command}`,
           );
         }

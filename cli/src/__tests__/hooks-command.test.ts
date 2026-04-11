@@ -103,11 +103,13 @@ describe("hooksCommand", () => {
   });
 
   test("session-stop dispatches to runSessionStop", async () => {
+    process.env.BEASTMODE_EPIC_SLUG = "test-epic";
     try {
       await hooksCommand(["session-stop"]);
     } catch { /* exit mock */ }
 
     expect(runSessionStop).toHaveBeenCalled();
+    delete process.env.BEASTMODE_EPIC_SLUG;
   });
 
   test("unknown subcommand writes error and exits 1", async () => {

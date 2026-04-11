@@ -36,7 +36,6 @@ vi.mock("../store/index.js", () => {
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import { renameTags } from "../git/tags.js";
-import { JsonFileStore } from "../store/index.js";
 import type { Epic } from "../store/types.js";
 
 describe("reconcileDesign", () => {
@@ -152,7 +151,7 @@ describe("reconcileDesign", () => {
       context: { summary: "Problem — Solution" },
     } as any);
 
-    vi.mocked(loadEpic).mockReturnValue(mockActor);
+    vi.mocked(loadEpic).mockReturnValue(mockActor as any);
 
     sharedMockStore.find.mockReturnValue(mockEpic);
     sharedMockStore.listFeatures.mockReturnValue([]);
@@ -217,7 +216,7 @@ describe("reconcileDesign", () => {
       context: { summary: "Problem — Solution" },
     } as any);
 
-    vi.mocked(loadEpic).mockReturnValue(mockActor);
+    vi.mocked(loadEpic).mockReturnValue(mockActor as any);
 
     sharedMockStore.find.mockReturnValue(mockEpic);
     sharedMockStore.listFeatures.mockReturnValue([]);
@@ -283,7 +282,7 @@ describe("reconcileDesign", () => {
       context: { summary: "Problem — Solution" },
     } as any);
 
-    vi.mocked(loadEpic).mockReturnValue(mockActor);
+    vi.mocked(loadEpic).mockReturnValue(mockActor as any);
 
     const mockFeatures = [
       { slug: "feature-1", status: "completed" },

@@ -11,8 +11,8 @@
  */
 
 import { execSync } from "node:child_process";
-import { resolve, basename, dirname } from "node:path";
-import { mkdirSync, appendFileSync, existsSync, statSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { mkdirSync, appendFileSync, existsSync } from "node:fs";
 import { loadConfig } from "../config.js";
 import { getPhaseHitlProse } from "../hooks/hitl-settings.js";
 import { decideResponse } from "../hooks/hitl-auto.js";
@@ -59,7 +59,7 @@ export async function hooksCommand(args: string[]): Promise<void> {
         runHitlLog(args.slice(1));
         break;
       case "session-stop":
-        runGenerateOutput();
+        runSessionStopHandler();
         break;
     }
   } catch {
@@ -69,7 +69,7 @@ export async function hooksCommand(args: string[]): Promise<void> {
 }
 
 function runHitlAuto(args: string[]): void {
-  const phase = args[0];
+  const phase = process.env.BEASTMODE_PHASE ?? args[0];
   if (!phase) return;
 
   const rawToolInput = process.env.TOOL_INPUT;
@@ -88,7 +88,7 @@ function runHitlAuto(args: string[]): void {
 }
 
 function runHitlLog(args: string[]): void {
-  const phase = args[0];
+  const phase = process.env.BEASTMODE_PHASE ?? args[0];
   if (!phase) return;
 
   const rawInput = process.env.TOOL_INPUT;
@@ -117,17 +117,14 @@ function runHitlLog(args: string[]): void {
   appendFileSync(logPath, entry + "\n");
 }
 
-function runGenerateOutput(): void {
+function runSessionStopHandler(): void {
+  const epicSlug = process.env.BEASTMODE_EPIC_SLUG;
+  if (!epicSlug) {
+    process.stderr.write("session-stop hook failed: Missing environment variable: BEASTMODE_EPIC_SLUG\n");
+    process.exit(1);
+  }
+
   const repoRoot = execSync("git rev-parse --show-toplevel", { encoding: "utf-8" }).trim();
   const artifactsDir = resolve(repoRoot, ".beastmode", "artifacts");
-
-  let isWorktree = false;
-  try {
-    const dotGit = resolve(repoRoot, ".git");
-    isWorktree = statSync(dotGit).isFile();
-  } catch {
-    // not a worktree
-  }
-  const worktreeSlug = isWorktree ? basename(repoRoot) : undefined;
-  runSessionStop(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug);
+  runSessionStop(artifactsDir, "changed", epicSlug);
 }
