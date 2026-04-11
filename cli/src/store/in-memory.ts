@@ -13,7 +13,7 @@ import {
   EntityType,
 } from "./types.js";
 
-import { slugify, deduplicateSlug } from "./slug.js";
+import { slugify } from "./slug.js";
 
 export class InMemoryTaskStore implements TaskStore {
   private entities = new Map<string, Entity>();
@@ -75,13 +75,14 @@ export class InMemoryTaskStore implements TaskStore {
     );
   }
 
-  addEpic(opts: { name: string; slug?: string }): Epic {
+  addEpic(opts: { name: string }): Epic {
     const id = this.generateEpicId();
+    const shortId = id.replace("bm-", "");
     const epic: Epic = {
       id,
       type: "epic",
       name: opts.name,
-      slug: opts.slug || opts.name.toLowerCase().replace(/\s+/g, "-"),
+      slug: slugify(opts.name) + "-" + shortId,
       status: "design",
       depends_on: [],
       created_at: this.now(),
@@ -101,6 +102,7 @@ export class InMemoryTaskStore implements TaskStore {
       ...patch,
       id: epic.id, // immutable
       type: "epic", // immutable
+      slug: epic.slug, // immutable
       created_at: epic.created_at, // immutable
       updated_at: this.now(),
     };
@@ -138,15 +140,14 @@ export class InMemoryTaskStore implements TaskStore {
     );
   }
 
-  addFeature(opts: { parent: string; name: string; slug?: string; description?: string }): Feature {
+  addFeature(opts: { parent: string; name: string; description?: string }): Feature {
     const parentEpic = this.getEpic(opts.parent);
     if (!parentEpic) throw new Error(`Parent epic not found: ${opts.parent}`);
 
     const id = this.generateFeatureId(opts.parent);
-    const rawSlug = opts.slug ?? opts.name;
-    const normalizedSlug = slugify(rawSlug);
-    const existingSlugs = this.collectSlugs();
-    const finalSlug = deduplicateSlug(normalizedSlug, id, existingSlugs);
+    // Extract ordinal from feature ID: "{parentId}.N" -> N
+    const ordinal = id.split(".").pop()!;
+    const finalSlug = slugify(opts.name) + "-" + ordinal;
 
     const feature: Feature = {
       id,
