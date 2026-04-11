@@ -27,6 +27,7 @@ import { createLogger, createStdioSink } from "../logger";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig, getCategoryProse } from "../config";
 import { cancelEpic } from "./cancel-logic.js";
+import { generatePlaceholderName } from "../store/placeholder.js";
 import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, writeSessionStartHook, cleanSessionStartHook } from "../hooks/hitl-settings";
 import {
   writeFilePermissionSettings,
@@ -165,29 +166,13 @@ export async function phaseCommand(
 function deriveWorktreeSlug(phase: Phase, args: string[]): string {
   if (phase === "design") {
     // If an existing slug was passed (watch loop re-dispatch), reuse it
-    return args[0] || randomHex(6);
+    if (args[0]) return args[0];
+    // Generate a placeholder name using a random 4-hex ID
+    const hex = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, "0");
+    return generatePlaceholderName(hex);
   }
   // All non-design phases use the epic slug directly
   return args[0] || "default";
-}
-
-/** Slugification matching worktree-manager.md derivation logic. */
-export function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-/** Generate a random hex string of the specified length. */
-export function randomHex(length: number): string {
-  const bytes = new Uint8Array(Math.ceil(length / 2));
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0"))
-    .join("")
-    .slice(0, length);
 }
 
 function formatDuration(ms: number): string {
