@@ -84,6 +84,26 @@ export function phaseIndex(phase: Phase): number {
   return (PHASE_ORDER as readonly string[]).indexOf(phase);
 }
 
+/** Check whether `current` phase is at or past `threshold` in the workflow progression.
+ *  Terminal phases (done, cancelled) are considered past all workflow phases.
+ *  If threshold is a terminal phase, only terminal phases satisfy it. */
+export function isPhaseAtOrPast(current: Phase, threshold: Phase): boolean {
+  const currentIdx = phaseIndex(current);
+  const thresholdIdx = phaseIndex(threshold);
+
+  // Both terminal — always true (done/cancelled are interchangeable for ordering)
+  if (currentIdx === -1 && thresholdIdx === -1) return true;
+
+  // Current is terminal, threshold is workflow — terminal is past everything
+  if (currentIdx === -1) return true;
+
+  // Threshold is terminal, current is workflow — workflow never reaches terminal
+  if (thresholdIdx === -1) return false;
+
+  // Both workflow — compare indices
+  return currentIdx >= thresholdIdx;
+}
+
 export function isValidPhase(s: string): s is Phase {
   return (VALID_PHASES as readonly string[]).includes(s);
 }
