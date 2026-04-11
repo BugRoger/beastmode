@@ -278,28 +278,6 @@ export class InMemoryTaskStore implements TaskStore {
     };
   }
 
-  find(idOrSlug: string): Entity | undefined {
-    // Try lookup by ID first
-    const byId = this.entities.get(idOrSlug);
-    if (byId) return byId;
-
-    // Try epic slug match first (epic slugs take priority)
-    for (const entity of this.entities.values()) {
-      if (entity.type === "epic" && entity.slug === idOrSlug) {
-        return entity;
-      }
-    }
-
-    // Try feature slug match
-    for (const entity of this.entities.values()) {
-      if (entity.type === "feature" && entity.slug === idOrSlug) {
-        return entity;
-      }
-    }
-
-    return undefined;
-  }
-
   // --- Dependency graph ---
 
   dependencyChain(id: string): Entity[] {
