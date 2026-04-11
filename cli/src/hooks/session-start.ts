@@ -9,7 +9,7 @@
  */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import { parseFrontmatter } from "./session-stop.js";
 
 // --- Types ---
@@ -38,7 +38,7 @@ const VALID_PHASES = ["design", "plan", "implement", "validate", "release"];
  * Throws on missing required inputs, context files, or artifacts.
  */
 export function assembleContext(input: SessionStartInput): string {
-  const { phase, epic, slug, feature, repoRoot } = input;
+  const { phase, epic, slug, feature, epicId, featureId, repoRoot } = input;
 
   // Validate required inputs
   if (!phase || !VALID_PHASES.includes(phase)) {
@@ -52,6 +52,24 @@ export function assembleContext(input: SessionStartInput): string {
 
   const beastmodeDir = join(repoRoot, ".beastmode");
   const sections: string[] = [];
+
+  // Phase-specific artifact resolution (before metadata so paths are available)
+  const artifactsDir = join(beastmodeDir, "artifacts");
+  const resolved = resolveArtifacts(phase, epic, feature, artifactsDir);
+
+  // Build and prepend metadata section
+  const parentArtifactFilenames = resolved.paths.map((p) => basename(p));
+  const outputTarget = computeOutputTarget(phase, slug, feature);
+  const metadata = buildMetadataSection({
+    phase,
+    epicId,
+    epicSlug: slug,
+    featureId,
+    featureSlug: feature,
+    parentArtifacts: parentArtifactFilenames,
+    outputTarget,
+  });
+  sections.push(metadata);
 
   // L0 context
   const l0Path = join(beastmodeDir, "BEASTMODE.md");
@@ -68,9 +86,7 @@ export function assembleContext(input: SessionStartInput): string {
   }
   sections.push(readFileSync(l1Path, "utf-8"));
 
-  // Phase-specific artifact resolution
-  const artifactsDir = join(beastmodeDir, "artifacts");
-  const resolved = resolveArtifacts(phase, epic, feature, artifactsDir);
+  // Artifact contents
   if (resolved.contents.length > 0) {
     sections.push(...resolved.contents);
   }
@@ -284,12 +300,14 @@ export function runSessionStart(repoRoot: string): void {
   const phase = process.env.BEASTMODE_PHASE;
   const epic = process.env.BEASTMODE_EPIC_ID;
   const slug = process.env.BEASTMODE_EPIC_SLUG;
-  const feature = process.env.BEASTMODE_FEATURE;
+  const feature = process.env.BEASTMODE_FEATURE_SLUG;
+  const epicId = process.env.BEASTMODE_EPIC_ID;
+  const featureId = process.env.BEASTMODE_FEATURE_ID;
 
   if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
   if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC_ID");
   if (!slug) throw new Error("Missing environment variable: BEASTMODE_EPIC_SLUG");
 
-  const context = assembleContext({ phase, epic, slug, feature, repoRoot });
+  const context = assembleContext({ phase, epic, slug, feature, epicId, featureId, repoRoot });
   process.stdout.write(formatOutput(context));
 }

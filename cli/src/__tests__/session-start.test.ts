@@ -164,8 +164,8 @@ describe("assembleContext", () => {
     });
 
     test("throws on missing L1 context file", () => {
-      rmSync(join(tempDir, ".beastmode", "context", "PLAN.md"));
-      expect(() => assembleContext({ phase: "plan", epic: "e", slug: "s", repoRoot: tempDir })).toThrow(/PLAN\.md/i);
+      rmSync(join(tempDir, ".beastmode", "context", "DESIGN.md"));
+      expect(() => assembleContext({ phase: "design", epic: "e", slug: "s", repoRoot: tempDir })).toThrow(/DESIGN\.md/i);
     });
   });
 
@@ -194,6 +194,120 @@ describe("assembleContext", () => {
         repoRoot: tempDir,
       });
       expect(result).toContain("Plan body");
+    });
+
+    test("design phase includes metadata section at top of additionalContext", () => {
+      const result = assembleContext({
+        phase: "design",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        epicId: "bm-f3a7",
+        repoRoot: tempDir,
+      });
+      expect(result).toMatch(/^---\nphase: design/);
+      expect(result).toContain("epic-id: bm-f3a7");
+      expect(result).toContain("epic-slug: my-epic-abc123");
+      expect(result).toContain("output-target: .beastmode/artifacts/design/");
+      // L0 context should come after metadata section
+      const metaEndIndex = result.indexOf("---\n\n---\n\n");
+      const l0Start = result.indexOf("L0 persona and map");
+      expect(metaEndIndex).toBeLessThan(l0Start);
+    });
+
+    test("plan phase metadata lists parent artifact filename", () => {
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "design", "2026-04-11-my-epic.md"),
+        "---\nphase: design\nepic: my-epic\n---\n\nPRD content",
+      );
+      const result = assembleContext({
+        phase: "plan",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        epicId: "bm-f3a7",
+        repoRoot: tempDir,
+      });
+      expect(result).toContain("parent-artifacts:");
+      expect(result).toContain("2026-04-11-my-epic.md");
+      expect(result).toContain("epic-slug: my-epic-abc123");
+    });
+
+    test("implement phase metadata includes feature fields", () => {
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "plan", "2026-04-11-my-epic-my-feature.md"),
+        "---\nphase: plan\n---\n\nPlan content",
+      );
+      const result = assembleContext({
+        phase: "implement",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        feature: "my-feature",
+        epicId: "bm-f3a7",
+        featureId: "bm-f3a7.1",
+        repoRoot: tempDir,
+      });
+      expect(result).toContain("feature-id: bm-f3a7.1");
+      expect(result).toContain("feature-slug: my-feature");
+      expect(result).toContain("2026-04-11-my-epic-my-feature.md");
+    });
+
+    test("validate phase metadata lists all implement artifact filenames", () => {
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-feat-a.md"),
+        "---\nphase: implement\nepic: my-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl A",
+      );
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-feat-b.md"),
+        "---\nphase: implement\nepic: my-epic\nfeature: feat-b\nstatus: completed\n---\n\nImpl B",
+      );
+      const result = assembleContext({
+        phase: "validate",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        epicId: "bm-f3a7",
+        repoRoot: tempDir,
+      });
+      expect(result).toContain("2026-04-11-my-epic-feat-a.md");
+      expect(result).toContain("2026-04-11-my-epic-feat-b.md");
+    });
+
+    test("metadata section omits feature fields for non-implement phases", () => {
+      const result = assembleContext({
+        phase: "design",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        epicId: "bm-f3a7",
+        repoRoot: tempDir,
+      });
+      expect(result).not.toContain("feature-id:");
+      expect(result).not.toContain("feature-slug:");
+    });
+
+    test("existing context sections (L0, L1, artifacts) remain unchanged", () => {
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "design", "2026-04-11-my-epic.md"),
+        "---\nphase: design\n---\n\nPRD content here",
+      );
+      const result = assembleContext({
+        phase: "plan",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        epicId: "bm-f3a7",
+        repoRoot: tempDir,
+      });
+      expect(result).toContain("L0 persona and map");
+      expect(result).toContain("Plan rules");
+      expect(result).toContain("PRD content here");
+    });
+
+    test("metadata output-target path uses correct format", () => {
+      const result = assembleContext({
+        phase: "design",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        repoRoot: tempDir,
+      });
+      const today = new Date().toISOString().split("T")[0];
+      expect(result).toContain(`output-target: .beastmode/artifacts/design/${today}-my-epic-abc123.md`);
     });
   });
 });
