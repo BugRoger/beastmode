@@ -203,13 +203,14 @@ function buildPostToolUseHook(phase: string): HookEntry {
  * Build the Stop hook for output.json generation.
  * Calls generate-output via portable CLI after Claude finishes responding.
  */
-function buildStopHook(): HookEntry {
+function buildStopHook(feature?: string): HookEntry {
+  const envPrefix = feature ? `BEASTMODE_FEATURE=${feature} ` : "";
   return {
     matcher: "",
     hooks: [
       {
         type: "command",
-        command: `bunx beastmode hooks generate-output`,
+        command: `${envPrefix}bunx beastmode hooks generate-output`,
       },
     ],
   };

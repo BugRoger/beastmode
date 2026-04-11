@@ -71,6 +71,7 @@ export function buildOutput(
   artifactPath: string,
   fm: ArtifactFrontmatter,
   artifactsDir: string,
+  featureOverride?: string,
 ): PhaseOutput | undefined {
   switch (fm.phase) {
     case "design": {
@@ -97,7 +98,7 @@ export function buildOutput(
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
         artifacts: {
           features: [{
-            slug: fm.feature ?? "unknown",
+            slug: featureOverride ?? fm.feature ?? "unknown",
             status: (fm.status ?? "completed") as "completed" | "blocked",
           }],
         },
@@ -184,7 +185,7 @@ export function scanPlanFeatures(
  * Process a single artifact file: parse frontmatter, build output,
  * write output.json if the artifact is newer.
  */
-export function processArtifact(artifactPath: string, artifactsDir: string, worktreeSlug?: string): boolean {
+export function processArtifact(artifactPath: string, artifactsDir: string, worktreeSlug?: string, featureOverride?: string): boolean {
   let content: string;
   try {
     content = readFileSync(artifactPath, "utf-8");
@@ -203,7 +204,8 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
     // During design the worktree is still the hex slug; after rename it's the epic name.
     const dateMatch = artBasename.match(/^(\d{4}-\d{2}-\d{2})-/);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
-    const featureSuffix = fm.feature ? `-${fm.feature}` : "";
+    const effectiveFeature = featureOverride ?? fm.feature;
+    const featureSuffix = effectiveFeature ? `-${effectiveFeature}` : "";
     outputBasename = `${date}-${worktreeSlug}${featureSuffix}`;
   } else {
     outputBasename = artBasename;
@@ -222,7 +224,7 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
     }
   }
 
-  const output = buildOutput(artifactPath, fm, artifactsDir);
+  const output = buildOutput(artifactPath, fm, artifactsDir, featureOverride);
   if (!output) return false;
 
   // Atomic write: tmp -> rename
@@ -247,11 +249,11 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
  *
  * Returns the number of files generated/updated.
  */
-export function generateAll(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string): number {
+export function generateAll(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string, featureOverride?: string): number {
   if (!existsSync(artifactsDir)) return 0;
 
   if (scope === "changed") {
-    return generateChanged(artifactsDir, worktreeSlug);
+    return generateChanged(artifactsDir, worktreeSlug, featureOverride);
   }
 
   let count = 0;
@@ -262,7 +264,7 @@ export function generateAll(artifactsDir: string, scope?: "changed" | "all", wor
     for (const filename of readdirSync(phaseDir)) {
       if (!filename.endsWith(".md")) continue;
       const filePath = join(phaseDir, filename);
-      if (processArtifact(filePath, artifactsDir, worktreeSlug)) {
+      if (processArtifact(filePath, artifactsDir, worktreeSlug, featureOverride)) {
         count++;
       }
     }
@@ -275,7 +277,7 @@ export function generateAll(artifactsDir: string, scope?: "changed" | "all", wor
  * modified. Uses `git diff HEAD --name-only` (committed changes on branch)
  * plus `git diff --name-only` (uncommitted changes).
  */
-function generateChanged(artifactsDir: string, worktreeSlug?: string): number {
+function generateChanged(artifactsDir: string, worktreeSlug?: string, featureOverride?: string): number {
   const repoRoot = resolve(artifactsDir, "..", "..");
   const artifactsPrefix = ".beastmode/artifacts/";
 
@@ -302,14 +304,14 @@ function generateChanged(artifactsDir: string, worktreeSlug?: string): number {
     );
   } catch {
     // git diff failed — fall back to full scan
-    return generateAll(artifactsDir, "all", worktreeSlug);
+    return generateAll(artifactsDir, "all", worktreeSlug, featureOverride);
   }
 
   let count = 0;
   for (const relPath of changedFiles) {
     const filePath = resolve(repoRoot, relPath);
     if (existsSync(filePath)) {
-      if (processArtifact(filePath, artifactsDir, worktreeSlug)) count++;
+      if (processArtifact(filePath, artifactsDir, worktreeSlug, featureOverride)) count++;
     }
   }
   return count;
