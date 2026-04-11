@@ -3,6 +3,7 @@ import type { EnrichedEpic } from "../store/index.js";
 import type { GitStatus } from "./overview-panel.js";
 import {
   type DetailsPanelSelection,
+  type StatsViewMode,
   resolveDetailsContent,
 } from "./details-panel.js";
 import { PHASE_COLOR, CHROME } from "./monokai-palette.js";
@@ -18,6 +19,7 @@ export interface DetailsPanelProps {
   scrollOffset: number;
   visibleHeight: number;
   stats?: SessionStats;
+  statsViewMode?: StatsViewMode;
 }
 
 // --- Minimal markdown renderer for Ink ---
@@ -124,6 +126,7 @@ export default function DetailsPanel({
   scrollOffset,
   visibleHeight,
   stats,
+  statsViewMode,
 }: DetailsPanelProps) {
   const result = resolveDetailsContent(selection, {
     epics,
@@ -131,6 +134,7 @@ export default function DetailsPanel({
     gitStatus,
     projectRoot,
     stats,
+    statsViewMode,
   });
 
   if (result.kind === "overview") {
@@ -156,10 +160,13 @@ export default function DetailsPanel({
     }
 
     const s = result.stats;
+    const modeLabel = result.statsViewMode === "session" ? "session" : "all-time";
     const PHASES = ["plan", "implement", "validate", "release"] as const;
 
     return (
       <Box flexDirection="column" overflowY="hidden">
+        <Text dimColor>[{modeLabel}]</Text>
+
         <Text bold>Sessions</Text>
         <Text>  total: {s.total}</Text>
         <Text>  active: {s.active}</Text>

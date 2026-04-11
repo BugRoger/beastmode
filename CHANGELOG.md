@@ -4,6 +4,23 @@ All notable changes to beastmode.
 
 ---
 
+## v0.114.0 — Dashboard Stats Persistence (2026-04-11)
+
+### Highlights
+
+Dashboard statistics now persist across restarts via a JSON file, and operators can toggle between all-time and current-session stats views with a keyboard shortcut.
+
+### Features
+
+- feat(stats-persistence): add persistence module with load/save/merge for cumulative dashboard stats
+- feat(stats-persistence): wire persistence load and flush into App component
+- feat(stats-view-toggle): add `s` key toggle for all-time vs current-session stats
+- feat(stats-view-toggle): add toSessionStats converter
+- feat(stats-view-toggle): add statsViewMode to DetailsPanel and resolver
+- feat(stats-view-toggle): add stats mode to key hints bar
+
+---
+
 ## v0.113.0 — Fix Tree Log Rendering (2026-04-11)
 
 ### Highlights

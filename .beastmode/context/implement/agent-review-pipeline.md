@@ -34,3 +34,7 @@
 - Max 2 review attempts per stage before marking task as blocked
 - Same implementer fixes issues found by reviewers — reviewer re-reviews after fix
 - After max retries: task marked blocked, reported to user with details
+
+## Design Bounds as Quality Review Rebuttals
+- ALWAYS cite the design document's explicit bound when a quality reviewer raises a performance concern about a bounded collection — O(n) operations on provably bounded collections (e.g., project count, phase count) are acceptable and should be documented as a concern with the bound cited, not escalated or blocked
+- NEVER escalate bounded-collection performance concerns to BLOCKED status — document as DONE_WITH_CONCERNS with the bound reference; escalation wastes model cycles on non-problems

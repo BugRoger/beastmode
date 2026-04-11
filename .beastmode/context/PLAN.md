@@ -95,3 +95,4 @@ context/plan/file-collapse.md
 - When classification is ambiguous, classify as behavioral — false positives (unnecessary dispatch) are cheaper than false negatives (missed integration tests)
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it
 - ALWAYS include consumer test migration in plan scope when changing value derivation contracts -- when a value shifts from user-provided to auto-derived, all test files asserting the old explicit value become broken; grep for the old pattern at plan time
+- ALWAYS treat feature plan acceptance criteria as authoritative over integration artifact new scenarios when they conflict — the integration artifact agent runs before locked decisions are finalized, and its scenario defaults may not reflect PRD decisions recorded later in the feature plan; the feature plan is the ground truth, the integration artifact is an audit trail

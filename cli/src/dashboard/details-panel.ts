@@ -37,10 +37,14 @@ export interface NotFoundContent {
   message: string;
 }
 
+/** Stats view mode for toggle. */
+export type StatsViewMode = "all-time" | "session";
+
 /** Stats content — session metrics for the "(all)" view. */
 export interface StatsContent {
   kind: "stats";
   stats: SessionStats;
+  statsViewMode: StatsViewMode;
 }
 
 export type DetailsContentResult = OverviewContent | StatsContent | ArtifactContent | NotFoundContent;
@@ -52,6 +56,7 @@ export interface DetailsContentContext {
   gitStatus?: GitStatus | null;
   projectRoot?: string;
   stats?: SessionStats;
+  statsViewMode?: StatsViewMode;
 }
 
 /** Strip YAML front-matter (--- ... ---) from markdown content. */
@@ -85,7 +90,7 @@ export function resolveDetailsContent(
 ): DetailsContentResult {
   if (selection.kind === "all") {
     if (ctx.stats) {
-      return { kind: "stats", stats: ctx.stats };
+      return { kind: "stats", stats: ctx.stats, statsViewMode: ctx.statsViewMode ?? "all-time" };
     }
     const epics = ctx.epics ?? [];
     const distribution = computePhaseDistribution(epics);

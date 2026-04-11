@@ -329,5 +329,15 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "stats-persistence": {
+    "paths": ["features/stats-persistence.feature"],
+    "import": [
+      "features/step_definitions/stats-persistence.steps.ts",
+      "features/support/stats-persistence-world.ts",
+      "features/support/stats-persistence-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
