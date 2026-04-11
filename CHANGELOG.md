@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+### v0.109.0 — Session Start Hook (Apr 2026)
+
+- **SessionStart hook** — New `session-start` hook assembles phase context automatically when a skill session begins, replacing the manual Phase 0 prime step across all five workflow skills
+- **assembleContext core** — New `assembleContext` function reads BEASTMODE.md, config, and phase-specific L1/L2 context into a structured context object for hook injection
+- **Settings writer** — `ensureSessionStartHook` and `writeSettingsFile` functions register the hook in Claude Code's `settings.local.json` automatically
+- **CLI integration** — `session-start` command registered in the hooks router with full assembleContext wiring
+- **Phase 0 removal** — Stripped the manual prime/context-loading step from design, plan, implement, validate, and release skills
+- **Functional coupling rule** — New L0 plan rule: merge features whose acceptance criteria overlap even when file targets differ
+
+---
+
 ### v0.108.0 — Sync Log Hygiene (Apr 2026)
 
 - **Phase-aware sync gating** — `readPrdSections` and plan file reads now skip early via `isPhaseAtOrPast()` when the producing phase hasn't completed, eliminating expected missing-artifact warnings from the log

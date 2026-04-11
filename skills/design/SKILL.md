@@ -21,16 +21,11 @@ No Plan Mode — this skill operates in normal mode. EnterPlanMode/ExitPlanMode 
 - **Scope is protected by default.** New capabilities get deferred unless the user explicitly pulls them in.
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
-## Phase 0: Prime
+## Phase 0: Pre-Execute
 
-### 1. Announce Skill
+### 1. Problem-First Question
 
-Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
-
-### 2. Problem-First Question
-
-Before loading any project context or exploring the codebase, ask the user
-what they are trying to solve.
+Before exploring the codebase, ask the user what they are trying to solve.
 
 **Do NOT:**
 - Explore the codebase yet
@@ -38,21 +33,14 @@ what they are trying to solve.
 
 Wait for the user's response. Their framing drives the entire design — do not proceed until they answer.
 
-### 3. Load Project Context
-
-Read (if they exist):
-- `.beastmode/context/DESIGN.md`
-
-Follow L2 convention paths (`context/design/{domain}.md`) when relevant to the current topic.
-
-### 4. Express Path Check
+### 2. Express Path Check
 
 If the user's response points to an existing PRD, spec, or requirements document (not a `.beastmode/artifacts/design/` file):
 1. Read the document
 2. Skip decision tree walk in execute
 3. Jump directly to "Gray Areas" (Execute step 2) with the doc as input
 
-### 5. Existing Design Check
+### 3. Existing Design Check
 
 If a prior PRD exists for the same topic (matching feature name):
 - Ask: "Found existing PRD for this topic. What do you want to do?"
@@ -69,7 +57,7 @@ Rules:
 2. For each question, provide your recommended answer
 3. If a question can be answered by exploring the codebase, explore the codebase instead of asking
 4. If a question requires research (unfamiliar technology, external APIs, best practices), spawn an Explore agent as the researcher. It receives the research topic and returns findings with sources. Save findings to `.beastmode/artifacts/research/YYYY-MM-DD-<topic>.md`
-5. Honor prior decisions from prime — don't re-ask settled questions
+5. Honor prior decisions from pre-execute checks — don't re-ask settled questions
 6. Scope guardrail: new capabilities get deferred
    "That sounds like its own feature — I'll note it as a deferred idea. Back to the current branch."
 7. Track deferred ideas internally

@@ -19,25 +19,9 @@ No release without passing validation.
 - Validate the artifact, not the process — results matter, not how we got there
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
-## Phase 0: Prime
+## Phase 0: Pre-Execute
 
-### 1. Resolve Epic Name
-
-The epic name comes from the skill arguments. Use it directly for all artifact paths in this phase.
-
-### 2. Announce Skill
-
-Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
-
-### 3. Load Project Context
-
-Read (if they exist):
-- `.beastmode/context/VALIDATE.md`
-
-Follow L2 convention paths (`context/validate/{domain}.md`) when relevant to the current topic.
-Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
-
-### 4. Check Feature Completion
+### 1. Check Feature Completion
 
 Scan for implementation artifacts to verify all features have been implemented:
 
@@ -66,7 +50,7 @@ If any features are NOT completed:
 
 If all completed: proceed to next step.
 
-### 5. Identify Test Strategy
+### 2. Identify Test Strategy
 
 From context, determine:
 - Test command (e.g., `npm test`, `pytest`)
@@ -201,7 +185,7 @@ STOP. No additional output.
 
 - No release without passing validation
 - Do not proceed to commit if validation fails
-- Do not proceed past Prime if features are incomplete
+- Do not proceed past Pre-Execute if features are incomplete
 
 ## Reference
 

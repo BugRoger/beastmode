@@ -19,25 +19,9 @@ No EnterPlanMode or ExitPlanMode — this skill manages its own flow.
 - **Architectural, not procedural** — feature plans describe WHAT to build, not step-by-step HOW; /implement discovers file paths and generates code
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 
-## Phase 0: Prime
+## Phase 1: Execute
 
-### 1. Resolve Epic Name
-
-The epic name comes from the skill arguments. Use it directly for all artifact paths in this phase.
-
-### 2. Announce Skill
-
-Greet in persona voice. One sentence. Set expectations for what this phase does.
-
-### 3. Load Project Context
-
-Read (if they exist):
-- `.beastmode/context/PLAN.md`
-
-Follow L2 convention paths (`context/plan/{domain}.md`) when relevant to the current topic.
-Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
-
-### 4. Check Research Trigger
+### 0. Check Research Trigger
 
 Research triggers if ANY:
 - Arguments contain research keywords
@@ -45,20 +29,6 @@ Research triggers if ANY:
 - Complex integration required
 
 If triggered, spawn an Explore agent as the researcher. It receives the research topic and returns findings with sources. Save findings, summarize to user and continue to next step.
-
-### 5. Read Design Document
-
-Locate the design artifact by convention glob:
-
-```bash
-matches=$(ls .beastmode/artifacts/design/*-$epic.md 2>/dev/null)
-```
-
-If no matches, error: "No design artifact found for epic '$epic'". If multiple, take the latest (date prefix sorts chronologically).
-
-Read the resolved file path.
-
-## Phase 1: Execute
 
 ### 1. Explore Codebase
 

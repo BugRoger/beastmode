@@ -244,3 +244,92 @@ export function getPhaseHitlProse(
   const prose = hitlConfig[phase as keyof Omit<HitlConfig, "timeout">];
   return (typeof prose === "string" && prose.length > 0) ? prose : "always defer to human";
 }
+
+// --- SessionStart hook settings ---
+
+export interface WriteSessionStartHookOptions {
+  claudeDir: string;
+  phase: string;
+  epic: string;
+  slug: string;
+  feature?: string;
+}
+
+/**
+ * Build the SessionStart command hook entry.
+ * Sets BEASTMODE_* env vars inline and calls the session-start subcommand.
+ */
+export function buildSessionStartHook(opts: { phase: string; epic: string; slug: string; feature?: string }): HookEntry {
+  const envParts = [
+    `BEASTMODE_PHASE=${opts.phase}`,
+    `BEASTMODE_EPIC=${opts.epic}`,
+    `BEASTMODE_SLUG=${opts.slug}`,
+  ];
+  if (opts.feature) {
+    envParts.push(`BEASTMODE_FEATURE=${opts.feature}`);
+  }
+  return {
+    matcher: "",
+    hooks: [
+      {
+        type: "command",
+        command: `${envParts.join(" ")} bunx beastmode hooks session-start`,
+      },
+    ],
+  };
+}
+
+/**
+ * Write SessionStart hook to settings.local.json.
+ * Preserves all existing keys and replaces only the SessionStart hook.
+ */
+export function writeSessionStartHook(options: WriteSessionStartHookOptions): void {
+  const { claudeDir, phase, epic, slug, feature } = options;
+  const settingsPath = resolve(claudeDir, "settings.local.json");
+
+  let settings: SettingsLocal = {};
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+    } catch {
+      settings = {};
+    }
+  }
+
+  if (!settings.hooks) {
+    settings.hooks = {};
+  }
+
+  const hook = buildSessionStartHook({ phase, epic, slug, feature });
+  settings.hooks.SessionStart = [hook];
+
+  mkdirSync(claudeDir, { recursive: true });
+  const tmpPath = settingsPath + ".tmp";
+  writeFileSync(tmpPath, JSON.stringify(settings, null, 2) + "\n");
+  renameSync(tmpPath, settingsPath);
+}
+
+/**
+ * Remove SessionStart hook from settings.local.json.
+ */
+export function cleanSessionStartHook(claudeDir: string): void {
+  const settingsPath = resolve(claudeDir, "settings.local.json");
+  if (!existsSync(settingsPath)) return;
+
+  let settings: SettingsLocal;
+  try {
+    settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+  } catch {
+    return;
+  }
+
+  if (!settings.hooks) return;
+
+  delete settings.hooks.SessionStart;
+
+  if (Object.keys(settings.hooks).length === 0) {
+    delete settings.hooks;
+  }
+
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+}

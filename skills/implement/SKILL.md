@@ -20,38 +20,9 @@ No EnterPlanMode or ExitPlanMode.
 - **All user input via `AskUserQuestion`** — freeform print-and-wait is invisible to HITL hooks; every question the user must answer goes through `AskUserQuestion`
 - **Model escalation** — start cheap (haiku), escalate on failure (sonnet, then opus)
 
-## Phase 0: Prime
+## Phase 0: Pre-Execute
 
-### 1. Resolve Epic and Feature Name
-
-The argument is `<epic-name>-<feature-name>`. Parse the epic name and feature name from it. The feature name is used for all artifact paths in this phase.
-
-### 2. Announce Skill
-
-Greet in persona voice. One sentence. Set expectations for what this phase does and what the user's role is.
-
-### 3. Load Project Context
-
-Read (if they exist):
-- `.beastmode/context/IMPLEMENT.md`
-
-Follow L2 convention paths (`context/implement/{domain}.md`) when relevant to the current topic.
-Prior decisions, conventions, and learnings inform this phase — don't re-decide what's already been decided.
-
-### 4. Resolve Feature Plan
-
-1. Locate the feature plan by convention glob:
-
-```bash
-matches=$(ls .beastmode/artifacts/plan/*-$epic-$feature.md 2>/dev/null)
-```
-
-If no matches, error: "No feature plan found for '$epic/$feature'". If multiple, take the latest (date prefix sorts chronologically).
-
-2. Read the feature plan file
-3. Read the architectural decisions from the plan's design reference
-
-### 5. Verify Implementation Branch
+### 1. Verify Implementation Branch
 
 The CLI creates and checks out `impl/<slug>--<feature-name>` before dispatch. Verify:
 
@@ -66,7 +37,7 @@ fi
 
 If the branch check fails, error: "Implementation branch not found. The CLI must create and check out `impl/<slug>--<feature-name>` before running /implement."
 
-### 6. Prepare Environment
+### 2. Prepare Environment
 
     # Install dependencies if needed
     npm install  # or appropriate command from .beastmode/context/
@@ -102,8 +73,8 @@ The BDD verification escalation resets to tier 0 (haiku) when a new BDD retry lo
 
 Before dispatching, produce a detailed `.tasks.md` document from the feature plan. This is the inspection point between "plan says what to build" and "agent writes code."
 
-1. **Read feature plan** — user stories, what to build, acceptance criteria
-2. **Read architectural decisions** from the design doc — these are constraints
+1. **Read feature plan** — user stories, what to build, acceptance criteria (available in conversation context via hook injection)
+2. **Read architectural decisions** from the design doc (available in conversation context via hook injection) — these are constraints
 3. **Explore codebase** — identify exact files, patterns, test structure, dependencies
 4. **Generate Task 0** — the integration test:
    - Read the feature plan's `## Integration Test Scenarios` section — extract the Gherkin scenarios
