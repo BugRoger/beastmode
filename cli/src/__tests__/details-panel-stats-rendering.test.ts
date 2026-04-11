@@ -54,4 +54,16 @@ describe("DetailsPanel stats rendering", () => {
   test("shows double-dash for unseen phases", () => {
     expect(source).toContain('"--"');
   });
+
+  test("renders statsViewMode label", () => {
+    expect(source).toContain("statsViewMode");
+  });
+
+  test("renders all-time label text", () => {
+    expect(source).toContain("all-time");
+  });
+
+  test("renders session label text", () => {
+    expect(source).toContain("session");
+  });
 });

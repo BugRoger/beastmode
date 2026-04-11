@@ -175,3 +175,58 @@ describe("resolveDetailsContent", () => {
     expect(result.kind).toBe("overview");
   });
 });
+
+describe("resolveDetailsContent with statsViewMode", () => {
+  test("returns stats with statsViewMode all-time", () => {
+    const stats: SessionStats = {
+      total: 5, active: 0, successes: 5, failures: 0, reDispatches: 0,
+      successRate: 100, uptimeMs: 0, cumulativeMs: 200000,
+      isEmpty: false,
+      phaseDurations: { plan: 30000, implement: 80000, validate: 40000, release: 10000 },
+    };
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 0, gitStatus: null, stats, statsViewMode: "all-time" },
+    );
+    expect(result.kind).toBe("stats");
+    if (result.kind === "stats") {
+      expect(result.stats.total).toBe(5);
+      expect(result.statsViewMode).toBe("all-time");
+    }
+  });
+
+  test("returns stats with statsViewMode session", () => {
+    const stats: SessionStats = {
+      total: 2, active: 1, successes: 1, failures: 1, reDispatches: 0,
+      successRate: 50, uptimeMs: 60000, cumulativeMs: 90000,
+      isEmpty: false,
+      phaseDurations: { plan: 20000, implement: null, validate: null, release: null },
+    };
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 1, gitStatus: null, stats, statsViewMode: "session" },
+    );
+    expect(result.kind).toBe("stats");
+    if (result.kind === "stats") {
+      expect(result.stats.total).toBe(2);
+      expect(result.statsViewMode).toBe("session");
+    }
+  });
+
+  test("defaults statsViewMode to all-time when not provided", () => {
+    const stats: SessionStats = {
+      total: 1, active: 0, successes: 1, failures: 0, reDispatches: 0,
+      successRate: 100, uptimeMs: 0, cumulativeMs: 50000,
+      isEmpty: false,
+      phaseDurations: { plan: null, implement: null, validate: null, release: null },
+    };
+    const result = resolveDetailsContent(
+      { kind: "all" },
+      { epics: [], activeSessions: 0, gitStatus: null, stats },
+    );
+    expect(result.kind).toBe("stats");
+    if (result.kind === "stats") {
+      expect(result.statsViewMode).toBe("all-time");
+    }
+  });
+});
