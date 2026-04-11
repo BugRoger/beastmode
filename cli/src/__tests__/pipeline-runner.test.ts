@@ -88,12 +88,15 @@ vi.mock("../github/early-issues.js", () => ({
 // Mock store/json-file-store
 const mockJsonFileStore = vi.hoisted(() => {
   const storeState = {
-    find: vi.fn((idOrSlug: string) => {
-      if (idOrSlug === "test-epic") {
+    getEpic: vi.fn((id: string) => {
+      if (id === "epic-123" || id === "test-epic") {
         return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
       }
       return undefined;
     }),
+    listEpics: vi.fn(() => [
+      { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" }
+    ]),
     listFeatures: vi.fn((_epicId?: string) => []),
   };
 
@@ -102,7 +105,8 @@ const mockJsonFileStore = vi.hoisted(() => {
     constructor(_path: string) {}
     load() {}
     save() {}
-    find(idOrSlug: string) { return this.state.find(idOrSlug); }
+    getEpic(id: string) { return this.state.getEpic(id); }
+    listEpics() { return this.state.listEpics(); }
     listFeatures(epicId: string) { return this.state.listFeatures(epicId); }
     updateEpic(_id: string, _patch: any) {}
   }
