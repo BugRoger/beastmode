@@ -49,6 +49,8 @@ import {
   writeHitlSettings,
   cleanHitlSettings,
   buildPreToolUseHook,
+  writeSessionStartHook,
+  cleanSessionStartHook,
 } from "../hooks/hitl-settings.js";
 import {
   writeFilePermissionSettings,
@@ -163,6 +165,16 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, fpConfig?.timeout);
     const fpPostToolUseHooks = buildFilePermissionPostToolUseHooks(config.phase);
     writeFilePermissionSettings({ claudeDir, preToolUseHooks: fpPreToolUseHooks, postToolUseHooks: fpPostToolUseHooks });
+
+    // Session-start hook
+    cleanSessionStartHook(claudeDir);
+    writeSessionStartHook({
+      claudeDir,
+      phase: config.phase,
+      epic: config.epicSlug,
+      slug: config.epicSlug,
+      feature: config.featureSlug,
+    });
   }
 
   // Create impl branch for implement phase (idempotent — skips if exists)

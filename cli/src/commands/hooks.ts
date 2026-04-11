@@ -18,6 +18,7 @@ import { getPhaseHitlProse } from "../hooks/hitl-settings.js";
 import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
 import { generateAll } from "../hooks/generate-output.js";
+import { runSessionStart as runSessionStartImpl } from "../hooks/session-start.js";
 
 const VALID_HOOKS = ["hitl-auto", "hitl-log", "generate-output", "session-start"];
 
@@ -36,7 +37,16 @@ export async function hooksCommand(args: string[]): Promise<void> {
 
   // session-start has its own error handling — exits non-zero on failure
   if (hookName === "session-start") {
-    runSessionStart();
+    try {
+      const repoRoot = execSync("git rev-parse --show-toplevel", {
+        encoding: "utf-8",
+      }).trim();
+      runSessionStartImpl(repoRoot);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`session-start hook failed: ${message}\n`);
+      process.exit(1);
+    }
     return;
   }
 

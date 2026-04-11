@@ -27,7 +27,7 @@ import { createLogger, createStdioSink } from "../logger";
 import { loadWorktreePhaseOutput } from "../artifacts/reader";
 import { loadConfig, getCategoryProse } from "../config";
 import { cancelEpic } from "./cancel-logic.js";
-import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook } from "../hooks/hitl-settings";
+import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook, writeSessionStartHook, cleanSessionStartHook } from "../hooks/hitl-settings";
 import {
   writeFilePermissionSettings,
   cleanFilePermissionSettings,
@@ -98,6 +98,11 @@ export async function phaseCommand(
     const fpPreToolUseHooks = buildFilePermissionPreToolUseHooks(fpProse, fpConfig?.timeout);
     const fpPostToolUseHooks = buildFilePermissionPostToolUseHooks(phase);
     writeFilePermissionSettings({ claudeDir, preToolUseHooks: fpPreToolUseHooks, postToolUseHooks: fpPostToolUseHooks });
+
+    // SessionStart hook
+    cleanSessionStartHook(claudeDir);
+    const featureSlug = phase === "implement" ? args[1] : undefined;
+    writeSessionStartHook({ claudeDir, phase, epic: epicSlug, slug: epicSlug, feature: featureSlug });
 
     const result = await runInteractive({ phase, args, cwd });
     logger.info("phase complete", { phase, status: result.exit_status, duration: formatDuration(result.duration_ms) });

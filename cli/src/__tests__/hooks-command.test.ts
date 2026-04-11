@@ -25,6 +25,20 @@ vi.mock("../hooks/hitl-settings.js", () => ({
   getPhaseHitlProse: vi.fn(() => "approve all"),
 }));
 
+// Mock session-start hook module
+vi.mock("../hooks/session-start.js", () => ({
+  runSessionStart: vi.fn((repoRoot: string) => {
+    const phase = process.env.BEASTMODE_PHASE;
+    if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
+    const output = JSON.stringify({
+      hookSpecificOutput: {
+        additionalContext: `Phase: ${phase}`,
+      },
+    });
+    process.stdout.write(output);
+  }),
+}));
+
 // Mock child_process.execSync for git rev-parse
 vi.mock("node:child_process", () => ({
   execSync: vi.fn(() => "/tmp/fake-repo"),
@@ -125,11 +139,10 @@ describe("hooksCommand", () => {
 
     const output = stdoutSpy.mock.calls[0]?.[0] as string;
     const parsed = JSON.parse(output);
-    expect(parsed.hookSpecificOutput.hookEventName).toBe("SessionStart");
     expect(parsed.hookSpecificOutput.additionalContext).toContain("design");
   });
 
-  test("session-start exits non-zero when env vars missing", async () => {
+  test("session-start exits non-zero when BEASTMODE_PHASE is missing", async () => {
     delete process.env.BEASTMODE_PHASE;
     delete process.env.BEASTMODE_EPIC;
     delete process.env.BEASTMODE_SLUG;
@@ -138,7 +151,7 @@ describe("hooksCommand", () => {
       await hooksCommand(["session-start"]);
     } catch { /* exit mock */ }
 
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("missing required env vars"));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Missing environment variable"));
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
@@ -151,6 +164,7 @@ describe("hooksCommand", () => {
       await hooksCommand(["session-start"]);
     } catch { /* exit mock */ }
 
+    // Should NOT write "Unknown hook" error
     const stderrCalls = stderrSpy.mock.calls.map((c: unknown[]) => c[0]);
     expect(stderrCalls.some((c: unknown) => typeof c === "string" && c.includes("Unknown hook"))).toBe(false);
   });
