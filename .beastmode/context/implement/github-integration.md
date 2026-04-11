@@ -36,24 +36,23 @@
 
 ## Commit Issue References
 - ALWAYS use pure functions for commit message logic — `shouldAmendCommit()`, `buildAmendedMessage()`, `resolveIssueNumber()` in `commit-issue-ref.ts`; thin integration wrapper calls `git log` and `git commit --amend`
-- ALWAYS resolve feature issue numbers by parsing impl branch name (`impl/<slug>--<feature>`) and looking up the feature in the manifest
+- ALWAYS resolve feature issue numbers from commit message prefix (`feat(<feature>):`) and looking up the feature in the store
 - ALWAYS skip amend gracefully when no issue number is available — return early, no error
 - Integration tests for commit amend require shell access — mark Bun-specific shell tests with skip annotations for cross-runtime compatibility
 - ALWAYS use range-based amend (rebase all commits since last phase tag) — not just HEAD commit; ensures every commit appears in the GitHub issue timeline
 - ALWAYS run amend before push in the pipeline — rewrites local-only history, no force-push needed from CLI
 - ALWAYS use `resolveRangeStart()` to find the previous phase tag — falls back to merge-base with main for first phase (design)
-- ALWAYS use `resolveCommitIssueNumber()` to route each commit to the correct issue — epic ref for phase checkpoints, feature ref for impl tasks detected by message prefix
+- ALWAYS use `resolveCommitIssueNumber()` to route each commit to the correct issue — epic ref for phase checkpoints, feature ref for tasks detected by message prefix
 
 ## Git Push
 - ALWAYS push feature branches after every phase checkpoint — pure git operation, not gated on `github.enabled`
-- ALWAYS push impl branches during implement phase
 - ALWAYS push all tags (phase tags and archive tags) after each checkpoint — `git push origin --tags`
 - ALWAYS use `hasRemote()` to detect configured remote before push — pure local workflows skip silently
 - ALWAYS use warn-and-continue for push failures — never block the pipeline
 - NEVER force-push from the CLI pipeline — amend runs before push, so no rewrite of pushed history
 
 ## Branch Linking
-- ALWAYS use `createLinkedBranch` GraphQL mutation to link branches to issues — feature branches to epic issues, impl branches to feature issues
+- ALWAYS use `createLinkedBranch` GraphQL mutation to link feature branches to epic issues
 - ALWAYS gate branch linking on `github.enabled` — unlike push, this is a GitHub API operation
 - ALWAYS use delete-then-recreate workaround for already-existing remote branches — `createLinkedBranch` returns null for existing branches
 - ALWAYS resolve GraphQL node IDs via `ghRepoNodeId()` and `ghIssueNodeId()` — REST API numbers are not accepted

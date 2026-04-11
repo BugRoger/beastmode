@@ -16,7 +16,6 @@
 - ALWAYS run retro inlined in the release skill — no shared orchestrator import
 - ALWAYS use context walker as the sole retro agent — meta walker removed
 - ALWAYS run retro with all phase artifacts (design, plan, implement, validate, release) in a single pass
-- ALWAYS expect impl branches (`impl/<slug>--*`) to be deleted by worktree `remove()` at release — no manual cleanup needed
 
 ## Changelog
 - ALWAYS include Highlights and Full Changelog sections in release artifacts

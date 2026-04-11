@@ -16,8 +16,7 @@
 - NEVER use @imports between skills — each SKILL.md is self-contained
 
 ## Branch Naming
-- ALWAYS use `feature/<slug>` for the worktree branch — created by CLI at worktree creation
-- ALWAYS use `impl/<slug>--<feature>` for implementation branches — created by CLI before implement dispatch, cleaned up by `remove()` at release
+- ALWAYS use `feature/<slug>` for the worktree branch — created by CLI at worktree creation, all agents commit directly to this branch
 - ALWAYS create worktrees at `.beastmode/worktrees/<feature>` — standard location
 - NEVER work directly on main — use worktree isolation
 - Design creates both branch and worktree, all phases inherit, /release merges and cleans up — full lifecycle
@@ -29,7 +28,7 @@
 - NEVER add "just in case" sections to context docs — document what exists
 - NEVER commit during implement phase — /release owns the merge
 - NEVER use @ in flowing prose — use markdown links for inline references, reserve @ for standalone mandatory imports
-- NEVER separate a module and its sole registration/wiring point into parallel features — implementing the module requires importing it at the registration point; the features are functionally coupled and produce a dead impl branch when separated
+- NEVER separate a module and its sole registration/wiring point into parallel features — implementing the module requires importing it at the registration point; the features are functionally coupled and produce an empty feature with zero net code when separated
 
 ## Context Document Format
 - ALWAYS use `[Populated by init or retro]` as placeholder text in skeleton L2 files — signals ownership

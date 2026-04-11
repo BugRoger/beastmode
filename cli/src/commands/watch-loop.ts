@@ -21,7 +21,6 @@ import { resolve } from "node:path";
 import { createLogger, createStdioSink } from "../logger.js";
 import { resolveVersion } from "../version.js";
 import { createTag } from "../git/tags.js";
-import { createImplBranch } from "../git/worktree.js";
 import { reconcileGitHub } from "../github/reconcile.js";
 import { loadSyncRefs, saveSyncRefs } from "../github/sync-refs.js";
 import { loadConfig } from "../config.js";
@@ -331,16 +330,6 @@ export class WatchLoop extends EventEmitter {
       const abortController = new AbortController();
 
       try {
-        // Create impl branch before dispatch — idempotent, skips if exists.
-        // Best-effort: failure here should not block session dispatch.
-        try {
-          await createImplBranch(epic.slug, featureSlug, {
-            cwd: resolve(this.config.projectRoot, ".claude", "worktrees", epic.slug),
-          });
-        } catch (branchErr) {
-          this.logger.warn("impl branch creation failed", { feature: featureSlug, error: String(branchErr) });
-        }
-
         const handle = await this.deps.sessionFactory.create({
           epicSlug: epic.slug,
           phase: "implement",

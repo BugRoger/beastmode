@@ -8,7 +8,7 @@ Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill ma
 1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
 2. ALWAYS use a single self-contained SKILL.md per verb with inline phase sections — no external phase files or @imports
 3. ALWAYS keep each SKILL.md self-contained — no @imports between skills
-4. ALWAYS use `feature/<slug>` for worktree branches, `impl/<slug>--<feature>` for implementation branches
+4. ALWAYS use `feature/<slug>` for worktree branches -- all agents commit directly to this branch
 
 context/plan/conventions.md
 

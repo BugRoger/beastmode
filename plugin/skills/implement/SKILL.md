@@ -22,22 +22,7 @@ No EnterPlanMode or ExitPlanMode.
 
 ## Phase 0: Pre-Execute
 
-### 1. Verify Implementation Branch
-
-The CLI creates and checks out `impl/<slug>--<feature-name>` before dispatch. Verify:
-
-```bash
-current_branch=$(git branch --show-current)
-expected_branch="impl/${epic}--${feature}"
-if [ "$current_branch" != "$expected_branch" ]; then
-  echo "ERROR: Expected branch '$expected_branch' but on '$current_branch'"
-  exit 1
-fi
-```
-
-If the branch check fails, error: "Implementation branch not found. The CLI must create and check out `impl/<slug>--<feature-name>` before running /implement."
-
-### 2. Prepare Environment
+### 1. Prepare Environment
 
     # Install dependencies if needed
     npm install  # or appropriate command from .beastmode/context/
@@ -424,66 +409,9 @@ status: completed
 
 Set `status` to `completed` if all tasks passed, `error` if any task is blocked.
 
-### 2. Rebase Implementation Branch
+### 2. Commit and Handoff
 
-Rebase the impl branch onto the worktree branch:
-
-```bash
-# Variables (already known from Prime)
-worktree_branch="feature/${slug}"
-impl_branch="impl/${slug}--${feature}"
-
-# Rebase impl branch onto worktree branch
-git rebase "$worktree_branch" "$impl_branch"
-```
-
-**On success:** Fast-forward the worktree branch to the rebased head:
-
-```bash
-git checkout "$worktree_branch"
-git merge --ff-only "$impl_branch"
-```
-
-Proceed to step 3 (Commit and Handoff).
-
-**On rebase failure (conflicts):**
-
-1. Capture the conflicted files:
-```bash
-git diff --name-only --diff-filter=U
-```
-
-2. Spawn a conflict resolution agent:
-   - Provide: list of conflicted files, the conflict markers from each file, context about the feature being implemented
-   - The agent reads each conflicted file, resolves the conflict markers, writes the resolved file, and stages it
-   - After resolution: `git rebase --continue`
-
-3. If resolution succeeds: fast-forward worktree branch as above, proceed to step 3
-
-4. If resolution fails:
-   - `git rebase --abort`
-   - Re-spawn the conflict resolution agent with the failure context
-   - Max 2 attempts total
-
-5. After 2 failed attempts:
-   - `git rebase --abort`
-   - Report to user with conflict details:
-
-   ```
-   Rebase failed: N conflicted files after 2 resolution attempts.
-   Conflicted files:
-   - path/to/file1.ts
-   - path/to/file2.ts
-
-   The impl branch (impl/<slug>--<feature>) has all task commits intact.
-   Manual resolution needed before checkpoint can complete.
-   ```
-
-   STOP. Do not commit the deviation log or proceed.
-
-### 3. Commit and Handoff
-
-After successful rebase and fast-forward, commit the implementation report on the worktree branch:
+Commit the implementation report on the feature branch:
 
 ```bash
 git add .beastmode/artifacts/implement/
@@ -515,7 +443,7 @@ STOP. No additional output.
 
 - Spawn ONE agent per task (never parallel implementer agents on the same wave — file conflicts)
 - Controller stays in the working directory — agents inherit it
-- Agents commit per task on the impl branch (`impl/<slug>--<feature-name>`) only — never push, switch branches, or commit to the worktree branch
+- Agents commit per task on the feature branch using `git add <files>` + `git commit` — never push or switch branches
 - Agents must NOT read the plan file — controller provides task text
 - Agents must NOT modify files outside their task's file list
 - If an agent returns BLOCKED, controller assesses and either re-dispatches or escalates to user

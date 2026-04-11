@@ -47,7 +47,7 @@
 ## Plan Process
 
 - ALWAYS deduplicate features during plan decomposition — two features touching the same files with overlapping scope cause rebase conflicts during implementation; merge overlapping user stories into a single feature
-- ALWAYS merge functionally coupled features during plan decomposition — when feature B's acceptance criteria are satisfied as a byproduct of implementing feature A, separating them produces a dead impl branch, an orphaned Write Plan, and stub cleanup at checkpoint; the signal is that implementing one feature requires importing or registering the other
+- ALWAYS merge functionally coupled features during plan decomposition — when feature B's acceptance criteria are satisfied as a byproduct of implementing feature A, separating them produces an empty feature with zero net code, an orphaned Write Plan, and stub cleanup at checkpoint; the signal is that implementing one feature requires importing or registering the other
 - ALWAYS decompose features to single-concern scope during plan decomposition — composite features that bundle unrelated fixes into one plan produce tasks that are harder to review, test, and re-dispatch on failure; one user story per feature is the target granularity
 - ALWAYS produce detailed design documents with component breakdowns — enables direct 1:1 mapping to plan tasks
 - ALWAYS use design locked decisions as cross-cutting constraints applied uniformly across all plan tasks
@@ -72,11 +72,11 @@
 - Sequential tasks with API-level dependencies fail under worktree isolation — orchestrator must merge intermediate results
 - ALWAYS produce a Write Plan (.tasks.md) before dispatch — visible, inspectable task breakdown with complete code, TDD cycles, and no-placeholder rule
 - ALWAYS run two-stage review per task: spec compliance first, then code quality — ordered pipeline, not optional
-- ALWAYS use isolated implementation branches (impl/<slug>--<feature>) with per-task commits — worktree branch stays clean, checkpoint rebases back
+- ALWAYS commit per task directly to the feature branch using git add <files> + git commit — wave file isolation guarantees disjoint file sets across parallel agents
+- Wave file isolation is the sole concurrency mechanism for parallel implementation — no branch-level isolation needed when file sets are disjoint
 
 ## Implement Workarounds
 
-- ALWAYS check for pre-existing implementations on the worktree branch before rebasing impl branches — duplicate features from plan decomposition cause code duplication during rebase that requires manual cleanup
 - ALWAYS verify task state from .tasks.md checkboxes rather than trusting in-memory state in long sessions — context compaction drops incremental state
 - ALWAYS design parallel dispatch for post-hoc reconciliation, not real-time status updates
 - ALWAYS read skill files from worktree path when the feature modifies skill files — plugin cache serves main-branch files

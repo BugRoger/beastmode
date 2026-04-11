@@ -2,7 +2,7 @@
  * Branch Link Orchestrator — links branches to GitHub issues via
  * the createLinkedBranch GraphQL mutation.
  *
- * Feature branches link to epic issues. Impl branches link to feature issues.
+ * Feature branches link to epic issues.
  * Uses delete-then-recreate flow since branches are already pushed.
  * Warn-and-continue: never throws, logs failures.
  */
@@ -12,7 +12,7 @@ import {
   ghIssueNodeId,
   ghCreateLinkedBranch,
 } from "./cli.js";
-import { git, implBranchName } from "../git/worktree.js";
+import { git } from "../git/worktree.js";
 import { createLogger, createStdioSink } from "../logger.js";
 import type { Logger } from "../logger.js";
 
@@ -30,15 +30,14 @@ export interface LinkBranchesOpts {
 /**
  * Link branches to their corresponding GitHub issues.
  *
- * Always links the feature branch to the epic issue.
- * During implement phase, also links the impl branch to the feature issue.
+ * Links the feature branch to the epic issue.
  *
  * Uses delete-then-recreate: delete the remote ref first, then call
  * createLinkedBranch to recreate at the same SHA — this establishes the link.
  */
 export async function linkBranches(opts: LinkBranchesOpts): Promise<void> {
   const log = (opts.logger ?? createLogger(createStdioSink(0), {})).child({ phase: opts.phase });
-  const { repo, epicSlug, epicIssueNumber, featureSlug, featureIssueNumber, phase, cwd } = opts;
+  const { repo, epicSlug, epicIssueNumber, cwd } = opts;
 
   // Skip if no epic issue number
   if (!epicIssueNumber) return;
@@ -69,20 +68,6 @@ export async function linkBranches(opts: LinkBranchesOpts): Promise<void> {
     cwd,
     logger: log,
   });
-
-  // Link impl branch -> feature issue (implement phase only)
-  if (phase === "implement" && featureSlug && featureIssueNumber) {
-    const implBranch = implBranchName(epicSlug, featureSlug);
-    await linkOneBranch({
-      repoId,
-      repo,
-      issueNumber: featureIssueNumber,
-      branchName: implBranch,
-      oid,
-      cwd,
-      logger: log,
-    });
-  }
 }
 
 /**

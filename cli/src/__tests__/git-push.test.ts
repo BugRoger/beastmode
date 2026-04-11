@@ -8,7 +8,6 @@ const mockGit = vi.hoisted(() => vi.fn(async (_args: string[], _opts?: any) => (
 
 vi.mock("../git/worktree.js", () => ({
   git: mockGit,
-  implBranchName: (slug: string, feature: string) => `impl/${slug}--${feature}`,
 }));
 
 import { hasRemote, pushBranches, pushTags } from "../git/push.js";
@@ -61,7 +60,7 @@ describe("git/push", () => {
       );
     });
 
-    it("pushes both feature and impl branch on implement phase with featureSlug", async () => {
+    it("pushes only feature branch on implement phase with featureSlug", async () => {
       await pushBranches({
         epicSlug: "my-epic",
         phase: "implement",
@@ -70,10 +69,9 @@ describe("git/push", () => {
       });
 
       const calls = mockGit.mock.calls;
-      const pushCalls = calls.filter(([args]) => args[0] === "push");
-      expect(pushCalls).toHaveLength(2);
+      const pushCalls = calls.filter(([args]: any) => args[0] === "push");
+      expect(pushCalls).toHaveLength(1);
       expect(pushCalls[0][0]).toEqual(["push", "origin", "feature/my-epic"]);
-      expect(pushCalls[1][0]).toEqual(["push", "origin", "impl/my-epic--my-feature"]);
     });
 
     it("pushes only feature branch on implement phase without featureSlug", async () => {

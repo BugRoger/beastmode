@@ -4,7 +4,7 @@
 - NEVER stash, switch branches, or modify worktrees without explicit user request
 - ALWAYS verify worktree context before modifying files
 - NEVER guess file paths — verify they exist first
-- Agents commit per task on the impl branch (`impl/<slug>--<feature-name>`) — never on the worktree branch
+- Agents commit per task on the feature branch using `git add <files>` + `git commit` -- wave file isolation ensures disjoint file sets
 - Agent roles: implementer (TDD execution), spec-reviewer (trust-nothing verification), quality-reviewer (self-contained quality checklist), plan-integration-tester (BDD specialist, spawned by plan skill) — all peers in `plugin/agents/`, all use four-status protocol
 - ALWAYS add new worktree functions to all mock objects in tests — mock gaps cause test failures discovered only after implementation is complete
 - NEVER use Bun `mock.module()` for modules shared across test files — it pollutes the module registry globally within a test run; use dependency injection or per-file mock objects instead
@@ -106,14 +106,11 @@ context/implement/agent-review-pipeline.md
 context/implement/agent-review-pipeline.md
 
 ## Branch Isolation
-- CLI creates `impl/<slug>--<feature-name>` branch before dispatch; agents commit per task on the impl branch
-- ALWAYS verify the correct impl branch (`impl/<slug>--<feature-name>`) is checked out before writing the Write Plan — parallel wave execution leaves the prior feature's impl branch checked out; writing tasks on the wrong branch silently contaminates an adjacent feature's history
-- ALWAYS verify the correct impl branch is still checked out immediately before each agent task commit — linter hooks and parallel wave completions can silently switch branches between tasks
-- ALWAYS verify branch identity between sequential feature dispatches within the same session, not just at wave boundaries -- sequential features can inherit the prior feature's impl branch when branch creation/checkout is skipped or fails silently
-- Checkpoint rebases impl branch onto worktree branch — fast-forward on success, conflict resolution agent on failure
-- Max 2 conflict resolution attempts before aborting and reporting to user
-- Resume model: first unchecked task in .tasks.md; prior tasks have commits on impl branch
-- Subagent Safety: agents commit on impl branch only, never on worktree branch
-- WHEN an impl branch is irrecoverable (contaminated commits, unresolvable rebases across multiple attempts), create a new impl branch with a retry suffix (`impl/<slug>--<feature>-fac2`, `-fac3`, etc.) and restart dispatch from the first unchecked task — preserve integration test file and Write Plan from the original attempt
+- All agents commit directly to the feature branch (feature/<slug>) -- no separate impl branches
+- Wave file isolation is the concurrency mechanism -- plan phase assigns disjoint file sets per wave
+- Checkpoint commits artifact report directly on the feature branch -- no rebase or merge step
+- Resume model: first unchecked task in .tasks.md; prior tasks have commits on the feature branch
+- Subagent Safety: agents commit only their task's files using git add <files> + git commit -- never switch branches
+- ALWAYS verify wave file isolation is maintained in the plan before parallel dispatch -- without branch isolation, file conflicts are unrecoverable
 
 context/implement/branch-isolation.md
