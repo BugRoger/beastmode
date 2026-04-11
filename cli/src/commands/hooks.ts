@@ -69,7 +69,7 @@ export async function hooksCommand(args: string[]): Promise<void> {
 }
 
 function runHitlAuto(args: string[]): void {
-  const phase = args[0];
+  const phase = process.env.BEASTMODE_PHASE ?? args[0];
   if (!phase) return;
 
   const rawToolInput = process.env.TOOL_INPUT;
@@ -88,7 +88,7 @@ function runHitlAuto(args: string[]): void {
 }
 
 function runHitlLog(args: string[]): void {
-  const phase = args[0];
+  const phase = process.env.BEASTMODE_PHASE ?? args[0];
   if (!phase) return;
 
   const rawInput = process.env.TOOL_INPUT;

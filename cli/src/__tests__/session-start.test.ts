@@ -6,7 +6,7 @@ import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { assembleContext, formatOutput } from "../hooks/session-start";
+import { assembleContext, formatOutput, computeOutputTarget, buildMetadataSection } from "../hooks/session-start";
 import {
   writeSessionStartHook,
   cleanSessionStartHook,
@@ -194,7 +194,7 @@ describe("session-start settings writer", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "my-epic", epicSlug: "abc123" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     expect(settings.hooks.SessionStart).toBeDefined();
@@ -207,7 +207,7 @@ describe("session-start settings writer", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "my-epic", epicSlug: "abc123" });
     cleanSessionStartHook(claudeDir);
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
@@ -221,7 +221,7 @@ describe("session-start settings writer", () => {
       hooks: { PreToolUse: [{ matcher: "AskUserQuestion", hooks: [{ type: "command", command: "existing" }] }] }
     }, null, 2));
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "my-epic", epicSlug: "abc123" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     expect(settings.hooks.PreToolUse).toBeDefined();
@@ -232,10 +232,10 @@ describe("session-start settings writer", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "implement", epic: "my-epic", slug: "abc123", feature: "my-feat" });
+    writeSessionStartHook({ claudeDir, phase: "implement", epicId: "my-epic", epicSlug: "abc123", featureId: "my-feat", featureSlug: "my-feat" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     const command = settings.hooks.SessionStart[0].hooks[0].command;
-    expect(command).toContain("BEASTMODE_FEATURE=my-feat");
+    expect(command).toContain("BEASTMODE_FEATURE_ID=my-feat");
   });
 });

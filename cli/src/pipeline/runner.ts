@@ -135,6 +135,36 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // The runner only needs the worktree path for post-dispatch steps (5-9).
     worktreePath = resolve(config.projectRoot, ".claude", "worktrees", epicSlug);
   } else {
+    // -- Step 0: store.preCreate -----------------------------------------------
+    // For design phase: create the store entity so epicId is available for hooks.
+    // For non-design phases: look up existing entity and read its ID.
+    try {
+      const storePath = resolve(config.projectRoot, ".beastmode", "state", "store.json");
+      const preStore = new JsonFileStore(storePath);
+      preStore.load();
+
+      if (config.phase === "design") {
+        const existing = preStore.find(epicSlug);
+        if (!existing || existing.type !== "epic") {
+          const newEpic = preStore.addEpic({ name: epicSlug });
+          config.epicId = newEpic.id;
+          logger.debug?.(`store entity created: ${newEpic.id}`);
+        } else {
+          config.epicId = existing.id;
+        }
+      } else {
+        const existing = preStore.find(epicSlug);
+        if (existing && existing.type === "epic") {
+          config.epicId = existing.id;
+        }
+      }
+
+      preStore.save();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn(`store entity pre-creation failed: ${message}`);
+    }
+
     // -- Step 1: git.worktree.prepare -----------------------------------------
     if (config.skipWorktreeSetup) {
       // Cmux / manual already created the worktree
@@ -144,6 +174,24 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
       worktreePath = wt.path;
     }
     logger.info(`worktree: ${worktreePath}`);
+
+    // -- Step 1b: store worktree metadata -------------------------------------
+    // Set worktree path and branch on the newly created entity so downstream
+    // consumers (GitHub sync, branch linking) have it immediately.
+    if (config.epicId && config.phase === "design") {
+      try {
+        const storePath = resolve(config.projectRoot, ".beastmode", "state", "store.json");
+        const wtMetaStore = new JsonFileStore(storePath);
+        wtMetaStore.load();
+        wtMetaStore.updateEpic(config.epicId, {
+          worktree: { branch: `feature/${epicSlug}`, path: worktreePath },
+        });
+        wtMetaStore.save();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.warn(`store worktree metadata update failed: ${message}`);
+      }
+    }
 
     // -- Step 2: git.worktree.rebase ------------------------------------------
     const rebaseResult = await rebase(config.phase, { cwd: worktreePath, logger });
@@ -155,8 +203,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // -- Step 3: settings.create ----------------------------------------------
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
-    const preToolUseHook = buildPreToolUseHook(config.phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase });
+    const envContext = { phase: config.phase, epicId: config.epicSlug, epicSlug: config.epicSlug, featureId: config.featureSlug, featureSlug: config.featureSlug };
+    const preToolUseHook = buildPreToolUseHook(envContext);
+    writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
@@ -171,9 +220,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     writeSessionStartHook({
       claudeDir,
       phase: config.phase,
-      epic: config.epicSlug,
-      slug: config.epicSlug,
-      feature: config.featureSlug,
+      epicId: config.epicSlug,
+      epicSlug: config.epicSlug,
+      featureId: config.featureSlug, featureSlug: config.featureSlug,
     });
   }
 

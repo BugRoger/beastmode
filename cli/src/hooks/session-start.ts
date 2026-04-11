@@ -218,13 +218,13 @@ export function formatOutput(context: string): string {
  */
 export function runSessionStart(repoRoot: string): void {
   const phase = process.env.BEASTMODE_PHASE;
-  const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
+  const epic = process.env.BEASTMODE_EPIC_ID;
+  const slug = process.env.BEASTMODE_EPIC_SLUG;
   const feature = process.env.BEASTMODE_FEATURE;
 
   if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
-  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC");
-  if (!slug) throw new Error("Missing environment variable: BEASTMODE_SLUG");
+  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC_ID");
+  if (!slug) throw new Error("Missing environment variable: BEASTMODE_EPIC_SLUG");
 
   const context = assembleContext({ phase, epic, slug, feature, repoRoot });
   process.stdout.write(formatOutput(context));

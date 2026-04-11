@@ -88,8 +88,9 @@ export async function phaseCommand(
     // Write HITL settings
     const claudeDir = resolve(cwd, ".claude");
     cleanHitlSettings(claudeDir);
-    const preToolUseHook = buildPreToolUseHook(phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase });
+    const envContext = { phase, epicId: epicSlug, epicSlug, featureId: phase === "implement" ? args[1] : undefined, featureSlug: phase === "implement" ? args[1] : undefined };
+    const preToolUseHook = buildPreToolUseHook(envContext);
+    writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
@@ -102,7 +103,7 @@ export async function phaseCommand(
     // SessionStart hook
     cleanSessionStartHook(claudeDir);
     const featureSlug = phase === "implement" ? args[1] : undefined;
-    writeSessionStartHook({ claudeDir, phase, epic: epicSlug, slug: epicSlug, feature: featureSlug });
+    writeSessionStartHook({ claudeDir, phase, epicId: epicSlug, epicSlug, featureId: featureSlug, featureSlug });
 
     const result = await runInteractive({ phase, args, cwd });
     logger.info("phase complete", { phase, status: result.exit_status, duration: formatDuration(result.duration_ms) });
