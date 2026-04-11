@@ -59,6 +59,9 @@ export function cycleViewFilter(current: ViewFilter): ViewFilter {
   return VIEW_ORDER[(idx + 1) % VIEW_ORDER.length];
 }
 
+/** Stats view mode — controls whether DetailsPanel shows all-time or session stats. */
+export type StatsViewMode = "all-time" | "session";
+
 export interface DashboardKeyboardDeps {
   /** Number of visible rows including (all) entry */
   itemCount: number;
@@ -111,6 +114,8 @@ export interface DashboardKeyboardState {
   logAutoFollow: boolean;
   /** Details panel scroll offset */
   detailsScrollOffset: number;
+  /** Stats view mode — all-time or current session */
+  statsViewMode: StatsViewMode;
   /** Reset details scroll offset to 0 (call on selection change) */
   resetDetailsScroll: () => void;
 }
@@ -156,6 +161,7 @@ export function useDashboardKeyboard(
   const [logScrollOffset, setLogScrollOffset] = useState(0);
   const [logAutoFollow, setLogAutoFollow] = useState(true);
   const [detailsScrollOffset, setDetailsScrollOffset] = useState(0);
+  const [statsViewMode, setStatsViewMode] = useState<StatsViewMode>("all-time");
 
   const resetDetailsScroll = useCallback(() => {
     setDetailsScrollOffset(0);
@@ -299,6 +305,12 @@ export function useDashboardKeyboard(
         return;
       }
 
+      // Priority 12.5: stats view toggle
+      if (input === "s" || input === "S") {
+        setStatsViewMode((prev) => (prev === "all-time" ? "session" : "all-time"));
+        return;
+      }
+
       // Priority 13: PgUp — details panel scroll up
       if (key.pageUp) {
         setDetailsScrollOffset((prev) => Math.max(0, prev - detailsVisibleHeightRef.current));
@@ -330,6 +342,7 @@ export function useDashboardKeyboard(
       phaseFilter,
       viewFilter,
       logAutoFollow,
+      statsViewMode,
       cancelFlow,
       shutdown,
       nav,
@@ -358,6 +371,7 @@ export function useDashboardKeyboard(
     logScrollOffset,
     logAutoFollow,
     detailsScrollOffset,
+    statsViewMode,
     resetDetailsScroll,
   };
 }
