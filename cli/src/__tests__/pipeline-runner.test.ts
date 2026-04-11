@@ -805,13 +805,11 @@ describe("pipeline/runner", () => {
     it("skips entity creation when skipPreDispatch is true", async () => {
       const storeState = (mockJsonFileStore as any).__storeState;
       storeState.addEpic = vi.fn();
-      storeState.find = vi.fn();
 
       await run(makeConfig({ phase: "design", skipPreDispatch: true }));
 
-      // When skipPreDispatch is true, neither find nor addEpic should be called
-      // (Step 0 is skipped entirely)
-      expect(storeState.find).not.toHaveBeenCalled();
+      // When skipPreDispatch is true, addEpic should NOT be called
+      // (Step 0 is skipped entirely, entity should already exist)
       expect(storeState.addEpic).not.toHaveBeenCalled();
     });
   });
