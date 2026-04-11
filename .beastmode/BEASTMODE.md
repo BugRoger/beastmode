@@ -46,7 +46,7 @@
 
 ## Plan Process
 
-- ALWAYS deduplicate features during plan decomposition — two features touching the same files with overlapping scope cause rebase conflicts during implementation; merge overlapping user stories into a single feature
+- ALWAYS deduplicate features during plan decomposition — two features touching the same files with overlapping scope cause rebase conflicts during implementation; merge overlapping user stories into a single feature; verify by checking that no user story number appears in more than one feature plan
 - ALWAYS merge functionally coupled features during plan decomposition — when feature B's acceptance criteria are satisfied as a byproduct of implementing feature A, separating them produces a dead impl branch, an orphaned Write Plan, and stub cleanup at checkpoint; the signal is that implementing one feature requires importing or registering the other
 - ALWAYS decompose features to single-concern scope during plan decomposition — composite features that bundle unrelated fixes into one plan produce tasks that are harder to review, test, and re-dispatch on failure; one user story per feature is the target granularity
 - ALWAYS produce detailed design documents with component breakdowns — enables direct 1:1 mapping to plan tasks
