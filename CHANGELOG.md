@@ -4,6 +4,25 @@ All notable changes to beastmode.
 
 ---
 
+## v0.113.0 — Fix Tree Log Rendering (2026-04-11)
+
+### Highlights
+
+Fixes four dashboard tree log rendering bugs: SYSTEM routing filters epic-scoped entries, dispatched features show correct in-progress status, tree drawing characters stay dim grey regardless of log level, and only the level label carries color while messages remain white.
+
+### Features
+
+- feat(feature-status): upgrade pending features to in-progress when session exists
+- feat(system-routing): gate systemRef entries on !context.epic
+
+### Fixes
+
+- fix(tree-format): decompose warn/error to segmented coloring
+- fix: pass store feature slug to generate-output stop hook
+- fix: preserve collision-proof hex suffix during design slug rename
+
+---
+
 ## v0.112.0 — Remove Impl Branches (2026-04-11)
 
 ### Highlights

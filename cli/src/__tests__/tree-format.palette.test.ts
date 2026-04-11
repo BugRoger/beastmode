@@ -95,4 +95,66 @@ describe("tree-format with monokai-palette", () => {
     expect(plain).toContain("INFO");
     expect(plain).toContain("System msg");
   });
+
+  test("warn line has dim prefix, not full-line yellow", () => {
+    const timestamp = new Date("2024-04-04T10:30:45Z").getTime();
+    const line = formatTreeLine("leaf-epic", "warn", "plan", "Warning!", timestamp);
+
+    // Prefix should be dim (not yellow)
+    expect(line).toContain("\x1b[2m"); // dim code for prefix
+
+    // Should NOT have yellow wrapping the entire string — yellow should only wrap the label
+    // The dim prefix proves the line is not fully wrapped in yellow
+    const plain = stripAnsi(line);
+    expect(plain).toContain("│");
+    expect(plain).toContain("WARN");
+    expect(plain).toContain("Warning!");
+  });
+
+  test("warn line has yellow label only, not yellow message", () => {
+    const timestamp = new Date("2024-04-04T10:30:45Z").getTime();
+    const line = formatTreeLine("leaf-epic", "warn", "plan", "Warning!", timestamp);
+
+    // Yellow code should be present (for the label)
+    expect(line).toContain("\x1b[33m");
+
+    // Split at the message text — message should NOT be inside yellow
+    // The message "Warning!" should appear after the yellow reset
+    const msgIdx = line.indexOf("Warning!");
+    const labelIdx = line.indexOf("WARN");
+    // Between label and message, there should be a reset/close
+    const between = line.slice(labelIdx, msgIdx);
+    expect(between).toContain("\x1b[39m"); // yellow reset (default foreground)
+  });
+
+  test("error line has dim prefix and red label only", () => {
+    const timestamp = new Date("2024-04-04T10:30:45Z").getTime();
+    const line = formatTreeLine("leaf-epic", "error", "plan", "Error!", timestamp);
+
+    // Prefix should be dim
+    expect(line).toContain("\x1b[2m");
+
+    // Red code for label
+    expect(line).toContain("\x1b[31m");
+
+    // Message should not be inside red — check reset between label and message
+    const msgIdx = line.indexOf("Error!");
+    const labelIdx = line.indexOf("ERR");
+    const between = line.slice(labelIdx, msgIdx);
+    expect(between).toContain("\x1b[39m");
+  });
+
+  test("warn line has dim timestamp", () => {
+    const timestamp = new Date("2024-04-04T10:30:45Z").getTime();
+    const localTime = new Date(timestamp).toLocaleTimeString("en-GB", { hour12: false });
+    const line = formatTreeLine("leaf-epic", "warn", "plan", "Warning!", timestamp);
+
+    const plain = stripAnsi(line);
+    expect(plain).toContain(localTime);
+    // Timestamp should be wrapped in dim, same as normal level
+    // The dim code should appear before the timestamp
+    const timeIdx = line.indexOf(localTime);
+    const beforeTime = line.slice(Math.max(0, timeIdx - 10), timeIdx);
+    expect(beforeTime).toContain("\x1b[2m");
+  });
 });

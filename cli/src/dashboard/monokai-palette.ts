@@ -50,3 +50,6 @@ export const FEATURE_STATUS_COLOR: Record<string, string> = {
 export function isFeatureDim(status: string): boolean {
   return status === "completed";
 }
+
+/** Fixed visual width for phase/status badges (length of longest: "[in-progress]"). */
+export const BADGE_WIDTH = 13;

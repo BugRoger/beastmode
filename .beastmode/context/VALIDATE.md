@@ -24,6 +24,7 @@
 - Baseline as of 2026-04-11 (post release-rebase-fix): 97 unit test files passing, 21 file-level failures (pre-existing on main + branch divergence), 1569 individual tests passing; 8 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-11 (post sync-log-hygiene): 122 test files passing, ~1660 individual tests passing, 14 file-level failures (pre-existing, none sync-related), 8 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-11 (post collision-proof-slugs): 112 test files passing, 15 file-level failures, 1721 individual tests passing, 33 individual test failures, 7 type errors -- all pre-existing in untouched files
+- Baseline as of 2026-04-11 (post fix-tree-log-rendering): 124 test files passing, 4 file-level failures (globalThis.Bun readonly -- pre-existing), 1747 individual tests passing, 17 type errors (pre-existing in untouched files)
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:

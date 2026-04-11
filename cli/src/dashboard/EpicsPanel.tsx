@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import type { EnrichedEpic } from "../store/index.js";
-import { PHASE_COLOR, FEATURE_STATUS_COLOR, CHROME, isDim, isFeatureDim } from "./monokai-palette.js";
+import { PHASE_COLOR, FEATURE_STATUS_COLOR, CHROME, isDim, isFeatureDim, BADGE_WIDTH } from "./monokai-palette.js";
 import type { SelectableRow } from "./epics-tree-model.js";
 
 // --- Shared utilities ---
@@ -84,32 +84,30 @@ export default function EpicsPanel({
       const color = PHASE_COLOR[epic.status];
       const dotColor = isSelected ? CHROME.title : dim ? CHROME.muted : (color ?? CHROME.muted);
 
+      const badgeText = isConfirming
+        ? `[cancel? y/n]`
+        : `[${epic.status}]`;
+      const paddedBadge = badgeText.padEnd(BADGE_WIDTH);
+
       rows.push(
         <Box key={`e-${epic.slug}`}>
-          <Box flexGrow={1}>
-            <Text dimColor={dim} bold>
-              {isActive && !isSelected ? (
-                <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{EPIC_SPINNER[tick % EPIC_SPINNER.length]}</Text>
-              ) : (
-                <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{"●"}</Text>
-              )}
-              <Text>{" "}</Text>
-              <Text inverse={isSelected} dimColor={dim}>{epic.slug}</Text>
-            </Text>
-          </Box>
-          <Box>
-            <Text dimColor={dim} bold>
-              {isConfirming ? (
-                <Text color="red" bold>{"[cancel? y/n]"}</Text>
-              ) : color ? (
-                <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>
-                  {`[${epic.status}]`}
-                </Text>
-              ) : (
-                <Text dimColor>{`[${epic.status}]`}</Text>
-              )}
-            </Text>
-          </Box>
+          <Text dimColor={dim} bold>
+            {isActive && !isSelected ? (
+              <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{EPIC_SPINNER[tick % EPIC_SPINNER.length]}</Text>
+            ) : (
+              <Text color={dotColor as Parameters<typeof Text>[0]["color"]}>{"●"}</Text>
+            )}
+            <Text>{" "}</Text>
+            {isConfirming ? (
+              <Text color="red" bold>{paddedBadge}</Text>
+            ) : color ? (
+              <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>{paddedBadge}</Text>
+            ) : (
+              <Text dimColor>{paddedBadge}</Text>
+            )}
+            <Text>{" "}</Text>
+            <Text inverse={isSelected} dimColor={dim}>{epic.slug}</Text>
+          </Text>
         </Box>,
       );
     } else {
@@ -119,31 +117,27 @@ export default function EpicsPanel({
       const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
       const featureActive = row.featureStatus === "in-progress";
 
+      const fBadgeText = `[${row.featureStatus}]`;
+      const fPaddedBadge = fBadgeText.padEnd(BADGE_WIDTH);
+
       rows.push(
         <Box key={`f-${row.epicSlug}-${row.slug}`}>
-          <Box flexGrow={1}>
-            <Text dimColor={dim}>
-              <Text color={CHROME.muted}>{"├─"}</Text>
-              <Text color={isSelected ? CHROME.title : dotColor as Parameters<typeof Text>[0]["color"]}>
-                {featureActive && !isSelected
-                  ? FEATURE_SPINNER[tick % FEATURE_SPINNER.length]
-                  : isSelected ? "●" : "○"}
-              </Text>
-              <Text>{" "}</Text>
-              <Text inverse={isSelected} dimColor={dim}>{row.slug}</Text>
+          <Text dimColor={dim}>
+            <Text color={CHROME.muted}>{"├─"}</Text>
+            <Text color={isSelected ? CHROME.title : dotColor as Parameters<typeof Text>[0]["color"]}>
+              {featureActive && !isSelected
+                ? FEATURE_SPINNER[tick % FEATURE_SPINNER.length]
+                : isSelected ? "●" : "○"}
             </Text>
-          </Box>
-          <Box>
-            <Text dimColor={dim}>
-              {color ? (
-                <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>
-                  {`[${row.featureStatus}]`}
-                </Text>
-              ) : (
-                <Text dimColor>{`[${row.featureStatus}]`}</Text>
-              )}
-            </Text>
-          </Box>
+            <Text>{" "}</Text>
+            {color ? (
+              <Text color={color as Parameters<typeof Text>[0]["color"]} dimColor={dim}>{fPaddedBadge}</Text>
+            ) : (
+              <Text dimColor>{fPaddedBadge}</Text>
+            )}
+            <Text>{" "}</Text>
+            <Text inverse={isSelected} dimColor={dim}>{row.slug}</Text>
+          </Text>
         </Box>,
       );
     }

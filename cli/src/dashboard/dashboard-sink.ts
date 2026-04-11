@@ -3,7 +3,7 @@
  *
  * Receives LogEntry records from the Logger (no gating) and:
  * 1. Routes epic-scoped entries to FallbackEntryStore (keyed by epic/phase/feature)
- * 2. Pushes all entries to SystemEntryRef for aggregate mode display
+ * 2. Pushes non-epic entries to SystemEntryRef for aggregate mode display
  *
  * Bridges the core LogEntry (level/msg/data/context) to the dispatch LogEntry
  * shape (type/text/seq) expected by FallbackEntryStore.
@@ -46,15 +46,14 @@ export class DashboardSink implements LogSink {
       );
     }
 
-    // Always push to system entries (visible in aggregate mode)
-    const prefix = context.epic
-      ? `[${context.epic}${context.phase ? `/${context.phase}` : ""}] `
-      : "";
-    this.systemRef.entries.push({
-      timestamp,
-      level,
-      message: `${prefix}${msg}`,
-      seq: this.systemRef.nextSeq(),
-    });
+    // Push to system entries only for non-epic-scoped entries
+    if (!context.epic) {
+      this.systemRef.entries.push({
+        timestamp,
+        level,
+        message: msg,
+        seq: this.systemRef.nextSeq(),
+      });
+    }
   }
 }

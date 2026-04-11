@@ -83,7 +83,7 @@ describe("DashboardSink", () => {
     expect(stored[1].type).toBe("text");
   });
 
-  test("always pushes to systemRef entries", () => {
+  test("entry with epic context is excluded from systemRef entries", () => {
     const sink = new DashboardSink({ fallbackStore, systemRef });
     sink.write({
       level: "info",
@@ -92,13 +92,25 @@ describe("DashboardSink", () => {
       context: { epic: "e", phase: "p" },
     });
 
+    expect(systemRef.entries).toHaveLength(0);
+  });
+
+  test("entry without epic context is pushed to systemRef entries", () => {
+    const sink = new DashboardSink({ fallbackStore, systemRef });
+    sink.write({
+      level: "info",
+      timestamp: 1000,
+      msg: "hello",
+      context: {},
+    });
+
     expect(systemRef.entries).toHaveLength(1);
-    expect(systemRef.entries[0].message).toContain("hello");
+    expect(systemRef.entries[0].message).toBe("hello");
     expect(systemRef.entries[0].level).toBe("info");
     expect(systemRef.entries[0].seq).toBe(0);
   });
 
-  test("systemRef entry includes epic prefix when context has epic", () => {
+  test("entry with epic context does not reach systemRef (no prefix test needed)", () => {
     const sink = new DashboardSink({ fallbackStore, systemRef });
     sink.write({
       level: "info",
@@ -107,7 +119,7 @@ describe("DashboardSink", () => {
       context: { epic: "my-epic", phase: "plan" },
     });
 
-    expect(systemRef.entries[0].message).toBe("[my-epic/plan] hello");
+    expect(systemRef.entries).toHaveLength(0);
   });
 
   test("systemRef entry has no prefix when no epic context", () => {
@@ -149,7 +161,7 @@ describe("DashboardSink", () => {
     expect(stored).toHaveLength(1);
   });
 
-  test("receives all entries regardless of level (no gating)", () => {
+  test("receives all entries regardless of level (no gating on fallbackStore)", () => {
     const sink = new DashboardSink({ fallbackStore, systemRef });
     const levels = ["info", "debug", "warn", "error"] as const;
     for (const level of levels) {
@@ -163,6 +175,7 @@ describe("DashboardSink", () => {
 
     const stored = fallbackStore.get("e", "p", undefined);
     expect(stored).toHaveLength(4);
-    expect(systemRef.entries).toHaveLength(4);
+    // Epic-scoped entries excluded from systemRef
+    expect(systemRef.entries).toHaveLength(0);
   });
 });
