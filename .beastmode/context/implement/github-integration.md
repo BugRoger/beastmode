@@ -74,6 +74,15 @@
 - ALWAYS type SyncMutation.opType as the `OpType` union, not `string` — prevents `as any` casts and maintains compile-time safety at the mutation handler site
 - ALWAYS mock Bun globals (CryptoHasher, spawnSync) in integration tests that import sync engine modules — `hashBody()` uses `Bun.CryptoHasher` which throws in Node-mode vitest; the try/catch in hashBody silently returns undefined, causing body-hash comparisons to always mismatch or always skip depending on code path
 
+## Sync Phase Gating
+- ALWAYS gate `readPrdSections` on `isPhaseAtOrPast(epic.phase, "plan")` — design artifact exists from plan-phase onward; skip returns early with a debug log
+- ALWAYS gate plan file reads in `syncFeature` on `isPhaseAtOrPast(epic.phase, "implement")` — plan artifacts exist from implement-phase onward; skip returns early with a debug log
+- ALWAYS use `isPhaseAtOrPast` from `cli/src/types.ts` for all phase comparison logic in sync — centralized and testable, avoids scattered string comparisons
+- ALWAYS use `logger.child({ phase: epic.phase })` at the `syncGitHub` entry point — all nested calls inherit phase context without per-call injection
+- NEVER log at warn or error for expected missing-artifact conditions — these are phase-progression artifacts, not errors; debug is the correct level for skipped reads
+
+context/implement/github-integration/sync-phase-gating.md
+
 ## Label Taxonomy
 - 12 labels total: `type/epic`, `type/feature`, `phase/backlog`, `phase/design`, `phase/plan`, `phase/implement`, `phase/validate`, `phase/release`, `phase/done`, `status/ready`, `status/in-progress`, `status/blocked`
 - Phase labels are mutually exclusive on an issue — remove siblings before adding

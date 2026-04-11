@@ -36,6 +36,9 @@
 - ALWAYS store bare filenames (no directory prefix, no absolute path) in epic/feature store fields for artifact paths — readers prefix the known artifact directory at read time using `basename(storedPath)` + `join(projectRoot, ".beastmode", "artifacts", "<phase>")`. This tolerates absolute worktree paths, repo-relative paths, and bare filenames equally with no store migration needed
 - ALWAYS scope additive tasks (logging-only, metrics-only) with explicit "DO NOT change existing logic" guards in the task spec — agents drift into fixing adjacent code when they encounter it; the task must make the boundary explicit
 - ALWAYS add unused-import check to the quality-reviewer checklist for new test files — TypeScript test files routinely accumulate unused imports (type imports, helper imports) that fail the type gate at validate; catching them at review is cheaper than validate fixup
+- ALWAYS gate sync artifact reads on `isPhaseAtOrPast(epic.phase, threshold)` — skip `readPrdSections` when phase has not yet passed `design`, skip plan file reads when phase has not yet passed `plan`; gates log at `debug` level; prevents expected file-not-found conditions from producing WARN output
+- ALWAYS use `logger.child({ phase: epic.phase })` at the sync entry point — propagates phase context to all downstream log calls automatically; prefer child logger over per-call context injection
+- ALWAYS update existing sync tests to use post-threshold phases when adding phase gates — tests that exercise "warn on missing artifact" paths fail silently once a gate is added if they still use a pre-threshold phase
 
 ## State Scanning
 - ALWAYS discover epics from store entities — never from design files or date heuristics
