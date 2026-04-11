@@ -148,10 +148,6 @@ export class JsonFileStore implements TaskStore {
     return this.inner.tree(rootId);
   }
 
-  find(idOrSlug: string): Entity | undefined {
-    return this.inner.find(idOrSlug);
-  }
-
   // --- Dependency graph (delegate to inner) ---
 
   dependencyChain(id: string): Entity[] {

@@ -97,7 +97,6 @@ export interface TaskStore {
   ready(opts?: { epicId?: string; type?: EntityType }): Entity[];
   blocked(): Entity[];
   tree(rootId?: string): TreeNode[];
-  find(idOrSlug: string): Entity | undefined;
 
   // Dependency graph
   dependencyChain(id: string): Entity[];
