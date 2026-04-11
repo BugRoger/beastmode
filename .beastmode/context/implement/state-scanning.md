@@ -4,7 +4,7 @@
 - ALWAYS discover epics from manifest files (.manifest.json) in `.beastmode/state/` — never from design files or date heuristics
 - Flat-file convention: `state/YYYY-MM-DD-<slug>.manifest.json` — no directory-per-slug
 - Slug extraction strips date prefix and .manifest.json suffix from filenames
-- `store.find()` resolves by either hex slug or epic name for dual-lookup convenience
+- `resolveIdentifier()` resolves entities by exact ID -> exact slug -> prefix slug (opt-in). Typed accessors `getEpic()` and `getFeature()` replace the removed `store.find()` for direct lookups
 
 ## Phase Derivation
 - ALWAYS derive current phase from the top-level manifest.phase field — no filesystem marker sniffing, no inference from features or phases map

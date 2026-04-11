@@ -39,8 +39,8 @@
 - CLI is the sole manifest mutator via two modules: manifest-store.ts (get, list, save, create, validate, rename, find, slugify) and manifest.ts (enrich, advancePhase, regressPhase, markFeature, cancel, deriveNextAction, checkBlocked, shouldAdvance) — all pure functions return new manifests, caller calls store.save()
 - Terminology: `slug` is an immutable 6-character hex assigned at worktree creation; `epic` is the human-readable name derived by the design skill after rename; `feature` is a sub-unit within an epic
 - `store.rename()` atomically renames all slug-keyed resources (artifacts, branch, worktree, manifest file, manifest content) with prepare-then-execute strategy — collision resolution uses deterministic `<epic>-<hex>` suffix
-- `store.find()` resolves by either hex slug or epic name — dual lookup for user convenience
-- `slugify()` and `isValidSlug()` centralize format validation in the store (`[a-z0-9](?:[a-z0-9-]*[a-z0-9])?`)
+- `resolveIdentifier()` resolves entities by exact ID -> exact slug -> prefix slug (opt-in via `allowPrefix: true`). Typed accessors `getEpic()` and `getFeature()` replace the removed `store.find()` for direct lookups
+- `slugify()` and `isValidSlug()` centralize format validation in the store (`[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?`) — accepts dots and `--` epic-feature separator
 - `originId` field preserves lineage from birth hex to final epic name after rename
 - Cancel deletes the manifest file entirely via the shared cancel module (`cancelEpic()`) — cancelled features vanish from status/dashboard, git log serves as the historical record
 - Manifest location: `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — flat-file convention, local-only, gitignored
@@ -51,7 +51,7 @@
 
 ## Post-Dispatch Pipeline
 - After every phase dispatch: Stop hook generates output.json from artifact frontmatter, CLI reads output.json from `artifacts/<phase>/` by hex slug match, enriches manifest via manifest.ts pure functions, optionally calls `store.rename()` for design phase (memory-only), then single `store.save()`, then runs `syncGitHubForEpic()` which encapsulates loadConfig, discoverGitHub, syncGitHub, mutation write-back via setGitHubEpic()/setFeatureGitHubIssue(), and warn-and-continue error handling. After sync, a commit issue ref amend step appends `(#N)` to the most recent commit message — epic issue ref for phase checkpoints and release merges, feature issue ref for feature task commits (resolved from commit message prefix)
-- Non-design phases fail fast if slug not found in store via `store.find()` — design creates the slug, all other phases are read-only with respect to slug identity
+- Non-design phases fail fast if slug not found in store via `resolveIdentifier()` — design creates the slug, all other phases are read-only with respect to slug identity
 - Machine persist action accumulates state in memory without disk writes — single `store.save()` at end of dispatch is the sole persist path
 - Design abandon cleanup: two-layer defense detects when design session ends without producing output.json. Primary gate in phase.ts checks `loadWorktreePhaseOutput()` after `runInteractive()` returns — if missing, runs cleanup via the shared cancel module (`cancelEpic()` from `cancel-logic.ts` — handles worktree, branch, tags, artifacts, GitHub issue, manifest in order with warn-and-continue) before returning, preventing post-dispatch from being called. Secondary guard in post-dispatch.ts skips `DESIGN_COMPLETED` event when no design output exists — defensive backstop for edge cases (ReconcilingFactory path). Both non-zero exit (crash/Ctrl+C) and zero exit without output (graceful quit) trigger the same cleanup path. Cleanup is idempotent — shared cancel module succeeds with nothing left to clean on re-run
 - `resolveDesignSlug()` (commit-message regex) deleted — output.json hex lookup replaces it
@@ -73,13 +73,13 @@
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
 - A Stop hook (generated into `.claude/settings.local.json` at dispatch time) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
 - output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
-- Standardized artifact frontmatter across all phases: `phase`, `slug` (immutable hex), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
+- Standardized artifact frontmatter across all phases: `phase`, `id` (entity identifier), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
 - `filenameMatchesEpic()` handles both hex-named files (pre-rename) and epic-named files (post-rename) during the design phase transition window
 
 ## Cancel Cleanup Module
 - Shared module (`cancel-logic.ts`) consumed by three callers: CLI cancel command (`cancelCommand()`), dashboard cancel action, and design-abandon cleanup in phase.ts
-- `cancelEpic()` takes an identifier string, resolves via `store.find()` internally, extracts epic name from manifest for artifact matching
+- `cancelEpic()` takes an identifier string, resolves via `resolveIdentifier()` internally, extracts epic name from store for artifact matching
 - Ordered cleanup steps with warn-and-continue per step:
   1. Remove worktree (`git worktree remove --force`) and delete `feature/<slug>` branch
   2. Delete archive tag `archive/<slug>` if present

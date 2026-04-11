@@ -80,4 +80,4 @@
 - ALWAYS enrich manifest from output.json at each checkpoint — Stop hook generates output.json from artifact frontmatter
 - CLI is the sole manifest mutator via manifest-store.ts + manifest.ts — github-sync.ts returns mutations instead of mutating in-place
 - ALWAYS include optional github blocks (epic/repo at root, issue numbers per feature) only when github.enabled is true
-- `slugify()` and `isValidSlug()` in the store validate slug format against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?`
+- `slugify()` and `isValidSlug()` in the store validate slug format against `[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?` — accepts dots and the `--` epic-feature separator

@@ -13,7 +13,7 @@
 - Optional fields: `epic` (string, human-readable name after rename), `originId` (string, birth hex for lineage), `artifacts` (Record<string, string[]>), `summary` ({ problem, solution }), `worktree` ({ branch, path }), `github` ({ epic, repo, bodyHash? })
 - ManifestFeature extended with optional `description` field — plan checkpoint populates it
 - manifest-store.ts owns the validate() function — single source of truth for manifest structure
-- Slug format validated against `[a-z0-9](?:[a-z0-9-]*[a-z0-9])?` via `isValidSlug()`
+- Slug format validated against `[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?` via `isValidSlug()` — centralized in store module; accepts dots and the `--` epic-feature separator
 
 ## Type Architecture
 - ALWAYS use PipelineManifest as the sole type — canonical for store, state machine, status command, and watch command
