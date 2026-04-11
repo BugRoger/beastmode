@@ -6,6 +6,7 @@
  * TOOL_INPUT and TOOL_OUTPUT as environment variables.
  *
  * Exits 0 always for hook handlers (hook failure must never block Claude).
+ * Exception: session-start exits non-zero on missing inputs (fail-fast contract).
  * Exits 1 for unknown subcommands.
  */
 
@@ -18,19 +19,25 @@ import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
 import { generateAll } from "../hooks/generate-output.js";
 
-const VALID_HOOKS = ["hitl-auto", "hitl-log", "generate-output"];
+const VALID_HOOKS = ["hitl-auto", "hitl-log", "generate-output", "session-start"];
 
 export async function hooksCommand(args: string[]): Promise<void> {
   const hookName = args[0];
 
   if (!hookName) {
-    process.stderr.write("Usage: beastmode hooks <hitl-auto|hitl-log|generate-output> [phase]\n");
+    process.stderr.write("Usage: beastmode hooks <hitl-auto|hitl-log|generate-output|session-start> [phase]\n");
     process.exit(1);
   }
 
   if (!VALID_HOOKS.includes(hookName)) {
     process.stderr.write(`Unknown hook: ${hookName}\nValid hooks: ${VALID_HOOKS.join(", ")}\n`);
     process.exit(1);
+  }
+
+  // session-start has its own error handling — exits non-zero on failure
+  if (hookName === "session-start") {
+    runSessionStart();
+    return;
   }
 
   try {
@@ -49,6 +56,30 @@ export async function hooksCommand(args: string[]): Promise<void> {
     // Silent exit — hook failure must never block Claude
   }
   process.exit(0);
+}
+
+function runSessionStart(): void {
+  const phase = process.env.BEASTMODE_PHASE;
+  const epic = process.env.BEASTMODE_EPIC;
+  const slug = process.env.BEASTMODE_SLUG;
+
+  if (!phase || !epic || !slug) {
+    const missing = [
+      !phase && "BEASTMODE_PHASE",
+      !epic && "BEASTMODE_EPIC",
+      !slug && "BEASTMODE_SLUG",
+    ].filter(Boolean).join(", ");
+    process.stderr.write(`session-start: missing required env vars: ${missing}\n`);
+    process.exit(1);
+  }
+
+  const output = {
+    hookSpecificOutput: {
+      hookEventName: "SessionStart",
+      additionalContext: `Phase: ${phase}, Epic: ${epic}, Slug: ${slug}`,
+    },
+  };
+  process.stdout.write(JSON.stringify(output));
 }
 
 function runHitlAuto(args: string[]): void {
