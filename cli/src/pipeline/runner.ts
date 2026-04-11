@@ -156,7 +156,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
     const preToolUseHook = buildPreToolUseHook(config.phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase });
+    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase, feature: config.featureSlug });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);

@@ -129,5 +129,6 @@ function runGenerateOutput(): void {
     // not a worktree
   }
   const worktreeSlug = isWorktree ? basename(repoRoot) : undefined;
-  generateAll(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug);
+  const featureOverride = process.env.BEASTMODE_FEATURE;
+  generateAll(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug, featureOverride);
 }

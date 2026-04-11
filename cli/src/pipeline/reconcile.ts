@@ -319,7 +319,9 @@ export async function reconcilePlan(
 
     // Create feature entities
     for (const f of features) {
-      const existing = store.listFeatures(epic.id).find((ef) => ef.slug === f.slug);
+      const existing = store.listFeatures(epic.id).find(
+        (ef) => ef.slug === f.slug || ef.name === f.slug,
+      );
       if (!existing) {
         const newFeature = store.addFeature({
           parent: epic.id,
