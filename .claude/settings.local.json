@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-auto release"
+            "command": "bunx beastmode hooks hitl-auto design"
           }
         ]
       },
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log release"
+            "command": "bunx beastmode hooks hitl-log design"
           }
         ]
       },
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log release"
+            "command": "bunx beastmode hooks hitl-log design"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bunx beastmode hooks hitl-log release"
+            "command": "bunx beastmode hooks hitl-log design"
           }
         ]
       }
