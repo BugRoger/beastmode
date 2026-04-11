@@ -68,30 +68,6 @@ export async function hooksCommand(args: string[]): Promise<void> {
   process.exit(0);
 }
 
-function runSessionStart(): void {
-  const phase = process.env.BEASTMODE_PHASE;
-  const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
-
-  if (!phase || !epic || !slug) {
-    const missing = [
-      !phase && "BEASTMODE_PHASE",
-      !epic && "BEASTMODE_EPIC",
-      !slug && "BEASTMODE_SLUG",
-    ].filter(Boolean).join(", ");
-    process.stderr.write(`session-start: missing required env vars: ${missing}\n`);
-    process.exit(1);
-  }
-
-  const output = {
-    hookSpecificOutput: {
-      hookEventName: "SessionStart",
-      additionalContext: `Phase: ${phase}, Epic: ${epic}, Slug: ${slug}`,
-    },
-  };
-  process.stdout.write(JSON.stringify(output));
-}
-
 function runHitlAuto(args: string[]): void {
   const phase = args[0];
   if (!phase) return;
