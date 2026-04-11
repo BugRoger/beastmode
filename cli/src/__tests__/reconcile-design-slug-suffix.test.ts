@@ -66,7 +66,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
       },
     };
 
-    const result = await reconcileDesign(projectRoot, originalSlug, "/tmp/fake-wt");
+    const result = await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
 
     expect(result).toBeDefined();
     expect(result!.epic.slug).toBe(`dashboard-stats-persistence-${shortId}`);
@@ -75,7 +75,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
   });
 
   it("should preserve original slug when no realSlug is provided", async () => {
-    const { originalSlug } = seedEpic("abcd");
+    const { epicId, originalSlug } = seedEpic("abcd");
 
     mockDesignOutput = {
       status: "completed",
@@ -84,7 +84,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
       },
     };
 
-    const result = await reconcileDesign(projectRoot, originalSlug, "/tmp/fake-wt");
+    const result = await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
 
     expect(result).toBeDefined();
     // Slug unchanged — still has the original hex-derived slug
@@ -103,7 +103,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
       },
     };
 
-    await reconcileDesign(projectRoot, originalSlug, "/tmp/fake-wt");
+    await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
 
     expect(renamedTags).toHaveLength(1);
     expect(renamedTags[0].from).toBe(originalSlug);
@@ -111,7 +111,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
   });
 
   it("should produce slug matching pattern {realSlug}-{4-hex}", async () => {
-    const { epicId, originalSlug } = seedEpic("cafe");
+    const { epicId } = seedEpic("cafe");
 
     mockDesignOutput = {
       status: "completed",
@@ -120,7 +120,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
       },
     };
 
-    const result = await reconcileDesign(projectRoot, originalSlug, "/tmp/fake-wt");
+    const result = await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
 
     expect(result).toBeDefined();
     // Must end with 4 hex chars

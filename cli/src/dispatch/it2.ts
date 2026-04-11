@@ -493,8 +493,9 @@ export class ITermSessionFactory implements SessionFactory {
         if (projectRoot) {
           const taskStore = new JsonFileStore(resolve(projectRoot, ".beastmode", "state", "store.json"));
           taskStore.load();
-          const entity = taskStore.find(epicSlug);
-          if (entity && entity.type === "epic" && (entity.status === "done" || entity.status === "cancelled")) {
+          // Look up epic by listing and matching slug (no find() available)
+          const entity = taskStore.listEpics().find((e) => e.slug === epicSlug);
+          if (entity && (entity.status === "done" || entity.status === "cancelled")) {
             try {
               await this.client.closeSession(session.id);
             } catch {

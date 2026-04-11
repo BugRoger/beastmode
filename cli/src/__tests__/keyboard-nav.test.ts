@@ -32,7 +32,7 @@ describe("cancelEpicAction", () => {
     const storePath = resolve(stateDir, "store.json");
     const store = new JsonFileStore(storePath);
     store.load();
-    store.addEpic({ name: slug, slug });
+    store.addEpic({ name: slug });
     store.save();
 
     return { tmpDir, stateDir, storePath };
