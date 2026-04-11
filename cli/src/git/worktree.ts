@@ -50,7 +50,7 @@ export async function gitCheck(
 }
 
 /**
- * Worktree lifecycle manager — create, enter, exists, archive, merge, remove.
+ * Worktree lifecycle manager — create, enter, exists, archive, remove.
  *
  * Provides lifecycle operations only:
  *   create        — git worktree at .claude/worktrees/<slug> with feature/<slug> branch
@@ -58,7 +58,6 @@ export async function gitCheck(
  *   ensureWorktree — idempotent create-or-reuse
  *   exists        — checks if worktree exists for slug
  *   archive       — tag feature branch HEAD as archive/<slug>
- *   merge         — squash-merge feature branch into main
  *   remove        — cleans up worktree directory and optionally deletes branch
  *   isInsideWorktree      — detect if cwd is inside a git worktree
  *   resolveMainCheckoutRoot — resolve the main checkout path from any worktree
@@ -388,27 +387,6 @@ export async function archive(
   await git(["tag", tagName, sha], { cwd, allowFailure: true });
 
   return tagName;
-}
-
-/**
- * Squash-merge a feature branch into main.
- */
-export async function merge(
-  slug: string,
-  opts: { cwd?: string } = {},
-): Promise<void> {
-  const cwd = opts.cwd;
-  const branch = `feature/${slug}`;
-  const mainBranch = await resolveMainBranch({ cwd });
-
-  // Squash-merge into main (from project root, not worktree)
-  await git(["checkout", mainBranch], { cwd });
-  // Reset staged changes and remove untracked artifacts that could conflict
-  await git(["reset", "HEAD"], { cwd, allowFailure: true });
-  await git(["checkout", "."], { cwd, allowFailure: true });
-  await git(["clean", "-fd", ".beastmode/artifacts/"], { cwd, allowFailure: true });
-  await git(["merge", "--squash", branch], { cwd });
-  await git(["commit", "--no-edit"], { cwd, allowFailure: true });
 }
 
 /**
