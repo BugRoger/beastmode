@@ -51,12 +51,15 @@ describe("Collision-proof slug derivation", () => {
   });
 
   describe("Feature slug includes the ordinal suffix", () => {
-    it("should derive feature slugs with ordinal from feature ID", () => {
+    it("should derive feature slugs with epic prefix and ordinal", () => {
       const epic = store.addEpic({ name: "auth system" });
       const f1 = store.addFeature({ parent: epic.id, name: "login flow" });
       const f2 = store.addFeature({ parent: epic.id, name: "token cache" });
-      expect(f1.slug).toBe("login-flow-1");
-      expect(f2.slug).toBe("token-cache-2");
+      // New format: {epicSlug}--{featureName}-{4hex}.{ordinal}
+      expect(f1.slug).toContain(epic.slug + "--");
+      expect(f1.slug).toMatch(/\.1$/);
+      expect(f2.slug).toContain(epic.slug + "--");
+      expect(f2.slug).toMatch(/\.2$/);
     });
   });
 
@@ -68,7 +71,8 @@ describe("Collision-proof slug derivation", () => {
       const f3 = store.addFeature({ parent: epic.id, name: "feature c" });
 
       const ordinals = [f1, f2, f3].map((f) => {
-        const parts = f.slug.split("-");
+        // Ordinal is after the last dot
+        const parts = f.slug.split(".");
         return parts[parts.length - 1];
       });
       const uniqueOrdinals = new Set(ordinals);
@@ -108,6 +112,37 @@ describe("Collision-proof slug derivation", () => {
       expect(
         filenameMatchesEpic("2026-04-01-f3a7.output.json", epicSlug, hexSlug)
       ).toBe(true);
+    });
+  });
+
+  describe("Feature slug embeds parent epic name", () => {
+    it("should follow {epicSlug}--{featureName}-{4hex}.{ordinal} format", () => {
+      const epic = store.addEpic({ name: "auth system" });
+      const feature = store.addFeature({ parent: epic.id, name: "login flow" });
+      const shortId = epic.id.replace("bm-", "");
+      expect(feature.slug).toMatch(new RegExp(`^auth-system-${shortId}--login-flow-[0-9a-f]{4}\\.1$`));
+    });
+
+    it("should use the full epic slug including hex suffix", () => {
+      const epic = store.addEpic({ name: "data pipeline" });
+      const feature = store.addFeature({ parent: epic.id, name: "ingestion" });
+      expect(feature.slug).toContain(epic.slug + "--");
+    });
+
+    it("should have ordinal after the dot", () => {
+      const epic = store.addEpic({ name: "auth system" });
+      const f1 = store.addFeature({ parent: epic.id, name: "login" });
+      const f2 = store.addFeature({ parent: epic.id, name: "logout" });
+      expect(f1.slug).toMatch(/\.1$/);
+      expect(f2.slug).toMatch(/\.2$/);
+    });
+
+    it("double-hyphen separates epic slug from feature slug", () => {
+      const epic = store.addEpic({ name: "my epic" });
+      const feature = store.addFeature({ parent: epic.id, name: "my feature" });
+      const parts = feature.slug.split("--");
+      expect(parts).toHaveLength(2);
+      expect(parts[0]).toBe(epic.slug);
     });
   });
 });
