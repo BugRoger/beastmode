@@ -7,6 +7,7 @@ import {
   mergeSessionCompleted,
   loadStats,
   saveStats,
+  toSessionStats,
   CURRENT_SCHEMA_VERSION,
   type PersistedStats,
 } from "../dashboard/stats-persistence.js";
@@ -217,5 +218,72 @@ describe("loadStats graceful degradation", () => {
     writeFileSync(statsPath, JSON.stringify(futureStats), "utf-8");
     const stats = loadStats(statsPath);
     expect(stats.total).toBe(0);
+  });
+});
+
+describe("toSessionStats", () => {
+  test("converts PersistedStats with populated phases to SessionStats", () => {
+    const persisted: PersistedStats = {
+      schemaVersion: 1,
+      total: 10,
+      successes: 8,
+      failures: 2,
+      reDispatches: 1,
+      cumulativeMs: 600000,
+      phaseDurations: {
+        plan: { avgMs: 30000, count: 3 },
+        implement: { avgMs: 120000, count: 5 },
+        validate: { avgMs: 45000, count: 4 },
+        release: { avgMs: 15000, count: 2 },
+      },
+      completedKeys: ["a:plan:", "b:implement:feat1"],
+    };
+    const result = toSessionStats(persisted);
+    expect(result.total).toBe(10);
+    expect(result.active).toBe(0);
+    expect(result.successes).toBe(8);
+    expect(result.failures).toBe(2);
+    expect(result.reDispatches).toBe(1);
+    expect(result.successRate).toBe(80);
+    expect(result.uptimeMs).toBe(0);
+    expect(result.cumulativeMs).toBe(600000);
+    expect(result.isEmpty).toBe(false);
+    expect(result.phaseDurations.plan).toBe(30000);
+    expect(result.phaseDurations.implement).toBe(120000);
+    expect(result.phaseDurations.validate).toBe(45000);
+    expect(result.phaseDurations.release).toBe(15000);
+  });
+
+  test("converts empty PersistedStats to empty SessionStats", () => {
+    const empty = emptyPersistedStats();
+    const result = toSessionStats(empty);
+    expect(result.total).toBe(0);
+    expect(result.active).toBe(0);
+    expect(result.isEmpty).toBe(true);
+    expect(result.successRate).toBe(0);
+    expect(result.phaseDurations.plan).toBeNull();
+    expect(result.phaseDurations.implement).toBeNull();
+    expect(result.phaseDurations.validate).toBeNull();
+    expect(result.phaseDurations.release).toBeNull();
+  });
+
+  test("handles partial phase durations (missing phases get null)", () => {
+    const partial: PersistedStats = {
+      schemaVersion: 1,
+      total: 2,
+      successes: 2,
+      failures: 0,
+      reDispatches: 0,
+      cumulativeMs: 100000,
+      phaseDurations: {
+        plan: { avgMs: 50000, count: 2 },
+      },
+      completedKeys: [],
+    };
+    const result = toSessionStats(partial);
+    expect(result.phaseDurations.plan).toBe(50000);
+    expect(result.phaseDurations.implement).toBeNull();
+    expect(result.phaseDurations.validate).toBeNull();
+    expect(result.phaseDurations.release).toBeNull();
   });
 });

@@ -6,8 +6,12 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname } from "node:path";
+import type { SessionStats } from "./session-stats.js";
 
 export const CURRENT_SCHEMA_VERSION = 1;
+
+const TRACKED_PHASES = ["plan", "implement", "validate", "release"] as const;
+type TrackedPhase = (typeof TRACKED_PHASES)[number];
 
 /** Incremental average entry for a single phase. */
 export interface PhaseAverage {
@@ -129,4 +133,29 @@ export function saveStats(filePath: string, stats: PersistedStats): void {
     mkdirSync(dir, { recursive: true });
   }
   writeFileSync(filePath, JSON.stringify(stats, null, 2), "utf-8");
+}
+
+/**
+ * Convert persisted all-time stats into the SessionStats shape for rendering.
+ * Sets active=0, uptimeMs=0 (not applicable for historical data).
+ */
+export function toSessionStats(p: PersistedStats): SessionStats {
+  const phaseDurations = {} as Record<TrackedPhase, number | null>;
+  for (const phase of TRACKED_PHASES) {
+    const entry = p.phaseDurations[phase];
+    phaseDurations[phase] = entry ? entry.avgMs : null;
+  }
+
+  return {
+    total: p.total,
+    active: 0,
+    successes: p.successes,
+    failures: p.failures,
+    reDispatches: p.reDispatches,
+    successRate: p.total > 0 ? Math.round((p.successes / p.total) * 100) : 0,
+    uptimeMs: 0,
+    cumulativeMs: p.cumulativeMs,
+    isEmpty: p.total === 0,
+    phaseDurations,
+  };
 }
