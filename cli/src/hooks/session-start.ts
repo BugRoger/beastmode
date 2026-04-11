@@ -17,7 +17,7 @@ import { parseFrontmatter } from "./generate-output.js";
 export interface SessionStartInput {
   phase: string;
   epic: string;
-  slug: string;
+  id: string;
   feature?: string;
   repoRoot: string;
 }
@@ -31,14 +31,14 @@ const VALID_PHASES = ["design", "plan", "implement", "validate", "release"];
  * Throws on missing required inputs, context files, or artifacts.
  */
 export function assembleContext(input: SessionStartInput): string {
-  const { phase, epic, slug, feature, repoRoot } = input;
+  const { phase, epic, id, feature, repoRoot } = input;
 
   // Validate required inputs
   if (!phase || !VALID_PHASES.includes(phase)) {
     throw new Error(`Missing or invalid phase: "${phase}". Valid phases: ${VALID_PHASES.join(", ")}`);
   }
   if (!epic) throw new Error("Missing required input: epic");
-  if (!slug) throw new Error("Missing required input: slug");
+  if (!id) throw new Error("Missing required input: id");
   if (phase === "implement" && !feature) {
     throw new Error("Missing required input: feature (required for implement phase)");
   }
@@ -219,13 +219,13 @@ export function formatOutput(context: string): string {
 export function runSessionStart(repoRoot: string): void {
   const phase = process.env.BEASTMODE_PHASE;
   const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
+  const id = process.env.BEASTMODE_ID;
   const feature = process.env.BEASTMODE_FEATURE;
 
   if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
   if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC");
-  if (!slug) throw new Error("Missing environment variable: BEASTMODE_SLUG");
+  if (!id) throw new Error("Missing environment variable: BEASTMODE_ID");
 
-  const context = assembleContext({ phase, epic, slug, feature, repoRoot });
+  const context = assembleContext({ phase, epic, id, feature, repoRoot });
   process.stdout.write(formatOutput(context));
 }
