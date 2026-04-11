@@ -28,8 +28,8 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
       const result = listEnrichedFromStore(store);
 
       expect(result.length).toBe(2);
-      expect(result.map(e => e.slug)).toContain("auth-system");
-      expect(result.map(e => e.slug)).toContain("data-pipeline");
+      expect(result.map(e => e.slug)).toContain(epic1.slug);
+      expect(result.map(e => e.slug)).toContain(epic2.slug);
     });
 
     it("each epic has a machine-derived next action", async () => {
@@ -38,7 +38,7 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
-      const enriched = result.find(e => e.slug === "auth-system");
+      const enriched = result.find(e => e.slug === epic.slug);
 
       expect(enriched).toBeDefined();
       expect(enriched!.nextAction).toBeDefined();
@@ -55,25 +55,25 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
       const f1 = store.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" });
       store.updateFeature(f1.id, { status: "completed" });
 
-      store.addFeature({ parent: epic.id, name: "Token Cache", slug: "token-cache" });
+      const f2 = store.addFeature({ parent: epic.id, name: "Token Cache", slug: "token-cache" });
       // token-cache depends on f1 — but f1 completed, so token-cache is pending and dispatchable
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
-      const enriched = result.find(e => e.slug === "auth-system");
+      const enriched = result.find(e => e.slug === epic.slug);
 
       expect(enriched).toBeDefined();
       expect(enriched!.nextAction).toBeDefined();
       expect(enriched!.nextAction!.type).toBe("fan-out");
-      expect(enriched!.nextAction!.features).toContain("token-cache");
+      expect(enriched!.nextAction!.features).toContain(f2.slug);
     });
   });
 
   describe("Watch loop scan is a single store parse", () => {
     it("all epic discovery happens from a single store read", async () => {
-      store.addEpic({ name: "Epic 1", slug: "epic-1" });
-      store.addEpic({ name: "Epic 2", slug: "epic-2" });
-      store.addEpic({ name: "Epic 3", slug: "epic-3" });
+      const e1 = store.addEpic({ name: "Epic 1", slug: "epic-1" });
+      const e2 = store.addEpic({ name: "Epic 2", slug: "epic-2" });
+      const e3 = store.addEpic({ name: "Epic 3", slug: "epic-3" });
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       // Single call — no manifest files consulted
@@ -93,7 +93,7 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
-      const enriched = result.find(e => e.slug === "auth-system");
+      const enriched = result.find(e => e.slug === epic.slug);
 
       expect(enriched).toBeDefined();
       expect(enriched!.status).toBe("implement");
@@ -109,7 +109,7 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
 
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const result = listEnrichedFromStore(store);
-      const enriched = result.find(e => e.slug === "auth-system");
+      const enriched = result.find(e => e.slug === epic.slug);
 
       expect(enriched!.nextAction).toBeDefined();
       expect(enriched!.nextAction!.type).toBe("fan-out");
@@ -133,7 +133,7 @@ describe("@manifest-absorption: Watch loop and dashboard consume store entities"
       // Enriched view (what dashboard would see)
       const { listEnrichedFromStore } = await import("../store/scan.js");
       const enrichedEpics = listEnrichedFromStore(store);
-      const enriched = enrichedEpics.find(e => e.slug === "auth-system")!;
+      const enriched = enrichedEpics.find(e => e.slug === epic.slug)!;
 
       // Both show same phase
       expect(enriched.status).toBe(storeEpic!.status);

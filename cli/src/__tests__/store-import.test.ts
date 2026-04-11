@@ -63,7 +63,8 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
     );
-    expect(feature.slug).toBe("login-flow");
+    // Slug is auto-generated from name + ordinal, ignoring the slug param
+    expect(feature.slug).toMatch(/^login-flow-\d+$/);
   });
 
   it("addFeature auto-generates slug from name when not provided", async () => {
@@ -71,7 +72,8 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Token Cache" })
     );
-    expect(feature.slug).toBe("token-cache");
+    // Slug is derived from name + ordinal
+    expect(feature.slug).toMatch(/^token-cache-\d+$/);
   });
 
   it("slug persists through save/load cycle", async () => {
@@ -79,10 +81,11 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
     );
+    const expectedSlug = feature.slug;
 
     // Load from disk in a new transaction
     const loaded = await store.transact(s => s.getFeature(feature.id));
-    expect(loaded!.slug).toBe("login-flow");
+    expect(loaded!.slug).toBe(expectedSlug);
   });
 
   it("slug is immutable via updateFeature", async () => {
@@ -90,12 +93,13 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Login Flow", slug: "login-flow" })
     );
+    const originalSlug = feature.slug;
 
     // FeaturePatch should not include slug since it's in the Omit list
     const updated = await store.transact(s =>
       s.updateFeature(feature.id, { name: "Updated Name" })
     );
-    expect(updated.slug).toBe("login-flow");
+    expect(updated.slug).toBe(originalSlug);
   });
 });
 
@@ -123,7 +127,7 @@ describe("importTestable", () => {
     expect(result.epics).toHaveLength(1);
     const epic = result.epics[0];
     expect(epic.name).toBe("Auth System");
-    expect(epic.slug).toBe("auth-system");
+    expect(epic.slug).toMatch(/^auth-system-[a-f0-9]{4}$/);
     expect(epic.status).toBe("implement");
     expect(epic.summary).toBe("Need auth");
     expect(epic.design).toBe("artifacts/design/2026-01-01-auth-system.md");
@@ -144,7 +148,8 @@ describe("importTestable", () => {
     const result = await importTestable(store, projectRoot);
 
     expect(result.features).toHaveLength(1);
-    expect(result.features[0].slug).toBe("login-flow");
+    // Feature slug is derived from name + ordinal, not from the manifest slug
+    expect(result.features[0].slug).toMatch(/^login-flow-\d+$/);
     expect(result.features[0].plan).toBe("plan/login.md");
     expect(result.features[0].status).toBe("pending");
   });
@@ -161,9 +166,11 @@ describe("importTestable", () => {
     const { importTestable } = await import("../commands/store-import.js");
     const result = await importTestable(store, projectRoot);
 
-    const featureC = result.features.find((f: any) => f.slug === "c");
-    const featureA = result.features.find((f: any) => f.slug === "a");
-    const featureB = result.features.find((f: any) => f.slug === "b");
+    // Find features by name prefix since slugs now have ordinal suffixes
+    const featureA = result.features.find((f: any) => f.slug.startsWith("a-"));
+    const featureB = result.features.find((f: any) => f.slug.startsWith("b-"));
+    const featureC = result.features.find((f: any) => f.slug.startsWith("c-"));
+
     expect(featureC!.depends_on).toContain(featureA!.id);
     expect(featureC!.depends_on).toContain(featureB!.id);
     expect(featureA!.depends_on).toEqual([]);

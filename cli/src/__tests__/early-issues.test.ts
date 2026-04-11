@@ -123,8 +123,8 @@ describe("ensureEarlyIssues", () => {
       mockLoadSyncRefs.mockReturnValue({ [epicId]: { issue: 10 } });
 
       // Add features to store
-      store.addFeature({ parent: epicId, name: "Feat A", slug: "feat-a" });
-      store.addFeature({ parent: epicId, name: "Feat B", slug: "feat-b" });
+      const featA = store.addFeature({ parent: epicId, name: "Feat A" });
+      const featB = store.addFeature({ parent: epicId, name: "Feat B" });
 
       mockGhIssueCreate
         .mockResolvedValueOnce(20)
@@ -144,8 +144,8 @@ describe("ensureEarlyIssues", () => {
     });
 
     it("skips features that already have issue numbers", async () => {
-      const featA = store.addFeature({ parent: epicId, name: "Feat A", slug: "feat-a" });
-      store.addFeature({ parent: epicId, name: "Feat B", slug: "feat-b" });
+      const featA = store.addFeature({ parent: epicId, name: "Feat A" });
+      const featB = store.addFeature({ parent: epicId, name: "Feat B" });
 
       // feat-a already has an issue
       mockLoadSyncRefs.mockReturnValue({
@@ -167,7 +167,7 @@ describe("ensureEarlyIssues", () => {
       expect(mockGhIssueCreate).toHaveBeenCalledTimes(1);
       expect(mockGhIssueCreate).toHaveBeenCalledWith(
         "owner/repo",
-        "My Epic: feat-b",
+        "My Epic: " + featB.slug,
         expect.any(String),
         ["type/feature", "status/ready"],
         { logger: nullLogger },
@@ -175,7 +175,7 @@ describe("ensureEarlyIssues", () => {
     });
 
     it("skips feature creation for non-implement phases", async () => {
-      store.addFeature({ parent: epicId, name: "Feat A", slug: "feat-a" });
+      store.addFeature({ parent: epicId, name: "Feat A" });
 
       await ensureEarlyIssues({
         phase: "validate",
@@ -190,7 +190,7 @@ describe("ensureEarlyIssues", () => {
     });
 
     it("skips feature creation when epic has no issue number", async () => {
-      store.addFeature({ parent: epicId, name: "Feat A", slug: "feat-a" });
+      store.addFeature({ parent: epicId, name: "Feat A" });
       mockLoadSyncRefs.mockReturnValue({}); // no epic ref
 
       await ensureEarlyIssues({
