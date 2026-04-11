@@ -71,9 +71,9 @@ function colorPrefix(prefix: string): string {
  * Format a phase badge: [phase] in the phase's color.
  */
 function formatPhaseBadge(phase: string | undefined): string {
-  if (!phase) return "";
+  if (!phase) return "".padEnd(BADGE_WIDTH);
   const color = PHASE_COLOR[phase];
-  const badge = `[${phase}]`;
+  const badge = `[${phase}]`.padEnd(BADGE_WIDTH);
   return color ? chalk.hex(color)(badge) : badge;
 }
 

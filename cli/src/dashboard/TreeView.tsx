@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
 import type { TreeState, EpicNode, FeatureNode, TreeEntry } from "./tree-types.js";
 import { formatTreeLine } from "./tree-format.js";
-import { isDim, PHASE_COLOR, CHROME } from "./monokai-palette.js";
+import { isDim, PHASE_COLOR, CHROME, BADGE_WIDTH } from "./monokai-palette.js";
 
 export interface TreeViewProps {
   /** Full tree state to render. */
@@ -56,7 +56,7 @@ function flattenFeature(feat: FeatureNode, tick: number): FlatLine[] {
   const dim = isDim(feat.status);
   const active = feat.status === "in-progress";
   const color = PHASE_COLOR[feat.status];
-  const badge = `[${feat.status}]`;
+  const badge = `[${feat.status}]`.padEnd(BADGE_WIDTH);
   const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
   const dot = active ? FEATURE_SPINNER[tick % FEATURE_SPINNER.length] : "○";
 
@@ -69,9 +69,9 @@ function flattenFeature(feat: FeatureNode, tick: number): FlatLine[] {
         <Text color={CHROME.muted}>{"├─"}</Text>
         <Text color={dotColor}>{dot}</Text>
         <Text>{" "}</Text>
-        <Text dimColor={dim}>{feat.slug}</Text>
-        {" "}
         {color ? <Text color={color}>{badge}</Text> : <Text dimColor>{badge}</Text>}
+        <Text>{" "}</Text>
+        <Text dimColor={dim}>{feat.slug}</Text>
       </Text>
     ),
   });
@@ -94,7 +94,7 @@ function flattenEpic(epic: EpicNode, tick: number): FlatLine[] {
   const dim = isDim(epic.status);
   const active = isActive(epic.status) && !isDim(epic.status);
   const color = PHASE_COLOR[epic.status];
-  const badge = `[${epic.status}]`;
+  const badge = `[${epic.status}]`.padEnd(BADGE_WIDTH);
   const dotColor = dim ? CHROME.muted : (color ?? CHROME.muted);
   const dot = active ? EPIC_SPINNER[tick % EPIC_SPINNER.length] : "●";
 
@@ -106,9 +106,9 @@ function flattenEpic(epic: EpicNode, tick: number): FlatLine[] {
       <Text dimColor={dim} bold>
         <Text color={dotColor}>{dot}</Text>
         <Text>{" "}</Text>
-        <Text dimColor={dim}>{epic.slug}</Text>
-        {" "}
         {color ? <Text color={color}>{badge}</Text> : <Text dimColor>{badge}</Text>}
+        <Text>{" "}</Text>
+        <Text dimColor={dim}>{epic.slug}</Text>
       </Text>
     ),
   });
