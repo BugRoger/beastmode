@@ -188,20 +188,6 @@ describe("JsonFileStore", () => {
   });
 
   describe("Queries", () => {
-    it("should find entity by ID", () => {
-      const epic = store.addEpic({ name: "Epic" });
-      expect(store.find(epic.id)).toEqual(epic);
-    });
-
-    it("should find epic by slug", () => {
-      const epic = store.addEpic({ name: "Test Epic" });
-      expect(store.find(epic.slug)).toEqual(epic);
-    });
-
-    it("should return undefined for unknown", () => {
-      expect(store.find("nope")).toBeUndefined();
-    });
-
     it("should return blocked entities", () => {
       const epic = store.addEpic({ name: "Epic" });
       const f1 = store.addFeature({ parent: epic.id, name: "F1" });

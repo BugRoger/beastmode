@@ -140,7 +140,8 @@ describe("cancelEpic", () => {
 
     const store = new JsonFileStore(storePath());
     store.load();
-    expect(store.find("my-epic")).toBeUndefined();
+    const remaining = store.listEpics().filter((e) => e.slug === "my-epic");
+    expect(remaining).toHaveLength(0);
 
     const second = await cancelEpic(baseConfig());
     expect(second.cleaned).toContain("store-entity");

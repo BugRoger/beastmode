@@ -111,8 +111,8 @@ describe("cancelEpic shared module", () => {
     // Verify store entity is gone
     const store = new JsonFileStore(storePath);
     store.load();
-    const entity = store.find(epicSlug);
-    expect(entity).toBeUndefined();
+    const entities = store.listEpics().filter((e) => e.slug === epicSlug);
+    expect(entities).toHaveLength(0);
   });
 
   test("deletes artifacts matching epic name", async () => {
