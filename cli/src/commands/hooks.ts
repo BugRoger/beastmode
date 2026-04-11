@@ -18,6 +18,7 @@ import { getPhaseHitlProse } from "../hooks/hitl-settings.js";
 import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
 import { generateAll } from "../hooks/generate-output.js";
+import { runSessionStart as runSessionStartImpl } from "../hooks/session-start.js";
 
 const VALID_HOOKS = ["hitl-auto", "hitl-log", "generate-output", "session-start"];
 
@@ -36,7 +37,16 @@ export async function hooksCommand(args: string[]): Promise<void> {
 
   // session-start has its own error handling — exits non-zero on failure
   if (hookName === "session-start") {
-    runSessionStart();
+    try {
+      const repoRoot = execSync("git rev-parse --show-toplevel", {
+        encoding: "utf-8",
+      }).trim();
+      runSessionStartImpl(repoRoot);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`session-start hook failed: ${message}\n`);
+      process.exit(1);
+    }
     return;
   }
 
@@ -56,30 +66,6 @@ export async function hooksCommand(args: string[]): Promise<void> {
     // Silent exit — hook failure must never block Claude
   }
   process.exit(0);
-}
-
-function runSessionStart(): void {
-  const phase = process.env.BEASTMODE_PHASE;
-  const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
-
-  if (!phase || !epic || !slug) {
-    const missing = [
-      !phase && "BEASTMODE_PHASE",
-      !epic && "BEASTMODE_EPIC",
-      !slug && "BEASTMODE_SLUG",
-    ].filter(Boolean).join(", ");
-    process.stderr.write(`session-start: missing required env vars: ${missing}\n`);
-    process.exit(1);
-  }
-
-  const output = {
-    hookSpecificOutput: {
-      hookEventName: "SessionStart",
-      additionalContext: `Phase: ${phase}, Epic: ${epic}, Slug: ${slug}`,
-    },
-  };
-  process.stdout.write(JSON.stringify(output));
 }
 
 function runHitlAuto(args: string[]): void {
