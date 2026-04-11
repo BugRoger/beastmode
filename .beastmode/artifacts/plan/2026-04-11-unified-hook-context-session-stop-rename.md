@@ -17,34 +17,84 @@ wave: 2
 
 ## What to Build
 
-**Rename generate-output module to session-stop:** Rename the module file from `generate-output.ts` to `session-stop.ts`. Update all import paths that reference the old module name. This includes at minimum: `hooks.ts` (command dispatcher), `session-start.ts` (imports `parseFrontmatter` from generate-output).
+**Module rename.** Rename `generate-output.ts` to `session-stop.ts`. All imports across the codebase that reference `generate-output` are updated to point to `session-stop`. The public function `generateAll` is renamed to `runSessionStop` (or a more appropriate name that reflects the new identity). The internal functions (`processArtifact`, `buildOutput`, `scanPlanFeatures`, `parseFrontmatter`) retain their names since they describe what they do, not where they live.
 
-**Update hook subcommand:** In the hooks command dispatcher, rename the `generate-output` case to `session-stop`. Update the `VALID_HOOKS` constant to list `session-stop` instead of `generate-output`. Update the usage string.
+**Hook command string.** The `buildStopHook` function in `hitl-settings.ts` changes its command from `bunx beastmode hooks generate-output` to `bunx beastmode hooks session-stop`. The `cleanHitlSettings` function updates its Stop hook filter to match on `"session-stop"` instead of `"generate-output"`.
 
-**Update buildStopHook command string:** The `buildStopHook` function currently emits `bunx beastmode hooks generate-output`. Change to `bunx beastmode hooks session-stop`. The shared env prefix from wave 1 will already be prepended.
+**VALID_HOOKS constant.** Update from `["hitl-auto", "hitl-log", "generate-output", "session-start"]` to `["hitl-auto", "hitl-log", "session-stop", "session-start"]`.
 
-**Update cleanHitlSettings filter:** The `cleanHitlSettings` function filters Stop hooks by checking if the command string contains `"generate-output"`. Update the filter to match `"session-stop"` instead.
+**Hook dispatcher.** The `hooksCommand` function in `hooks.ts` adds a `case "session-stop"` that calls the renamed runner. The old `case "generate-output"` is removed.
 
-**Replace filesystem inference with env var:** In the hook handler (currently `runGenerateOutput`), remove the `isWorktree` detection logic (`statSync(".git").isFile()`) and `basename(repoRoot)` slug derivation. Instead, read `BEASTMODE_EPIC_SLUG` from the environment. If the env var is missing, exit with an error message (matching session-start's fail-fast behavior). Pass the slug to `generateAll` as the `worktreeSlug` parameter.
+**Env var for slug.** The renamed `runSessionStop` (or `runGenerateOutput` renamed) reads `BEASTMODE_EPIC_SLUG` from `process.env` for the worktree slug instead of inferring via `basename(repoRoot)` and `isWorktree` detection. If `BEASTMODE_EPIC_SLUG` is missing, the function exits with an error (matching session-start's fail-fast behavior). The `isWorktree` detection logic and `basename(repoRoot)` inference path are removed.
 
-**Scope determination:** With the env var available, the scope can be set to `"changed"` when `BEASTMODE_EPIC_SLUG` is present (implying a worktree context), removing the need for `isWorktree` detection entirely.
+**Scope parameter.** The `scope: "changed"` behavior (git diff-based filtering) remains -- it's orthogonal to slug source. The slug is now always from the env var.
 
-**Rename the handler function:** `runGenerateOutput` becomes `runSessionStop` for consistency.
+**Import updates.** The following files import from `generate-output.ts` and need path updates:
+- `session-start.ts` -- imports `parseFrontmatter`
+- `hooks.ts` -- imports `generateAll`
+- All test files referencing the old module path
+- BDD support files (`world.ts`, step definitions)
 
 ## Integration Test Scenarios
 
-<!-- No behavioral scenarios — skip gate classified this feature as non-behavioral -->
+```gherkin
+@unified-hook-context @hooks
+Feature: Session-stop hook -- renamed from generate-output with env-var slug source
+
+  The session-stop hook (formerly generate-output) reads the epic slug
+  from the BEASTMODE_EPIC_SLUG environment variable instead of inferring
+  it from basename(repoRoot). The hook subcommand is renamed from
+  generate-output to session-stop for symmetry with session-start.
+
+  Scenario: Session-stop subcommand is recognized by the hook dispatcher
+    Given a pipeline worktree is initialized
+    And the session-stop environment variables are set
+    When the hooks command is invoked with subcommand "session-stop"
+    Then the hook dispatcher should accept the subcommand without error
+
+  Scenario: Session-stop reads epic slug from environment variable
+    Given a pipeline worktree is initialized
+    And the BEASTMODE_EPIC_SLUG environment variable is set to "my-epic"
+    And a design artifact exists for epic "my-epic"
+    When the session-stop hook runs
+    Then the output filename should be derived from slug "my-epic"
+    And the hook should not infer the slug from the worktree directory name
+
+  Scenario: Session-stop exits non-zero when BEASTMODE_EPIC_SLUG is missing
+    Given a pipeline worktree is initialized
+    And the BEASTMODE_EPIC_SLUG environment variable is not set
+    When the session-stop hook runs
+    Then the hook should exit with a non-zero status
+    And an error message should indicate the missing environment variable
+
+  Scenario: Stop hook command string in settings uses session-stop
+    Given HITL settings are generated for a pipeline phase
+    When the Stop hook entry is written to settings
+    Then the Stop hook command should contain "session-stop"
+    And the Stop hook command should not contain "generate-output"
+
+  Scenario: Pipeline end-to-end uses session-stop for output generation
+    Given an epic is initialized with slug "e2e-stop"
+    And a manifest is seeded for slug "e2e-stop"
+    When the dispatch writes a design artifact for epic "e2e-stop"
+    And the pipeline runs the design phase
+    Then the pipeline result should be successful
+    And the output.json file should be generated via the session-stop hook
+    And the output filename should reflect the epic slug from the environment
+```
+
+**Consolidation note:** The existing `portable-settings.feature` scenario "Generated Stop hook uses CLI-based command" must be updated to expect `"bunx beastmode hooks session-stop"` instead of `"bunx beastmode hooks generate-output"`.
 
 ## Acceptance Criteria
 
-- [ ] Module file renamed from `generate-output.ts` to `session-stop.ts`
-- [ ] All import paths updated (hooks.ts, session-start.ts, any tests)
-- [ ] `VALID_HOOKS` lists `session-stop` instead of `generate-output`
-- [ ] Hook subcommand `session-stop` works: `bunx beastmode hooks session-stop`
-- [ ] `buildStopHook` command string uses `session-stop`
-- [ ] `cleanHitlSettings` Stop hook filter matches `session-stop`
-- [ ] `runSessionStop` reads `BEASTMODE_EPIC_SLUG` from env var (no filesystem inference)
-- [ ] Missing `BEASTMODE_EPIC_SLUG` causes non-zero exit with error message
-- [ ] `isWorktree` detection and `basename(repoRoot)` inference removed entirely
-- [ ] Unit tests for session-stop: verify slug from env var, verify error on missing env var
-- [ ] Existing generate-output tests migrated to session-stop (updated imports, same assertions)
+- [ ] `generate-output.ts` is renamed to `session-stop.ts`
+- [ ] All imports referencing the old module path are updated
+- [ ] `VALID_HOOKS` includes `"session-stop"` instead of `"generate-output"`
+- [ ] Hook dispatcher handles `"session-stop"` subcommand
+- [ ] Stop hook command string is `bunx beastmode hooks session-stop`
+- [ ] `cleanHitlSettings` matches on `"session-stop"` for Stop hook cleanup
+- [ ] Session-stop reads `BEASTMODE_EPIC_SLUG` from env var for slug derivation
+- [ ] Session-stop exits non-zero when `BEASTMODE_EPIC_SLUG` is missing
+- [ ] The `isWorktree` detection and `basename(repoRoot)` inference are removed
+- [ ] Existing `portable-settings.feature` scenario updated to new command string
+- [ ] All existing tests pass with updated imports and assertions
