@@ -1,8 +1,8 @@
 /**
- * generate-output.ts — Stop hook that reads artifact frontmatter and
+ * session-stop.ts — Stop hook that reads artifact frontmatter and
  * generates output.json completion contracts.
  *
- * Replaces generate-output-json.sh with typed, testable TypeScript.
+ * Renamed from generate-output.ts for symmetry with session-start.
  *
  * Runs after Claude finishes responding. Scans .beastmode/artifacts/<phase>/
  * for all .md files with YAML frontmatter, parses each, and writes the
@@ -247,7 +247,7 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
  *
  * Returns the number of files generated/updated.
  */
-export function generateAll(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string): number {
+export function runSessionStop(artifactsDir: string, scope?: "changed" | "all", worktreeSlug?: string): number {
   if (!existsSync(artifactsDir)) return 0;
 
   if (scope === "changed") {
@@ -302,7 +302,7 @@ function generateChanged(artifactsDir: string, worktreeSlug?: string): number {
     );
   } catch {
     // git diff failed — fall back to full scan
-    return generateAll(artifactsDir, "all", worktreeSlug);
+    return runSessionStop(artifactsDir, "all", worktreeSlug);
   }
 
   let count = 0;

@@ -6,8 +6,8 @@ import {
   buildOutput,
   scanPlanFeatures,
   processArtifact,
-  generateAll,
-} from "../hooks/generate-output";
+  runSessionStop,
+} from "../hooks/session-stop";
 
 const TEST_ROOT = resolve(import.meta.dirname, "../../.test-generate-output");
 const ARTIFACTS_DIR = join(TEST_ROOT, ".beastmode", "artifacts");
@@ -361,9 +361,9 @@ describe("processArtifact", () => {
   });
 });
 
-// --- generateAll ---
+// --- runSessionStop ---
 
-describe("generateAll", () => {
+describe("runSessionStop", () => {
   beforeEach(setup);
   afterEach(teardown);
 
@@ -373,7 +373,7 @@ describe("generateAll", () => {
     writeArtifact("validate", "2026-03-30-epic.md",
       "---\nphase: validate\nstatus: passed\n---\n# Report");
 
-    const count = generateAll(ARTIFACTS_DIR);
+    const count = runSessionStop(ARTIFACTS_DIR);
     expect(count).toBe(2);
 
     expect(existsSync(join(ARTIFACTS_DIR, "design", "2026-03-30-epic.output.json"))).toBe(true);
@@ -382,12 +382,12 @@ describe("generateAll", () => {
 
   test("returns 0 when artifacts dir does not exist", () => {
     rmSync(TEST_ROOT, { recursive: true });
-    expect(generateAll(ARTIFACTS_DIR)).toBe(0);
+    expect(runSessionStop(ARTIFACTS_DIR)).toBe(0);
   });
 
   test("skips non-md files", () => {
     writeFileSync(join(ARTIFACTS_DIR, "design", "notes.txt"), "not an artifact");
-    expect(generateAll(ARTIFACTS_DIR)).toBe(0);
+    expect(runSessionStop(ARTIFACTS_DIR)).toBe(0);
   });
 
   test("the bug scenario: stale plan features are excluded by frontmatter", () => {
@@ -403,7 +403,7 @@ describe("generateAll", () => {
     writeArtifact("plan", "2026-03-30-remove-persona-voice-strip.md",
       "---\nphase: plan\nepic: remove-persona-voice\nfeature: strip-persona-import\n---\n# Strip");
 
-    generateAll(ARTIFACTS_DIR);
+    runSessionStop(ARTIFACTS_DIR);
 
     // The stale artifact's output should only contain done-status-v2 features
     const staleOutput = readOutputJson("plan", "2026-03-29-done-status-v2-github-sync");
