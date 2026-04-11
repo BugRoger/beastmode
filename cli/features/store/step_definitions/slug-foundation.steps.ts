@@ -75,7 +75,7 @@ Then("no two epics should share the same suffix", function (this: StoreWorld) {
 
 let lastPlaceholderSlug = "";
 
-When("a developer generates a placeholder slug with short ID {string}", function (_this: StoreWorld, shortId: string) {
+When("a developer generates a placeholder slug with short ID {string}", function (this: StoreWorld, shortId: string) {
   lastPlaceholderSlug = generatePlaceholderName(shortId);
 });
 
@@ -95,7 +95,7 @@ Then("the placeholder slug should match the pattern adjective-noun-hex", functio
 
 let lastSlugResult = "";
 
-Given("a raw name {string}", function (_this: StoreWorld, _name: string) {
+Given("a raw name {string}", function (this: StoreWorld, _name: string) {
   // Name stored for When step
 });
 
@@ -103,13 +103,13 @@ When("the slug is computed by the store module", function (this: StoreWorld) {
   lastSlugResult = slugify("My Epic Name!");
 });
 
-Then("the result should be {string}", function (_this: StoreWorld, expected: string) {
+Then("the result should be {string}", function (this: StoreWorld, expected: string) {
   assert.strictEqual(lastSlugResult, expected);
 });
 
 // --- Dot validation ---
 
-Given("a feature slug containing a dot suffix like {string}", function (_this: StoreWorld, _slug: string) {
+Given("a feature slug containing a dot suffix like {string}", function (this: StoreWorld, _slug: string) {
   // Slug stored for When step
 });
 
@@ -123,7 +123,7 @@ Then("the validation should pass", function () {
 
 // --- Double-hyphen separator ---
 
-Given("a name containing double hyphens {string}", function (_this: StoreWorld, _name: string) {
+Given("a name containing double hyphens {string}", function (this: StoreWorld, _name: string) {
   // Name stored for When step
 });
 
