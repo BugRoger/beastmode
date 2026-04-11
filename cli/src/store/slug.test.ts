@@ -57,4 +57,21 @@ describe("isValidSlug", () => {
   it("should reject empty string", () => {
     expect(isValidSlug("")).toBe(false);
   });
+
+  it("should accept dots for feature ID suffixes", () => {
+    expect(isValidSlug("auth-flow.2")).toBe(true);
+    expect(isValidSlug("auth-flow-a3f2.2")).toBe(true);
+  });
+
+  it("should reject leading dot", () => {
+    expect(isValidSlug(".auth")).toBe(false);
+  });
+
+  it("should reject trailing dot", () => {
+    expect(isValidSlug("auth.")).toBe(false);
+  });
+
+  it("should accept dot in the middle", () => {
+    expect(isValidSlug("a.b")).toBe(true);
+  });
 });

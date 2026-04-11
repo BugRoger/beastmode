@@ -2,8 +2,8 @@
  * Slug utilities for entity naming in the store module.
  */
 
-/** Slug format: lowercase alphanumeric with optional hyphens, no leading/trailing hyphens */
-const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+/** Slug format: lowercase alphanumeric with optional hyphens and dots, no leading/trailing hyphens or dots */
+const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 
 /**
  * Validate a string against the slug format.
