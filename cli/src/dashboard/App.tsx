@@ -24,7 +24,7 @@ import { TICK_INTERVAL_MS } from "./NyanBanner.js";
 import { buildFlatRows, rowSlugAtIndex } from "./epics-tree-model.js";
 import type { SelectableRow } from "./epics-tree-model.js";
 import { SessionStatsAccumulator } from "./session-stats.js";
-import { loadStats, saveStats, mergeSessionCompleted, type PersistedStats } from "./stats-persistence.js";
+import { loadStats, saveStats, mergeSessionCompleted, toSessionStats, type PersistedStats } from "./stats-persistence.js";
 import { join } from "node:path";
 
 export interface AppProps {
@@ -508,6 +508,13 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
       ? keyboard.cancelFlow.state.slug
       : undefined;
 
+  // --- Stats view toggle: select stats source ---
+  const activeStats = keyboard.statsViewMode === "session"
+    ? sessionStats
+    : allTimeStats
+      ? toSessionStats(allTimeStats)
+      : sessionStats;
+
   // --- Key hints ---
   const keyHintText = getKeyHints(keyboard.mode, {
     slug: cancelConfirmingSlug,
@@ -515,6 +522,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
     verbosity: keyboard.verbosity,
     phaseFilter: keyboard.phaseFilter,
     viewFilter: keyboard.viewFilter,
+    statsViewMode: keyboard.statsViewMode,
   });
 
   // --- Cancel prompt ---
@@ -550,7 +558,8 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           gitStatus={gitStatus}
           scrollOffset={keyboard.detailsScrollOffset}
           visibleHeight={detailsVisibleLines}
-          stats={sessionStats}
+          stats={activeStats}
+          statsViewMode={keyboard.statsViewMode}
         />
       }
       logSlot={
