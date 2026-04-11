@@ -68,7 +68,7 @@ export interface PromptHookEntry {
  * only the HITL-related hook entries.
  */
 export function writeHitlSettings(options: WriteSettingsOptions): void {
-  const { claudeDir, preToolUseHook, phase, feature } = options;
+  const { claudeDir, preToolUseHook, phase } = options;
   const settingsPath = resolve(claudeDir, "settings.local.json");
 
   // Read existing settings or start fresh
@@ -103,7 +103,7 @@ export function writeHitlSettings(options: WriteSettingsOptions): void {
   );
 
   // Add Stop hook for output.json generation
-  const stopHook = buildStopHook(feature);
+  const stopHook = buildStopHook();
   settings.hooks.Stop = replaceHitlHook(
     settings.hooks.Stop,
     "",

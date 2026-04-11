@@ -1,9 +1,9 @@
 /**
  * Cancel-logic — shared module implementing the full 6-step epic cleanup sequence.
  *
- * Self-resolving: accepts a raw identifier string, calls store.find() to resolve
- * to a manifest. Falls back to best-effort matching when the manifest is already
- * gone (idempotent re-run).
+ * Self-resolving: accepts a raw identifier string, uses resolveIdentifier() to
+ * look up the manifest. Falls back to best-effort matching when the manifest is
+ * already gone (idempotent re-run).
  *
  * Each step is warn-and-continue: failures log a warning and accumulate in
  * `warned[]` rather than aborting the sequence.
