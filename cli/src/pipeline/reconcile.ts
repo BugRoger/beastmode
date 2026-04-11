@@ -16,6 +16,7 @@ import {
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import type { EpicContext } from "../pipeline-machine/index.js";
 import { resolve } from "node:path";
+import { renameTags } from "../git/tags.js";
 
 // --- Result type ---
 
@@ -180,25 +181,29 @@ export async function reconcileDesign(
     const updated = extractEpic(actor, epic);
 
     // Design phase may rename the slug (hex -> human-readable).
-    // Since slug is immutable on epic entities, delete and recreate.
+    // Update in-place — entity ID stays stable.
     const newSlug = realSlug ?? epic.slug;
     if (newSlug !== epic.slug) {
-      store.deleteEpic(epic.id);
-      const renamed = store.addEpic({ name: newSlug, slug: newSlug });
-      store.updateEpic(renamed.id, {
+      const oldSlug = epic.slug;
+      store.updateEpic(epic.id, {
+        slug: newSlug,
+        name: realSlug ?? epic.name,
         status: updated.status,
         summary: typeof summary === "object" ? `${summary.problem} — ${summary.solution}` : epic.summary,
         design: designPath,
-        worktree: epic.worktree,
         updated_at: updated.updated_at,
       });
       store.save();
-      const savedEpic = store.getEpic(renamed.id)!;
+
+      // Rename git tags from old slug to new slug
+      await renameTags(oldSlug, newSlug, { cwd: projectRoot });
+
+      const savedEpic = store.getEpic(epic.id)!;
       return {
         epic: savedEpic,
         manifest: savedEpic,
         phase: savedEpic.status as Phase,
-        progress: readProgress(renamed.id, store),
+        progress: readProgress(epic.id, store),
       };
     }
 
