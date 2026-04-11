@@ -50,21 +50,10 @@ function deriveNextAction(epic: Epic, features: Feature[]): NextAction | null {
     );
     if (incompleteFeatures.length === 0) return null;
 
-    // Wave-aware filtering: compute wave from dependency graph
-    const waveOf = (f: Feature, visited: Set<string> = new Set()): number => {
-      if (visited.has(f.id)) return 1; // cycle protection
-      visited.add(f.id);
-      if (f.depends_on.length === 0) return 1;
-      const depWaves = f.depends_on.map((depId) => {
-        const dep = features.find((d) => d.id === depId);
-        return dep ? waveOf(dep, visited) : 1;
-      });
-      return Math.max(...depWaves) + 1;
-    };
-
+    // Wave-aware filtering: use stored wave (set during plan reconciliation)
     const featureWaves = incompleteFeatures.map((f) => ({
       feature: f,
-      wave: waveOf(f),
+      wave: f.wave ?? 1,
     }));
 
     const lowestWave = Math.min(...featureWaves.map((fw) => fw.wave));

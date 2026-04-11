@@ -35,7 +35,7 @@ function buildContext(epic: Epic, store: JsonFileStore): EpicContext {
     slug: f.slug,
     plan: f.plan ?? "",
     description: f.description,
-    wave: store.computeWave(f.id),
+    wave: f.wave,
     status: f.status,
     reDispatchCount: f.reDispatchCount ?? 0,
   }));
@@ -265,10 +265,11 @@ export async function reconcilePlan(
           slug: f.slug,
           description: f.description,
         });
-        // Update plan path if provided
-        if (f.plan) {
-          store.updateFeature(newFeature.id, { plan: f.plan });
-        }
+        // Update plan path and wave if provided
+        store.updateFeature(newFeature.id, {
+          ...(f.plan ? { plan: f.plan } : {}),
+          ...(f.wave != null ? { wave: f.wave } : {}),
+        });
       }
     }
 

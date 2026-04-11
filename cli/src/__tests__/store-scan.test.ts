@@ -93,7 +93,8 @@ describe("listEnrichedFromStore", () => {
 
     const f1 = store.addFeature({ parent: epic.id, name: "F1", slug: "f1" });
     const f2 = store.addFeature({ parent: epic.id, name: "F2", slug: "f2" });
-    store.updateFeature(f2.id, { depends_on: [f1.id] });
+    store.updateFeature(f1.id, { wave: 1 });
+    store.updateFeature(f2.id, { wave: 2 });
 
     const result = listEnrichedFromStore(store);
     expect(result[0].nextAction!.features).toEqual(["f1"]);

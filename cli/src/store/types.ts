@@ -40,6 +40,7 @@ export interface Feature {
   description?: string;
   status: FeatureStatus;
   reDispatchCount?: number;
+  wave?: number;
   plan?: string;
   implement?: string;
   depends_on: string[];
