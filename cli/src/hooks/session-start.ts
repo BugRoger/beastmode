@@ -10,7 +10,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { parseFrontmatter } from "./generate-output.js";
+import { parseFrontmatter } from "./session-stop.js";
 
 // --- Types ---
 
@@ -19,7 +19,14 @@ export interface SessionStartInput {
   epic: string;
   slug: string;
   feature?: string;
+  epicId?: string;
+  featureId?: string;
   repoRoot: string;
+}
+
+interface ResolvedArtifacts {
+  paths: string[];
+  contents: string[];
 }
 
 const VALID_PHASES = ["design", "plan", "implement", "validate", "release"];
@@ -63,9 +70,9 @@ export function assembleContext(input: SessionStartInput): string {
 
   // Phase-specific artifact resolution
   const artifactsDir = join(beastmodeDir, "artifacts");
-  const artifacts = resolveArtifacts(phase, epic, feature, artifactsDir);
-  if (artifacts.length > 0) {
-    sections.push(...artifacts);
+  const resolved = resolveArtifacts(phase, epic, feature, artifactsDir);
+  if (resolved.contents.length > 0) {
+    sections.push(...resolved.contents);
   }
 
   // Gate evaluation (validate phase only)
@@ -79,7 +86,7 @@ export function assembleContext(input: SessionStartInput): string {
 
 /**
  * Resolve parent artifacts for the given phase.
- * Returns array of artifact content strings.
+ * Returns paths and contents for metadata and context assembly.
  * Throws if a required artifact is missing.
  */
 function resolveArtifacts(
@@ -87,10 +94,10 @@ function resolveArtifacts(
   epic: string,
   feature: string | undefined,
   artifactsDir: string,
-): string[] {
+): ResolvedArtifacts {
   switch (phase) {
     case "design":
-      return [];
+      return { paths: [], contents: [] };
 
     case "plan": {
       const designDir = join(artifactsDir, "design");
@@ -98,7 +105,7 @@ function resolveArtifacts(
       if (!artifact) {
         throw new Error(`No design artifact found for epic "${epic}". Expected pattern: *-${epic}.md in ${designDir}`);
       }
-      return [readFileSync(artifact, "utf-8")];
+      return { paths: [artifact], contents: [readFileSync(artifact, "utf-8")] };
     }
 
     case "implement": {
@@ -108,25 +115,28 @@ function resolveArtifacts(
       if (!artifact) {
         throw new Error(`No plan artifact found for feature "${feature}" of epic "${epic}". Expected pattern: *-${pattern}.md in ${planDir}`);
       }
-      return [readFileSync(artifact, "utf-8")];
+      return { paths: [artifact], contents: [readFileSync(artifact, "utf-8")] };
     }
 
     case "validate": {
       const implDir = join(artifactsDir, "implement");
-      return findAllArtifacts(implDir, epic);
+      return findAllArtifactsWithPaths(implDir, epic);
     }
 
     case "release": {
-      const results: string[] = [];
+      const allPaths: string[] = [];
+      const allContents: string[] = [];
       for (const subdir of ["design", "plan", "validate"]) {
         const phaseDir = join(artifactsDir, subdir);
-        results.push(...findAllArtifacts(phaseDir, epic));
+        const result = findAllArtifactsWithPaths(phaseDir, epic);
+        allPaths.push(...result.paths);
+        allContents.push(...result.contents);
       }
-      return results;
+      return { paths: allPaths, contents: allContents };
     }
 
     default:
-      return [];
+      return { paths: [], contents: [] };
   }
 }
 
@@ -147,15 +157,19 @@ function findLatestArtifact(dir: string, suffix: string): string | undefined {
 
 /**
  * Find all .md artifacts in a directory whose filename contains the epic name.
- * Returns array of file contents.
+ * Returns both file paths and contents.
  */
-function findAllArtifacts(dir: string, epic: string): string[] {
-  if (!existsSync(dir)) return [];
+function findAllArtifactsWithPaths(dir: string, epic: string): ResolvedArtifacts {
+  if (!existsSync(dir)) return { paths: [], contents: [] };
 
-  return readdirSync(dir)
+  const files = readdirSync(dir)
     .filter((f) => f.endsWith(".md") && f.includes(epic))
-    .sort()
-    .map((f) => readFileSync(join(dir, f), "utf-8"));
+    .sort();
+
+  return {
+    paths: files.map((f) => join(dir, f)),
+    contents: files.map((f) => readFileSync(join(dir, f), "utf-8")),
+  };
 }
 
 /**
@@ -218,13 +232,13 @@ export function formatOutput(context: string): string {
  */
 export function runSessionStart(repoRoot: string): void {
   const phase = process.env.BEASTMODE_PHASE;
-  const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
+  const epic = process.env.BEASTMODE_EPIC_ID;
+  const slug = process.env.BEASTMODE_EPIC_SLUG;
   const feature = process.env.BEASTMODE_FEATURE;
 
   if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
-  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC");
-  if (!slug) throw new Error("Missing environment variable: BEASTMODE_SLUG");
+  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC_ID");
+  if (!slug) throw new Error("Missing environment variable: BEASTMODE_EPIC_SLUG");
 
   const context = assembleContext({ phase, epic, slug, feature, repoRoot });
   process.stdout.write(formatOutput(context));

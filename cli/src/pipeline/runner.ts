@@ -211,8 +211,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     // -- Step 3: settings.create ----------------------------------------------
     const claudeDir = resolve(worktreePath, ".claude");
     cleanHitlSettings(claudeDir);
-    const preToolUseHook = buildPreToolUseHook(config.phase);
-    writeHitlSettings({ claudeDir, preToolUseHook, phase: config.phase });
+    const envContext = { phase: config.phase, epicId: config.epicSlug, epicSlug: config.epicSlug, featureId: config.featureSlug, featureSlug: config.featureSlug };
+    const preToolUseHook = buildPreToolUseHook(envContext);
+    writeHitlSettings({ claudeDir, preToolUseHook, envContext });
 
     // File-permission hooks
     cleanFilePermissionSettings(claudeDir);
@@ -227,9 +228,9 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     writeSessionStartHook({
       claudeDir,
       phase: config.phase,
-      epic: config.epicSlug,
-      slug: config.epicSlug,
-      feature: config.featureSlug,
+      epicId: config.epicId ?? config.epicSlug,
+      epicSlug: config.epicSlug,
+      featureSlug: config.featureSlug,
     });
   }
 

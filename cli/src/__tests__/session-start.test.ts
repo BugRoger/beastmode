@@ -176,6 +176,25 @@ describe("assembleContext", () => {
       expect(parsed.hookSpecificOutput.additionalContext).toBe("some context");
     });
   });
+
+  describe("metadata section", () => {
+    test("assembleContext accepts epicId and featureId in input", () => {
+      writeFileSync(
+        join(tempDir, ".beastmode", "artifacts", "plan", "2026-04-11-my-epic-my-feature.md"),
+        "---\nphase: plan\nepic: my-epic\nfeature: my-feature\n---\n\n# Plan\n\nPlan body",
+      );
+      const result = assembleContext({
+        phase: "implement",
+        epic: "my-epic",
+        slug: "my-epic-abc123",
+        feature: "my-feature",
+        epicId: "bm-f3a7",
+        featureId: "bm-f3a7.1",
+        repoRoot: tempDir,
+      });
+      expect(result).toContain("Plan body");
+    });
+  });
 });
 
 describe("session-start settings writer", () => {
@@ -194,7 +213,7 @@ describe("session-start settings writer", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "bm-f3a7", epicSlug: "my-epic-abc123" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     expect(settings.hooks.SessionStart).toBeDefined();
@@ -207,7 +226,7 @@ describe("session-start settings writer", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "bm-f3a7", epicSlug: "my-epic-abc123" });
     cleanSessionStartHook(claudeDir);
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
@@ -221,21 +240,22 @@ describe("session-start settings writer", () => {
       hooks: { PreToolUse: [{ matcher: "AskUserQuestion", hooks: [{ type: "command", command: "existing" }] }] }
     }, null, 2));
 
-    writeSessionStartHook({ claudeDir, phase: "plan", epic: "my-epic", slug: "abc123" });
+    writeSessionStartHook({ claudeDir, phase: "plan", epicId: "bm-f3a7", epicSlug: "my-epic-abc123" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     expect(settings.hooks.PreToolUse).toBeDefined();
     expect(settings.hooks.SessionStart).toBeDefined();
   });
 
-  test("includes feature env var for implement phase", () => {
+  test("includes feature env vars for implement phase", () => {
     const claudeDir = join(tempDir, ".claude");
     mkdirSync(claudeDir, { recursive: true });
 
-    writeSessionStartHook({ claudeDir, phase: "implement", epic: "my-epic", slug: "abc123", feature: "my-feat" });
+    writeSessionStartHook({ claudeDir, phase: "implement", epicId: "bm-f3a7", epicSlug: "my-epic-abc123", featureId: "bm-f3a7.1", featureSlug: "my-feat" });
 
     const settings = JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
     const command = settings.hooks.SessionStart[0].hooks[0].command;
-    expect(command).toContain("BEASTMODE_FEATURE=my-feat");
+    expect(command).toContain("BEASTMODE_FEATURE_ID=bm-f3a7.1");
+    expect(command).toContain("BEASTMODE_FEATURE_SLUG=my-feat");
   });
 });

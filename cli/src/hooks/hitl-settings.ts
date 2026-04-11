@@ -42,8 +42,8 @@ export interface WriteSettingsOptions {
   claudeDir: string;
   /** PreToolUse hook entry for HITL auto-answering */
   preToolUseHook: HookEntry;
-  /** Phase name for the PostToolUse logging hook */
-  phase: string;
+  /** Env prefix context for PostToolUse and Stop hooks */
+  envContext: EnvPrefixContext;
 }
 
 // --- Types from hitl-prompt.ts ---
@@ -93,7 +93,7 @@ export function buildEnvPrefix(ctx: EnvPrefixContext): string {
  * only the HITL-related hook entries.
  */
 export function writeHitlSettings(options: WriteSettingsOptions): void {
-  const { claudeDir, preToolUseHook, phase } = options;
+  const { claudeDir, preToolUseHook, envContext } = options;
   const settingsPath = resolve(claudeDir, "settings.local.json");
 
   // Read existing settings or start fresh
@@ -120,7 +120,7 @@ export function writeHitlSettings(options: WriteSettingsOptions): void {
   );
 
   // Add PostToolUse command hook for decision logging
-  const postToolUseHook = buildPostToolUseHook(phase);
+  const postToolUseHook = buildPostToolUseHook(envContext);
   settings.hooks.PostToolUse = replaceHitlHook(
     settings.hooks.PostToolUse,
     "AskUserQuestion",
@@ -128,7 +128,7 @@ export function writeHitlSettings(options: WriteSettingsOptions): void {
   );
 
   // Add Stop hook for output.json generation
-  const stopHook = buildStopHook();
+  const stopHook = buildStopHook(envContext);
   settings.hooks.Stop = replaceHitlHook(
     settings.hooks.Stop,
     "",
@@ -179,7 +179,7 @@ export function cleanHitlSettings(claudeDir: string): void {
   // Remove Stop hook for output.json generation
   if (settings.hooks.Stop) {
     settings.hooks.Stop = settings.hooks.Stop.filter(
-      (h) => !h.hooks?.some((hk) => hk.command?.includes("generate-output")),
+      (h) => !h.hooks?.some((hk) => hk.command?.includes("session-stop")),
     );
     if (settings.hooks.Stop.length === 0) {
       delete settings.hooks.Stop;
@@ -210,15 +210,16 @@ function replaceHitlHook(
 
 /**
  * Build the PostToolUse command hook for AskUserQuestion decision logging.
- * Calls hitl-log via portable CLI with the phase argument.
+ * Calls hitl-log via portable CLI with env prefix and phase argument.
  */
-function buildPostToolUseHook(phase: string): HookEntry {
+function buildPostToolUseHook(ctx: EnvPrefixContext): HookEntry {
+  const envPrefix = buildEnvPrefix(ctx);
   return {
     matcher: "AskUserQuestion",
     hooks: [
       {
         type: "command",
-        command: `bunx beastmode hooks hitl-log ${phase}`,
+        command: `${envPrefix} bunx beastmode hooks hitl-log ${ctx.phase}`,
       },
     ],
   };
@@ -226,15 +227,16 @@ function buildPostToolUseHook(phase: string): HookEntry {
 
 /**
  * Build the Stop hook for output.json generation.
- * Calls generate-output via portable CLI after Claude finishes responding.
+ * Calls session-stop via portable CLI with env prefix.
  */
-function buildStopHook(): HookEntry {
+function buildStopHook(ctx: EnvPrefixContext): HookEntry {
+  const envPrefix = buildEnvPrefix(ctx);
   return {
     matcher: "",
     hooks: [
       {
         type: "command",
-        command: `bunx beastmode hooks generate-output`,
+        command: `${envPrefix} bunx beastmode hooks session-stop`,
       },
     ],
   };
@@ -244,17 +246,16 @@ function buildStopHook(): HookEntry {
 
 /**
  * Build the PreToolUse command hook entry for AskUserQuestion.
- *
- * @param phase — The current pipeline phase name
- * @returns A single hook entry targeting AskUserQuestion with a command hook
+ * Prepends env prefix and includes phase as positional arg for fallback.
  */
-export function buildPreToolUseHook(phase: string): PromptHookEntry {
+export function buildPreToolUseHook(ctx: EnvPrefixContext): PromptHookEntry {
+  const envPrefix = buildEnvPrefix(ctx);
   return {
     matcher: "AskUserQuestion",
     hooks: [
       {
         type: "command",
-        command: `bunx beastmode hooks hitl-auto ${phase}`,
+        command: `${envPrefix} bunx beastmode hooks hitl-auto ${ctx.phase}`,
       },
     ],
   };
@@ -277,30 +278,24 @@ export function getPhaseHitlProse(
 export interface WriteSessionStartHookOptions {
   claudeDir: string;
   phase: string;
-  epic: string;
-  slug: string;
-  feature?: string;
+  epicId: string;
+  epicSlug: string;
+  featureId?: string;
+  featureSlug?: string;
 }
 
 /**
  * Build the SessionStart command hook entry.
  * Sets BEASTMODE_* env vars inline and calls the session-start subcommand.
  */
-export function buildSessionStartHook(opts: { phase: string; epic: string; slug: string; feature?: string }): HookEntry {
-  const envParts = [
-    `BEASTMODE_PHASE=${opts.phase}`,
-    `BEASTMODE_EPIC=${opts.epic}`,
-    `BEASTMODE_SLUG=${opts.slug}`,
-  ];
-  if (opts.feature) {
-    envParts.push(`BEASTMODE_FEATURE=${opts.feature}`);
-  }
+export function buildSessionStartHook(opts: EnvPrefixContext): HookEntry {
+  const envPrefix = buildEnvPrefix(opts);
   return {
     matcher: "",
     hooks: [
       {
         type: "command",
-        command: `${envParts.join(" ")} bunx beastmode hooks session-start`,
+        command: `${envPrefix} bunx beastmode hooks session-start`,
       },
     ],
   };
@@ -311,7 +306,7 @@ export function buildSessionStartHook(opts: { phase: string; epic: string; slug:
  * Preserves all existing keys and replaces only the SessionStart hook.
  */
 export function writeSessionStartHook(options: WriteSessionStartHookOptions): void {
-  const { claudeDir, phase, epic, slug, feature } = options;
+  const { claudeDir, phase, epicId, epicSlug, featureId, featureSlug } = options;
   const settingsPath = resolve(claudeDir, "settings.local.json");
 
   let settings: SettingsLocal = {};
@@ -327,7 +322,7 @@ export function writeSessionStartHook(options: WriteSessionStartHookOptions): vo
     settings.hooks = {};
   }
 
-  const hook = buildSessionStartHook({ phase, epic, slug, feature });
+  const hook = buildSessionStartHook({ phase, epicId, epicSlug, featureId, featureSlug });
   settings.hooks.SessionStart = [hook];
 
   mkdirSync(claudeDir, { recursive: true });
