@@ -1,5 +1,6 @@
 import { findProjectRoot } from "../config.js";
 import { JsonFileStore } from "../store/json-file-store.js";
+import { resolveIdentifier } from "../store/resolve.js";
 import { join } from "path";
 import { importCommand } from "./store-import.js";
 
@@ -86,8 +87,12 @@ export async function epicCommand(store: JsonFileStore, args: string[]): Promise
       const { positional, flags } = parseFlags(actionArgs);
       if (positional.length === 0) jsonError("Usage: beastmode store epic show <id-or-slug>");
       const result = await store.transact(s => {
-        const entity = s.find(positional[0]);
-        if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+        const resolution = resolveIdentifier(s, positional[0]);
+        if (resolution.kind !== "found") {
+          throw new Error(`Epic not found: ${positional[0]}`);
+        }
+        const entity = resolution.entity;
+        if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
         if (flags["deps"] === "true") {
           return { ...entity, deps: s.dependencyChain(entity.id) };
         }
@@ -107,8 +112,12 @@ export async function epicCommand(store: JsonFileStore, args: string[]): Promise
       const { positional, flags } = parseFlags(actionArgs);
       if (positional.length === 0) jsonError("Usage: beastmode store epic update <id> [--field=value]");
       const result = await store.transact(s => {
-        const entity = s.find(positional[0]);
-        if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+        const resolution = resolveIdentifier(s, positional[0]);
+        if (resolution.kind !== "found") {
+          throw new Error(`Epic not found: ${positional[0]}`);
+        }
+        const entity = resolution.entity;
+        if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
         const epicId = entity.id;
 
         const patch: Record<string, unknown> = {};
@@ -140,8 +149,12 @@ export async function epicCommand(store: JsonFileStore, args: string[]): Promise
       const { positional } = parseFlags(actionArgs);
       if (positional.length === 0) jsonError("Usage: beastmode store epic delete <id>");
       await store.transact(s => {
-        const entity = s.find(positional[0]);
-        if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+        const resolution = resolveIdentifier(s, positional[0]);
+        if (resolution.kind !== "found") {
+          throw new Error(`Epic not found: ${positional[0]}`);
+        }
+        const entity = resolution.entity;
+        if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
         s.deleteEpic(entity.id);
       });
       jsonOut({ deleted: true });
@@ -163,8 +176,12 @@ export async function featureCommand(store: JsonFileStore, args: string[]): Prom
       const { positional } = parseFlags(actionArgs);
       if (positional.length === 0) jsonError("Usage: beastmode store feature ls <epic-id-or-slug>");
       const result = await store.transact(s => {
-        const entity = s.find(positional[0]);
-        if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+        const resolution = resolveIdentifier(s, positional[0], { resolveToEpic: true });
+        if (resolution.kind !== "found") {
+          throw new Error(`Epic not found: ${positional[0]}`);
+        }
+        const entity = resolution.entity;
+        if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
         return s.listFeatures(entity.id);
       });
       jsonOut(result);
@@ -190,8 +207,12 @@ export async function featureCommand(store: JsonFileStore, args: string[]): Prom
         jsonError("Usage: beastmode store feature add --parent=<epic-id> --name=\"X\"");
       }
       const result = await store.transact(s => {
-        const parent = s.find(flags["parent"]);
-        if (!parent || parent.type !== "epic") throw new Error(`Parent epic not found: ${flags["parent"]}`);
+        const resolution = resolveIdentifier(s, flags["parent"], { resolveToEpic: true });
+        if (resolution.kind !== "found") {
+          throw new Error(`Parent epic not found: ${flags["parent"]}`);
+        }
+        const parent = resolution.entity;
+        if (parent.type !== "epic") throw new Error(`Parent not an epic: ${flags["parent"]}`);
         return s.addFeature({
           parent: parent.id,
           name: flags["name"],
@@ -251,8 +272,12 @@ export async function readyCommand(store: JsonFileStore, args: string[]): Promis
 
   if (positional.length > 0) {
     const epicId = await store.transact(s => {
-      const entity = s.find(positional[0]);
-      if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+      const resolution = resolveIdentifier(s, positional[0], { resolveToEpic: true });
+      if (resolution.kind !== "found") {
+        throw new Error(`Epic not found: ${positional[0]}`);
+      }
+      const entity = resolution.entity;
+      if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
       return entity.id;
     });
     opts.epicId = epicId;
@@ -277,9 +302,11 @@ export async function treeCommand(store: JsonFileStore, args: string[]): Promise
 
   const result = await store.transact(s => {
     if (rootId) {
-      const entity = s.find(rootId);
-      if (!entity) throw new Error(`Entity not found: ${rootId}`);
-      return s.tree(entity.id);
+      const resolution = resolveIdentifier(s, rootId);
+      if (resolution.kind !== "found") {
+        throw new Error(`Entity not found: ${rootId}`);
+      }
+      return s.tree(resolution.entity.id);
     }
     return s.tree();
   });
@@ -319,8 +346,12 @@ export async function epicLsTestable(store: JsonFileStore): Promise<any> {
 export async function epicShowTestable(store: JsonFileStore, args: string[]): Promise<any> {
   const { positional, flags } = parseFlags(args);
   return store.transact(s => {
-    const entity = s.find(positional[0]);
-    if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+    const resolution = resolveIdentifier(s, positional[0]);
+    if (resolution.kind !== "found") {
+      throw new Error(`Epic not found: ${positional[0]}`);
+    }
+    const entity = resolution.entity;
+    if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
     if (flags["deps"] === "true") {
       return { ...entity, deps: s.dependencyChain(entity.id) };
     }
@@ -331,8 +362,12 @@ export async function epicShowTestable(store: JsonFileStore, args: string[]): Pr
 export async function epicUpdateTestable(store: JsonFileStore, args: string[]): Promise<any> {
   const { positional, flags } = parseFlags(args);
   return store.transact(s => {
-    const entity = s.find(positional[0]);
-    if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+    const resolution = resolveIdentifier(s, positional[0]);
+    if (resolution.kind !== "found") {
+      throw new Error(`Epic not found: ${positional[0]}`);
+    }
+    const entity = resolution.entity;
+    if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
     const epicId = entity.id;
     const patch: Record<string, unknown> = {};
     if (flags["name"]) patch.name = flags["name"];
@@ -359,8 +394,12 @@ export async function epicUpdateTestable(store: JsonFileStore, args: string[]): 
 export async function epicDeleteTestable(store: JsonFileStore, args: string[]): Promise<any> {
   const { positional } = parseFlags(args);
   return store.transact(s => {
-    const entity = s.find(positional[0]);
-    if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+    const resolution = resolveIdentifier(s, positional[0]);
+    if (resolution.kind !== "found") {
+      throw new Error(`Epic not found: ${positional[0]}`);
+    }
+    const entity = resolution.entity;
+    if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
     s.deleteEpic(entity.id);
   });
 }
@@ -370,16 +409,24 @@ export async function epicDeleteTestable(store: JsonFileStore, args: string[]): 
 export async function featureAddTestable(store: JsonFileStore, args: string[]): Promise<any> {
   const { flags } = parseFlags(args);
   return store.transact(s => {
-    const parent = s.find(flags["parent"]);
-    if (!parent || parent.type !== "epic") throw new Error(`Parent epic not found: ${flags["parent"]}`);
+    const resolution = resolveIdentifier(s, flags["parent"], { resolveToEpic: true });
+    if (resolution.kind !== "found") {
+      throw new Error(`Parent epic not found: ${flags["parent"]}`);
+    }
+    const parent = resolution.entity;
+    if (parent.type !== "epic") throw new Error(`Parent not an epic: ${flags["parent"]}`);
     return s.addFeature({ parent: parent.id, name: flags["name"], description: flags["description"] });
   });
 }
 
 export async function featureLsTestable(store: JsonFileStore, args: string[]): Promise<any> {
   return store.transact(s => {
-    const entity = s.find(args[0]);
-    if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${args[0]}`);
+    const resolution = resolveIdentifier(s, args[0], { resolveToEpic: true });
+    if (resolution.kind !== "found") {
+      throw new Error(`Epic not found: ${args[0]}`);
+    }
+    const entity = resolution.entity;
+    if (entity.type !== "epic") throw new Error(`Not an epic: ${args[0]}`);
     return s.listFeatures(entity.id);
   });
 }
@@ -434,8 +481,12 @@ export async function readyTestable(store: JsonFileStore, args: string[]): Promi
   const opts: { epicId?: string; type?: "epic" | "feature" } = {};
   if (positional.length > 0) {
     opts.epicId = await store.transact(s => {
-      const entity = s.find(positional[0]);
-      if (!entity || entity.type !== "epic") throw new Error(`Epic not found: ${positional[0]}`);
+      const resolution = resolveIdentifier(s, positional[0], { resolveToEpic: true });
+      if (resolution.kind !== "found") {
+        throw new Error(`Epic not found: ${positional[0]}`);
+      }
+      const entity = resolution.entity;
+      if (entity.type !== "epic") throw new Error(`Not an epic: ${positional[0]}`);
       return entity.id;
     });
   }
@@ -454,9 +505,11 @@ export async function treeTestable(store: JsonFileStore, args: string[]): Promis
   const rootId = positional.length > 0 ? positional[0] : undefined;
   return store.transact(s => {
     if (rootId) {
-      const entity = s.find(rootId);
-      if (!entity) throw new Error(`Entity not found: ${rootId}`);
-      return s.tree(entity.id);
+      const resolution = resolveIdentifier(s, rootId);
+      if (resolution.kind !== "found") {
+        throw new Error(`Entity not found: ${rootId}`);
+      }
+      return s.tree(resolution.entity.id);
     }
     return s.tree();
   });
