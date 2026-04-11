@@ -7,7 +7,7 @@ bump: minor
 
 # Release: unified-hook-context
 
-**Version:** v0.116.0
+**Bump:** minor
 **Date:** 2026-04-12
 
 ## Highlights
