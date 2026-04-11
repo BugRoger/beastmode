@@ -110,6 +110,8 @@ export function buildTreeState(
       if (!feature) {
         feature = { slug: session.featureSlug, status: "in-progress", entries: [] };
         epic.features.push(feature);
+      } else if (feature.status === "pending") {
+        feature.status = "in-progress";
       }
       feature.entries.push(...treeEntries);
       feature.entries.sort((a, b) => a.timestamp - b.timestamp || a.seq - b.seq);

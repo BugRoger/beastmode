@@ -99,4 +99,48 @@ describe("buildTreeState with EnrichedEpic skeleton", () => {
     expect(state.epics).toHaveLength(2);
     expect(state.epics[0].features[0].entries).toEqual([]);
   });
+
+  test("skeleton feature with pending status upgrades to in-progress when session exists", () => {
+    const epics = [
+      mockEpic("auth", "implement", [
+        mockFeature("login-flow", "pending", "auth"),
+      ]),
+    ];
+    const sessions = [{ epicSlug: "auth", phase: "implement", featureSlug: "login-flow" }];
+    const getEntries = () => [
+      { timestamp: 1000, type: "text" as const, text: "working", seq: 0 },
+    ];
+    const state = buildTreeState(sessions, getEntries, undefined, undefined, epics);
+    const auth = state.epics.find(e => e.slug === "auth")!;
+    const loginFlow = auth.features.find(f => f.slug === "login-flow")!;
+    expect(loginFlow.status).toBe("in-progress");
+  });
+
+  test("skeleton feature with non-pending status is NOT overwritten by session", () => {
+    const epics = [
+      mockEpic("auth", "implement", [
+        mockFeature("login-flow", "completed", "auth"),
+      ]),
+    ];
+    const sessions = [{ epicSlug: "auth", phase: "implement", featureSlug: "login-flow" }];
+    const getEntries = () => [
+      { timestamp: 1000, type: "text" as const, text: "working", seq: 0 },
+    ];
+    const state = buildTreeState(sessions, getEntries, undefined, undefined, epics);
+    const auth = state.epics.find(e => e.slug === "auth")!;
+    const loginFlow = auth.features.find(f => f.slug === "login-flow")!;
+    expect(loginFlow.status).toBe("completed");
+  });
+
+  test("skeleton feature without matching session retains pending status", () => {
+    const epics = [
+      mockEpic("auth", "implement", [
+        mockFeature("login-flow", "pending", "auth"),
+      ]),
+    ];
+    const state = buildTreeState([], () => [], undefined, undefined, epics);
+    const auth = state.epics.find(e => e.slug === "auth")!;
+    const loginFlow = auth.features.find(f => f.slug === "login-flow")!;
+    expect(loginFlow.status).toBe("pending");
+  });
 });
