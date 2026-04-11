@@ -101,7 +101,6 @@ export class InMemoryTaskStore implements TaskStore {
       ...patch,
       id: epic.id, // immutable
       type: "epic", // immutable
-      slug: epic.slug, // immutable
       created_at: epic.created_at, // immutable
       updated_at: this.now(),
     };
