@@ -85,8 +85,8 @@ function formatPhaseBadge(phase: string | undefined): string {
  * For leaf entries: renders prefix + phase badge + HH:MM:SS + LEVEL + message.
  * For system entries: renders │ · prefix + HH:MM:SS + LEVEL + message (same as leaf-epic, no badge).
  *
- * Warn/error: full-line yellow/red coloring.
- * Normal: phase-colored prefix, dimmed timestamp.
+ * All leaf levels: dimmed prefix, dimmed timestamp, colored level label, default message.
+ * Level label colors: green (info), blue (debug), yellow (warn), red (error).
  */
 export function formatTreeLine(
   depth: TreeDepth,
@@ -113,12 +113,12 @@ export function formatTreeLine(
   const label = LEVEL_LABELS[level];
   const badge = depth !== "system" ? `${formatPhaseBadge(phase)} ` : "";
 
-  // Warn/error: full-line coloring
+  // Warn/error: segmented coloring (same structure as normal path)
   if (level === "warn") {
-    return chalk.yellow(`${prefix}${badge}${time} ${label} ${message}`);
+    return `${colorPrefix(prefix)}${badge}${chalk.dim(time)} ${chalk.yellow(label)} ${message}`;
   }
   if (level === "error") {
-    return chalk.red(`${prefix}${badge}${time} ${label} ${message}`);
+    return `${colorPrefix(prefix)}${badge}${chalk.dim(time)} ${chalk.red(label)} ${message}`;
   }
 
   // Normal: phase-colored prefix, dim timestamp
