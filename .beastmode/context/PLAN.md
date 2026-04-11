@@ -95,3 +95,4 @@ context/plan/file-collapse.md
 - When classification is ambiguous, classify as behavioral — false positives (unnecessary dispatch) are cheaper than false negatives (missed integration tests)
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it
 - ALWAYS include consumer test migration in plan scope when changing value derivation contracts -- when a value shifts from user-provided to auto-derived, all test files asserting the old explicit value become broken; grep for the old pattern at plan time
+- ALWAYS enumerate all consumers of a changed contract (function signature, module path, env var name) via grep at plan time — include every call site, import path, and test assertion in the feature plan's file list; consumer-side updates omitted from the plan become validate fixups

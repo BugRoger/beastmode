@@ -9,7 +9,7 @@
  */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import { parseFrontmatter } from "./session-stop.js";
 
 // --- Types ---
@@ -19,7 +19,14 @@ export interface SessionStartInput {
   epic: string;
   slug: string;
   feature?: string;
+  epicId?: string;
+  featureId?: string;
   repoRoot: string;
+}
+
+interface ResolvedArtifacts {
+  paths: string[];
+  contents: string[];
 }
 
 const VALID_PHASES = ["design", "plan", "implement", "validate", "release"];
@@ -31,7 +38,7 @@ const VALID_PHASES = ["design", "plan", "implement", "validate", "release"];
  * Throws on missing required inputs, context files, or artifacts.
  */
 export function assembleContext(input: SessionStartInput): string {
-  const { phase, epic, slug, feature, repoRoot } = input;
+  const { phase, epic, slug, feature, epicId, featureId, repoRoot } = input;
 
   // Validate required inputs
   if (!phase || !VALID_PHASES.includes(phase)) {
@@ -45,6 +52,24 @@ export function assembleContext(input: SessionStartInput): string {
 
   const beastmodeDir = join(repoRoot, ".beastmode");
   const sections: string[] = [];
+
+  // Phase-specific artifact resolution (before metadata so paths are available)
+  const artifactsDir = join(beastmodeDir, "artifacts");
+  const resolved = resolveArtifacts(phase, epic, feature, artifactsDir);
+
+  // Build and prepend metadata section
+  const parentArtifactFilenames = resolved.paths.map((p) => basename(p));
+  const outputTarget = computeOutputTarget(phase, slug, feature);
+  const metadata = buildMetadataSection({
+    phase,
+    epicId,
+    epicSlug: slug,
+    featureId,
+    featureSlug: feature,
+    parentArtifacts: parentArtifactFilenames,
+    outputTarget,
+  });
+  sections.push(metadata);
 
   // L0 context
   const l0Path = join(beastmodeDir, "BEASTMODE.md");
@@ -61,11 +86,9 @@ export function assembleContext(input: SessionStartInput): string {
   }
   sections.push(readFileSync(l1Path, "utf-8"));
 
-  // Phase-specific artifact resolution
-  const artifactsDir = join(beastmodeDir, "artifacts");
-  const artifacts = resolveArtifacts(phase, epic, feature, artifactsDir);
-  if (artifacts.length > 0) {
-    sections.push(...artifacts);
+  // Artifact contents
+  if (resolved.contents.length > 0) {
+    sections.push(...resolved.contents);
   }
 
   // Gate evaluation (validate phase only)
@@ -79,7 +102,7 @@ export function assembleContext(input: SessionStartInput): string {
 
 /**
  * Resolve parent artifacts for the given phase.
- * Returns array of artifact content strings.
+ * Returns paths and contents for metadata and context assembly.
  * Throws if a required artifact is missing.
  */
 function resolveArtifacts(
@@ -87,10 +110,10 @@ function resolveArtifacts(
   epic: string,
   feature: string | undefined,
   artifactsDir: string,
-): string[] {
+): ResolvedArtifacts {
   switch (phase) {
     case "design":
-      return [];
+      return { paths: [], contents: [] };
 
     case "plan": {
       const designDir = join(artifactsDir, "design");
@@ -98,7 +121,7 @@ function resolveArtifacts(
       if (!artifact) {
         throw new Error(`No design artifact found for epic "${epic}". Expected pattern: *-${epic}.md in ${designDir}`);
       }
-      return [readFileSync(artifact, "utf-8")];
+      return { paths: [artifact], contents: [readFileSync(artifact, "utf-8")] };
     }
 
     case "implement": {
@@ -108,25 +131,28 @@ function resolveArtifacts(
       if (!artifact) {
         throw new Error(`No plan artifact found for feature "${feature}" of epic "${epic}". Expected pattern: *-${pattern}.md in ${planDir}`);
       }
-      return [readFileSync(artifact, "utf-8")];
+      return { paths: [artifact], contents: [readFileSync(artifact, "utf-8")] };
     }
 
     case "validate": {
       const implDir = join(artifactsDir, "implement");
-      return findAllArtifacts(implDir, epic);
+      return findAllArtifactsWithPaths(implDir, epic);
     }
 
     case "release": {
-      const results: string[] = [];
+      const allPaths: string[] = [];
+      const allContents: string[] = [];
       for (const subdir of ["design", "plan", "validate"]) {
         const phaseDir = join(artifactsDir, subdir);
-        results.push(...findAllArtifacts(phaseDir, epic));
+        const result = findAllArtifactsWithPaths(phaseDir, epic);
+        allPaths.push(...result.paths);
+        allContents.push(...result.contents);
       }
-      return results;
+      return { paths: allPaths, contents: allContents };
     }
 
     default:
-      return [];
+      return { paths: [], contents: [] };
   }
 }
 
@@ -147,15 +173,19 @@ function findLatestArtifact(dir: string, suffix: string): string | undefined {
 
 /**
  * Find all .md artifacts in a directory whose filename contains the epic name.
- * Returns array of file contents.
+ * Returns both file paths and contents.
  */
-function findAllArtifacts(dir: string, epic: string): string[] {
-  if (!existsSync(dir)) return [];
+function findAllArtifactsWithPaths(dir: string, epic: string): ResolvedArtifacts {
+  if (!existsSync(dir)) return { paths: [], contents: [] };
 
-  return readdirSync(dir)
+  const files = readdirSync(dir)
     .filter((f) => f.endsWith(".md") && f.includes(epic))
-    .sort()
-    .map((f) => readFileSync(join(dir, f), "utf-8"));
+    .sort();
+
+  return {
+    paths: files.map((f) => join(dir, f)),
+    contents: files.map((f) => readFileSync(join(dir, f), "utf-8")),
+  };
 }
 
 /**
@@ -209,6 +239,56 @@ export function formatOutput(context: string): string {
   });
 }
 
+/**
+ * Compute the artifact output target path for the current phase.
+ * Format: .beastmode/artifacts/<phase>/YYYY-MM-DD-<epicSlug>[-<featureSlug>].md
+ */
+export function computeOutputTarget(phase: string, epicSlug: string, featureSlug: string | undefined): string {
+  const today = new Date().toISOString().split("T")[0];
+  const suffix = featureSlug ? `${epicSlug}-${featureSlug}` : epicSlug;
+  return `.beastmode/artifacts/${phase}/${today}-${suffix}.md`;
+}
+
+export interface MetadataInput {
+  phase: string;
+  epicId?: string;
+  epicSlug: string;
+  featureId?: string;
+  featureSlug?: string;
+  parentArtifacts: string[];
+  outputTarget: string;
+}
+
+/**
+ * Build a YAML-fenced metadata section for prepending to additionalContext.
+ * Feature fields are omitted when not provided.
+ */
+export function buildMetadataSection(input: MetadataInput): string {
+  const lines: string[] = ["---"];
+  lines.push(`phase: ${input.phase}`);
+  if (input.epicId) {
+    lines.push(`epic-id: ${input.epicId}`);
+  }
+  lines.push(`epic-slug: ${input.epicSlug}`);
+  if (input.featureId) {
+    lines.push(`feature-id: ${input.featureId}`);
+  }
+  if (input.featureSlug) {
+    lines.push(`feature-slug: ${input.featureSlug}`);
+  }
+  if (input.parentArtifacts.length > 0) {
+    lines.push("parent-artifacts:");
+    for (const artifact of input.parentArtifacts) {
+      lines.push(`  - ${artifact}`);
+    }
+  } else {
+    lines.push("parent-artifacts: []");
+  }
+  lines.push(`output-target: ${input.outputTarget}`);
+  lines.push("---");
+  return lines.join("\n");
+}
+
 // --- CLI Entry Point ---
 
 /**
@@ -218,14 +298,16 @@ export function formatOutput(context: string): string {
  */
 export function runSessionStart(repoRoot: string): void {
   const phase = process.env.BEASTMODE_PHASE;
-  const epic = process.env.BEASTMODE_EPIC;
-  const slug = process.env.BEASTMODE_SLUG;
-  const feature = process.env.BEASTMODE_FEATURE;
+  const epic = process.env.BEASTMODE_EPIC_ID;
+  const slug = process.env.BEASTMODE_EPIC_SLUG;
+  const feature = process.env.BEASTMODE_FEATURE_SLUG;
+  const epicId = process.env.BEASTMODE_EPIC_ID;
+  const featureId = process.env.BEASTMODE_FEATURE_ID;
 
   if (!phase) throw new Error("Missing environment variable: BEASTMODE_PHASE");
-  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC");
-  if (!slug) throw new Error("Missing environment variable: BEASTMODE_SLUG");
+  if (!epic) throw new Error("Missing environment variable: BEASTMODE_EPIC_ID");
+  if (!slug) throw new Error("Missing environment variable: BEASTMODE_EPIC_SLUG");
 
-  const context = assembleContext({ phase, epic, slug, feature, repoRoot });
+  const context = assembleContext({ phase, epic, slug, feature, epicId, featureId, repoRoot });
   process.stdout.write(formatOutput(context));
 }

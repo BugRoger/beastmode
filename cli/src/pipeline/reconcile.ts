@@ -163,13 +163,10 @@ export async function reconcileDesign(
     const store = new JsonFileStore(storePath);
     store.load();
 
-    let epic = store.find(slug);
+    const epic = store.find(slug);
     if (!epic || epic.type !== "epic") {
-      // Create the epic entity during design reconciliation
-      const newEpic = store.addEpic({
-        name: realSlug ?? slug,
-      });
-      epic = newEpic;
+      // Entity must exist — pre-created by pipeline runner at Step 0
+      return undefined;
     }
 
     const actor = hydrateActor(epic, store);

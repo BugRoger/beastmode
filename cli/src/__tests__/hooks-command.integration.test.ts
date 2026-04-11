@@ -74,7 +74,7 @@ describe("hooks-command integration", () => {
   });
 
   describe("hooks session-stop dispatches to handler", () => {
-    test("session-stop exits cleanly with BEASTMODE_EPIC_SLUG set", () => {
+    test("session-stop exits cleanly", () => {
       const tempDir = makeTempProjectWithGit();
 
       execSync(

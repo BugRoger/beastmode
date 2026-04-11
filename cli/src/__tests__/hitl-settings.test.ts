@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { writeHitlSettings, cleanHitlSettings, buildPreToolUseHook } from "../hooks/hitl-settings";
+import type { EnvPrefixContext } from "../hooks/hitl-settings";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -15,7 +16,13 @@ function readSettings(claudeDir: string): Record<string, unknown> {
   return JSON.parse(readFileSync(join(claudeDir, "settings.local.json"), "utf-8"));
 }
 
-const mockPreToolUseHook = buildPreToolUseHook("design");
+const mockEnvContext: EnvPrefixContext = {
+  phase: "design",
+  epicId: "bm-test1",
+  epicSlug: "test-epic",
+};
+
+const mockPreToolUseHook = buildPreToolUseHook(mockEnvContext);
 
 describe("writeHitlSettings", () => {
   test("creates settings.local.json when none exists", () => {
@@ -24,7 +31,7 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     const settings = readSettings(claudeDir);
@@ -47,10 +54,11 @@ describe("writeHitlSettings", () => {
       }),
     );
 
+    const implCtx: EnvPrefixContext = { phase: "implement", epicId: "bm-test1", epicSlug: "test-epic", featureId: "bm-test1.1", featureSlug: "auth-flow" };
     writeHitlSettings({
       claudeDir,
-      preToolUseHook: mockPreToolUseHook,
-      phase: "implement",
+      preToolUseHook: buildPreToolUseHook(implCtx),
+      envContext: implCtx,
     });
 
     const settings = readSettings(claudeDir);
@@ -62,10 +70,11 @@ describe("writeHitlSettings", () => {
 
   test("PreToolUse hook targets AskUserQuestion", () => {
     const claudeDir = makeTempClaudeDir();
+    const planCtx: EnvPrefixContext = { phase: "plan", epicId: "bm-test1", epicSlug: "test-epic" };
     writeHitlSettings({
       claudeDir,
-      preToolUseHook: mockPreToolUseHook,
-      phase: "plan",
+      preToolUseHook: buildPreToolUseHook(planCtx),
+      envContext: planCtx,
     });
 
     const settings = readSettings(claudeDir);
@@ -75,16 +84,18 @@ describe("writeHitlSettings", () => {
 
   test("PostToolUse hook uses portable CLI command with phase", () => {
     const claudeDir = makeTempClaudeDir();
+    const valCtx: EnvPrefixContext = { phase: "validate", epicId: "bm-test1", epicSlug: "test-epic" };
     writeHitlSettings({
       claudeDir,
-      preToolUseHook: mockPreToolUseHook,
-      phase: "validate",
+      preToolUseHook: buildPreToolUseHook(valCtx),
+      envContext: valCtx,
     });
 
     const settings = readSettings(claudeDir);
     const hooks = settings.hooks as Record<string, Array<{matcher: string; hooks: Array<{command?: string}>}>>;
     expect(hooks.PostToolUse[0].matcher).toBe("AskUserQuestion");
-    expect(hooks.PostToolUse[0].hooks[0].command).toBe("bunx beastmode hooks hitl-log validate");
+    expect(hooks.PostToolUse[0].hooks[0].command).toContain("hitl-log");
+    expect(hooks.PostToolUse[0].hooks[0].command).toContain("validate");
   });
 
   test("Stop hook uses portable CLI command", () => {
@@ -92,14 +103,14 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     const settings = readSettings(claudeDir);
     const hooks = settings.hooks as Record<string, Array<{matcher: string; hooks: Array<{command?: string}>}>>;
     expect(hooks.Stop).toHaveLength(1);
     expect(hooks.Stop[0].matcher).toBe("");
-    expect(hooks.Stop[0].hooks[0].command).toBe("bunx beastmode hooks session-stop");
+    expect(hooks.Stop[0].hooks[0].command).toContain("session-stop");
   });
 
   test("replaces existing HITL hooks on re-write", () => {
@@ -109,14 +120,15 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     // Second write with different phase
+    const planCtx: EnvPrefixContext = { phase: "plan", epicId: "bm-test1", epicSlug: "test-epic" };
     writeHitlSettings({
       claudeDir,
-      preToolUseHook: mockPreToolUseHook,
-      phase: "plan",
+      preToolUseHook: buildPreToolUseHook(planCtx),
+      envContext: planCtx,
     });
 
     const settings = readSettings(claudeDir);
@@ -145,7 +157,7 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     const settings = readSettings(claudeDir);
@@ -164,7 +176,7 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     const settings = readSettings(claudeDir);
@@ -176,23 +188,25 @@ describe("writeHitlSettings", () => {
     writeHitlSettings({
       claudeDir,
       preToolUseHook: mockPreToolUseHook,
-      phase: "design",
+      envContext: mockEnvContext,
     });
 
     const settings = readSettings(claudeDir);
     const hooks = settings.hooks as Record<string, Array<{matcher: string; hooks: Array<{command?: string}>}>>;
 
-    // PreToolUse
+    // PreToolUse — contains env prefix + bunx command
     const preCmd = hooks.PreToolUse[0].hooks[0].command!;
-    expect(preCmd).toBe("bunx beastmode hooks hitl-auto design");
+    expect(preCmd).toContain("bunx beastmode hooks hitl-auto");
+    expect(preCmd).toContain("design");
 
-    // PostToolUse
+    // PostToolUse — contains env prefix + bunx command
     const postCmd = hooks.PostToolUse[0].hooks[0].command!;
-    expect(postCmd).toBe("bunx beastmode hooks hitl-log design");
+    expect(postCmd).toContain("bunx beastmode hooks hitl-log");
+    expect(postCmd).toContain("design");
 
-    // Stop
+    // Stop — contains env prefix + bunx command
     const stopCmd = hooks.Stop[0].hooks[0].command!;
-    expect(stopCmd).toBe("bunx beastmode hooks session-stop");
+    expect(stopCmd).toContain("bunx beastmode hooks session-stop");
   });
 });
 
@@ -211,7 +225,7 @@ describe("cleanHitlSettings", () => {
             { matcher: "AskUserQuestion", hooks: [{ type: "command", command: "test" }] },
           ],
           Stop: [
-            { matcher: "", hooks: [{ type: "command", command: "bunx beastmode hooks session-stop" }] },
+            { matcher: "", hooks: [{ type: "command", command: "BEASTMODE_PHASE=design bunx beastmode hooks session-stop" }] },
           ],
         },
       }),

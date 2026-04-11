@@ -96,6 +96,10 @@ const mockJsonFileStore = vi.hoisted(() => {
       return undefined;
     }),
     listFeatures: vi.fn((_epicId?: string) => []),
+    addEpic: vi.fn((opts: { name: string }) => {
+      const id = `bm-${Math.random().toString(16).slice(2, 6)}`;
+      return { id, slug: opts.name + "-" + id.slice(-4), name: opts.name, type: "epic" };
+    }),
   };
 
   class JsonFileStore {
@@ -105,6 +109,7 @@ const mockJsonFileStore = vi.hoisted(() => {
     save() {}
     find(idOrSlug: string) { return this.state.find(idOrSlug); }
     listFeatures(epicId: string) { return this.state.listFeatures(epicId); }
+    addEpic(opts: { name: string }) { return this.state.addEpic(opts); }
     updateEpic(_id: string, _patch: any) {}
   }
 
@@ -277,6 +282,10 @@ function resetAllMocks() {
     return undefined;
   });
   storeState.listFeatures = vi.fn(() => []);
+  storeState.addEpic = vi.fn((opts: { name: string }) => {
+    const id = `bm-${Math.random().toString(16).slice(2, 6)}`;
+    return { id, slug: opts.name + "-" + id.slice(-4), name: opts.name, type: "epic" };
+  });
 
   mockLoadSyncRefs.mockImplementation(() => ({}));
   mockGetSyncRef.mockImplementation((_refs: any, entityId: string) => {
@@ -697,6 +706,110 @@ describe("pipeline/runner", () => {
       const result = await run(makeConfig({ phase: "release" }));
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("pre-dispatch entity creation (Step 0)", () => {
+    it("creates store entity for design phase before dispatch", async () => {
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((_idOrSlug: string) => {
+        // Entity doesn't exist yet
+        return undefined;
+      });
+
+      const callOrder: string[] = [];
+      storeState.addEpic = vi.fn((opts: { name: string }) => {
+        callOrder.push("addEpic");
+        const id = "bm-new1";
+        return { id, slug: "test-epic-new1", name: opts.name, type: "epic" };
+      });
+
+      mockCreate.mockImplementation(async (slug: string) => {
+        callOrder.push("worktree.create");
+        return {
+          slug,
+          path: `/tmp/test-project/.claude/worktrees/${slug}`,
+          branch: `feature/${slug}`,
+        };
+      });
+
+      const config = makeConfig({ phase: "design" });
+      const result = await run(config);
+
+      expect(result.success).toBe(true);
+      // Step 0 (addEpic) should happen before Step 1 (worktree.create)
+      expect(callOrder[0]).toBe("addEpic");
+      expect(callOrder[1]).toBe("worktree.create");
+      // epicId should be set in config
+      expect(storeState.addEpic).toHaveBeenCalledWith({ name: "test-epic" });
+    });
+
+    it("looks up existing entity for non-design phases", async () => {
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.find = vi.fn((idOrSlug: string) => {
+        if (idOrSlug === "test-epic") {
+          return { id: "epic-123", slug: "test-epic", name: "Test Epic", type: "epic" };
+        }
+        return undefined;
+      });
+      storeState.addEpic = vi.fn(); // Should NOT be called
+
+      await run(makeConfig({ phase: "plan" }));
+
+      // For non-design phases, find should be called but addEpic should not
+      expect(storeState.find).toHaveBeenCalledWith("test-epic");
+      expect(storeState.addEpic).not.toHaveBeenCalled();
+    });
+
+    it("sets worktree metadata on newly created entity", async () => {
+      const storeState = (mockJsonFileStore as any).__storeState;
+      const updateCalls: Array<[string, any]> = [];
+
+      storeState.find = vi.fn((_idOrSlug: string) => {
+        // Entity doesn't exist initially
+        return undefined;
+      });
+
+      storeState.addEpic = vi.fn((opts: { name: string }) => {
+        const id = "bm-new2";
+        return { id, slug: "test-epic-new2", name: opts.name, type: "epic" };
+      });
+
+      // Mock the updateEpic call
+      const JsonFileStoreClass = mockJsonFileStore;
+      JsonFileStoreClass.prototype.updateEpic = vi.fn(function(_id: string, patch: any) {
+        updateCalls.push([_id, patch]);
+        return { id: _id, type: "epic" };
+      });
+
+      mockCreate.mockImplementation(async (slug: string) => ({
+        slug,
+        path: `/tmp/test-project/.claude/worktrees/${slug}`,
+        branch: `feature/${slug}`,
+      }));
+
+      await run(makeConfig({ phase: "design" }));
+
+      // After Step 1 (worktree.create), Step 0b should call updateEpic with worktree metadata
+      expect(updateCalls.length).toBeGreaterThan(0);
+      const lastUpdate = updateCalls[updateCalls.length - 1];
+      expect(lastUpdate[1]).toMatchObject({
+        worktree: expect.objectContaining({
+          branch: expect.stringContaining("feature/"),
+          path: expect.stringContaining(".claude/worktrees"),
+        }),
+      });
+    });
+
+    it("skips entity creation when skipPreDispatch is true", async () => {
+      const storeState = (mockJsonFileStore as any).__storeState;
+      storeState.addEpic = vi.fn();
+
+      await run(makeConfig({ phase: "design", skipPreDispatch: true }));
+
+      // When skipPreDispatch is true, addEpic should NOT be called
+      // (Step 0 is skipped entirely, entity should already exist)
+      expect(storeState.addEpic).not.toHaveBeenCalled();
     });
   });
 
