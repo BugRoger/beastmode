@@ -351,7 +351,7 @@ describe("InMemoryTaskStore", () => {
     it("should prefer epic slug over feature slug", () => {
       const epic = store.addEpic({ name: "Auth" });
       // Feature slug won't collide with epic slug since they have different suffixes
-      const feature = store.addFeature({ parent: epic.id, name: "Auth Feature" });
+      store.addFeature({ parent: epic.id, name: "Auth Feature" });
       // Find by epic slug should return the epic
       const found = store.find(epic.slug);
       expect(found).toBeDefined();

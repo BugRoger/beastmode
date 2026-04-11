@@ -75,7 +75,7 @@ export class InMemoryTaskStore implements TaskStore {
     );
   }
 
-  addEpic(opts: { name: string }): Epic {
+  addEpic(opts: { name: string; slug?: string }): Epic {
     const id = this.generateEpicId();
     const shortId = id.replace("bm-", "");
     const epic: Epic = {
@@ -139,7 +139,7 @@ export class InMemoryTaskStore implements TaskStore {
     );
   }
 
-  addFeature(opts: { parent: string; name: string; description?: string }): Feature {
+  addFeature(opts: { parent: string; name: string; slug?: string; description?: string }): Feature {
     const parentEpic = this.getEpic(opts.parent);
     if (!parentEpic) throw new Error(`Parent epic not found: ${opts.parent}`);
 
