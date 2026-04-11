@@ -24,6 +24,8 @@ import { TICK_INTERVAL_MS } from "./NyanBanner.js";
 import { buildFlatRows, rowSlugAtIndex } from "./epics-tree-model.js";
 import type { SelectableRow } from "./epics-tree-model.js";
 import { SessionStatsAccumulator } from "./session-stats.js";
+import { loadStats, saveStats, mergeSessionCompleted, type PersistedStats } from "./stats-persistence.js";
+import { join } from "node:path";
 
 export interface AppProps {
   config: BeastmodeConfig;
@@ -58,6 +60,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
   const systemSeqRef = useRef(0);
   const [sessionStats, setSessionStats] = useState<ReturnType<SessionStatsAccumulator["getStats"]> | undefined>(undefined);
   const statsAccRef = useRef<SessionStatsAccumulator | null>(null);
+  const [allTimeStats, setAllTimeStats] = useState<PersistedStats | undefined>(undefined);
 
   // Dashboard logger for cancel actions (uses shared stores)
   const dashboardLoggerRef = useRef(
@@ -437,6 +440,35 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
       statsAccRef.current = null;
     };
   }, [loop]);
+
+  // --- Persisted stats (all-time) ---
+  useEffect(() => {
+    if (!projectRoot) return;
+    const statsPath = join(projectRoot, ".beastmode", "state", "dashboard-stats.json");
+    const persisted = loadStats(statsPath);
+    setAllTimeStats(persisted);
+
+    if (!loop) return;
+
+    const onSessionCompleted = (ev: WatchLoopEventMap["session-completed"][0]) => {
+      setAllTimeStats((prev) => {
+        const updated = mergeSessionCompleted(prev ?? persisted, {
+          epicSlug: ev.epicSlug,
+          phase: ev.phase,
+          success: ev.success,
+          durationMs: ev.durationMs,
+          featureSlug: ev.featureSlug,
+        });
+        saveStats(statsPath, updated);
+        return updated;
+      });
+    };
+
+    loop.on("session-completed", onSessionCompleted);
+    return () => {
+      loop.off("session-completed", onSessionCompleted);
+    };
+  }, [loop, projectRoot]);
 
   // --- Refresh epics from store ---
   useEffect(() => {
