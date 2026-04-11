@@ -38,14 +38,14 @@ function readOutputJson(phase: string, basename: string): Record<string, unknown
 
 describe("parseFrontmatter", () => {
   test("parses basic frontmatter", () => {
-    const fm = parseFrontmatter("---\nphase: design\nslug: my-epic\n---\n\n# Content");
+    const fm = parseFrontmatter("---\nphase: design\nid: my-epic\n---\n\n# Content");
     expect(fm.phase).toBe("design");
-    expect(fm.slug).toBe("my-epic");
+    expect(fm.id).toBe("my-epic");
   });
 
   test("strips quotes from values", () => {
-    const fm = parseFrontmatter('---\nslug: "my-epic"\nphase: \'plan\'\n---\n');
-    expect(fm.slug).toBe("my-epic");
+    const fm = parseFrontmatter('---\nid: "my-epic"\nphase: \'plan\'\n---\n');
+    expect(fm.id).toBe("my-epic");
     expect(fm.phase).toBe("plan");
   });
 
@@ -55,13 +55,13 @@ describe("parseFrontmatter", () => {
   });
 
   test("returns empty object when frontmatter is malformed (no closing ---)", () => {
-    const fm = parseFrontmatter("---\nphase: design\nslug: test\n\n# No closing");
+    const fm = parseFrontmatter("---\nphase: design\nid: test\n\n# No closing");
     expect(fm).toEqual({});
   });
 
   test("handles all known fields", () => {
     const fm = parseFrontmatter(
-      "---\nphase: implement\nslug: s\nepic: e\nfeature: f\nstatus: completed\nbump: minor\n---\n",
+      "---\nphase: implement\nid: s\nepic: e\nfeature: f\nstatus: completed\nbump: minor\n---\n",
     );
     expect(fm.phase).toBe("implement");
     expect(fm.epic).toBe("e");
@@ -75,7 +75,7 @@ describe("parseFrontmatter", () => {
 
 describe("buildOutput", () => {
   test("design phase output", () => {
-    const output = buildOutput("path/to/design.md", { phase: "design", slug: "abc123", epic: "my-epic" }, ARTIFACTS_DIR);
+    const output = buildOutput("path/to/design.md", { phase: "design", id: "abc123", epic: "my-epic" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
       artifacts: { design: "design.md", slug: "my-epic", epic: "my-epic", summary: undefined },
@@ -88,10 +88,10 @@ describe("buildOutput", () => {
   });
 
   test("design phase output without epic field", () => {
-    const output = buildOutput("path/to/design.md", { phase: "design" }, ARTIFACTS_DIR);
+    const output = buildOutput("path/to/design.md", { phase: "design", id: "abc123" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "design.md" },
+      artifacts: { design: "design.md", slug: "abc123", summary: undefined },
     });
   });
 
@@ -145,7 +145,7 @@ describe("buildOutput", () => {
   test("design phase strips directory prefix from absolute path", () => {
     const output = buildOutput(
       "/worktree/.beastmode/artifacts/design/2026-04-06-epic.md",
-      { phase: "design", slug: "abc123", epic: "my-epic" },
+      { phase: "design", id: "abc123", epic: "my-epic" },
       ARTIFACTS_DIR,
     );
     expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
@@ -154,7 +154,7 @@ describe("buildOutput", () => {
   test("design phase preserves bare filename unchanged", () => {
     const output = buildOutput(
       "2026-04-06-epic.md",
-      { phase: "design", slug: "abc123", epic: "my-epic" },
+      { phase: "design", id: "abc123", epic: "my-epic" },
       ARTIFACTS_DIR,
     );
     expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
@@ -200,7 +200,7 @@ describe("buildOutput", () => {
 describe("validate buildOutput with failedFeatures", () => {
   test("includes failedFeatures in artifacts when present", () => {
     const fm = parseFrontmatter(
-      "---\nphase: validate\nslug: test\nepic: test\nstatus: failed\nfailedFeatures: token-cache,auth-lib\n---\n",
+      "---\nphase: validate\nid: test\nepic: test\nstatus: failed\nfailedFeatures: token-cache,auth-lib\n---\n",
     );
     const output = buildOutput("test.md", fm, "/tmp");
     expect(output).toBeDefined();
@@ -210,7 +210,7 @@ describe("validate buildOutput with failedFeatures", () => {
 
   test("does not include failedFeatures when absent", () => {
     const fm = parseFrontmatter(
-      "---\nphase: validate\nslug: test\nepic: test\nstatus: passed\n---\n",
+      "---\nphase: validate\nid: test\nepic: test\nstatus: passed\n---\n",
     );
     const output = buildOutput("test.md", fm, "/tmp");
     expect(output).toBeDefined();
@@ -249,7 +249,7 @@ describe("scanPlanFeatures", () => {
 
   test("skips files without feature field", () => {
     writeArtifact("plan", "2026-03-30-my-epic.md",
-      "---\nphase: plan\nepic: my-epic\nslug: my-epic\n---\n# Epic-level plan");
+      "---\nphase: plan\nepic: my-epic\nid: my-epic\n---\n# Epic-level plan");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(0);
@@ -287,23 +287,6 @@ describe("scanPlanFeatures", () => {
     expect(features).toHaveLength(1);
     expect(features[0].wave).toBeUndefined();
   });
-
-  test("matches features by slug field (hex lookup)", () => {
-    writeArtifact("plan", "2026-03-30-my-epic-auth.md",
-      "---\nphase: plan\nslug: abc123\nepic: my-epic\nfeature: auth\n---\n# Auth");
-
-    const features = scanPlanFeatures(ARTIFACTS_DIR, "abc123");
-    expect(features).toHaveLength(1);
-    expect(features[0].slug).toBe("auth");
-  });
-
-  test("does not double-count when epic and slug both match", () => {
-    writeArtifact("plan", "2026-03-30-my-epic-auth.md",
-      "---\nphase: plan\nslug: my-epic\nepic: my-epic\nfeature: auth\n---\n# Auth");
-
-    const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
-    expect(features).toHaveLength(1);
-  });
 });
 
 // --- processArtifact ---
@@ -314,7 +297,7 @@ describe("processArtifact", () => {
 
   test("generates output.json for a design artifact", () => {
     const path = writeArtifact("design", "2026-03-30-my-epic.md",
-      "---\nphase: design\nslug: my-epic\n---\n# PRD");
+      "---\nphase: design\nid: my-epic\n---\n# PRD");
 
     const result = processArtifact(path, ARTIFACTS_DIR);
     expect(result).toBe(true);
@@ -328,7 +311,7 @@ describe("processArtifact", () => {
     writeArtifact("plan", "2026-03-30-my-epic-auth.md",
       "---\nphase: plan\nepic: my-epic\nfeature: auth\n---\n# Auth");
     const planPath = writeArtifact("plan", "2026-03-30-my-epic.md",
-      "---\nphase: plan\nepic: my-epic\nslug: my-epic\n---\n# Plan");
+      "---\nphase: plan\nepic: my-epic\nid: my-epic\n---\n# Plan");
 
     processArtifact(planPath, ARTIFACTS_DIR);
 
@@ -340,13 +323,13 @@ describe("processArtifact", () => {
 
   test("skips artifact without phase frontmatter", () => {
     const path = writeArtifact("design", "no-phase.md",
-      "---\nslug: test\n---\n# No phase");
+      "---\nid: test\n---\n# No phase");
     expect(processArtifact(path, ARTIFACTS_DIR)).toBe(false);
   });
 
   test("skips regeneration when output is newer than artifact", () => {
     const path = writeArtifact("design", "2026-03-30-cached.md",
-      "---\nphase: design\nslug: cached\n---\n# Cached");
+      "---\nphase: design\nid: cached\n---\n# Cached");
 
     // First generation
     processArtifact(path, ARTIFACTS_DIR);
@@ -369,7 +352,7 @@ describe("generateAll", () => {
 
   test("processes artifacts across multiple phases", () => {
     writeArtifact("design", "2026-03-30-epic.md",
-      "---\nphase: design\nslug: epic\n---\n# PRD");
+      "---\nphase: design\nid: epic\n---\n# PRD");
     writeArtifact("validate", "2026-03-30-epic.md",
       "---\nphase: validate\nstatus: passed\n---\n# Report");
 
@@ -397,7 +380,7 @@ describe("generateAll", () => {
 
     // Current epic's plan artifact
     writeArtifact("plan", "2026-03-30-remove-persona-voice.md",
-      "---\nphase: plan\nepic: remove-persona-voice\nslug: remove-persona-voice\n---\n# Plan");
+      "---\nphase: plan\nepic: remove-persona-voice\nid: remove-persona-voice\n---\n# Plan");
 
     // Current epic's feature plan
     writeArtifact("plan", "2026-03-30-remove-persona-voice-strip.md",
