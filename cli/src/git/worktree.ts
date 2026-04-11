@@ -72,48 +72,6 @@ const ARTIFACT_PHASES = ["design", "plan", "implement", "validate", "release"];
 const WORKTREE_DIR = ".claude/worktrees";
 
 /**
- * Return the canonical impl branch name for a feature.
- * Single source of truth — all callers use this, never string interpolation.
- *
- * Format: `impl/<slug>--<feature>`
- */
-export function implBranchName(slug: string, feature: string): string {
-  return `impl/${slug}--${feature}`;
-}
-
-/**
- * Create an implementation branch for a feature.
- * Idempotent — skips creation if the branch already exists.
- * Returns the branch name regardless.
- *
- * Creates the branch from the current HEAD (worktree HEAD when called
- * from a worktree context).
- */
-export async function createImplBranch(
-  slug: string,
-  feature: string,
-  opts: { cwd?: string } = {},
-): Promise<string> {
-  const cwd = opts.cwd;
-  const branch = implBranchName(slug, feature);
-
-  // Check if the branch already exists
-  const branchExists = await gitCheck(
-    ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`],
-    { cwd },
-  );
-
-  if (branchExists) {
-    return branch;
-  }
-
-  // Create from current HEAD
-  await git(["branch", branch], { cwd });
-
-  return branch;
-}
-
-/**
  * Detect whether cwd is inside a git worktree (not the main checkout).
  *
  * Uses `git rev-parse --git-common-dir`: in the main checkout this returns
@@ -391,7 +349,6 @@ export async function archive(
 
 /**
  * Remove a worktree and optionally delete its branch.
- * Also deletes all impl/<slug>--* branches for the slug.
  */
 export async function remove(
   slug: string,
@@ -409,22 +366,6 @@ export async function remove(
 
   // Prune to clean up
   await git(["worktree", "prune"], { cwd, allowFailure: true });
-
-  // Delete all impl branches for this slug (impl/<slug>--*)
-  const implPrefix = `impl/${slug}--`;
-  const branchList = await git(["branch", "--list", `${implPrefix}*`], {
-    cwd,
-    allowFailure: true,
-  });
-  if (branchList.exitCode === 0 && branchList.stdout.trim()) {
-    const implBranches = branchList.stdout
-      .split("\n")
-      .map((b) => b.trim().replace(/^\*\s*/, ""))
-      .filter((b) => b.length > 0);
-    for (const b of implBranches) {
-      await git(["branch", "-D", b], { cwd, allowFailure: true });
-    }
-  }
 
   // Optionally delete the branch
   if (opts.deleteBranch !== false) {
