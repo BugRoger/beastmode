@@ -6,11 +6,11 @@
 - ALWAYS follow commit format: `Release vX.Y.Z — Title` with categorized sections
 
 ## Release Process
-- ALWAYS use merge-only — no rebase before merge
+- ALWAYS rebase the feature branch onto main before squash merge — prevents stale fork point from overwriting intermediate main commits
 - ALWAYS bump versions and update CHANGELOG on main AFTER the squash merge — never in the worktree
 - ALWAYS read main's plugin.json for the current version — the worktree's copy is stale
 - ALWAYS resolve version file and CHANGELOG conflicts with --ours (main) during squash merge
-- ALWAYS resolve code file conflicts with --theirs (feature branch) during squash merge
+- NEVER auto-resolve code file conflicts with --theirs during squash merge — post-rebase, remaining code conflicts indicate genuine divergence and must fail loudly for manual review
 - NEVER modify version files (plugin.json, marketplace.json) or CHANGELOG.md in the worktree
 - NEVER skip retro before the release commit — retro output must be included in the squash merge
 - ALWAYS run retro inlined in the release skill — no shared orchestrator import

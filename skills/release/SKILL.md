@@ -182,21 +182,41 @@ feature_dir=$(pwd)
 feature_branch=$(git branch --show-current)
 main_repo=$(git rev-parse --show-toplevel)/..
 
+# Navigate to main repo, checkout main, pull latest
 cd "$main_repo"
 git checkout main
 git pull
+
+# Archive tag BEFORE rebase — preserves original pre-rebase commit history
 git tag "archive/$feature_branch"
+
+# Navigate back to feature worktree for rebase
+cd "$feature_dir"
+git rebase main
+```
+
+If the rebase encounters conflicts, resolve them interactively per commit:
+1. Examine each conflicted file
+2. Resolve the conflict (edit the file to produce the correct merged content)
+3. `git add <resolved-file>`
+4. `git rebase --continue`
+5. Repeat until rebase completes
+
+After rebase completes:
+
+```bash
+# Navigate back to main repo for squash merge
+cd "$main_repo"
 git merge --squash "$feature_branch"
 ```
 
 **Important:** The squash merge stages changes but does NOT commit. Proceed to step 4.
 
-If the squash merge produces conflicts, resolve as follows:
+If the squash merge produces conflicts after rebase, resolve as follows:
 
-- **Code files** (`.ts`, `.tsx`, `.js`, etc.): resolve with `--theirs` (feature branch has the new implementation)
 - **CHANGELOG.md**: resolve with `--ours` (main has the complete history; new entry is added in step 5)
 - **Version files** (plugin.json, marketplace.json): resolve with `--ours` (main has the correct current version; bump happens in step 6)
-- **Other .beastmode/ files**: resolve with `--theirs` (feature branch has the latest state)
+- **All other files**: any remaining conflicts after rebase indicate genuine divergence — fail loudly and report for manual review. Do NOT auto-resolve with `--theirs`.
 
 ### 4. Compute Version
 
@@ -270,6 +290,8 @@ claude plugin update beastmode@beastmode-marketplace --scope user
 - Do NOT proceed to checkpoint if validation fails
 - The squash merge stages changes but does NOT commit — these are separate steps
 - NEVER skip the archive tag before squash merge — it preserves detailed commit history
+- ALWAYS rebase the feature branch onto main before squash merge — prevents stale fork point from overwriting intermediate main commits
+- After rebase, code file conflicts during squash merge are genuine divergence — do NOT auto-resolve with `--theirs`
 
 ## Reference
 

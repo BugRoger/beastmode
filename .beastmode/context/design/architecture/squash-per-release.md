@@ -4,7 +4,7 @@
 Multiple phase-specific commits per feature cycle create noise on main. Branch history leaks via regular merge.
 
 ## Decision
-Release uses `git merge --squash` to collapse entire feature branch into one commit on main. Commit message: `Release vX.Y.Z — Title` with categorized sections. Feature branch tips archived as `archive/feature/<name>` tags before deletion.
+Release rebases the feature branch onto main, then uses `git merge --squash` to collapse the rebased branch into one commit on main. Archive tag is created before rebase to preserve original commit history. Commit message: `Release vX.Y.Z — Title` with categorized sections. Feature branch tips archived as `archive/feature/<name>` tags before deletion.
 
 ## Rationale
 - One commit per version on main creates scannable release history

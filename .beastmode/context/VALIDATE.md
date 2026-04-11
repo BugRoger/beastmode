@@ -20,6 +20,7 @@
 - Baseline as of 2026-04-06 (post dashboard-log-fixes): 93 test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing), 1483 individual tests passing, 5 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-06 (post details-panel-stats): 113 test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing), 1652 individual tests passing, 5 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-07 (post integration-test-hygiene): 104 unit test files passing, 14 file-level failures (pre-existing on main), 1621 individual tests passing; 8 type errors in src/dashboard/App.tsx caused by branch divergence from dashboard refactors on main — resolve by rebasing onto main before release
+- Baseline as of 2026-04-11 (post release-rebase-fix): 97 unit test files passing, 21 file-level failures (pre-existing on main + branch divergence), 1569 individual tests passing; 8 type errors (pre-existing in untouched files)
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:

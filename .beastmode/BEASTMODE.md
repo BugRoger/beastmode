@@ -84,7 +84,8 @@
 ## Release Process
 
 - ALWAYS expect version file staleness in worktree-branching model
-- ALWAYS use squash merge with archive tags before merge — prevents loss of detailed commit history
+- ALWAYS rebase feature branch onto main before squash merge — archive tag before rebase preserves original history, rebase prevents stale fork point from overwriting intermediate main commits
+- NEVER auto-resolve code file conflicts with --theirs after rebase — post-rebase conflicts are genuine divergence
 - ALWAYS verify step ordering when squash merge separates staging from committing
 - ALWAYS run retro before release commit — post-commit retro misses the current release's learnings
 

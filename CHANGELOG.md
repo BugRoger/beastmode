@@ -4,6 +4,13 @@ All notable changes to beastmode.
 
 ---
 
+### v0.107.0 — Release Rebase Fix (Apr 2026)
+
+- **Rebase before squash merge** — Release workflow now rebases the feature branch onto main before squash merge, preventing stale fork points from overwriting intermediate main commits
+- **Remove dead merge()** — Removed unused `merge()` function from worktree utilities
+
+---
+
 ### v0.106.0 — Integration Test Hygiene (Apr 2026)
 
 - **Behavioral-change skip gate** — Plan skill step 4 now evaluates each feature's behavioral impact before dispatching the plan-integration-tester agent; documentation-only, refactoring, config-change, and covered-fix features are classified as non-behavioral and skip agent dispatch entirely

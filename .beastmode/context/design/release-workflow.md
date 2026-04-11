@@ -18,5 +18,7 @@
 
 ## Merge Strategy
 - ALWAYS archive branch tip before squash merge — `git tag archive/feature/<name>` preserves history
-- NEVER rebase at merge time — merge-only strategy avoids per-commit conflicts
+- ALWAYS rebase the feature branch onto main before squash merge — archive tag must precede rebase to preserve original commit history
+- Post-rebase, code file conflicts during squash merge are genuine divergence — do NOT auto-resolve with --theirs; fail loudly for manual review
+- ALWAYS resolve CHANGELOG.md and version file conflicts with --ours during squash merge — these are managed post-merge on main
 - Interactive merge options: merge locally (recommended), push and create PR, keep as-is, discard — user choice
