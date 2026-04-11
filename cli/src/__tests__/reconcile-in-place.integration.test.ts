@@ -68,14 +68,14 @@ describe("Design reconciliation updates slug in-place", () => {
       expect(allEpics).toHaveLength(1);
       expect(allEpics[0].slug).toBe("oauth-redesign-a1b2");
 
-      // Old slug should not resolve
-      const oldLookup = store.find(seeded.slug);
-      expect(oldLookup).toBeUndefined();
+      // Old slug should not be found in the list
+      const oldSlugMatch = store.listEpics().find((e) => e.slug === seeded.slug);
+      expect(oldSlugMatch).toBeUndefined();
 
-      // New slug should resolve
-      const newLookup = store.find("oauth-redesign-a1b2");
-      expect(newLookup).toBeDefined();
-      expect(newLookup!.id).toBe(seeded.id);
+      // New slug should be found
+      const newSlugMatch = store.listEpics().find((e) => e.slug === "oauth-redesign-a1b2");
+      expect(newSlugMatch).toBeDefined();
+      expect(newSlugMatch!.id).toBe(seeded.id);
     });
   });
 });

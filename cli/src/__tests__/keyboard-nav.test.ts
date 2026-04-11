@@ -84,7 +84,8 @@ describe("cancelEpicAction", () => {
     // Shared module deletes the store entity
     const store = new JsonFileStore(storePath);
     store.load();
-    expect(store.find("cancel-test")).toBeUndefined();
+    const entities = store.listEpics().filter((e) => e.slug === "cancel-test");
+    expect(entities).toHaveLength(0);
   });
 
   test("deletes store entity from design phase", async () => {
@@ -101,7 +102,8 @@ describe("cancelEpicAction", () => {
 
     const store = new JsonFileStore(storePath);
     store.load();
-    expect(store.find("design-cancel")).toBeUndefined();
+    const entities = store.listEpics().filter((e) => e.slug === "design-cancel");
+    expect(entities).toHaveLength(0);
   });
 
   test("deletes store entity from validate phase", async () => {
@@ -118,7 +120,8 @@ describe("cancelEpicAction", () => {
 
     const store = new JsonFileStore(storePath);
     store.load();
-    expect(store.find("validate-cancel")).toBeUndefined();
+    const entities = store.listEpics().filter((e) => e.slug === "validate-cancel");
+    expect(entities).toHaveLength(0);
   });
 
   test("aborts only sessions matching the epic slug", async () => {
@@ -169,7 +172,8 @@ describe("cancelEpicAction", () => {
     // Store entity is deleted entirely
     const store = new JsonFileStore(storePath);
     store.load();
-    expect(store.find("blocked-cancel")).toBeUndefined();
+    const entities = store.listEpics().filter((e) => e.slug === "blocked-cancel");
+    expect(entities).toHaveLength(0);
   });
 });
 
