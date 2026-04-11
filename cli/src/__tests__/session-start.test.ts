@@ -6,7 +6,7 @@ import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { assembleContext, formatOutput, computeOutputTarget, buildMetadataSection } from "../hooks/session-start";
+import { assembleContext, formatOutput } from "../hooks/session-start";
 import {
   writeSessionStartHook,
   cleanSessionStartHook,
