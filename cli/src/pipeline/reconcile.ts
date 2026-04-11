@@ -15,7 +15,8 @@ import {
 } from "../artifacts/reader.js";
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import type { EpicContext } from "../pipeline-machine/index.js";
-import { resolve } from "node:path";
+import { resolve, join, basename } from "node:path";
+import { renameSync, existsSync } from "node:fs";
 import { renameTags } from "../git/tags.js";
 
 // --- Result type ---
@@ -143,6 +144,54 @@ async function withLock<T>(slug: string, fn: () => Promise<T>): Promise<T> {
 // --- Phase-specific reconcile functions ---
 
 /**
+ * Rename a design artifact file (and its output.json) from hex slug to
+ * human-readable slug. Returns the new basename, or the original if no
+ * rename was needed or possible.
+ */
+function renameDesignArtifact(
+  wtPath: string,
+  designPath: string | undefined,
+  oldSlug: string,
+  newSlug: string,
+): string | undefined {
+  if (!designPath) return undefined;
+
+  const designDir = join(wtPath, ".beastmode", "artifacts", "design");
+  const oldMd = join(designDir, designPath);
+
+  if (!existsSync(oldMd)) return designPath;
+
+  // Replace the old slug suffix with the new slug in the filename
+  // e.g., 2026-04-11-f2d907.md -> 2026-04-11-fix-tree-log-rendering.md
+  const base = basename(designPath, ".md");
+  if (!base.endsWith(`-${oldSlug}`)) return designPath;
+
+  const prefix = base.slice(0, -(oldSlug.length));
+  const newBase = `${prefix}${newSlug}`;
+  const newMdName = `${newBase}.md`;
+  const newMd = join(designDir, newMdName);
+
+  try {
+    renameSync(oldMd, newMd);
+  } catch {
+    return designPath;
+  }
+
+  // Also rename the output.json if it exists
+  const oldOutput = join(designDir, `${base}.output.json`);
+  const newOutput = join(designDir, `${newBase}.output.json`);
+  if (existsSync(oldOutput)) {
+    try {
+      renameSync(oldOutput, newOutput);
+    } catch {
+      // Non-fatal — the .md rename succeeded
+    }
+  }
+
+  return newMdName;
+}
+
+/**
  * Reconcile a design phase completion.
  */
 export async function reconcileDesign(
@@ -181,7 +230,9 @@ export async function reconcileDesign(
 
     // Design phase may rename the slug (hex -> human-readable).
     // Update in-place — entity ID stays stable.
-    const newSlug = realSlug ?? epic.slug;
+    // Preserve the collision-proof hex suffix from the epic ID.
+    const shortId = epic.id.replace("bm-", "");
+    const newSlug = realSlug ? `${realSlug}-${shortId}` : epic.slug;
     if (newSlug !== epic.slug) {
       const oldSlug = epic.slug;
       store.updateEpic(epic.id, {
@@ -196,6 +247,13 @@ export async function reconcileDesign(
 
       // Rename git tags from old slug to new slug
       await renameTags(oldSlug, newSlug, { cwd: projectRoot });
+
+      // Rename design artifact file from hex slug to human-readable slug
+      const renamedDesignPath = renameDesignArtifact(wtPath, designPath, oldSlug, newSlug);
+      if (renamedDesignPath && renamedDesignPath !== designPath) {
+        store.updateEpic(epic.id, { design: renamedDesignPath });
+        store.save();
+      }
 
       const savedEpic = store.getEpic(epic.id)!;
       return {
