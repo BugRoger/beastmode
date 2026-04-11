@@ -1,6 +1,6 @@
 ---
 phase: design
-slug: 727f7b
+slug: collision-proof-slugs
 epic: collision-proof-slugs
 ---
 
