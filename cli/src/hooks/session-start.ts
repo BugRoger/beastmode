@@ -203,6 +203,7 @@ function evaluateGates(epic: string, artifactsDir: string): string {
 export function formatOutput(context: string): string {
   return JSON.stringify({
     hookSpecificOutput: {
+      "hookEventName": "SessionStart",
       additionalContext: context,
     },
   });
