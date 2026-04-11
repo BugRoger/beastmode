@@ -9,8 +9,8 @@ vi.mock("../hooks/hitl-log.js", () => ({
   routeAndFormat: vi.fn(() => "## 2026-01-01\n**Tag:** auto\n"),
 }));
 
-vi.mock("../hooks/generate-output.js", () => ({
-  generateAll: vi.fn(() => 0),
+vi.mock("../hooks/session-stop.js", () => ({
+  runSessionStop: vi.fn(() => 0),
 }));
 
 vi.mock("../config.js", () => ({
@@ -59,7 +59,7 @@ vi.mock("node:fs", async () => {
 import { hooksCommand } from "../commands/hooks";
 import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
-import { generateAll } from "../hooks/generate-output.js";
+import { runSessionStop } from "../hooks/session-stop.js";
 
 describe("hooksCommand", () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
@@ -102,12 +102,12 @@ describe("hooksCommand", () => {
     expect(routeAndFormat).toHaveBeenCalled();
   });
 
-  test("generate-output dispatches to generateAll", async () => {
+  test("session-stop dispatches to runSessionStop", async () => {
     try {
-      await hooksCommand(["generate-output"]);
+      await hooksCommand(["session-stop"]);
     } catch { /* exit mock */ }
 
-    expect(generateAll).toHaveBeenCalled();
+    expect(runSessionStop).toHaveBeenCalled();
   });
 
   test("unknown subcommand writes error and exits 1", async () => {

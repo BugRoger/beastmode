@@ -17,16 +17,16 @@ import { loadConfig } from "../config.js";
 import { getPhaseHitlProse } from "../hooks/hitl-settings.js";
 import { decideResponse } from "../hooks/hitl-auto.js";
 import { routeAndFormat } from "../hooks/hitl-log.js";
-import { generateAll } from "../hooks/generate-output.js";
+import { runSessionStop } from "../hooks/session-stop.js";
 import { runSessionStart as runSessionStartImpl } from "../hooks/session-start.js";
 
-const VALID_HOOKS = ["hitl-auto", "hitl-log", "generate-output", "session-start"];
+const VALID_HOOKS = ["hitl-auto", "hitl-log", "session-stop", "session-start"];
 
 export async function hooksCommand(args: string[]): Promise<void> {
   const hookName = args[0];
 
   if (!hookName) {
-    process.stderr.write("Usage: beastmode hooks <hitl-auto|hitl-log|generate-output|session-start> [phase]\n");
+    process.stderr.write("Usage: beastmode hooks <hitl-auto|hitl-log|session-stop|session-start> [phase]\n");
     process.exit(1);
   }
 
@@ -58,7 +58,7 @@ export async function hooksCommand(args: string[]): Promise<void> {
       case "hitl-log":
         runHitlLog(args.slice(1));
         break;
-      case "generate-output":
+      case "session-stop":
         runGenerateOutput();
         break;
     }
@@ -129,5 +129,5 @@ function runGenerateOutput(): void {
     // not a worktree
   }
   const worktreeSlug = isWorktree ? basename(repoRoot) : undefined;
-  generateAll(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug);
+  runSessionStop(artifactsDir, isWorktree ? "changed" : "all", worktreeSlug);
 }

@@ -49,18 +49,17 @@ describe("session-stop-rename integration", () => {
     expect(output.status).toBe("completed");
   });
 
-  test("session-stop exits non-zero when BEASTMODE_EPIC_SLUG is missing", () => {
+  test("session-stop exits cleanly even when BEASTMODE_EPIC_SLUG is missing", () => {
     const tempDir = makeTempProjectWithGit();
-    expect(() => {
-      execSync(
-        `bun run "${CLI_PATH}" hooks session-stop`,
-        {
-          encoding: "utf-8",
-          cwd: tempDir,
-          env: { ...process.env, BEASTMODE_EPIC_SLUG: undefined },
-        },
-      );
-    }).toThrow();
+    // session-stop scans artifact directories, does not require env vars
+    execSync(
+      `bun run "${CLI_PATH}" hooks session-stop`,
+      {
+        encoding: "utf-8",
+        cwd: tempDir,
+        env: { ...process.env, BEASTMODE_EPIC_SLUG: undefined },
+      },
+    );
   });
 
   test("generate-output subcommand is no longer recognized", () => {
