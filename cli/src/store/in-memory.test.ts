@@ -82,6 +82,21 @@ describe("InMemoryTaskStore", () => {
     it("should throw on delete non-existent epic", () => {
       expect(() => store.deleteEpic("bm-0000")).toThrow();
     });
+
+    it("should allow slug mutation via updateEpic", () => {
+      const epic = store.addEpic({ name: "Test Epic", slug: "old-slug" });
+      const updated = store.updateEpic(epic.id, { slug: "new-slug" });
+      expect(updated.slug).toBe("new-slug");
+      expect(store.getEpic(epic.id)!.slug).toBe("new-slug");
+    });
+
+    it("should make epic findable by new slug after slug mutation", () => {
+      const epic = store.addEpic({ name: "Test Epic", slug: "old-slug" });
+      store.updateEpic(epic.id, { slug: "new-slug" });
+      expect(store.find("new-slug")).toBeDefined();
+      expect(store.find("new-slug")!.id).toBe(epic.id);
+      expect(store.find("old-slug")).toBeUndefined();
+    });
   });
 
   describe("Feature CRUD", () => {
