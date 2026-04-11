@@ -243,6 +243,17 @@
     "format": ["progress-bar"],
     "publishQuiet": true
   },
+  "id-pipeline": {
+    "paths": ["features/store/id-pipeline.feature"],
+    "import": [
+      "features/store/step_definitions/id-pipeline.steps.ts",
+      "features/store/step_definitions/store-ready.steps.ts",
+      "features/store/support/store-world.ts",
+      "features/store/support/store-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
   "logging-cleanup": {
     "paths": [
       "features/logger-interface.feature",
