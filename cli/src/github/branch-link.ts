@@ -37,7 +37,7 @@ export interface LinkBranchesOpts {
  * createLinkedBranch to recreate at the same SHA — this establishes the link.
  */
 export async function linkBranches(opts: LinkBranchesOpts): Promise<void> {
-  const log = opts.logger ?? createLogger(createStdioSink(0), {});
+  const log = (opts.logger ?? createLogger(createStdioSink(0), {})).child({ phase: opts.phase });
   const { repo, epicSlug, epicIssueNumber, featureSlug, featureIssueNumber, phase, cwd } = opts;
 
   // Skip if no epic issue number
@@ -118,6 +118,6 @@ async function linkOneBranch(opts: {
   if (linkedId) {
     log?.debug?.(`branch-link: linked ${branchName} -> #${issueNumber}`);
   } else {
-    log?.warn?.(`branch-link: createLinkedBranch returned null for ${branchName} -> #${issueNumber}`);
+    log?.debug?.(`branch-link: createLinkedBranch returned null for ${branchName} -> #${issueNumber}`);
   }
 }
