@@ -14,6 +14,7 @@ let mockDesignOutput: unknown = undefined;
 vi.mock("../artifacts/reader.js", () => ({
   loadWorktreePhaseOutput: () => mockDesignOutput,
   loadWorktreeFeatureOutput: () => undefined,
+  extractSectionFromFile: vi.fn().mockResolvedValue(undefined),
 }));
 
 // --- Mock git tags ---
@@ -60,8 +61,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "dashboard-stats-persistence",
-        summary: { problem: "stats lost", solution: "persist them" },
+        "epic-slug": "dashboard-stats-persistence",
         design: "2026-04-11-dashboard-stats-persistence.md",
       },
     };
@@ -79,9 +79,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
 
     mockDesignOutput = {
       status: "completed",
-      artifacts: {
-        summary: { problem: "broken", solution: "fix it" },
-      },
+      artifacts: {},
     };
 
     const result = await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
@@ -98,8 +96,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "auth-redesign",
-        summary: { problem: "auth bad", solution: "redo it" },
+        "epic-slug": "auth-redesign",
       },
     };
 
@@ -116,7 +113,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "my-cool-feature",
+        "epic-slug": "my-cool-feature",
       },
     };
 
