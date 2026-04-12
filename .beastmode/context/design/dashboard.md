@@ -136,3 +136,13 @@
 - Re-dispatch detected when a session-completed fires for an epic+phase combination that already has a prior completion — tracked via completed key set
 - `nowFn` constructor option for deterministic uptime testing without real timers
 - `dispose()` method removes all event listeners for cleanup
+
+## Heartbeat Countdown Timer
+- Three-state machine: `counting` (interval ticking down), `scanning` (scan in progress), `stopped` (watch loop not running)
+- Event wiring: `started` → `counting` (reset to full interval + start 1s timer); `scan-started` → `scanning` (clear timer); `scan-complete` with `trigger: "poll"` → `counting` (reset + restart timer); `scan-complete` with `trigger: "event"` → no change (countdown continues); `stopped` → `stopped` (clear timer)
+- Independent 1-second `setInterval` drives the decrement — separate from the orchestration poll interval
+- Pure function / hook separation: transition functions (`handleStarted`, `handleScanStarted`, `handleScanComplete`, `handleStopped`, `decrementCountdown`, `formatCountdown`) live in `use-countdown.ts` alongside the `useCountdown` hook; functions are independently testable without React
+- Display format contract: counting → `{N}s`; scanning → `scanning...`; stopped → `stopped ({N}s)`
+- Rendered in the NyanBanner header row alongside watch status and clock
+
+context/design/dashboard/countdown-timer.md

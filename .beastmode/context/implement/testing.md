@@ -22,12 +22,14 @@ context/implement/testing/bun-test-runner-imports.md
 - ALWAYS use store-lifecycle World pattern for CRUD-backed store interface tests — TaskStore instance in World, reset via Before/After hooks, per-scenario isolation
 - ALWAYS create a dedicated cucumber profile per domain in `cucumber.json` — explicit import list (world, hooks, steps), isolated from other profiles
 - ALWAYS write intentionally-failing scenarios first (wave 1) before the implementation that fixes them (wave 2) — BDD verifies the wiring bug, then the fix
+- ALWAYS call stop() or equivalent cleanup in an After hook when a Cucumber World instantiates a timer-owning system-under-test (WatchLoop, setInterval owners) — omitting cleanup prevents Cucumber from exiting cleanly
 
 - ALWAYS use API-behavioral World pattern for module contract tests (interface shape, delegation, data routing) — inject mock dependency at World construction, capture calls for Then-step assertions
 
 context/implement/testing/cucumber-source-analysis-world.md
 context/implement/testing/cucumber-store-lifecycle-world.md
 context/implement/testing/cucumber-api-behavioral-world.md
+context/implement/testing/cucumber-state-machine-world.md
 
 ## Git-Initialized Temp Dirs for CLI Hook Tests
 - ALWAYS call `git init` in temp dirs used by integration tests that invoke CLI dispatch commands — hook handlers (hitl-auto, hitl-log, generate-output) call `git rev-parse --show-toplevel` internally; a plain `mkdtempSync` dir causes the command to fail with "not a git repository"

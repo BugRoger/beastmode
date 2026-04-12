@@ -7,7 +7,7 @@
 - Orchestrator picks up epics with a design artifact but no release artifact — scope is plan through release only
 - Event-driven re-scan on session completion — 60-second poll interval (configurable via `cli.interval`) is the safety net
 - ALWAYS auto-regress from validate to implement on failure via generic REGRESS event — replaces hardcoded VALIDATE_FAILED, no confirmation prompt in automated mode
-- ALWAYS use WatchLoop EventEmitter with typed events (`scan-complete`, `session-started`, `session-completed`, `error`, `stopped`, `release:held`, `session-dead`) for state communication — logger subscriber and React hooks for dashboard
+- ALWAYS use WatchLoop EventEmitter with typed events (`scan-complete`, `scan-started`, `session-started`, `session-completed`, `error`, `stopped`, `release:held`, `session-dead`) for state communication — logger subscriber and React hooks for dashboard; `scan-started` fires at the beginning of each scan cycle before any session dispatching; `scan-complete` carries `trigger: "poll" | "event"` to distinguish scheduled interval ticks from session-completion-driven rescans (poll resets the countdown timer; event-triggered does not)
 - ALWAYS externalize signal handling from WatchLoop — dashboard owns SIGINT/SIGTERM and calls `loop.stop()` for graceful shutdown
 - No concurrency cap except release phase — parallel epics, parallel features within epics, terminal processes are the natural governor; release phase is serialized to one-at-a-time to prevent merge conflicts on main
 - ALWAYS sync GitHub inside reconcileState() via syncGitHubForEpic() — single load-save cycle per epic, no TOCTOU window between reconciliation and sync; sync failures warn and continue without blocking the pipeline
