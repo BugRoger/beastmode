@@ -18,24 +18,22 @@ export interface PhaseResult {
 /** Phase-specific artifact shapes for output files */
 export interface DesignArtifacts {
   design: string; // path to PRD
-  slug?: string;  // entity identifier from frontmatter (fm.epic ?? fm.id)
-  epic?: string;  // human-readable epic name from standardized frontmatter
-  summary?: { problem: string; solution: string };
+  "epic-slug"?: string; // skill-proposed epic name from frontmatter
 }
 
 export interface PlanArtifacts {
-  features: Array<{ slug: string; plan: string; description?: string; wave?: number }>;
+  features: Array<{ "feature-slug": string; plan: string; wave?: number }>;
 }
 
 export interface ImplementArtifacts {
-  features: Array<{ slug: string; status: "completed" | "blocked" }>;
+  features: Array<{ "feature-slug": string; status: "completed" | "blocked" }>;
   deviations?: string; // path to deviations log
 }
 
 export interface ValidateArtifacts {
   report: string; // path to validation report
   passed: boolean;
-  failedFeatures?: string[];
+  "failed-features"?: string[];
 }
 
 export interface ReleaseArtifacts {
