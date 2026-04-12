@@ -206,8 +206,8 @@ function evaluateGates(epic: string, artifactsDir: string): string {
 
     const content = readFileSync(join(implDir, filename), "utf-8");
     const fm = parseFrontmatter(content);
-    if (fm.feature) {
-      features.push({ name: fm.feature, status: fm.status ?? "unknown" });
+    if (fm["feature-slug"]) {
+      features.push({ name: fm["feature-slug"], status: fm.status ?? "unknown" });
     }
   }
 

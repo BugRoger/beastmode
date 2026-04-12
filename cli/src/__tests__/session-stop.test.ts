@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, mkdtempSync } from "fs";
-import { resolve, join } from "path";
+import { join } from "path";
 import { tmpdir } from "os";
 import {
   parseFrontmatter,

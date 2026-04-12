@@ -100,7 +100,7 @@ describe("assembleContext", () => {
     test("includes L0, L1, implementation artifacts, and gate status", () => {
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-feat-a.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl A body",
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: feat-a\nstatus: completed\n---\n\nImpl A body",
       );
       const result = assembleContext({ phase: "validate", epic: "my-epic", slug: "abc123", repoRoot: tempDir });
       expect(result).toContain("Validate rules");
@@ -110,25 +110,25 @@ describe("assembleContext", () => {
 
     test("gate status shows all complete when all features completed", () => {
       writeFileSync(join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-f1.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: f1\nstatus: completed\n---\n\nF1");
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: f1\nstatus: completed\n---\n\nF1");
       writeFileSync(join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-f2.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: f2\nstatus: completed\n---\n\nF2");
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: f2\nstatus: completed\n---\n\nF2");
       const result = assembleContext({ phase: "validate", epic: "my-epic", slug: "abc123", repoRoot: tempDir });
       expect(result).toMatch(/all features.*completed/i);
     });
 
     test("gate status shows incomplete when features have non-completed status", () => {
       writeFileSync(join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-f1.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: f1\nstatus: completed\n---\n\nF1");
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: f1\nstatus: completed\n---\n\nF1");
       writeFileSync(join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-f2.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: f2\nstatus: error\n---\n\nF2");
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: f2\nstatus: error\n---\n\nF2");
       const result = assembleContext({ phase: "validate", epic: "my-epic", slug: "abc123", repoRoot: tempDir });
       expect(result).toMatch(/incomplete|not all/i);
     });
 
     test("gate failure does not throw", () => {
       writeFileSync(join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-f1.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: f1\nstatus: error\n---\n\nF1");
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: f1\nstatus: error\n---\n\nF1");
       expect(() => assembleContext({ phase: "validate", epic: "my-epic", slug: "abc123", repoRoot: tempDir })).not.toThrow();
     });
   });
@@ -252,11 +252,11 @@ describe("assembleContext", () => {
     test("validate phase metadata lists all implement artifact filenames", () => {
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-feat-a.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl A",
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: feat-a\nstatus: completed\n---\n\nImpl A",
       );
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-my-epic-feat-b.md"),
-        "---\nphase: implement\nepic: my-epic\nfeature: feat-b\nstatus: completed\n---\n\nImpl B",
+        "---\nphase: implement\nepic-slug: my-epic\nfeature-slug: feat-b\nstatus: completed\n---\n\nImpl B",
       );
       const result = assembleContext({
         phase: "validate",

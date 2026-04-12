@@ -235,13 +235,13 @@ export async function reconcileDesign(
     const realSlug = artifacts?.["epic-slug"] as string | undefined;
     const designPath = artifacts?.design as string | undefined;
 
-    let summary: string | undefined;
+    let summary: { problem: string; solution: string } | undefined;
     if (designPath) {
       const designFullPath = join(wtPath, ".beastmode", "artifacts", "design", designPath);
       const problem = await extractSectionFromFile(designFullPath, "Problem Statement");
       const solution = await extractSectionFromFile(designFullPath, "Solution");
       if (problem && solution) {
-        summary = `${problem} — ${solution}`;
+        summary = { problem, solution };
       }
     }
 
