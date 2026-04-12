@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-0cb2
-epic-slug: polled-abort-0cb2
+epic-slug: one-sentence-project-bootstrap-0cb2
 epic-name: One-Sentence Project Bootstrap
 ---
 
