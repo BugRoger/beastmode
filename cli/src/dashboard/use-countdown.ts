@@ -18,7 +18,7 @@ export function createCountdownState(intervalSeconds: number): CountdownState {
   return { mode: "stopped", secondsRemaining: 0, intervalSeconds };
 }
 
-export function handleStarted(state: CountdownState, intervalSeconds: number): CountdownState {
+export function handleStarted(_state: CountdownState, intervalSeconds: number): CountdownState {
   return { mode: "counting", secondsRemaining: intervalSeconds, intervalSeconds };
 }
 
