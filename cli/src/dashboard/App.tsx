@@ -41,7 +41,7 @@ export interface AppProps {
 export default function App({ config, verbosity, loop, projectRoot, fallbackStore, systemRef }: AppProps) {
   const { exit } = useApp();
   const [epics, setEpics] = useState<EnrichedEpic[]>([]);
-  const [watchRunning, setWatchRunning] = useState(false);
+
   const [version, setVersion] = useState<string | null>(null);
   const [activeSessions, setActiveSessions] = useState<Set<string>>(new Set());
   const [trackerSessions, setTrackerSessions] = useState<DispatchedSession[]>([]);
@@ -311,11 +311,11 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
 
     const onStarted = (ev: WatchLoopEventMap["started"][0]) => {
       setVersion(ev.version);
-      setWatchRunning(true);
+
       pushSystemEntry("watch loop started", "debug");
     };
     const onStopped = () => {
-      setWatchRunning(false);
+
       pushSystemEntry("watch loop stopped", "debug");
     };
 
