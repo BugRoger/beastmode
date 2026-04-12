@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-6aca
-epic-slug: jacked-xor-6aca
+epic-slug: remove-design-topic-input-6aca
 epic-name: Remove Design Topic Input
 ---
 
