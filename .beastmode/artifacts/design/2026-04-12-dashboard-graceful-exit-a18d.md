@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-a18d
-epic-slug: routed-ritual-a18d
+epic-slug: dashboard-graceful-exit-a18d
 epic-name: Dashboard Graceful Exit
 ---
 
