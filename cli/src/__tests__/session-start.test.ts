@@ -390,7 +390,7 @@ describe("computeOutputTarget", () => {
   test("implement phase includes feature slug", () => {
     const result = computeOutputTarget("implement", "dashboard-redesign-f3a7", "auth-flow-1");
     const today = new Date().toISOString().split("T")[0];
-    expect(result).toBe(`.beastmode/artifacts/implement/${today}-dashboard-redesign-f3a7-auth-flow-1.md`);
+    expect(result).toBe(`.beastmode/artifacts/implement/${today}-dashboard-redesign-f3a7--auth-flow-1.md`);
   });
 
   test("validate phase returns validate artifact path", () => {

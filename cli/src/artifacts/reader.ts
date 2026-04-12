@@ -389,11 +389,11 @@ export function filenameMatchesEpic(filename: string, epicSlug: string, hexSlug?
 
 /**
  * Check if an output.json filename matches a specific epic+feature combo.
- * Matches: YYYY-MM-DD-<epic>-<feature>.output.json
+ * Matches: YYYY-MM-DD-<epic>--<feature>.output.json
  */
 function filenameMatchesFeature(filename: string, epicSlug: string, featureSlug: string): boolean {
   const stripped = filename.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/\.output\.json$/, "");
-  return stripped === `${epicSlug}-${featureSlug}`;
+  return stripped === `${epicSlug}--${featureSlug}`;
 }
 
 /**

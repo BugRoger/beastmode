@@ -278,9 +278,9 @@ This is read-only — do NOT ask new questions here.
 
 ### 1. Write Feature Plan Files
 
-For each feature, save to `.beastmode/artifacts/plan/YYYY-MM-DD-<epic-slug>--<feature-name>.<ordinal>.md` using the feature plan format below.
+For each feature, save to `.beastmode/artifacts/plan/YYYY-MM-DD-<epic-slug>--<feature-slug>.<ordinal>.md` using the feature plan format below.
 
-Where `<epic-slug>` is from session metadata, `<feature-name>` is the feature's name (lowercase, hyphenated), and `<ordinal>` is assigned sequentially (`.1`, `.2`, `.3`) based on feature creation order.
+Where `<epic-slug>` is from session metadata, `<feature-slug>` is the feature's name slugified (lowercase, hyphenated), and `<ordinal>` is assigned sequentially (`.1`, `.2`, `.3`) based on feature creation order.
 
 Each feature plan file must begin with YAML frontmatter:
 
@@ -289,10 +289,12 @@ Each feature plan file must begin with YAML frontmatter:
 phase: plan
 epic-id: <epic-id>
 epic-slug: <epic-slug>
-feature-name: <feature-name>
+feature-name: <Feature Name>
 wave: <N>
 ---
 ```
+
+The `feature-name` field is the human-readable feature name in title case (e.g. `Remove Topic Arg`, not `remove-topic-arg`). Slugification is handled downstream.
 
 ### 2. Commit and Handoff
 
@@ -331,7 +333,7 @@ Each feature plan file follows this structure:
 phase: plan
 epic-id: <epic-id>
 epic-slug: <epic-slug>
-feature-name: <feature-name>
+feature-name: <Feature Name>
 wave: <N>
 ---
 

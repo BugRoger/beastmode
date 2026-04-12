@@ -59,18 +59,6 @@ export class InMemoryTaskStore implements TaskStore {
     return new Date().toISOString();
   }
 
-  /**
-   * Derive a 4-char hex string from an arbitrary string ID.
-   * Uses a simple hash to produce a deterministic, short hex value.
-   */
-  private shortHex(input: string): string {
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-      hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
-    }
-    return (hash >>> 0).toString(16).padStart(4, "0").slice(-4);
-  }
-
   // --- Epic CRUD ---
 
   getEpic(id: string): Epic | undefined {
@@ -167,8 +155,8 @@ export class InMemoryTaskStore implements TaskStore {
     const id = this.generateFeatureId(opts.parent);
     const featureSlugBase = slugify(opts.name);
     const ordinal = id.split(".").pop()!;
-    const featureHex = this.shortHex(id);
-    const finalSlug = `${parentEpic.slug}--${featureSlugBase}-${featureHex}.${ordinal}`;
+    const epicHex = opts.parent.replace("bm-", "");
+    const finalSlug = `${featureSlugBase}-${epicHex}.${ordinal}`;
 
     const feature: Feature = {
       id,

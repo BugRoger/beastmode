@@ -494,7 +494,7 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
           let featureIssueNumber: number | undefined;
           if (config.featureSlug) {
             const features = taskStore.listFeatures(epicEntity.id);
-            const feat = features.find((f) => f.slug === config.featureSlug);
+            const feat = features.find((f) => f.slug === config.featureSlug || f.name === config.featureSlug);
             if (feat) featureIssueNumber = getSyncRef(syncRefs, feat.id)?.issue;
           }
           // Discover repo from sync ref or discovery

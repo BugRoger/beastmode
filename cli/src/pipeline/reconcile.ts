@@ -7,6 +7,7 @@
 
 import type { Epic, Feature } from "../store/index.js";
 import { JsonFileStore, resolveIdentifier } from "../store/index.js";
+import { slugify } from "../store/slug.js";
 import type { Phase } from "../types.js";
 import type { PhaseOutput } from "../types.js";
 import {
@@ -257,7 +258,7 @@ export async function reconcilePlan(
     const eventArtifacts: Record<string, string[]> | undefined = planPaths.length > 0
       ? { plan: planPaths }
       : undefined;
-    actor.send({ type: "PLAN_COMPLETED", features: features.map((f) => ({ slug: f.name, plan: f.plan, wave: f.wave })), artifacts: eventArtifacts });
+    actor.send({ type: "PLAN_COMPLETED", features: features.map((f) => ({ slug: slugify(f.name), plan: f.plan, wave: f.wave })), artifacts: eventArtifacts });
     const updated = extractEpic(actor, epic);
 
     store.updateEpic(epic.id, {
@@ -354,8 +355,10 @@ export async function reconcileFeature(
     if (!output || output.status !== "completed") return undefined;
 
     // Mark the feature as completed
+    // featureSlug may be the full derived slug (from reconcileAll) or the short
+    // name (from the runner/dispatcher). Match on both slug and name.
     const features = store.listFeatures(epic.id);
-    const feature = features.find((f) => f.slug === featureSlug);
+    const feature = features.find((f) => f.slug === featureSlug || f.name === featureSlug);
     if (feature) {
       store.updateFeature(feature.id, { status: "completed" });
     }

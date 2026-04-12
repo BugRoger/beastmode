@@ -63,9 +63,8 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Login Flow" })
     );
-    // Slug is auto-generated: {epicSlug}--{name}-{4hex}.{ordinal}
-    expect(feature.slug).toContain("--login-flow-");
-    expect(feature.slug).toMatch(/\.\d+$/);
+    // Slug is auto-generated: {name}-{epicHex}.{ordinal}
+    expect(feature.slug).toMatch(/^login-flow-[0-9a-f]{4}\.\d+$/);
   });
 
   it("addFeature auto-generates slug from name when not provided", async () => {
@@ -73,9 +72,8 @@ describe("Feature slug field", () => {
     const feature = await store.transact(s =>
       s.addFeature({ parent: epic.id, name: "Token Cache" })
     );
-    // Slug is derived: {epicSlug}--{name}-{4hex}.{ordinal}
-    expect(feature.slug).toContain("--token-cache-");
-    expect(feature.slug).toMatch(/\.\d+$/);
+    // Slug is derived: {name}-{epicHex}.{ordinal}
+    expect(feature.slug).toMatch(/^token-cache-[0-9a-f]{4}\.\d+$/);
   });
 
   it("slug persists through save/load cycle", async () => {
@@ -150,9 +148,8 @@ describe("importTestable", () => {
     const result = await importTestable(store, projectRoot);
 
     expect(result.features).toHaveLength(1);
-    // Feature slug is derived: {epicSlug}--{name}-{4hex}.{ordinal}
-    expect(result.features[0].slug).toContain("--login-flow-");
-    expect(result.features[0].slug).toMatch(/\.\d+$/);
+    // Feature slug is derived: {name}-{epicHex}.{ordinal}
+    expect(result.features[0].slug).toMatch(/^login-flow-[0-9a-f]{4}\.\d+$/);
     expect(result.features[0].plan).toBe("plan/login.md");
     expect(result.features[0].status).toBe("pending");
   });
@@ -169,10 +166,10 @@ describe("importTestable", () => {
     const { importTestable } = await import("../commands/store-import.js");
     const result = await importTestable(store, projectRoot);
 
-    // Find features by name prefix since slugs now embed epic slug with -- separator
-    const featureA = result.features.find((f: any) => f.slug.includes("--a-"));
-    const featureB = result.features.find((f: any) => f.slug.includes("--b-"));
-    const featureC = result.features.find((f: any) => f.slug.includes("--c-"));
+    // Find features by name prefix (slugs now use {name}-{epicHex}.{ordinal})
+    const featureA = result.features.find((f: any) => f.slug.startsWith("a-"));
+    const featureB = result.features.find((f: any) => f.slug.startsWith("b-"));
+    const featureC = result.features.find((f: any) => f.slug.startsWith("c-"));
 
     expect(featureC!.depends_on).toContain(featureA!.id);
     expect(featureC!.depends_on).toContain(featureB!.id);

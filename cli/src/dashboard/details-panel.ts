@@ -128,7 +128,7 @@ export function resolveDetailsContent(
 
   try {
     const files = readdirSync(planDir);
-    const suffix = `-${selection.epicSlug}-${selection.featureSlug}.md`;
+    const suffix = `-${selection.epicSlug}--${selection.featureSlug}.md`;
     const match = files
       .filter((f) => f.endsWith(suffix) && !f.endsWith(".output.json"))
       .sort()

@@ -83,9 +83,9 @@ describe("@manifest-absorption: Store import migrates manifests into the store",
 
     expect(result.features.length).toBe(2);
     const slugs = result.features.map((f: any) => f.slug);
-    // Slugs are derived: {epicSlug}--{name}-{4hex}.{ordinal}
-    expect(slugs.some((s: string) => s.includes("--login-flow-"))).toBe(true);
-    expect(slugs.some((s: string) => s.includes("--token-cache-"))).toBe(true);
+    // Slugs are derived: {name}-{epicHex}.{ordinal}
+    expect(slugs.some((s: string) => s.startsWith("login-flow-"))).toBe(true);
+    expect(slugs.some((s: string) => s.startsWith("token-cache-"))).toBe(true);
   });
 
   it("converts wave ordering to dependency relationships", async () => {
@@ -99,9 +99,9 @@ describe("@manifest-absorption: Store import migrates manifests into the store",
     const { importTestable } = await import("../commands/store-import.js");
     const result = await importTestable(store, projectRoot);
 
-    // Find features by matching slug parts (since slugs embed epic slug with -- separator)
-    const tokenCache = result.features.find((f: any) => f.slug.includes("--token-cache-"))!;
-    const authProvider = result.features.find((f: any) => f.slug.includes("--auth-provider-"))!;
+    // Find features by matching slug prefix (slugs use {name}-{epicHex}.{ordinal})
+    const tokenCache = result.features.find((f: any) => f.slug.startsWith("token-cache-"))!;
+    const authProvider = result.features.find((f: any) => f.slug.startsWith("auth-provider-"))!;
     expect(tokenCache.depends_on).toContain(authProvider.id);
   });
 

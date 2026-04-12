@@ -582,7 +582,7 @@ export class ITermSessionFactory implements SessionFactory {
 
     // Build the expected output.json suffix for this specific session.
     const outputSuffix = featureSlug
-      ? `-${epicSlug}-${featureSlug}.output.json`
+      ? `-${epicSlug}--${featureSlug}.output.json`
       : `-${epicSlug}.output.json`;
 
     // Set up promise that resolves when output.json appears

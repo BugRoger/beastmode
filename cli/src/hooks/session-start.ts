@@ -247,7 +247,7 @@ export function formatOutput(context: string): string {
  */
 export function computeOutputTarget(phase: string, epicSlug: string, featureSlug: string | undefined): string {
   const today = new Date().toISOString().split("T")[0];
-  const suffix = featureSlug ? `${epicSlug}-${featureSlug}` : epicSlug;
+  const suffix = featureSlug ? `${epicSlug}--${featureSlug}` : epicSlug;
   return `.beastmode/artifacts/${phase}/${today}-${suffix}.md`;
 }
 

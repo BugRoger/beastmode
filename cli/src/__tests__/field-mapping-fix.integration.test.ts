@@ -195,7 +195,7 @@ describe("field-mapping-fix integration", () => {
       });
       expect(featureCreate).toBeDefined();
       const title = featureCreate!.args[1] as string;
-      expect(title).toMatch(/^auth-system: .+login-flow/);
+      expect(title).toMatch(/^auth-system: login-flow-[0-9a-f]{4}\.1$/);
     });
 
     test("Multiple features in same epic have distinct epic-prefixed titles", async () => {
