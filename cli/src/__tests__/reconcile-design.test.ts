@@ -35,7 +35,7 @@ vi.mock("../store/index.js", () => {
   };
 });
 
-import { loadWorktreePhaseOutput, extractSectionFromFile } from "../artifacts/reader.js";
+import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import { renameTags } from "../git/tags.js";
 import { resolveIdentifier } from "../store/index.js";
@@ -54,7 +54,7 @@ describe("reconcileDesign", () => {
       updateEpic: vi.fn(),
     };
     // Default resolveIdentifier mock to return "not_found"
-    vi.mocked(resolveIdentifier).mockReturnValue({ kind: "not_found" });
+    vi.mocked(resolveIdentifier).mockReturnValue({ kind: "not-found" });
   });
 
   it("returns undefined when output is not completed", async () => {
@@ -108,7 +108,7 @@ describe("reconcileDesign", () => {
     // resolveIdentifier finds a feature instead of an epic
     vi.mocked(resolveIdentifier).mockReturnValue({
       kind: "found",
-      entity: { type: "feature", id: "f-1" },
+      entity: { type: "feature", id: "f-1", parent: "bm-1", name: "feat", slug: "feat", status: "pending", depends_on: [], created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" } as any,
     });
     sharedMockStore.listFeatures.mockReturnValue([]);
 

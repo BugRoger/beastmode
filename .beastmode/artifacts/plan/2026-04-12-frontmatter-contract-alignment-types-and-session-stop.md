@@ -1,7 +1,7 @@
 ---
 phase: plan
 slug: quick-quartz-96da
-epic: frontmatter-contract-alignment
+epic: quick-quartz-96da
 feature: types-and-session-stop
 wave: 1
 ---

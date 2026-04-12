@@ -20,9 +20,9 @@ describe("tree-format with monokai-palette", () => {
     expect(buildTreePrefix("cli")).toBe("● ");
     expect(buildTreePrefix("epic")).toBe("● ");
     expect(buildTreePrefix("feature")).toBe("├─○ ");
-    expect(buildTreePrefix("leaf-epic")).toBe("    │ ");
-    expect(buildTreePrefix("leaf-feature")).toBe("    │ │ ");
-    expect(buildTreePrefix("system")).toBe("    │ ");
+    expect(buildTreePrefix("leaf-epic")).toBe("  │ ");
+    expect(buildTreePrefix("leaf-feature")).toBe("  │ │ ");
+    expect(buildTreePrefix("system")).toBe("  │ ");
   });
 
   test("formatTreeLine feature with phase prefix applies color", () => {
