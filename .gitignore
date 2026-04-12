@@ -7,5 +7,5 @@
 .claude/worktrees/
 .claude/settings.local.json
 .beastmode/artifacts/**/*.output.json
-.beastmode-watch.lock
+.beastmode/.beastmode-watch.lock
 .DS_Store
