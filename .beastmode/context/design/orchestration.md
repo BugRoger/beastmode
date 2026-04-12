@@ -28,7 +28,7 @@
 ## Recovery
 - State files are the recovery point, not sessions — on startup, scan for existing worktrees with uncommitted changes
 - ALWAYS re-dispatch from last committed state on recovery — no session persistence required
-- Lockfile (`cli/.beastmode-watch.lock`) prevents duplicate watch instances — single orchestrator guarantee
+- Lockfile (`.beastmode/.beastmode-watch.lock`) prevents duplicate watch instances — single orchestrator guarantee
 
 ## Lifecycle
 - Start via `beastmode dashboard`, stop via Ctrl+C — foreground process with explicit control

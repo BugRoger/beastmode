@@ -31,7 +31,7 @@
 ## Recovery Model
 - State files are the recovery point, not sessions — stateless session model
 - On startup, scan for existing worktrees with uncommitted changes and re-dispatch from last committed state
-- Lockfile (`cli/.beastmode-watch.lock`) prevents duplicate watch instances
+- Lockfile (`.beastmode/.beastmode-watch.lock`) prevents duplicate watch instances
 
 ## Manifest Lifecycle
 - CLI creates manifest at first phase dispatch (design) via store.create(slug) before dispatching — manifest exists throughout the entire skill session
