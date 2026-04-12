@@ -21,7 +21,7 @@ This works for quick fixes. It falls apart for anything that spans sessions.
 | macOS | Only supported platform |
 | [Node.js](https://nodejs.org/) >= 18 | Runtime for npx |
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | AI coding assistant |
-| [Git](https://git-scm.com/) | Worktree operations |
+| [Git](https://git-scm.com/) | Branch and commit operations |
 | [iTerm2](https://iterm2.com/) | Pipeline orchestration |
 | [GitHub CLI](https://cli.github.com/) *(optional)* | Issue and project board sync |
 
@@ -55,7 +55,7 @@ Init detects your stack and bootstraps the full knowledge hierarchy — inventor
 |-------|-------|-------------|
 | Design | `/design` | Structured dialogue. Research from 3+ sources. Lock decisions before writing code. |
 | Plan | `/plan` | Break the design into wave-ordered, file-isolated tasks. Generate integration tests. |
-| Implement | `/implement` | Fan out one agent per feature in parallel worktrees. Two-stage review per task. |
+| Implement | `/implement` | Dispatch parallel agents on the shared feature branch with wave file isolation. Two-stage review per task. |
 | Validate | `/validate` | Tests, lint, type checks. Failing features regress to implement automatically. |
 | Release | `/release` | Changelog, version bump, retro, squash-merge to main. |
 
@@ -149,38 +149,53 @@ Three domains organize what gets persisted:
 Skills handle the work inside each phase. The `beastmode` CLI handles everything around it.
 
 ```
-beastmode <phase> <slug>     # run a single phase
-beastmode dashboard          # fullscreen pipeline monitor + orchestrator
-beastmode cancel <slug>      # clean up a feature (worktree, branch, tags, artifacts, GitHub issue)
-beastmode compact            # prune and promote the context tree
+beastmode design                      Start a new design
+beastmode plan <slug>                 Plan features for a design
+beastmode implement <slug> [feature]  Implement features
+beastmode validate <slug>             Run validation checks
+beastmode release <slug>              Create a release
+beastmode done <slug>                 Mark epic as done
+beastmode cancelled <slug>            Mark epic as cancelled
+beastmode cancel <slug> [--force]     Clean up an epic (branch, tags, artifacts, GitHub issues)
+beastmode dashboard                   Fullscreen pipeline dashboard and orchestrator
+beastmode compact                     Audit and compact the context tree
+beastmode store <subcommand>          Structured task store operations
+beastmode hooks <name> [phase]        Run a hook handler
+beastmode help                        Show help
+
+Flags: -v, -vv, -vvv                 Increase output verbosity
 ```
 
 ### Dashboard
 
 `beastmode dashboard` is both the monitor and the orchestrator. It scans for epics that have a design but no release, and drives them through plan → implement → validate → release automatically.
 
-- Fullscreen terminal UI with epic list, detail panel, and live log stream
-- Dispatches one terminal session per phase, one per feature during implement
-- Keyboard navigation, phase and status filters, inline cancel with confirmation
-- Color-coded phase badges, animated header, verbosity cycling
+- Fullscreen terminal UI with epic list, details panel, and hierarchical tree log (SYSTEM > epic > feature)
+- Heartbeat countdown timer showing seconds until next poll cycle
+- Persistent stats with session/all-time toggle (sessions, success rate, phase durations, retries)
+- Phase-colored badges using Monokai Pro palette
+- Keyboard extensions: tab focus between panels, phase filter cycling, blocked toggle, PgUp/PgDn scroll, filter search, cancel with confirmation
+- Animated nyan rainbow focus border on active panel
 
 ### Orchestration
 
-The pipeline is a state machine. Each epic tracks its phase, features, and artifacts in a manifest file. The CLI owns the full lifecycle:
+The pipeline is a state machine. A single JSON file store at `.beastmode/state/store.json` tracks epics and features with typed statuses, dependency chains, and wave assignments. The store is the sole operational authority.
 
-- **Worktrees** — created at first phase, persisted through all phases, squash-merged and removed at release. Branch detection reuses `feature/<slug>` if it exists.
-- **Parallel implement** — one agent per feature in isolated worktrees. After all agents finish, worktrees merge sequentially with pre-merge conflict simulation. Manifest verified for completeness.
-- **Phase regression** — validation failures regress specific failing features back to implement with a dispatch budget. Blanket regression available as fallback. Phase tags mark reset points.
-- **Recovery** — manifests are the recovery point. On startup, existing worktrees with uncommitted changes are detected and re-dispatched from last committed state.
+- **Implement dispatch** — one agent per feature on the shared feature branch. Wave file isolation guarantees disjoint file sets across parallel tasks. No per-feature worktrees, no merge step.
+- **Phase regression** — validation failures regress failing features to implement with a dispatch budget. Phase tags mark reset points for re-entry.
+- **Recovery** — on startup, store state is loaded from disk. Pending operations resume from last saved state.
 
 ### GitHub Integration
 
-When `github.enabled: true` in config, the CLI mirrors pipeline state to GitHub:
+When `github.enabled: true` in config, the store mirrors pipeline state to GitHub as a one-way sync:
 
+- **Store as authority** — `.beastmode/state/store.json` is the operational source of truth. GitHub reflects store state, never the reverse.
 - **Epic and feature issues** — created automatically, updated after each phase
-- **Labels as source of truth** — phase, type, and status labels drive the state model
-- **Project board sync** — issues appear on a GitHub Projects V2 board
-- **Commit refs** — phase checkpoints and release merges annotate commit messages with issue numbers
+- **Label taxonomy** — `type/epic`, `type/feature`, `phase/*`, `status/*` labels categorize issues
+- **Project board sync** — V2 board status synced via GraphQL
+- **Retry queue** — failed sync operations retry with exponential backoff
+- **Commit refs** — phase checkpoints annotate commit messages with issue numbers
+- **Release closing** — done epics receive a closing comment with version tag
 
 ## The Persona
 

@@ -4,6 +4,21 @@ All notable changes to beastmode.
 
 ---
 
+## v0.124.1 — README Accuracy Refresh (2026-04-12)
+
+Accuracy pass across all README.md sections to match v0.124 reality. No structural changes.
+
+### Docs
+
+- Fix Pipeline table Implement row — shared branch, not worktrees
+- Rewrite Orchestration — JSON file store, direct commits, no manifests
+- Complete CLI command reference — all 13 commands + verbosity flags
+- Expand Dashboard — heartbeat, stats, tree log, keyboard, nyan border
+- Rewrite GitHub Integration — store as authority, GitHub as mirror
+- Fix Install prerequisites — Git for branch ops, not worktree ops
+
+---
+
 ## v0.124.0 — Remove Design Topic Input (2026-04-12)
 
 Removes the unused `[topic]` positional argument from `beastmode design`. The design skill's Phase 0 interview is now the sole entry point for problem framing.
