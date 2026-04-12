@@ -14,12 +14,11 @@ Feature: File permissions config section in config.yaml
     And the config has file-permissions claude-settings set to "auto-allow all changes"
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-config     |
-      | epic     | fp-config     |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-config     |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a file-permission PreToolUse hook for "claude-settings"
@@ -32,12 +31,11 @@ Feature: File permissions config section in config.yaml
     And the config has no file-permissions section
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-default    |
-      | epic     | fp-default    |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value        |
+      | phase     | design       |
+      | epic-slug | fp-default    |
+      | problem   | Test problem |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a file-permission PreToolUse hook for "claude-settings"
@@ -50,12 +48,11 @@ Feature: File permissions config section in config.yaml
     And the config has file-permissions claude-settings set to "auto-allow skill edits"
 
     When the dispatch will write a design artifact:
-      | field    | value        |
-      | phase    | design       |
-      | slug     | fp-phase     |
-      | epic     | fp-phase     |
-      | problem  | Test problem |
-      | solution | Test solution |
+      | field     | value        |
+      | phase     | design       |
+      | epic-slug | fp-phase     |
+      | problem   | Test problem |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the file-permission hook prompt should contain "auto-allow skill edits"

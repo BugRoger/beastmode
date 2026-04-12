@@ -20,12 +20,11 @@ Feature: Regression loop -- validate failure triggers targeted re-dispatch
     And a manifest is seeded for slug "hex0a1b2c"
 
     When the dispatch will write a design artifact:
-      | field    | value                           |
-      | phase    | design                          |
-      | slug     | hex0a1b2c                       |
-      | epic     | auth-flow                       |
-      | problem  | Complex OAuth integration       |
-      | solution | Streamlined auth service        |
+      | field     | value                           |
+      | phase     | design                          |
+      | epic-slug | hex0a1b2c                       |
+      | problem   | Complex OAuth integration       |
+      | solution  | Streamlined auth service        |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest slug should be "auth-flow"

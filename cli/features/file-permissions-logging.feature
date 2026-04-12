@@ -13,12 +13,11 @@ Feature: File permission decisions logged to HITL log
     And the config has file-permissions claude-settings set to "auto-allow all changes"
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-log        |
-      | epic     | fp-log        |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-log        |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a file-permission PostToolUse hook

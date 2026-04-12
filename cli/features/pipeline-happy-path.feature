@@ -20,12 +20,11 @@ Feature: Pipeline happy path -- design to release
     And a manifest is seeded for slug "abc123"
 
     When the dispatch will write a design artifact:
-      | field    | value                              |
-      | phase    | design                             |
-      | slug     | abc123                             |
-      | epic     | widget-auth                        |
-      | problem  | Users cannot authenticate via OAuth |
-      | solution | Add OAuth2 flow with PKCE          |
+      | field     | value                              |
+      | phase     | design                             |
+      | epic-slug | abc123                             |
+      | problem   | Users cannot authenticate via OAuth |
+      | solution  | Add OAuth2 flow with PKCE          |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest slug should be "widget-auth"

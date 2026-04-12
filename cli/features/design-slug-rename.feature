@@ -18,12 +18,11 @@ Feature: Design slug rename end-to-end
 
     # -- Design with epic name different from slug --
     When the dispatch will write a design artifact:
-      | field    | value                              |
-      | phase    | design                             |
-      | slug     | d1e2f3a4b5c6                       |
-      | epic     | oauth-redesign                     |
-      | problem  | OAuth flow is outdated             |
-      | solution | Implement modern OAuth2 with PKCE |
+      | field     | value                              |
+      | phase     | design                             |
+      | epic-slug | d1e2f3a4b5c6                       |
+      | problem   | OAuth flow is outdated             |
+      | solution  | Implement modern OAuth2 with PKCE |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest slug should be "oauth-redesign"
