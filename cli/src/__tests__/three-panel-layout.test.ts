@@ -138,19 +138,19 @@ describe("ThreePanelLayout proportions", () => {
 // ---------------------------------------------------------------------------
 
 describe("watch status display", () => {
-  test("shows 'watch: running' with green when running", () => {
-    const watchRunning = true;
-    const text = watchRunning ? "watch: running" : "watch: stopped";
-    const color = watchRunning ? "green" : "red";
-    expect(text).toBe("watch: running");
+  test("shows countdown display when running", () => {
+    const countdownDisplay = "43s";
+    const countdownRunning = true;
+    const color = countdownRunning ? "green" : "red";
+    expect(countdownDisplay).toBe("43s");
     expect(color).toBe("green");
   });
 
-  test("shows 'watch: stopped' with red when stopped", () => {
-    const watchRunning = false;
-    const text = watchRunning ? "watch: running" : "watch: stopped";
-    const color = watchRunning ? "green" : "red";
-    expect(text).toBe("watch: stopped");
+  test("shows stopped display with red when stopped", () => {
+    const countdownDisplay = "stopped (60s)";
+    const countdownRunning = false;
+    const color = countdownRunning ? "green" : "red";
+    expect(countdownDisplay).toBe("stopped (60s)");
     expect(color).toBe("red");
   });
 });
