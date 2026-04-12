@@ -149,10 +149,21 @@ Three domains organize what gets persisted:
 Skills handle the work inside each phase. The `beastmode` CLI handles everything around it.
 
 ```
-beastmode <phase> <slug>     # run a single phase
-beastmode dashboard          # fullscreen pipeline monitor + orchestrator
-beastmode cancel <slug>      # clean up a feature (worktree, branch, tags, artifacts, GitHub issue)
-beastmode compact            # prune and promote the context tree
+beastmode design                      Start a new design
+beastmode plan <slug>                 Plan features for a design
+beastmode implement <slug> [feature]  Implement features
+beastmode validate <slug>             Run validation checks
+beastmode release <slug>              Create a release
+beastmode done <slug>                 Mark epic as done
+beastmode cancelled <slug>            Mark epic as cancelled
+beastmode cancel <slug> [--force]     Clean up an epic (branch, tags, artifacts, GitHub issues)
+beastmode dashboard                   Fullscreen pipeline dashboard and orchestrator
+beastmode compact                     Audit and compact the context tree
+beastmode store <subcommand>          Structured task store operations
+beastmode hooks <name> [phase]        Run a hook handler
+beastmode help                        Show help
+
+Flags: -v, -vv, -vvv                 Increase output verbosity
 ```
 
 ### Dashboard
