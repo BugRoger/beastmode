@@ -8,8 +8,10 @@ import type { FocusedPanel } from "./hooks/use-dashboard-keyboard.js";
 import { NYAN_PALETTE } from "./nyan-colors.js";
 
 export interface ThreePanelLayoutProps {
-  /** Watch loop running state. */
-  watchRunning: boolean;
+  /** Pre-formatted countdown display string (e.g., "43s", "scanning...", "stopped (60s)"). */
+  countdownDisplay: string;
+  /** Whether the watch loop is running (for color selection). */
+  countdownRunning: boolean;
   /** Current version string (e.g., "v0.96.0 (a1b2c3d)"). */
   version?: string;
   /** Terminal row count for full-height rendering. */
@@ -40,7 +42,8 @@ export interface ThreePanelLayoutProps {
 
 /** Three-panel k9s-style dashboard layout. */
 export default function ThreePanelLayout({
-  watchRunning,
+  countdownDisplay,
+  countdownRunning,
   version,
   rows,
   epicsSlot,
@@ -66,8 +69,8 @@ export default function ThreePanelLayout({
         <Box flexDirection="row" justifyContent="space-between" paddingX={1} paddingY={1}>
           <NyanBanner tick={nyanTick} />
           <Box flexDirection="column" alignItems="flex-end">
-            <Text color={watchRunning ? CHROME.watchRunning : CHROME.watchStopped}>
-              {watchRunning ? "watch: running" : "watch: stopped"}
+            <Text color={countdownRunning ? CHROME.watchRunning : CHROME.watchStopped}>
+              {countdownDisplay}
             </Text>
             {version && (
               <Text color={CHROME.muted} wrap="truncate-end">{version}</Text>
