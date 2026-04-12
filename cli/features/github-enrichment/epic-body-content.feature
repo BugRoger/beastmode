@@ -34,5 +34,5 @@ Feature: Epic issue body displays PRD summary
   Scenario: Epic issue body without a design artifact shows minimal content
     Given a new epic has no design artifact yet
     When the epic issue body is enriched
-    Then the body contains the epic slug as the title
+    Then the body has no structured content
     And the body does not contain PRD sections

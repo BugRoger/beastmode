@@ -142,9 +142,9 @@ Given("a new epic has no design artifact yet", function (this: GitHubEnrichmentW
   this.epic.summary = undefined;
 });
 
-Then("the body contains the epic slug as the title", function (this: GitHubEnrichmentWorld) {
-  // With phase badge removed, a minimal epic body (no summary, no features)
-  // contains no structured content. Verify no PRD sections or phase badge leaked.
+Then("the body has no structured content", function (this: GitHubEnrichmentWorld) {
+  // A bare epic (no PRD sections, no features) produces an empty body
+  // after the phase badge removal. Verify nothing leaked.
   assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent");
   assert.ok(!this.lastBody.includes("## Problem"), "Should have no Problem section");
   assert.ok(!this.lastBody.includes("## Solution"), "Should have no Solution section");
