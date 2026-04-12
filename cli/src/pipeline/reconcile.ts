@@ -12,6 +12,7 @@ import type { PhaseOutput } from "../types.js";
 import {
   loadWorktreePhaseOutput,
   loadWorktreeFeatureOutput,
+  extractSectionFromFile,
 } from "../artifacts/reader.js";
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import type { EpicContext } from "../pipeline-machine/index.js";
@@ -101,23 +102,22 @@ function readProgress(epicId: string, store: JsonFileStore): { completed: number
  */
 function extractFeaturesFromOutput(
   output: PhaseOutput | undefined,
-): Array<{ slug: string; plan: string; description?: string; wave?: number }> {
+): Array<{ slug: string; plan: string; wave?: number }> {
   if (!output) return [];
   const artifacts = output.artifacts as unknown as Record<string, unknown>;
   if (!artifacts || !Array.isArray(artifacts.features)) return [];
 
-  const features: Array<{ slug: string; plan: string; description?: string; wave?: number }> = [];
+  const features: Array<{ slug: string; plan: string; wave?: number }> = [];
   for (const entry of artifacts.features) {
     if (
       typeof entry === "object" &&
       entry !== null &&
-      typeof (entry as Record<string, unknown>).slug === "string"
+      typeof (entry as Record<string, unknown>)["feature-slug"] === "string"
     ) {
       const rec = entry as Record<string, unknown>;
       features.push({
-        slug: rec.slug as string,
+        slug: rec["feature-slug"] as string,
         plan: typeof rec.plan === "string" ? rec.plan : "",
-        description: typeof rec.description === "string" ? rec.description : undefined,
         wave: typeof rec.wave === "number" ? rec.wave : undefined,
       });
     }
@@ -232,9 +232,18 @@ export async function reconcileDesign(
     if (!output || output.status !== "completed") return undefined;
 
     const artifacts = output.artifacts as unknown as Record<string, unknown> | undefined;
-    const realSlug = artifacts?.slug as string | undefined;
-    const summary = artifacts?.summary as { problem: string; solution: string } | undefined;
+    const realSlug = artifacts?.["epic-slug"] as string | undefined;
     const designPath = artifacts?.design as string | undefined;
+
+    let summary: string | undefined;
+    if (designPath) {
+      const designFullPath = join(wtPath, ".beastmode", "artifacts", "design", designPath);
+      const problem = await extractSectionFromFile(designFullPath, "Problem Statement");
+      const solution = await extractSectionFromFile(designFullPath, "Solution");
+      if (problem && solution) {
+        summary = `${problem} — ${solution}`;
+      }
+    }
 
     const actor = hydrateActor(epic, store);
     const eventArtifacts: Record<string, string[]> | undefined = designPath
@@ -254,7 +263,7 @@ export async function reconcileDesign(
         slug: newSlug,
         name: realSlug ?? epic.name,
         status: updated.status,
-        summary: typeof summary === "object" ? `${summary.problem} — ${summary.solution}` : epic.summary,
+        summary: summary ?? epic.summary,
         design: designPath,
         updated_at: updated.updated_at,
       });
@@ -282,7 +291,7 @@ export async function reconcileDesign(
     store.updateEpic(epic.id, {
       status: updated.status,
       name: realSlug ?? epic.name,
-      summary: typeof summary === "object" ? `${summary.problem} — ${summary.solution}` : epic.summary,
+      summary: summary ?? epic.summary,
       design: designPath,
       updated_at: updated.updated_at,
     });
@@ -343,22 +352,29 @@ export async function reconcilePlan(
       const existing = store.listFeatures(epic.id).find(
         (ef) => ef.slug === f.slug || ef.name === f.slug,
       );
+      let description: string | undefined;
+      if (f.plan) {
+        const planFullPath = join(wtPath, ".beastmode", "artifacts", "plan", f.plan);
+        description = await extractSectionFromFile(planFullPath, "What to Build")
+          ?? await extractSectionFromFile(planFullPath, "Description");
+      }
       let featureEntity: Feature;
       if (!existing) {
         featureEntity = store.addFeature({
           parent: epic.id,
           name: f.slug,
-          description: f.description,
+          description,
         });
         store.updateFeature(featureEntity.id, {
           ...(f.plan ? { plan: f.plan } : {}),
           ...(f.wave != null ? { wave: f.wave } : {}),
         });
       } else {
-        // Update wave and plan on existing features
+        // Update wave, plan, and description on existing features
         store.updateFeature(existing.id, {
           ...(f.plan ? { plan: f.plan } : {}),
           ...(f.wave != null ? { wave: f.wave } : {}),
+          ...(description ? { description } : {}),
         });
         featureEntity = store.getFeature(existing.id)!;
       }
@@ -505,7 +521,7 @@ export async function reconcileValidate(
       actor.send({ type: "VALIDATE_COMPLETED" });
     } else {
       const artifacts = output?.artifacts as unknown as Record<string, unknown> | undefined;
-      const failedFeatures = artifacts?.failedFeatures as string[] | undefined;
+      const failedFeatures = artifacts?.["failed-features"] as string[] | undefined;
       if (failedFeatures && failedFeatures.length > 0) {
         actor.send({ type: "REGRESS_FEATURES", failingFeatures: failedFeatures });
       } else {
