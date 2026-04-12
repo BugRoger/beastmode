@@ -4,6 +4,17 @@ All notable changes to beastmode.
 
 ---
 
+## v0.127.1 — One-Sentence Project Bootstrap (2026-04-12)
+
+Replace the multi-step Install section in the README with a single "Get the Party Started" prose paragraph that users paste into Claude Code to bootstrap their entire project in one shot.
+
+### Docs
+
+- Replace Install section with "Get the Party Started" bootstrap section listing prerequisites and a single paste-and-go paragraph
+- Remove uninstall instructions from README
+
+---
+
 ## v0.127.0 — Dashboard Spinner Bug Fixes (2026-04-12)
 
 Fix dashboard spinner palindrome animation (pulsing instead of rotating) and enable spinner display for design-phase epics. Extract shared spinner module to eliminate duplication between EpicsPanel and TreeView.
