@@ -39,11 +39,11 @@ function makeFeatureBody(
 // --- formatEpicBody ---
 
 describe("formatEpicBody", () => {
-  test("includes phase badge", () => {
+  test("does not include phase badge", () => {
     const manifest = makeManifest({ phase: "design" });
     const body = formatEpicBody(manifest);
 
-    expect(body).toContain("**Phase:** design");
+    expect(body).not.toContain("**Phase:**");
   });
 
   test("includes problem and solution sections when summary present", () => {
@@ -163,7 +163,7 @@ describe("formatEpicBody", () => {
     expect(body).toContain("- [x]");
   });
 
-  test("graceful fallback: phase badge and checklist without summary", () => {
+  test("graceful fallback: checklist without summary, no phase badge", () => {
     const manifest = makeManifest({
       features: [
         makeFeature({ slug: "feat-a", status: "pending" }),
@@ -172,7 +172,7 @@ describe("formatEpicBody", () => {
     });
     const body = formatEpicBody(manifest);
 
-    expect(body).toContain("**Phase:** design");
+    expect(body).not.toContain("**Phase:**");
     expect(body).toContain("- [ ]");
     expect(body).toContain("- [x]");
     expect(body).not.toContain("## Problem");

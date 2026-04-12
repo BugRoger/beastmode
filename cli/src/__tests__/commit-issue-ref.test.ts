@@ -14,6 +14,20 @@ import {
 } from "../git/commit-issue-ref.js";
 import { git } from "../git/worktree.js";
 import type { SyncRefs } from "../github/sync-refs.js";
+import type { Logger } from "../logger.js";
+
+function createSpyLogger(): Logger & { messages: string[] } {
+  const messages: string[] = [];
+  const spy: Logger & { messages: string[] } = {
+    messages,
+    info(msg: string) { messages.push(`info: ${msg}`); },
+    debug(msg: string) { messages.push(`debug: ${msg}`); },
+    warn(msg: string) { messages.push(`warn: ${msg}`); },
+    error(msg: string) { messages.push(`error: ${msg}`); },
+    child() { return spy; },
+  };
+  return spy;
+}
 
 // --- Pure function tests (no git repo needed) ---
 
@@ -278,6 +292,43 @@ describe("resolveRangeStart", () => {
     await git(["checkout", "main"], { cwd: repoDir });
     await git(["branch", "-D", "feature/missing-tag"], { cwd: repoDir });
   });
+
+  test("logs tag resolution attempt and success", async () => {
+    const logger = createSpyLogger();
+    await git(["checkout", "-b", "feature/log-tag-hit"], { cwd: repoDir });
+    writeFileSync(join(repoDir, "lt1.txt"), "lt1\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "design checkpoint"], { cwd: repoDir });
+    await git(["tag", "beastmode/log-tag-hit/design"], { cwd: repoDir });
+
+    writeFileSync(join(repoDir, "lt2.txt"), "lt2\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "plan checkpoint"], { cwd: repoDir });
+
+    await resolveRangeStart("log-tag-hit", "plan", { cwd: repoDir, logger });
+
+    expect(logger.messages.some((m) => m.includes("beastmode/log-tag-hit/design"))).toBe(true);
+    expect(logger.messages.some((m) => m.includes("resolved"))).toBe(true);
+
+    await git(["checkout", "main"], { cwd: repoDir });
+    await git(["branch", "-D", "feature/log-tag-hit"], { cwd: repoDir });
+    await git(["tag", "-d", "beastmode/log-tag-hit/design"], { cwd: repoDir });
+  });
+
+  test("logs merge-base fallback when tag missing", async () => {
+    const logger = createSpyLogger();
+    await git(["checkout", "-b", "feature/log-mb-fallback"], { cwd: repoDir });
+    writeFileSync(join(repoDir, "lm1.txt"), "lm1\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "plan checkpoint"], { cwd: repoDir });
+
+    await resolveRangeStart("log-mb-fallback", "plan", { cwd: repoDir, logger });
+
+    expect(logger.messages.some((m) => m.includes("merge-base"))).toBe(true);
+
+    await git(["checkout", "main"], { cwd: repoDir });
+    await git(["branch", "-D", "feature/log-mb-fallback"], { cwd: repoDir });
+  });
 });
 
 describe("amendCommitsInRange", () => {
@@ -440,5 +491,44 @@ describe("amendCommitsInRange", () => {
     const result = await amendCommitsInRange(emptySyncRefs, epicId, features, "test-epic-abc123", "plan", { cwd: repoDir });
     expect(result.amended).toBe(0);
     expect(result.skipped).toBe(0);
+  });
+
+  test("logs debug when epic has no sync ref (exit 1)", async () => {
+    const logger = createSpyLogger();
+    const emptySyncRefs: SyncRefs = {};
+    await amendCommitsInRange(emptySyncRefs, epicId, features, "test-epic-abc123", "plan", { cwd: repoDir, logger });
+    expect(logger.messages.some((m) => m.includes("no epic issue"))).toBe(true);
+  });
+
+  test("logs debug when range start resolution fails (exit 2)", async () => {
+    const logger = createSpyLogger();
+    await amendCommitsInRange(syncRefs, epicId, features, "nonexistent-slug", "design", {
+      cwd: repoDir,
+      rangeStartOverride: "nonexistent-ref-abc123",
+      logger,
+    });
+    expect(logger.messages.some((m) => m.includes("range start"))).toBe(true);
+  });
+
+  test("logs debug when all commits already have refs (exit 5)", async () => {
+    const logger = createSpyLogger();
+    await git(["checkout", "-b", "feature/test-epic-abc123-log5"], { cwd: repoDir });
+    await git(["tag", "beastmode/test-epic-abc123/design-log5"], { cwd: repoDir });
+
+    writeFileSync(join(repoDir, "l5.txt"), "l5\n");
+    await git(["add", "."], { cwd: repoDir });
+    await git(["commit", "-m", "plan(test-epic): done (#42)"], { cwd: repoDir });
+
+    await amendCommitsInRange(syncRefs, epicId, features, "test-epic-abc123", "plan", {
+      cwd: repoDir,
+      rangeStartOverride: "beastmode/test-epic-abc123/design-log5",
+      logger,
+    });
+
+    expect(logger.messages.some((m) => m.includes("already have refs"))).toBe(true);
+
+    await git(["checkout", "main"], { cwd: repoDir });
+    await git(["branch", "-D", "feature/test-epic-abc123-log5"], { cwd: repoDir });
+    await git(["tag", "-d", "beastmode/test-epic-abc123/design-log5"], { cwd: repoDir });
   });
 });

@@ -457,10 +457,8 @@ export async function run(config: PipelineConfig): Promise<PipelineResult> {
     }
     if (epicEntity) {
       const features = taskStore.listFeatures(epicEntity.id).map((f) => ({ id: f.id, slug: f.slug }));
-      const rangeResult = await amendCommitsInRange(syncRefs, epicEntity.id, features, epicSlug, config.phase, { cwd: worktreePath });
-      if (rangeResult.amended > 0) {
-        logger.debug?.(`commit refs: ${rangeResult.amended} amended, ${rangeResult.skipped} skipped`);
-      }
+      const rangeResult = await amendCommitsInRange(syncRefs, epicEntity.id, features, epicSlug, config.phase, { cwd: worktreePath, logger });
+      logger.debug?.(`commit refs: ${rangeResult.amended} amended, ${rangeResult.skipped} skipped`);
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

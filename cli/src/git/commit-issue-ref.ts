@@ -10,6 +10,7 @@ import { git } from "./worktree.js";
 import { tagName } from "./tags.js";
 import type { SyncRefs } from "../github/index.js";
 import { getSyncRef } from "../github/index.js";
+import type { Logger } from "../logger.js";
 
 /** Minimal feature info needed for issue resolution. */
 export interface IssueRefFeature {
@@ -111,7 +112,7 @@ export function resolveCommitIssueNumber(
 export async function resolveRangeStart(
   slug: string,
   currentPhase: string,
-  opts: { cwd?: string } = {},
+  opts: { cwd?: string; logger?: Logger } = {},
 ): Promise<string | undefined> {
   const phaseIdx = PHASE_ORDER.indexOf(currentPhase as (typeof PHASE_ORDER)[number]);
 
@@ -119,18 +120,23 @@ export async function resolveRangeStart(
   if (phaseIdx > 0) {
     const prevPhase = PHASE_ORDER[phaseIdx - 1];
     const prevTag = tagName(slug, prevPhase);
+    opts.logger?.debug(`range-start: trying tag ${prevTag}`);
     const result = await git(["rev-parse", prevTag], { cwd: opts.cwd, allowFailure: true });
     if (result.exitCode === 0 && result.stdout) {
+      opts.logger?.debug(`range-start: tag ${prevTag} resolved to ${result.stdout.slice(0, 8)}`);
       return result.stdout;
     }
+    opts.logger?.debug(`range-start: tag ${prevTag} not found, falling back to merge-base`);
   }
 
   // Fallback: merge-base with main
   const mbResult = await git(["merge-base", "main", "HEAD"], { cwd: opts.cwd, allowFailure: true });
   if (mbResult.exitCode === 0 && mbResult.stdout) {
+    opts.logger?.debug(`range-start: merge-base resolved to ${mbResult.stdout.slice(0, 8)}`);
     return mbResult.stdout;
   }
 
+  opts.logger?.debug("range-start: merge-base failed, no range start found");
   return undefined;
 }
 
@@ -153,10 +159,11 @@ export async function amendCommitsInRange(
   features: IssueRefFeature[],
   slug: string,
   currentPhase: string,
-  opts: { cwd?: string; rangeStartOverride?: string } = {},
+  opts: { cwd?: string; rangeStartOverride?: string; logger?: Logger } = {},
 ): Promise<AmendRangeResult> {
   const epicIssue = getSyncRef(syncRefs, epicId)?.issue;
   if (!epicIssue) {
+    opts.logger?.debug("commit-refs: no epic issue number in sync refs -- skipping");
     return { amended: 0, skipped: 0 };
   }
 
@@ -166,10 +173,11 @@ export async function amendCommitsInRange(
     const r = await git(["rev-parse", opts.rangeStartOverride], { cwd: opts.cwd, allowFailure: true });
     rangeStart = r.exitCode === 0 ? r.stdout : undefined;
   } else {
-    rangeStart = await resolveRangeStart(slug, currentPhase, opts);
+    rangeStart = await resolveRangeStart(slug, currentPhase, { cwd: opts.cwd, logger: opts.logger });
   }
 
   if (!rangeStart) {
+    opts.logger?.debug("commit-refs: range start resolution failed -- skipping");
     return { amended: 0, skipped: 0 };
   }
 
@@ -180,6 +188,7 @@ export async function amendCommitsInRange(
   );
 
   if (logResult.exitCode !== 0 || !logResult.stdout) {
+    opts.logger?.debug("commit-refs: git log failed or empty output -- skipping");
     return { amended: 0, skipped: 0 };
   }
 
@@ -189,6 +198,7 @@ export async function amendCommitsInRange(
   });
 
   if (commits.length === 0) {
+    opts.logger?.debug("commit-refs: no commits found in range -- skipping");
     return { amended: 0, skipped: 0 };
   }
 
@@ -210,6 +220,7 @@ export async function amendCommitsInRange(
   }
 
   if (amendments.size === 0) {
+    opts.logger?.debug(`commit-refs: all ${skipped} commits already have refs -- nothing to amend`);
     return { amended: 0, skipped };
   }
 

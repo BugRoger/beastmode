@@ -65,7 +65,7 @@ describe("Body Enrichment Integration", () => {
       expect(body).toContain("Log aggregation service");
     });
 
-    test("retains phase badge and feature checklist", () => {
+    test("does not include phase badge, retains feature checklist", () => {
       const input: EpicBodyInput = {
         slug: "a1b2c3",
         epic: "logging-cleanup",
@@ -80,7 +80,7 @@ describe("Body Enrichment Integration", () => {
         },
       };
       const body = formatEpicBody(input);
-      expect(body).toContain("**Phase:** implement");
+      expect(body).not.toContain("**Phase:**");
       expect(body).toContain("- [x]");
       expect(body).toContain("- [ ]");
     });

@@ -39,6 +39,7 @@
 - ALWAYS gate sync artifact reads on `isPhaseAtOrPast(epic.phase, threshold)` — skip `readPrdSections` when phase has not yet passed `design`, skip plan file reads when phase has not yet passed `plan`; gates log at `debug` level; prevents expected file-not-found conditions from producing WARN output
 - ALWAYS use `logger.child({ phase: epic.phase })` at the sync entry point — propagates phase context to all downstream log calls automatically; prefer child logger over per-call context injection
 - ALWAYS update existing sync tests to use post-threshold phases when adding phase gates — tests that exercise "warn on missing artifact" paths fail silently once a gate is added if they still use a pre-threshold phase
+- ALWAYS add diagnostic debug logging at every early-return exit point in pipeline functions — silent no-ops (e.g., "no epic issue in sync refs", "range start resolution failed") are indistinguishable from success without logs; callers must also log unconditionally, not only on success paths
 
 ## State Scanning
 - ALWAYS discover epics from store entities — never from design files or date heuristics

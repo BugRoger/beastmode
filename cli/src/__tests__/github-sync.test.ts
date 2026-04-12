@@ -431,7 +431,7 @@ describe("syncGitHub", () => {
     await syncGitHub(epic, syncRefs, config, resolved);
 
     const createCalls = callsTo("ghIssueCreate");
-    expect(createCalls[0].args[2]).toContain("**Phase:** implement");
+    expect(createCalls[0].args[2]).not.toContain("**Phase:**");
     expect(createCalls[0].args[3]).toEqual(["type/epic", "phase/implement"]);
   });
 

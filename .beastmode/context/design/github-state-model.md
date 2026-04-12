@@ -14,7 +14,7 @@
 - ALWAYS show unlinked features as plain text in epic checklists — features without issue numbers yet still appear in scope
 - ALWAYS hide cancelled features from epic checklists — active scope only
 - ALWAYS follow manifest array order for feature checklists — stable, intentional plan-order sequencing
-- ALWAYS produce fallback body format when summary fields are missing — phase badge and feature checklist render regardless, richer than a stub
+- ALWAYS produce fallback body format when summary fields are missing — feature checklist renders regardless; phase badge is absent (labels are the canonical phase indicator, body is label-free)
 - ALWAYS post a closing comment on epic issues when phase transitions to done — includes version, release tag, and merge commit link
 - ALWAYS prevent duplicate closing comments via content scanning — check existing comments for the version string before posting
 - ALWAYS amend commit messages with issue references via range-based rebase of all commits since last phase tag — trailing `(#N)` format on the subject line; phase checkpoint commits get the epic issue ref, feature task commits get the feature issue ref (resolved from commit message prefix); amend runs before push so no force-push needed from CLI

@@ -8,7 +8,6 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "node:assert";
 import type { GitHubEnrichmentWorld } from "../support/enrichment-world.js";
-import { formatEpicBody } from "../../../src/github/sync.js";
 
 // ==========================================================================
 // Feature 1: Epic Issue Body Content
@@ -74,11 +73,11 @@ Given("an epic is at the plan phase", function (this: GitHubEnrichmentWorld) {
 });
 
 Then(
-  "the body contains a phase badge indicating {string}",
-  function (this: GitHubEnrichmentWorld, phase: string) {
+  "the body does not contain a phase badge",
+  function (this: GitHubEnrichmentWorld) {
     assert.ok(
-      this.lastBody.includes(`**Phase:** ${phase}`),
-      `Missing phase badge for "${phase}". Body: ${this.lastBody}`,
+      !this.lastBody.includes("**Phase:**"),
+      `Phase badge should be absent. Body: ${this.lastBody}`,
     );
   },
 );
@@ -118,7 +117,7 @@ Given("an epic has been enriched at the design phase", function (this: GitHubEnr
   this.epic.phase = "design";
   this.epic.slug = "test-epic";
   this.enrichEpicBody();
-  assert.ok(this.lastBody.includes("**Phase:** design"));
+  assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent after removal");
 });
 
 When("the epic advances to the plan phase", function (this: GitHubEnrichmentWorld) {
@@ -129,10 +128,10 @@ When("the epic issue body is re-enriched", function (this: GitHubEnrichmentWorld
   this.enrichEpicBody();
 });
 
-Then("the phase badge reflects {string}", function (this: GitHubEnrichmentWorld, phase: string) {
+Then("the body still does not contain a phase badge", function (this: GitHubEnrichmentWorld) {
   assert.ok(
-    this.lastBody.includes(`**Phase:** ${phase}`),
-    `Phase badge should show "${phase}". Body: ${this.lastBody}`,
+    !this.lastBody.includes("**Phase:**"),
+    `Phase badge should be absent. Body: ${this.lastBody}`,
   );
 });
 
@@ -143,9 +142,12 @@ Given("a new epic has no design artifact yet", function (this: GitHubEnrichmentW
   this.epic.summary = undefined;
 });
 
-Then("the body contains the epic slug as the title", function (this: GitHubEnrichmentWorld) {
-  // The phase badge is present and the slug is used in the output
-  assert.ok(this.lastBody.includes("**Phase:** design"), "Missing phase badge");
+Then("the body has no structured content", function (this: GitHubEnrichmentWorld) {
+  // A bare epic (no PRD sections, no features) produces an empty body
+  // after the phase badge removal. Verify nothing leaked.
+  assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent");
+  assert.ok(!this.lastBody.includes("## Problem"), "Should have no Problem section");
+  assert.ok(!this.lastBody.includes("## Solution"), "Should have no Solution section");
 });
 
 Then("the body does not contain PRD sections", function (this: GitHubEnrichmentWorld) {

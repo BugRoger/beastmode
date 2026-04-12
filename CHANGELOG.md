@@ -4,6 +4,25 @@ All notable changes to beastmode.
 
 ---
 
+## v0.125.0 — GitHub Sync Bug Fixes (2026-04-12)
+
+Cleans up three visible defects in GitHub issue sync: removes redundant phase badges from issue bodies, normalizes artifact link paths for GitHub permalink resolution, and adds diagnostic logging to the commit-issue-ref amend pipeline.
+
+### Features
+
+- Remove phase badge from `formatEpicBody` output — labels are the canonical phase indicator
+- Remove phase badge from early issue stub body
+- Add diagnostic logging to `amendCommitsInRange` and `resolveRangeStart` at all silent exit points
+- Log commit-ref amend result unconditionally in runner step 8.5
+
+### Fixes
+
+- Normalize artifact link paths through `buildArtifactsMap` to strip absolute/worktree-relative prefixes
+- Strengthen slug-title BDD step assertion and remove dead import
+- Rename misleading slug-title step to match actual assertion
+
+---
+
 ## v0.124.1 — README Accuracy Refresh (2026-04-12)
 
 Accuracy pass across all README.md sections to match v0.124 reality. No structural changes.

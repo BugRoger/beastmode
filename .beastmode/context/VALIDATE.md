@@ -25,6 +25,7 @@
 - Baseline as of 2026-04-11 (post sync-log-hygiene): 122 test files passing, ~1660 individual tests passing, 14 file-level failures (pre-existing, none sync-related), 8 type errors (pre-existing in untouched files)
 - Baseline as of 2026-04-11 (post collision-proof-slugs): 112 test files passing, 15 file-level failures, 1721 individual tests passing, 33 individual test failures, 7 type errors -- all pre-existing in untouched files
 - Baseline as of 2026-04-12 (post unified-hook-context): 126 unit test files passing, 4 file-level failures (globalThis.Bun readonly — pre-existing), 1792 individual tests passing, 16 type errors (pre-existing in untouched files)
+- Baseline as of 2026-04-12 (post github-sync-bug-fixes): 128 unit test files passing, 0 file-level failures, 1786 individual tests passing, 37 type errors (pre-existing in untouched files); BDD github-enrichment: 22 pass / 6 fail (all pre-existing on main)
 
 ## Type Error Fixup Patterns
 Common type errors introduced by new test files that require fixup before the type gate passes:

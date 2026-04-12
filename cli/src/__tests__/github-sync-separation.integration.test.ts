@@ -55,7 +55,7 @@ describe("GitHub sync state separated from pipeline state", () => {
       })),
     });
 
-    expect(body).toContain("plan");
+    expect(body).not.toContain("**Phase:**");
     expect(refs[epic.id].issue).toBe(10);
   });
 
