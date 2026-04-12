@@ -128,10 +128,19 @@ function resolveArtifacts(
 
     case "implement": {
       const planDir = join(artifactsDir, "plan");
-      const pattern = `${epic}-${feature}`;
-      const artifact = findLatestArtifact(planDir, pattern);
+      // Try exact pattern first (epic--feature), then fall back to
+      // matching by epic slug + feature name substring. Feature slugs
+      // may differ between plan time and implement time (e.g., the hex
+      // suffix gets added after plan creation).
+      const exactPattern = `${epic}--${feature}`;
+      let artifact = findLatestArtifact(planDir, exactPattern);
       if (!artifact) {
-        throw new Error(`No plan artifact found for feature "${feature}" of epic "${epic}". Expected pattern: *-${pattern}.md in ${planDir}`);
+        // Strip any trailing hex/id suffix from feature slug for fuzzy match
+        const featureBase = feature!.replace(/-[a-f0-9]{4,}(\.\d+)?$/, "");
+        artifact = findLatestArtifactContaining(planDir, epic, featureBase);
+      }
+      if (!artifact) {
+        throw new Error(`No plan artifact found for feature "${feature}" of epic "${epic}". Expected pattern: *-${exactPattern}.md in ${planDir}`);
       }
       return { paths: [artifact], contents: [readFileSync(artifact, "utf-8")] };
     }
@@ -167,6 +176,21 @@ function findLatestArtifact(dir: string, suffix: string): string | undefined {
 
   const candidates = readdirSync(dir)
     .filter((f) => f.endsWith(".md") && f.endsWith(`-${suffix}.md`))
+    .sort();
+
+  if (candidates.length === 0) return undefined;
+  return join(dir, candidates[candidates.length - 1]);
+}
+
+/**
+ * Find the latest artifact whose filename contains both the epic and a feature base name.
+ * Used as a fallback when exact suffix matching fails due to slug drift.
+ */
+function findLatestArtifactContaining(dir: string, epic: string, featureBase: string): string | undefined {
+  if (!existsSync(dir)) return undefined;
+
+  const candidates = readdirSync(dir)
+    .filter((f) => f.endsWith(".md") && f.includes(epic) && f.includes(featureBase))
     .sort();
 
   if (candidates.length === 0) return undefined;
