@@ -6,7 +6,7 @@ import {
   afterEach,
   vi,
 } from "vitest";
-import type { InteractiveRunnerOptions } from "../dispatch/factory";
+
 
 describe("interactive-runner", () => {
   let spawnSpy: ReturnType<typeof vi.spyOn>;
