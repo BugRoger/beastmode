@@ -73,9 +73,10 @@ describe("phaseCommand design args guard", () => {
 
     await expect(
       phaseCommand("design", ["something"], {
-        hitl: { model: "test", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+        hitl: { timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
         "file-permissions": { timeout: 60, "claude-settings": "" },
         github: { enabled: false },
+        cli: {},
       }),
     ).rejects.toThrow("process.exit called");
 
@@ -90,9 +91,10 @@ describe("phaseCommand design args guard", () => {
 
     await expect(
       phaseCommand("design", ["some", "topic"], {
-        hitl: { model: "test", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+        hitl: { timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
         "file-permissions": { timeout: 60, "claude-settings": "" },
         github: { enabled: false },
+        cli: {},
       }),
     ).rejects.toThrow("process.exit called");
 
@@ -109,9 +111,10 @@ describe("phaseCommand design args guard", () => {
     // but it should NOT be the args guard that triggers it.
     try {
       await phaseCommand("design", [], {
-        hitl: { model: "test", timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
+        hitl: { timeout: 30, design: "", plan: "", implement: "", validate: "", release: "" },
         "file-permissions": { timeout: 60, "claude-settings": "" },
         github: { enabled: false },
+        cli: {},
       });
     } catch {
       // Expected -- downstream mocks are incomplete
