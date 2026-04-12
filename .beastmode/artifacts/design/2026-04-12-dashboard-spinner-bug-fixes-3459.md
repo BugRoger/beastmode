@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-3459
-epic-slug: elite-exploit-3459
+epic-slug: dashboard-spinner-bug-fixes-3459
 epic-name: Dashboard Spinner Bug Fixes
 ---
 
