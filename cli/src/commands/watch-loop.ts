@@ -130,6 +130,8 @@ export class WatchLoop extends EventEmitter {
 
   /** Run a single scan-and-dispatch cycle. */
   async tick(): Promise<void> {
+    this.emitTyped('scan-started', {});
+
     // Check liveness of active sessions before scanning
     if (this.deps.sessionFactory.checkLiveness && this.tracker.size > 0) {
       const activeSessions = this.tracker.getAll();
@@ -192,7 +194,7 @@ export class WatchLoop extends EventEmitter {
       this.logger.warn("reconciliation pass failed", { error: String(err) });
     }
 
-    this.emitTyped('scan-complete', { epicsScanned: epics.length, dispatched });
+    this.emitTyped('scan-complete', { epicsScanned: epics.length, dispatched, trigger: "poll" });
   }
 
   private async processEpic(epic: EnrichedEpic): Promise<number> {
@@ -420,11 +422,13 @@ export class WatchLoop extends EventEmitter {
   /** Re-scan a single epic and dispatch if it has a new actionable step. */
   private async rescanEpic(epicSlug: string): Promise<void> {
     try {
+      this.emitTyped('scan-started', {});
       const epics = await this.deps.scanEpics(this.config.projectRoot);
       const epic = epics.find((e) => e.slug === epicSlug);
       if (epic) {
         await this.processEpic(epic);
       }
+      this.emitTyped('scan-complete', { epicsScanned: epic ? 1 : 0, dispatched: 0, trigger: "event" });
     } catch (err) {
       this.logger.warn("epic re-scan failed", { epic: epicSlug, error: String(err) });
     }

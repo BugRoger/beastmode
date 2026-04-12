@@ -90,7 +90,7 @@ describe("WatchLoop event emission", () => {
     const loop = new WatchLoop(makeConfig(), deps);
     loop.setRunning(true);
 
-    const events: Array<{ epicsScanned: number; dispatched: number }> = [];
+    const events: Array<{ epicsScanned: number; dispatched: number; trigger: string }> = [];
     loop.on("scan-complete", (payload) => events.push(payload));
 
     await loop.tick();
@@ -98,6 +98,74 @@ describe("WatchLoop event emission", () => {
     expect(events.length).toBe(1);
     expect(events[0].epicsScanned).toBe(2);
     expect(events[0].dispatched).toBe(1);
+    loop.setRunning(false);
+  });
+
+  test("tick emits scan-started before scan-complete", async () => {
+    const deps = makeDeps({ scanEpics: async () => [] });
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const eventOrder: string[] = [];
+    loop.on("scan-started", () => eventOrder.push("scan-started"));
+    loop.on("scan-complete", () => eventOrder.push("scan-complete"));
+
+    await loop.tick();
+
+    expect(eventOrder).toEqual(["scan-started", "scan-complete"]);
+    loop.setRunning(false);
+  });
+
+  test("tick emits scan-complete with trigger poll", async () => {
+    const deps = makeDeps({ scanEpics: async () => [] });
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const events: Array<{ trigger: string }> = [];
+    loop.on("scan-complete", (payload) => events.push(payload as any));
+
+    await loop.tick();
+
+    expect(events.length).toBe(1);
+    expect(events[0].trigger).toBe("poll");
+    loop.setRunning(false);
+  });
+
+  test("rescanEpic emits scan-complete with trigger event", async () => {
+    let scanCount = 0;
+    const deps = makeDeps({
+      scanEpics: async () => {
+        scanCount++;
+        if (scanCount === 1) {
+          return [makeEpic({ slug: "test-epic" })];
+        }
+        return [];
+      },
+      sessionFactory: {
+        async create(opts: SessionCreateOpts): Promise<SessionHandle> {
+          return {
+            id: `session-${Date.now()}`,
+            worktreeSlug: opts.epicSlug,
+            promise: Promise.resolve({ success: true, exitCode: 0, durationMs: 100 }),
+          };
+        },
+      },
+    });
+
+    const loop = new WatchLoop(makeConfig(), deps);
+    loop.setRunning(true);
+
+    const scanCompletes: Array<{ trigger: string }> = [];
+    loop.on("scan-complete", (payload) => scanCompletes.push(payload as any));
+
+    await loop.tick();
+    // Wait for session completion and rescan
+    await new Promise((r) => setTimeout(r, 100));
+
+    // First scan-complete from tick (poll), second from rescanEpic (event)
+    expect(scanCompletes.length).toBe(2);
+    expect(scanCompletes[0].trigger).toBe("poll");
+    expect(scanCompletes[1].trigger).toBe("event");
     loop.setRunning(false);
   });
 

@@ -82,10 +82,14 @@ export interface SessionCompletedEvent {
   costUsd?: number;
 }
 
+/** Payload for 'scan-started' event. */
+export interface ScanStartedEvent {}
+
 /** Payload for 'scan-complete' event. */
 export interface ScanCompleteEvent {
   epicsScanned: number;
   dispatched: number;
+  trigger: "poll" | "event";
 }
 
 /** Payload for 'error' event. */
@@ -118,6 +122,7 @@ export interface SessionDeadEvent {
 export interface WatchLoopEventMap {
   'session-started': [SessionStartedEvent];
   'session-completed': [SessionCompletedEvent];
+  'scan-started': [ScanStartedEvent];
   'scan-complete': [ScanCompleteEvent];
   'error': [WatchErrorEvent];
   'epic-blocked': [{ epicSlug: string; gate: string; reason: string }];
