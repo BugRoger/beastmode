@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-97c0
-epic-slug: inline-zealot-97c0
+epic-slug: readme-accuracy-refresh-97c0
 epic-name: README Accuracy Refresh
 ---
 
