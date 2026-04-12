@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-c861
-epic-slug: frozen-gadget-c861
+epic-slug: github-sync-bug-fixes-c861
 epic-name: GitHub Sync Bug Fixes
 ---
 
