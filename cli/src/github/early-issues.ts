@@ -68,7 +68,7 @@ export async function ensureEarlyIssues(opts: EarlyIssueOpts): Promise<void> {
         return;
       }
 
-      const stubBody = `**Phase:** design\n\n_Stub issue — content will be enriched after the design phase completes._`;
+      const stubBody = `_Stub issue — content will be enriched after the design phase completes._`;
       const epicNumber = await ghIssueCreate(
         repo,
         epicTitle(epic.slug, epic.name),
