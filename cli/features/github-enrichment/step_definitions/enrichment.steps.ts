@@ -74,11 +74,11 @@ Given("an epic is at the plan phase", function (this: GitHubEnrichmentWorld) {
 });
 
 Then(
-  "the body contains a phase badge indicating {string}",
-  function (this: GitHubEnrichmentWorld, phase: string) {
+  "the body does not contain a phase badge",
+  function (this: GitHubEnrichmentWorld) {
     assert.ok(
-      this.lastBody.includes(`**Phase:** ${phase}`),
-      `Missing phase badge for "${phase}". Body: ${this.lastBody}`,
+      !this.lastBody.includes("**Phase:**"),
+      `Phase badge should be absent. Body: ${this.lastBody}`,
     );
   },
 );
@@ -118,7 +118,7 @@ Given("an epic has been enriched at the design phase", function (this: GitHubEnr
   this.epic.phase = "design";
   this.epic.slug = "test-epic";
   this.enrichEpicBody();
-  assert.ok(this.lastBody.includes("**Phase:** design"));
+  assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent after removal");
 });
 
 When("the epic advances to the plan phase", function (this: GitHubEnrichmentWorld) {
@@ -129,10 +129,10 @@ When("the epic issue body is re-enriched", function (this: GitHubEnrichmentWorld
   this.enrichEpicBody();
 });
 
-Then("the phase badge reflects {string}", function (this: GitHubEnrichmentWorld, phase: string) {
+Then("the body still does not contain a phase badge", function (this: GitHubEnrichmentWorld) {
   assert.ok(
-    this.lastBody.includes(`**Phase:** ${phase}`),
-    `Phase badge should show "${phase}". Body: ${this.lastBody}`,
+    !this.lastBody.includes("**Phase:**"),
+    `Phase badge should be absent. Body: ${this.lastBody}`,
   );
 });
 
@@ -144,8 +144,9 @@ Given("a new epic has no design artifact yet", function (this: GitHubEnrichmentW
 });
 
 Then("the body contains the epic slug as the title", function (this: GitHubEnrichmentWorld) {
-  // The phase badge is present and the slug is used in the output
-  assert.ok(this.lastBody.includes("**Phase:** design"), "Missing phase badge");
+  // With the phase badge removed, a minimal epic body (no summary, no features)
+  // will be empty. Verify the badge is absent.
+  assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent");
 });
 
 Then("the body does not contain PRD sections", function (this: GitHubEnrichmentWorld) {

@@ -14,10 +14,10 @@ Feature: Epic issue body displays PRD summary
     And the body contains the user stories section
     And the body contains the decisions section
 
-  Scenario: Epic issue body shows current phase badge
+  Scenario: Epic issue body does not contain phase badge
     Given an epic is at the plan phase
     When the epic issue body is enriched
-    Then the body contains a phase badge indicating "plan"
+    Then the body does not contain a phase badge
 
   Scenario: Epic issue body includes feature checklist after plan phase
     Given an epic has completed the plan phase with three features
@@ -25,11 +25,11 @@ Feature: Epic issue body displays PRD summary
     Then the body contains a checklist with three feature entries
     And each checklist entry shows the feature name
 
-  Scenario: Epic issue body updates phase badge when phase advances
+  Scenario: Epic issue body still has no phase badge after phase advance
     Given an epic has been enriched at the design phase
     When the epic advances to the plan phase
     And the epic issue body is re-enriched
-    Then the phase badge reflects "plan"
+    Then the body still does not contain a phase badge
 
   Scenario: Epic issue body without a design artifact shows minimal content
     Given a new epic has no design artifact yet
