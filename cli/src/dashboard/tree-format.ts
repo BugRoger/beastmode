@@ -9,7 +9,7 @@
 
 import chalk from "chalk";
 import type { LogLevel } from "../logger.js";
-import { BADGE_WIDTH } from "./monokai-palette.js";
+import { BADGE_WIDTH, CHROME } from "./monokai-palette.js";
 
 /** Depth level in the tree hierarchy. */
 export type TreeDepth =
@@ -17,8 +17,8 @@ export type TreeDepth =
   | "epic"           // │
   | "feature"        // │ │
   | "leaf-epic"      // │ ·        (entry directly under epic)
-  | "leaf-feature"   // │ │ ·      (entry under feature)
-  | "leaf-feature-last" // │   ·   (entry under last feature — no parent vertical)
+  | "leaf-feature"   // │   ·      (entry under non-last feature — epic continuation only)
+  | "leaf-feature-last" //     ·   (entry under last feature — no verticals)
   | "system";        // │ · (same as leaf-epic)
 
 /** Level labels — fixed 5-char width (matches logger.ts). */
@@ -46,9 +46,9 @@ export function buildTreePrefix(depth: TreeDepth): string {
     case "leaf-epic":
       return "  │ ";
     case "leaf-feature":
-      return "  │ │ ";
+      return "  │   ";
     case "leaf-feature-last":
-      return "    │ ";
+      return "      ";
   }
 }
 
@@ -63,11 +63,11 @@ function formatTime(ts: number): string {
 }
 
 /**
- * Colorize tree prefix connectors — always dimmed.
+ * Colorize tree prefix connectors — always muted (#727072).
  */
 function colorPrefix(prefix: string): string {
   if (!prefix) return prefix;
-  return chalk.dim(prefix);
+  return chalk.hex(CHROME.muted)(prefix);
 }
 
 /**
