@@ -12,7 +12,7 @@
  * Body formatting for GitHub issue bodies — pure functions, no I/O.
  *
  * Renders markdown issue bodies from manifest state.
- * Epic body: phase badge, problem/solution, feature checklist.
+ * Epic body: problem/solution, feature checklist.
  * Feature body: description, epic back-reference.
  */
 
@@ -110,15 +110,12 @@ export interface FeatureSyncInput {
 /**
  * Format an epic issue body from manifest state.
  *
- * Includes: phase badge, problem statement, solution summary, feature checklist.
+ * Includes: problem statement, solution summary, feature checklist.
  * Cancelled features are excluded. Unlinked features show plain text.
  * Missing summary fields produce a graceful fallback.
  */
 export function formatEpicBody(input: EpicBodyInput): string {
   const sections: string[] = [];
-
-  // Phase badge
-  sections.push(`**Phase:** ${input.phase}`);
 
   // Problem/solution — prdSections override summary when present
   const problem = input.prdSections?.problem ?? input.summary?.problem;
