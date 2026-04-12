@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-b2b8
-epic-slug: grok-jabber-b2b8
+epic-slug: heartbeat-countdown-timer-b2b8
 epic-name: Heartbeat Countdown Timer
 ---
 
