@@ -79,6 +79,7 @@ context/implement/write-plan.md
 - `.tasks.md` uses checkbox tracking (`- [ ]`/`- [x]`) for cross-session resume — no separate .tasks.json
 - No YAML frontmatter in .tasks.md — prevents the stop hook from generating a spurious output.json
 - Self-review pass after writing: spec coverage against feature plan, placeholder scan (TBD/TODO/ellipsis), type/name consistency check
+- ALWAYS include env var name migration in Write Plan consumer enumeration — when renaming env vars (e.g., BEASTMODE_EPIC to BEASTMODE_EPIC_ID), grep for old env var names in all source, test, and BDD files; env var references are string literals invisible to import-based dependency analysis
 - ALWAYS produce complete code in every step — no placeholders, no "add appropriate handling", no "similar to Task N"
 - ALWAYS duplicate context from feature plan into .tasks.md header — makes the document self-contained for agents
 - ALWAYS author wiring task implementations from current source on the worktree branch — plan artifact descriptions become stale as parallel waves complete; source is the ground truth for type signatures, import paths, and component props

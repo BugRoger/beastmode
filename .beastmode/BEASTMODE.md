@@ -66,6 +66,7 @@
 
 - ALWAYS ensure file isolation across parallel wave tasks — plans must assign disjoint file sets
 - ALWAYS use grep-based cross-file verification after parallel implementation
+- ALWAYS run caller-sweep grep between implementation waves — implementation agents operating in file isolation cannot detect callers outside their task scope; grep for old function signatures, old import paths, and old env var names across the entire tree after each wave completes
 - ALWAYS ensure task edit ranges cover all occurrences of the target pattern
 - ALWAYS adapt heading depth to structural context when nesting changes
 - Cross-cutting features spanning all 5 phases need per-phase feature decomposition to maintain file isolation
