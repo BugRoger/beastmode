@@ -6,48 +6,26 @@ Turns Claude Code into a disciplined engineering partner. Five phases. Context t
 /design → /plan → /implement → /validate → /release
 ```
 
+## Get the Party Started
+
+**Prerequisites:**
+
+- **macOS** — only supported platform (required)
+- **[Node.js](https://nodejs.org/) >= 18** — runtime for npx (required)
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — AI coding assistant (required)
+- **[Git](https://git-scm.com/)** — branch and commit operations (required)
+- **[GitHub CLI](https://cli.github.com/)** — issue and project board sync (optional, for GitHub integration)
+- **[iTerm2](https://iterm2.com/)** — pipeline dashboard terminal (optional, for pipeline dashboard)
+
+**Paste this into Claude Code:**
+
+> Install Beastmode into this project by running `npx beastmode install`. Once that finishes, initialize the project skeleton by running the `/beastmode init` skill in skeleton-only mode — skip full discovery, just lay down the directory structure and config files. Finally, set up GitHub integration by running the `/beastmode setup-github` skill, which will ask for the repository details and configure labels, project board, and issue sync.
+
 ## The Problem
 
 Every AI coding session starts from scratch. You re-explain your architecture. Re-state your conventions. Re-describe decisions you made three sessions ago. The agent forgets everything between context windows, so you become the memory.
 
 This works for quick fixes. It falls apart for anything that spans sessions.
-
-## Install
-
-### Requirements
-
-| Prerequisite | Why |
-|---|---|
-| macOS | Only supported platform |
-| [Node.js](https://nodejs.org/) >= 18 | Runtime for npx |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | AI coding assistant |
-| [Git](https://git-scm.com/) | Branch and commit operations |
-| [iTerm2](https://iterm2.com/) | Pipeline orchestration |
-| [GitHub CLI](https://cli.github.com/) *(optional)* | Issue and project board sync |
-
-### One-Liner
-
-```bash
-npx beastmode install
-```
-
-Installs the plugin, CLI, and all dependencies. Re-run to update.
-
-### Uninstall
-
-```bash
-npx beastmode uninstall
-```
-
-Removes the plugin and CLI link. Project data in `.beastmode/` is preserved.
-
-Initialize your project:
-
-```bash
-/beastmode init
-```
-
-Init detects your stack and bootstraps the full knowledge hierarchy — inventory, context writing, retro, and synthesis. Existing projects get 17 detected domains populated from your codebase. New projects get the skeleton and a nudge toward `/design`.
 
 ## The Pipeline
 
