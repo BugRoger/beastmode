@@ -267,6 +267,7 @@ export default function App({ config, verbosity, loop, projectRoot, fallbackStor
           stderr: "pipe",
         });
         const branch = (await new Response(proc.stdout).text()).trim();
+        await proc.exited;
 
         const diffProc = Bun.spawn(["git", "diff", "--quiet", "HEAD"], {
           stdout: "pipe",

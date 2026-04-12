@@ -37,6 +37,7 @@ export interface ReconcileOpts {
   resolved: ResolvedGitHub;
   currentTick: number;
   logger?: Logger;
+  signal?: AbortSignal;
 }
 
 /**
@@ -48,7 +49,7 @@ export interface ReconcileOpts {
  * Returns ReconcileResult and the updated SyncRefs.
  */
 export async function reconcileGitHub(opts: ReconcileOpts): Promise<ReconcileResult & { updatedRefs: SyncRefs }> {
-  const { projectRoot, store, config, resolved, currentTick, logger } = opts;
+  const { projectRoot, store, config, resolved, currentTick, logger, signal } = opts;
   let refs = opts.syncRefs;
 
   const result: ReconcileResult = {
@@ -61,6 +62,10 @@ export async function reconcileGitHub(opts: ReconcileOpts): Promise<ReconcileRes
     fullReconcileCount: 0,
     warnings: [],
   };
+
+  if (signal?.aborted) {
+    return { ...result, updatedRefs: refs };
+  }
 
   if (!config.github.enabled) {
     return { ...result, updatedRefs: refs };
@@ -100,6 +105,7 @@ export async function reconcileGitHub(opts: ReconcileOpts): Promise<ReconcileRes
       }
 
       try {
+        if (signal?.aborted) break;
         const epicInput = buildEpicSyncInput(store, epic);
         const syncResult = await syncGitHub(epicInput, refs, config, resolved, {
           logger,
@@ -142,6 +148,7 @@ export async function reconcileGitHub(opts: ReconcileOpts): Promise<ReconcileRes
   const readyOps = drainPendingOps(refs, currentTick);
 
   for (const { entityId, op } of readyOps) {
+    if (signal?.aborted) break;
     result.opsAttempted++;
 
     try {
