@@ -5,7 +5,7 @@
  * pipeline/runner.run() for the full 9-step pipeline.
  *
  * Two invocation contexts:
- *   1. Manual -- user runs `beastmode design <topic>` from the project root.
+ *   1. Manual -- user runs `beastmode design` from the project root.
  *      Delegates to the pipeline runner for worktree + dispatch + post-dispatch.
  *   2. Cmux -- the watch loop already created the worktree and CDed into it.
  *      Runs interactive dispatch only; post-dispatch is handled by the watch
@@ -60,9 +60,13 @@ export async function phaseCommand(
   let worktreeSlug: string;
 
   if (phase === "design") {
-    // If an existing slug was passed (re-dispatch), reuse it.
-    // Otherwise pass empty — the runner creates the placeholder epic at Step 0.
-    worktreeSlug = args[0] ?? "";
+    if (args.length > 0) {
+      logger.error(
+        "The topic argument was removed. Run `beastmode design` with no arguments — the design session will ask for your problem description.",
+      );
+      process.exit(1);
+    }
+    worktreeSlug = "";
   } else {
     // Non-design phases require the epic to exist.
     // Resolution priority: store ID → store slug
