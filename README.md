@@ -166,12 +166,11 @@ beastmode compact            # prune and promote the context tree
 
 ### Orchestration
 
-The pipeline is a state machine. Each epic tracks its phase, features, and artifacts in a manifest file. The CLI owns the full lifecycle:
+The pipeline is a state machine. A single JSON file store at `.beastmode/state/store.json` tracks epics and features with typed statuses, dependency chains, and wave assignments. The store is the sole operational authority.
 
-- **Worktrees** — created at first phase, persisted through all phases, squash-merged and removed at release. Branch detection reuses `feature/<slug>` if it exists.
-- **Parallel implement** — one agent per feature in isolated worktrees. After all agents finish, worktrees merge sequentially with pre-merge conflict simulation. Manifest verified for completeness.
-- **Phase regression** — validation failures regress specific failing features back to implement with a dispatch budget. Blanket regression available as fallback. Phase tags mark reset points.
-- **Recovery** — manifests are the recovery point. On startup, existing worktrees with uncommitted changes are detected and re-dispatched from last committed state.
+- **Implement dispatch** — one agent per feature on the shared feature branch. Wave file isolation guarantees disjoint file sets across parallel tasks. No per-feature worktrees, no merge step.
+- **Phase regression** — validation failures regress failing features to implement with a dispatch budget. Phase tags mark reset points for re-entry.
+- **Recovery** — on startup, store state is loaded from disk. Pending operations resume from last saved state.
 
 ### GitHub Integration
 
