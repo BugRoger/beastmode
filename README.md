@@ -170,10 +170,12 @@ Flags: -v, -vv, -vvv                 Increase output verbosity
 
 `beastmode dashboard` is both the monitor and the orchestrator. It scans for epics that have a design but no release, and drives them through plan → implement → validate → release automatically.
 
-- Fullscreen terminal UI with epic list, detail panel, and live log stream
-- Dispatches one terminal session per phase, one per feature during implement
-- Keyboard navigation, phase and status filters, inline cancel with confirmation
-- Color-coded phase badges, animated header, verbosity cycling
+- Fullscreen terminal UI with epic list, details panel, and hierarchical tree log (SYSTEM > epic > feature)
+- Heartbeat countdown timer showing seconds until next poll cycle
+- Persistent stats with session/all-time toggle (sessions, success rate, phase durations, retries)
+- Phase-colored badges using Monokai Pro palette
+- Keyboard extensions: tab focus between panels, phase filter cycling, blocked toggle, PgUp/PgDn scroll, filter search, cancel with confirmation
+- Animated nyan rainbow focus border on active panel
 
 ### Orchestration
 
