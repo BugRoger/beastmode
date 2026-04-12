@@ -13,12 +13,11 @@ Feature: File permission hook lifecycle across pipeline phases
     And the config has file-permissions claude-settings set to "auto-allow plugin config writes"
 
     When the dispatch will write a design artifact:
-      | field    | value              |
-      | phase    | design             |
-      | slug     | fp-lifecycle       |
-      | epic     | fp-lifecycle       |
-      | problem  | Test problem       |
-      | solution | Test solution      |
+      | field     | value              |
+      | phase     | design             |
+      | epic-slug | fp-lifecycle       |
+      | problem   | Test problem       |
+      | solution  | Test solution      |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the file-permission hook prompt should contain "auto-allow plugin config writes"

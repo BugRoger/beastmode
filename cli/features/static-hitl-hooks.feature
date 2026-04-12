@@ -13,12 +13,11 @@ Feature: Static HITL hooks for AskUserQuestion
 
   Scenario: Hook builder produces command-type entry for AskUserQuestion
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | static-hitl   |
-      | epic     | static-hitl   |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | static-hitl   |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the AskUserQuestion PreToolUse hook should be command-type
@@ -60,12 +59,11 @@ Feature: Static HITL hooks for AskUserQuestion
   Scenario: File-permission hooks remain prompt-type alongside command-type HITL hooks
     Given the config has file-permissions claude-settings set to "auto-allow all changes"
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-coexist    |
-      | epic     | fp-coexist    |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-coexist    |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the AskUserQuestion PreToolUse hook should be command-type

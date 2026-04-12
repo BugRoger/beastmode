@@ -14,12 +14,11 @@ Feature: File permission hooks written to settings.local.json with path filterin
   Scenario: Write and Edit hooks have if-field conditions for path filtering
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-hook       |
-      | epic     | fp-hook       |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-hook       |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a file-permission PreToolUse hook for "Write"
@@ -30,12 +29,11 @@ Feature: File permission hooks written to settings.local.json with path filterin
   Scenario: File-permission hooks coexist with HITL AskUserQuestion hooks
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-coexist    |
-      | epic     | fp-coexist    |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-coexist    |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a command-type PreToolUse hook for "design"
@@ -45,12 +43,11 @@ Feature: File permission hooks written to settings.local.json with path filterin
   Scenario: File-permission hooks are cleaned between dispatches
 
     When the dispatch will write a design artifact:
-      | field    | value        |
-      | phase    | design       |
-      | slug     | fp-clean     |
-      | epic     | fp-clean     |
-      | problem  | Test problem |
-      | solution | Test solution |
+      | field     | value        |
+      | phase     | design       |
+      | epic-slug | fp-clean     |
+      | problem   | Test problem |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a file-permission PreToolUse hook for "Write"
@@ -68,12 +65,11 @@ Feature: File permission hooks written to settings.local.json with path filterin
     Given the worktree has a custom setting "myFlag" with value "keep-me"
 
     When the dispatch will write a design artifact:
-      | field    | value         |
-      | phase    | design        |
-      | slug     | fp-preserve   |
-      | epic     | fp-preserve   |
-      | problem  | Test problem  |
-      | solution | Test solution |
+      | field     | value         |
+      | phase     | design        |
+      | epic-slug | fp-preserve   |
+      | problem   | Test problem  |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should preserve custom setting "myFlag"

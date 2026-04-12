@@ -34,12 +34,11 @@ Feature: HITL hook lifecycle -- settings written before dispatch, cleaned betwee
     And a manifest is seeded for slug "phase-specific-epic"
 
     When the dispatch will write a design artifact:
-      | field    | value           |
-      | phase    | design          |
-      | slug     | phase-specific  |
-      | epic     | phase-specific  |
-      | problem  | Test problem    |
-      | solution | Test solution   |
+      | field     | value           |
+      | phase     | design          |
+      | epic-slug | phase-specific  |
+      | problem   | Test problem    |
+      | solution  | Test solution   |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a command-type PreToolUse hook for "design"
@@ -59,12 +58,11 @@ Feature: HITL hook lifecycle -- settings written before dispatch, cleaned betwee
     And the worktree has a custom setting "myCustom" with value "preserved"
 
     When the dispatch will write a design artifact:
-      | field    | value        |
-      | phase    | design       |
-      | slug     | custom       |
-      | epic     | custom       |
-      | problem  | Test problem |
-      | solution | Test solution |
+      | field     | value        |
+      | phase     | design       |
+      | epic-slug | custom       |
+      | problem   | Test problem |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the worktree settings should contain a command-type PreToolUse hook for "design"
