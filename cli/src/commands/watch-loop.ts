@@ -46,6 +46,7 @@ export class WatchLoop extends EventEmitter {
   /** Session IDs currently under liveness check — used to emit session-dead before rescanEpic. */
   private livenessCheckIds = new Set<string>();
   private tickCount = 0;
+  private tickAbortController: AbortController | null = null;
   constructor(config: WatchConfig, deps: WatchDeps) {
     super();
     this.config = config;
@@ -99,16 +100,29 @@ export class WatchLoop extends EventEmitter {
 
     this.logger.info("Shutting down...");
 
+    // Abort in-flight tick (cancels reconciliation/gh subprocess calls)
+    if (this.tickAbortController) {
+      this.tickAbortController.abort();
+      this.tickAbortController = null;
+      this.logger.info("Aborted in-flight tick");
+    }
+
     if (this.tracker.size > 0) {
       this.logger.info(
-        `Waiting for ${this.tracker.size} active session(s)...`,
+        `Aborting ${this.tracker.size} active session(s)...`,
       );
       this.tracker.abortAll();
-      await this.tracker.waitAll(30_000);
+      this.logger.info("Waiting up to 5s for sessions to finish...");
+      await this.tracker.waitAll(5_000);
+      this.logger.info("Session wait complete");
     }
 
     releaseLock(this.config.projectRoot);
+    this.logger.info("Lock released");
+
     this.emitTyped('stopped');
+    this.removeAllListeners();
+    this.logger.info("All listeners removed — shutdown complete");
   }
 
   /** Get the dispatch tracker (for testing/status). */
@@ -128,6 +142,9 @@ export class WatchLoop extends EventEmitter {
 
   /** Run a single scan-and-dispatch cycle. */
   async tick(): Promise<void> {
+    this.tickAbortController = new AbortController();
+    const { signal } = this.tickAbortController;
+
     this.emitTyped('scan-started', {});
 
     // Check liveness of active sessions before scanning
@@ -173,6 +190,7 @@ export class WatchLoop extends EventEmitter {
             resolved,
             currentTick: this.tickCount,
             logger: this.logger,
+            signal,
           });
 
           if (reconcileResult.updatedRefs !== syncRefs) {
@@ -191,6 +209,8 @@ export class WatchLoop extends EventEmitter {
     } catch (err) {
       this.logger.warn("reconciliation pass failed", { error: String(err) });
     }
+
+    this.tickAbortController = null;
 
     this.emitTyped('scan-complete', { epicsScanned: epics.length, dispatched, trigger: "poll" });
   }
@@ -397,7 +417,7 @@ export class WatchLoop extends EventEmitter {
         });
 
         // Create phase tag for regression support (mirrors post-dispatch in CLI path)
-        if (result.success && session.phase !== "release") {
+        if (result.success && session.phase !== "release" && this.running) {
           try {
             const wtPath = resolve(this.config.projectRoot, ".claude", "worktrees", session.worktreeSlug);
             await createTag(session.epicSlug, session.phase, { cwd: wtPath });

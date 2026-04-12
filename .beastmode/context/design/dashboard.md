@@ -115,6 +115,8 @@
 - ALWAYS subscribe to WatchLoop EventEmitter typed events for React state updates
 - ALWAYS use the dashboard lockfile — mutual exclusion prevents two orchestrators
 - ALWAYS externalize signal handling — Ink app's SIGINT handler calls `loop.stop()`
+- NEVER add `process.exit()` to the dashboard exit path — Ink's `installSignalHandlers: false` means the event loop must drain naturally; process.exit bypasses drain and masks real resource leaks
+- Watch mode and dashboard mode differ: watch mode installs its own signal handlers that call `process.exit(0)`; dashboard mode disables them so Ink owns SIGINT; the fix for hangs is always to drain the event loop, never to add process.exit
 
 ## Shared Data Module
 - ALWAYS use `status-data.ts` for sorting, filtering, snapshot building, and change detection — shared data module for the dashboard
