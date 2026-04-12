@@ -4,6 +4,21 @@ All notable changes to beastmode.
 
 ---
 
+## v0.127.2 — Lockfile Path Fix (2026-04-12)
+
+Fix ENOENT error when starting the dashboard from a worktree by moving the watch loop lockfile from `cli/` to the project-rooted `.beastmode/` directory.
+
+### Fixes
+
+- Resolve lockfile path to `.beastmode/.beastmode-watch.lock` instead of `cli/.beastmode-watch.lock`
+- Update `.gitignore` entry to match new lockfile path
+
+### Docs
+
+- Update lockfile path references in orchestration and CLI context docs
+
+---
+
 ## v0.127.1 — One-Sentence Project Bootstrap (2026-04-12)
 
 Replace the multi-step Install section in the README with a single "Get the Party Started" prose paragraph that users paste into Claude Code to bootstrap their entire project in one shot.
