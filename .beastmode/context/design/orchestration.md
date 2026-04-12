@@ -39,3 +39,11 @@
 - Interface contract gaps are invisible at compile time for optional methods — only manifest at runtime when the lifecycle event fires
 
 context/design/orchestration/decorator-forwarding.md
+
+## Graceful Shutdown
+- NEVER add `process.exit()` to the WatchLoop shutdown path — dashboard mode requires natural event loop drain; process.exit masks unresolved drains
+- ALWAYS follow the five-step stop() sequence: abort tick controller, abort+wait sessions (5s), release lock, emit stopped, removeAllListeners
+- ALWAYS scope async work cancellability to the tick via a per-tick AbortController stored on the WatchLoop instance
+- ALWAYS call `removeAllListeners()` after emitting `stopped` — late-firing EventEmitter events from React subscribers will spawn new async work if listeners remain
+
+context/design/orchestration/watchloop-shutdown-sequence.md
