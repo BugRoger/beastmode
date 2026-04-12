@@ -400,9 +400,10 @@ The artifact MUST begin with YAML frontmatter:
 ```yaml
 ---
 phase: implement
-slug: <epic-id>
-epic: <epic-name>
-feature: <feature-name>
+epic-id: <epic-id>
+epic-slug: <epic-name>
+feature-id: <feature-id>
+feature-slug: <feature-name>
 status: completed
 ---
 ```
