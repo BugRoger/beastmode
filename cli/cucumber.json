@@ -361,5 +361,25 @@
     ],
     "format": ["progress-bar"],
     "publishQuiet": true
+  },
+  "heartbeat-countdown": {
+    "paths": ["features/heartbeat-countdown-display.feature"],
+    "import": [
+      "features/step_definitions/heartbeat-countdown.steps.ts",
+      "features/support/heartbeat-countdown-world.ts",
+      "features/support/heartbeat-countdown-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
+  },
+  "heartbeat-watch-events": {
+    "paths": ["features/heartbeat-watch-loop-events.feature"],
+    "import": [
+      "features/step_definitions/heartbeat-watch-events.steps.ts",
+      "features/support/heartbeat-watch-world.ts",
+      "features/support/heartbeat-watch-hooks.ts"
+    ],
+    "format": ["progress-bar"],
+    "publishQuiet": true
   }
 }
