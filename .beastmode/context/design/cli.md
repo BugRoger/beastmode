@@ -77,6 +77,15 @@
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
 - `filenameMatchesEpic()` handles both hex-named files (pre-rename) and epic-named files (post-rename) during the design phase transition window
 
+## Unified Hook Context
+- ALWAYS use `buildEnvPrefix(context: EnvPrefixContext)` from `hitl-settings.ts` to produce the inline env var prefix for all command hooks — five vars with feature context (implement), three without
+- Five canonical env vars: `BEASTMODE_PHASE`, `BEASTMODE_EPIC_ID`, `BEASTMODE_EPIC_SLUG`, `BEASTMODE_FEATURE_ID`, `BEASTMODE_FEATURE_SLUG` — feature vars omitted (not set) outside implement phase
+- ALWAYS prepend structured metadata section in `assembleContext` output — delimited block containing phase, epic-id, epic-slug, feature-id, feature-slug, parent-artifacts, output-target; skills read metadata instead of parsing slash command args
+- `computeOutputTarget` computes the full artifact path (date prefix + slug components + phase) — skills use the metadata output-target, never derive filenames
+- HITL hooks read `BEASTMODE_PHASE` from env with positional arg fallback; session-start and session-stop require env vars (no fallback)
+- Pipeline runner pre-creates store entity at Step 0 before worktree setup — entity ID available from first hook invocation; `reconcileDesign` create-if-missing fallback removed
+- LLM prompt hooks (file-permission PreToolUse) are unchanged — env vars don't apply to prompt-type hooks
+
 ## Cancel Cleanup Module
 - Shared module (`cancel-logic.ts`) consumed by three callers: CLI cancel command (`cancelCommand()`), dashboard cancel action, and design-abandon cleanup in phase.ts
 - `cancelEpic()` takes an identifier string, resolves via `resolveIdentifier()` internally, extracts epic name from store for artifact matching

@@ -4,7 +4,7 @@ All notable changes to beastmode.
 
 ---
 
-## v0.116.0 — Unified Hook Context (2026-04-12)
+## v0.117.0 — Unified Hook Context (2026-04-12)
 
 Unifies all CLI hook context into five standardized `BEASTMODE_*` env vars and a structured metadata section in SessionStart. Renames `generate-output` to `session-stop` for naming symmetry. Pre-creates store entities before dispatch so IDs are available from the first hook invocation.
 

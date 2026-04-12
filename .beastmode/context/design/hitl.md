@@ -8,7 +8,7 @@
 - ALWAYS generate all hooks (Stop, HITL PreToolUse/PostToolUse, file-permission PostToolUse) into `settings.local.json` at dispatch time — no static hook declarations in committed settings files
 - ALWAYS gitignore `settings.local.json` — generated at dispatch time, no git noise
 - ALWAYS clean HITL settings before writing new ones at each dispatch — `cleanHitlSettings()` before `writeHitlSettings()` prevents stale state between phases
-- ALWAYS pass phase name as the sole argument to `buildPreToolUseHook(phase)` — prose is read at runtime by the script from config.yaml, not templated into the hook entry
+- ALWAYS pass `EnvPrefixContext` to hook builders (`buildPreToolUseHook`, `buildPostToolUseHook`, `buildStopHook`, `buildSessionStartHook`) — context includes phase, epicId, epicSlug, and optional featureId/featureSlug; prose is read at runtime by the script from config.yaml, not templated into the hook entry
 
 ## AskUserQuestion Hook
 - ALWAYS use `PreToolUse` command hook (`type: "command"`) targeting `AskUserQuestion` — static `hitl-auto.ts` script reads config prose at runtime and makes a binary defer-vs-auto-answer decision without LLM inference

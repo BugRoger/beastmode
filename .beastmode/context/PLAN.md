@@ -8,7 +8,7 @@ Naming patterns (UPPERCASE.md for invariant, lowercase.md for variant), skill ma
 1. ALWAYS use UPPERCASE.md for invariant meta files, lowercase.md for variant files
 2. ALWAYS use a single self-contained SKILL.md per verb with inline phase sections — no external phase files or @imports
 3. ALWAYS keep each SKILL.md self-contained — no @imports between skills
-4. ALWAYS use `feature/<slug>` for worktree branches -- all agents commit directly to this branch
+4. ALWAYS use `feature/<slug>` for worktree branches, `impl/<slug>--<feature>` for implementation branches
 
 context/plan/conventions.md
 
@@ -50,7 +50,7 @@ CLI-owned GitHub sync system. The CLI invokes a stateless sync module after ever
 6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
 7. ALWAYS use json-file-store.ts for all store filesystem operations -- no other module touches store files on disk
 8. ALWAYS use four feature statuses: pending, in-progress, completed, blocked -- enum values on Feature entity
-9. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `id` (entity identifier), `epic` (human name) always present
+9. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
 10. ALWAYS use sync-refs I/O module for GitHub issue/project references -- separate from the store, not persisted in epic state
 
 context/plan/github-integration.md
@@ -95,5 +95,4 @@ context/plan/file-collapse.md
 - When classification is ambiguous, classify as behavioral — false positives (unnecessary dispatch) are cheaper than false negatives (missed integration tests)
 - NEVER create a dedicated `integration-tests` wave 1 feature or use wave injection to accommodate it
 - ALWAYS include consumer test migration in plan scope when changing value derivation contracts -- when a value shifts from user-provided to auto-derived, all test files asserting the old explicit value become broken; grep for the old pattern at plan time
-- ALWAYS treat feature plan acceptance criteria as authoritative over integration artifact new scenarios when they conflict — the integration artifact agent runs before locked decisions are finalized, and its scenario defaults may not reflect PRD decisions recorded later in the feature plan; the feature plan is the ground truth, the integration artifact is an audit trail
 - ALWAYS enumerate all consumers of a changed contract (function signature, module path, env var name) via grep at plan time — include every call site, import path, and test assertion in the feature plan's file list; consumer-side updates omitted from the plan become validate fixups
