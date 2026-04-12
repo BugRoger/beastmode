@@ -1,7 +1,7 @@
 ---
 phase: design
 epic-id: bm-dcd0
-epic-slug: gated-strobe-dcd0
+epic-slug: lockfile-path-fix-dcd0
 epic-name: Lockfile Path Fix
 ---
 
