@@ -1,27 +1,10 @@
 import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
-import type { EnrichedEpic } from "../store/index.js";
 import { PHASE_COLOR, FEATURE_STATUS_COLOR, CHROME, isDim, isFeatureDim, BADGE_WIDTH } from "./monokai-palette.js";
+import { EPIC_SPINNER, FEATURE_SPINNER, useSpinnerTick, isActive } from "./spinner.js";
 import type { SelectableRow } from "./epics-tree-model.js";
 
 type InkColor = Parameters<typeof Text>[0]["color"];
-
-// --- Shared utilities ---
-
-const EPIC_SPINNER = ["○", "◔", "◑", "◕", "●", "◕", "◑", "◔"];
-const FEATURE_SPINNER = ["◉", "◎", "○", "◎"];
-const SPINNER_INTERVAL_MS = 120;
-
-function useSpinnerFrame(): number {
-  const [frame, setFrame] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFrame((f) => f + 1);
-    }, SPINNER_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return frame;
-}
 
 // --- Props ---
 
@@ -42,12 +25,12 @@ export interface EpicsPanelProps {
 
 export default function EpicsPanel({
   flatRows,
-  activeSessions,
+  activeSessions: _activeSessions,
   selectedIndex,
   cancelConfirmingSlug,
   visibleHeight,
 }: EpicsPanelProps) {
-  const tick = useSpinnerFrame();
+  const tick = useSpinnerTick();
   const [scrollOffset, setScrollOffset] = useState(0);
 
   // Keep selected index in view
@@ -80,7 +63,7 @@ export default function EpicsPanel({
       );
     } else if (row.type === "epic") {
       const epic = row.epic;
-      const isActive = activeSessions.has(epic.slug);
+      const active = isActive(epic.status);
       const isConfirming = cancelConfirmingSlug === epic.slug;
       const dim = isDim(epic.status);
       const color = PHASE_COLOR[epic.status];
@@ -94,7 +77,7 @@ export default function EpicsPanel({
       rows.push(
         <Box key={`e-${epic.slug}`}>
           <Text dimColor={dim} bold>
-            {isActive && !isSelected ? (
+            {active && !isSelected ? (
               <Text color={dotColor as InkColor}>{EPIC_SPINNER[tick % EPIC_SPINNER.length]}</Text>
             ) : (
               <Text color={dotColor as InkColor}>{"●"}</Text>
