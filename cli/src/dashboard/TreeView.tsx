@@ -9,11 +9,11 @@
  * Output is flattened to a line array and sliced to maxLines to prevent overflow.
  */
 
-import { useState, useEffect } from "react";
 import { Box, Text } from "ink";
-import type { TreeState, EpicNode, FeatureNode, TreeEntry } from "./tree-types.js";
+import type { TreeState, EpicNode, FeatureNode } from "./tree-types.js";
 import { formatTreeLine } from "./tree-format.js";
 import { isDim, isFeatureDim, PHASE_COLOR, FEATURE_STATUS_COLOR, CHROME, BADGE_WIDTH } from "./monokai-palette.js";
+import { EPIC_SPINNER, FEATURE_SPINNER, useSpinnerTick, isActive } from "./spinner.js";
 
 export interface TreeViewProps {
   /** Full tree state to render. */
@@ -22,28 +22,6 @@ export interface TreeViewProps {
   maxLines?: number;
   /** Scroll offset — skip this many lines from the top before rendering. */
   scrollOffset?: number;
-}
-
-/** Pie spinner for epic dots. */
-const EPIC_SPINNER = ["○", "◔", "◑", "◕", "●", "◕", "◑", "◔"];
-/** Fisheye spinner for feature dots. */
-const FEATURE_SPINNER = ["◉", "◎", "○", "◎"];
-const SPINNER_INTERVAL_MS = 120;
-
-function useSpinnerTick(): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTick((t) => t + 1);
-    }, SPINNER_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return tick;
-}
-
-function isActive(status: string): boolean {
-  return status === "in-progress" || status === "implement" || status === "design" ||
-    status === "plan" || status === "validate" || status === "release";
 }
 
 /** A single renderable line with a stable key. */

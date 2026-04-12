@@ -4,6 +4,24 @@ All notable changes to beastmode.
 
 ---
 
+## v0.127.0 — Dashboard Spinner Bug Fixes (2026-04-12)
+
+Fix dashboard spinner palindrome animation (pulsing instead of rotating) and enable spinner display for design-phase epics. Extract shared spinner module to eliminate duplication between EpicsPanel and TreeView.
+
+### Features
+
+- Create shared spinner module with forward-only frame arrays, tick hook, and phase-based activation logic
+
+### Fixes
+
+- Use shared spinner module and phase-based `isActive()` activation in EpicsPanel — design-phase epics now show spinners
+
+### Chores
+
+- Refactor TreeView to use shared spinner module, remove local spinner definitions
+
+---
+
 ## v0.126.0 — Dashboard Graceful Exit (2026-04-12)
 
 Fixes the dashboard hang-on-exit bug by properly draining all four categories of async work that hold the Bun event loop open. The dashboard now exits cleanly within seconds when the user presses `q` or Ctrl+C, with verbose shutdown logging showing progress.
