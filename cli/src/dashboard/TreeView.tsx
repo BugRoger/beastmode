@@ -1,7 +1,7 @@
 /**
  * TreeView — Ink component that renders pipeline hierarchy as a terminal tree.
  *
- * Renders: SYSTEM > Epic > Feature with dot connectors and phase-based coloring.
+ * Renders: SYSTEM > Epic > Feature with ● dot connectors and phase-based coloring.
  * Phase is displayed as a colored badge on each entry line.
  * Blocked/upcoming nodes render dimmed with status badge visible.
  * Active nodes show a spinner indicator.
