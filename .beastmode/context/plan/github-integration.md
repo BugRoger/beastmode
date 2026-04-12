@@ -35,7 +35,7 @@
 
 ## State Authority Model
 - ALWAYS treat manifest JSON as the operational authority for feature lifecycle -- lives at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json`, gitignored, local-only
-- Terminology: `slug` is an immutable hex key, `epic` is the human-readable name derived after design phase rename
+- Terminology: `epic-id` is the immutable hex identifier, `epic-slug` is the human-readable name derived after design phase rename, `feature-slug` is the feature name
 - CLI is the sole manifest mutator: seed at first dispatch, enrich from phase output files, advance phase, reconstruct from branch scanning on cold start
 - Manifest managed through two modules: manifest-store.ts (filesystem boundary, sole disk accessor — includes rename, find, slugify) and manifest.ts (pure state machine functions, no fs imports, all functions immutable)
 - Skills are pure artifact producers -- write artifacts with YAML frontmatter to `artifacts/<phase>/`, never touch manifests or output.json

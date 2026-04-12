@@ -4,6 +4,28 @@ All notable changes to beastmode.
 
 ---
 
+## v0.118.0 — Frontmatter Contract Alignment (2026-04-12)
+
+Defines an explicit frontmatter contract across all five phases, aligning field names between env vars, metadata-in, frontmatter, and output.json. Content fields move from frontmatter to artifact markdown body sections, making output.json a pure decisions-and-status signal.
+
+### Features
+
+- Unified field naming: `epic-id`, `epic-slug`, `feature-id`, `feature-slug`, `failed-features` across all layers
+- Frontmatter contract documentation with per-phase field tables
+- Session-stop uses unified field names in frontmatter pass-through and `buildOutput`
+- Reconcile extracts content from artifact body sections (`## Problem Statement`, `## Solution`, `## What to Build`)
+- All five skill templates updated to unified frontmatter field names
+- Artifact type interfaces renamed to unified naming convention
+- BDD world artifact writers updated to unified field names
+- Cucumber feature files updated to unified frontmatter field names
+
+### Chores
+
+- Session-stop test fixtures updated to unified field names
+- Reconcile tests updated to unified field names
+
+---
+
 ## v0.117.0 — Unified Hook Context (2026-04-12)
 
 Unifies all CLI hook context into five standardized `BEASTMODE_*` env vars and a structured metadata section in SessionStart. Renames `generate-output` to `session-stop` for naming symmetry. Pre-creates store entities before dispatch so IDs are available from the first hook invocation.

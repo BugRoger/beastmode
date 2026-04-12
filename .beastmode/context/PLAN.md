@@ -50,7 +50,7 @@ CLI-owned GitHub sync system. The CLI invokes a stateless sync module after ever
 6. ALWAYS use warn-and-continue for GitHub API failures -- print warning, skip sync, never block local workflow
 7. ALWAYS use json-file-store.ts for all store filesystem operations -- no other module touches store files on disk
 8. ALWAYS use four feature statuses: pending, in-progress, completed, blocked -- enum values on Feature entity
-9. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `slug` (immutable hex), `epic` (human name) always present
+9. ALWAYS use standardized frontmatter across all phase artifacts -- `phase`, `epic-id` (entity identifier), `epic-slug` (human name) always present; phase-specific additions: plan adds `feature-slug`, `wave`; implement adds `feature-id`, `feature-slug`, `status`; validate adds `status`, `failed-features`; release adds `bump`
 10. ALWAYS use sync-refs I/O module for GitHub issue/project references -- separate from the store, not persisted in epic state
 
 context/plan/github-integration.md

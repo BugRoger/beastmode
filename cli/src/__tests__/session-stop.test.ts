@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, mkdtempSync } from "fs";
-import { resolve, join } from "path";
+import { join } from "path";
 import { tmpdir } from "os";
 import {
   parseFrontmatter,
@@ -8,6 +8,7 @@ import {
   scanPlanFeatures,
   processArtifact,
   runSessionStop,
+  type ArtifactFrontmatter,
 } from "../hooks/session-stop";
 
 let TEST_ROOT = "";
@@ -40,14 +41,14 @@ function readOutputJson(phase: string, basename: string): Record<string, unknown
 
 describe("parseFrontmatter", () => {
   test("parses basic frontmatter", () => {
-    const fm = parseFrontmatter("---\nphase: design\nid: my-epic\n---\n\n# Content");
+    const fm = parseFrontmatter("---\nphase: design\nepic-id: my-epic\n---\n\n# Content");
     expect(fm.phase).toBe("design");
-    expect(fm.id).toBe("my-epic");
+    expect(fm["epic-id"]).toBe("my-epic");
   });
 
   test("strips quotes from values", () => {
-    const fm = parseFrontmatter('---\nid: "my-epic"\nphase: \'plan\'\n---\n');
-    expect(fm.id).toBe("my-epic");
+    const fm = parseFrontmatter('---\nepic-id: "my-epic"\nphase: \'plan\'\n---\n');
+    expect(fm["epic-id"]).toBe("my-epic");
     expect(fm.phase).toBe("plan");
   });
 
@@ -57,19 +58,29 @@ describe("parseFrontmatter", () => {
   });
 
   test("returns empty object when frontmatter is malformed (no closing ---)", () => {
-    const fm = parseFrontmatter("---\nphase: design\nid: test\n\n# No closing");
+    const fm = parseFrontmatter("---\nphase: design\nepic-id: test\n\n# No closing");
     expect(fm).toEqual({});
   });
 
   test("handles all known fields", () => {
     const fm = parseFrontmatter(
-      "---\nphase: implement\nid: s\nepic: e\nfeature: f\nstatus: completed\nbump: minor\n---\n",
+      "---\nphase: implement\nepic-id: s\nepic-slug: e\nfeature-slug: f\nstatus: completed\nbump: minor\n---\n",
     );
     expect(fm.phase).toBe("implement");
-    expect(fm.epic).toBe("e");
-    expect(fm.feature).toBe("f");
+    expect(fm["epic-slug"]).toBe("e");
+    expect(fm["feature-slug"]).toBe("f");
     expect(fm.status).toBe("completed");
     expect(fm.bump).toBe("minor");
+  });
+
+  test("handles hyphenated field names", () => {
+    const fm = parseFrontmatter(
+      "---\nepic-id: abc\nepic-slug: my-epic\nfeature-slug: auth\nfailed-features: a,b\n---\n",
+    );
+    expect(fm["epic-id"]).toBe("abc");
+    expect(fm["epic-slug"]).toBe("my-epic");
+    expect(fm["feature-slug"]).toBe("auth");
+    expect(fm["failed-features"]).toBe("a,b");
   });
 });
 
@@ -77,10 +88,10 @@ describe("parseFrontmatter", () => {
 
 describe("buildOutput", () => {
   test("design phase output", () => {
-    const output = buildOutput("path/to/design.md", { phase: "design", id: "abc123", epic: "my-epic" }, ARTIFACTS_DIR);
+    const output = buildOutput("path/to/design.md", { phase: "design", "epic-slug": "my-epic" } as ArtifactFrontmatter, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "design.md", slug: "my-epic", epic: "my-epic", summary: undefined },
+      artifacts: { design: "design.md", "epic-slug": "my-epic" },
     });
   });
 
@@ -89,25 +100,25 @@ describe("buildOutput", () => {
     expect(output?.status).toBe("error");
   });
 
-  test("design phase output without epic field", () => {
-    const output = buildOutput("path/to/design.md", { phase: "design", id: "abc123" }, ARTIFACTS_DIR);
+  test("design phase output without epic-slug field", () => {
+    const output = buildOutput("path/to/design.md", { phase: "design" }, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { design: "design.md", slug: "abc123", summary: undefined },
+      artifacts: { design: "design.md", "epic-slug": undefined },
     });
   });
 
   test("implement phase output", () => {
-    const output = buildOutput("impl.md", { phase: "implement", feature: "auth", status: "completed" }, ARTIFACTS_DIR);
+    const output = buildOutput("impl.md", { phase: "implement", "feature-slug": "auth", status: "completed" } as ArtifactFrontmatter, ARTIFACTS_DIR);
     expect(output).toEqual({
       status: "completed",
-      artifacts: { features: [{ slug: "auth", status: "completed" }] },
+      artifacts: { features: [{ "feature-slug": "auth", status: "completed" }] },
     });
   });
 
   test("implement phase defaults to unknown feature", () => {
     const output = buildOutput("impl.md", { phase: "implement" }, ARTIFACTS_DIR);
-    expect(output?.artifacts).toEqual({ features: [{ slug: "unknown", status: "completed" }] });
+    expect(output?.artifacts).toEqual({ features: [{ "feature-slug": "unknown", status: "completed" }] });
   });
 
   test("validate phase output — passed", () => {
@@ -147,7 +158,7 @@ describe("buildOutput", () => {
   test("design phase strips directory prefix from absolute path", () => {
     const output = buildOutput(
       "/worktree/.beastmode/artifacts/design/2026-04-06-epic.md",
-      { phase: "design", id: "abc123", epic: "my-epic" },
+      { phase: "design", "epic-slug": "my-epic" } as ArtifactFrontmatter,
       ARTIFACTS_DIR,
     );
     expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
@@ -156,7 +167,7 @@ describe("buildOutput", () => {
   test("design phase preserves bare filename unchanged", () => {
     const output = buildOutput(
       "2026-04-06-epic.md",
-      { phase: "design", id: "abc123", epic: "my-epic" },
+      { phase: "design", "epic-slug": "my-epic" } as ArtifactFrontmatter,
       ARTIFACTS_DIR,
     );
     expect(output?.artifacts).toMatchObject({ design: "2026-04-06-epic.md" });
@@ -199,25 +210,25 @@ describe("buildOutput", () => {
   });
 });
 
-describe("validate buildOutput with failedFeatures", () => {
-  test("includes failedFeatures in artifacts when present", () => {
+describe("validate buildOutput with failed-features", () => {
+  test("includes failed-features in artifacts when present", () => {
     const fm = parseFrontmatter(
-      "---\nphase: validate\nid: test\nepic: test\nstatus: failed\nfailedFeatures: token-cache,auth-lib\n---\n",
+      "---\nphase: validate\nepic-id: test\nepic-slug: test\nstatus: failed\nfailed-features: token-cache,auth-lib\n---\n",
     );
     const output = buildOutput("test.md", fm, "/tmp");
     expect(output).toBeDefined();
     expect(output!.status).toBe("error");
-    expect((output!.artifacts as any).failedFeatures).toEqual(["token-cache", "auth-lib"]);
+    expect((output!.artifacts as any)["failed-features"]).toEqual(["token-cache", "auth-lib"]);
   });
 
-  test("does not include failedFeatures when absent", () => {
+  test("does not include failed-features when absent", () => {
     const fm = parseFrontmatter(
-      "---\nphase: validate\nid: test\nepic: test\nstatus: passed\n---\n",
+      "---\nphase: validate\nepic-id: test\nepic-slug: test\nstatus: passed\n---\n",
     );
     const output = buildOutput("test.md", fm, "/tmp");
     expect(output).toBeDefined();
     expect(output!.status).toBe("completed");
-    expect((output!.artifacts as any).failedFeatures).toBeUndefined();
+    expect((output!.artifacts as any)["failed-features"]).toBeUndefined();
   });
 });
 
@@ -229,29 +240,29 @@ describe("scanPlanFeatures", () => {
 
   test("finds features for matching epic", () => {
     writeArtifact("plan", "2026-03-30-my-epic-auth.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: auth\n---\n# Auth");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: auth\n---\n# Auth");
     writeArtifact("plan", "2026-03-30-my-epic-db.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: db\n---\n# DB");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: db\n---\n# DB");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(2);
-    expect(features.map((f) => f.slug).sort()).toEqual(["auth", "db"]);
+    expect(features.map((f) => f["feature-slug"]).sort()).toEqual(["auth", "db"]);
   });
 
   test("rejects features from different epic (strict frontmatter match)", () => {
     writeArtifact("plan", "2026-03-29-old-epic-stale.md",
-      "---\nphase: plan\nepic: old-epic\nfeature: stale\n---\n# Stale");
+      "---\nphase: plan\nepic-slug: old-epic\nfeature-slug: stale\n---\n# Stale");
     writeArtifact("plan", "2026-03-30-my-epic-fresh.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: fresh\n---\n# Fresh");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: fresh\n---\n# Fresh");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(1);
-    expect(features[0].slug).toBe("fresh");
+    expect(features[0]["feature-slug"]).toBe("fresh");
   });
 
   test("skips files without feature field", () => {
     writeArtifact("plan", "2026-03-30-my-epic.md",
-      "---\nphase: plan\nepic: my-epic\nid: my-epic\n---\n# Epic-level plan");
+      "---\nphase: plan\nepic-slug: my-epic\nepic-id: my-epic\n---\n# Epic-level plan");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(0);
@@ -268,22 +279,22 @@ describe("scanPlanFeatures", () => {
 
   test("extracts wave number from feature frontmatter", () => {
     writeArtifact("plan", "2026-03-30-my-epic-wave-a.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: wave-a\nwave: 1\n---\n# Wave A");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: wave-a\nwave: 1\n---\n# Wave A");
     writeArtifact("plan", "2026-03-30-my-epic-wave-b.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: wave-b\nwave: 2\n---\n# Wave B");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: wave-b\nwave: 2\n---\n# Wave B");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(2);
     const sorted = features.sort((a, b) => (a.wave ?? 1) - (b.wave ?? 1));
-    expect(sorted[0].slug).toBe("wave-a");
+    expect(sorted[0]["feature-slug"]).toBe("wave-a");
     expect(sorted[0].wave).toBe(1);
-    expect(sorted[1].slug).toBe("wave-b");
+    expect(sorted[1]["feature-slug"]).toBe("wave-b");
     expect(sorted[1].wave).toBe(2);
   });
 
   test("defaults wave to undefined when not in frontmatter", () => {
     writeArtifact("plan", "2026-03-30-my-epic-no-wave.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: no-wave\n---\n# No Wave");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: no-wave\n---\n# No Wave");
 
     const features = scanPlanFeatures(ARTIFACTS_DIR, "my-epic");
     expect(features).toHaveLength(1);
@@ -299,7 +310,7 @@ describe("processArtifact", () => {
 
   test("generates output.json for a design artifact", () => {
     const path = writeArtifact("design", "2026-03-30-my-epic.md",
-      "---\nphase: design\nid: my-epic\n---\n# PRD");
+      "---\nphase: design\nepic-slug: my-epic\n---\n# PRD");
 
     const result = processArtifact(path, ARTIFACTS_DIR);
     expect(result).toBe(true);
@@ -311,27 +322,27 @@ describe("processArtifact", () => {
 
   test("generates output.json for a plan artifact with features", () => {
     writeArtifact("plan", "2026-03-30-my-epic-auth.md",
-      "---\nphase: plan\nepic: my-epic\nfeature: auth\n---\n# Auth");
+      "---\nphase: plan\nepic-slug: my-epic\nfeature-slug: auth\n---\n# Auth");
     const planPath = writeArtifact("plan", "2026-03-30-my-epic.md",
-      "---\nphase: plan\nepic: my-epic\nid: my-epic\n---\n# Plan");
+      "---\nphase: plan\nepic-slug: my-epic\nepic-id: my-epic\n---\n# Plan");
 
     processArtifact(planPath, ARTIFACTS_DIR);
 
     const output = readOutputJson("plan", "2026-03-30-my-epic");
-    const features = (output.artifacts as Record<string, unknown>).features as Array<{ slug: string }>;
+    const features = (output.artifacts as Record<string, unknown>).features as Array<{ "feature-slug": string }>;
     expect(features).toHaveLength(1);
-    expect(features[0].slug).toBe("auth");
+    expect(features[0]["feature-slug"]).toBe("auth");
   });
 
   test("skips artifact without phase frontmatter", () => {
     const path = writeArtifact("design", "no-phase.md",
-      "---\nid: test\n---\n# No phase");
+      "---\nepic-id: test\n---\n# No phase");
     expect(processArtifact(path, ARTIFACTS_DIR)).toBe(false);
   });
 
   test("skips regeneration when output is newer than artifact", () => {
     const path = writeArtifact("design", "2026-03-30-cached.md",
-      "---\nphase: design\nid: cached\n---\n# Cached");
+      "---\nphase: design\nepic-slug: cached\n---\n# Cached");
 
     // First generation
     processArtifact(path, ARTIFACTS_DIR);
@@ -354,7 +365,7 @@ describe("runSessionStop", () => {
 
   test("processes artifacts across multiple phases", () => {
     writeArtifact("design", "2026-03-30-epic.md",
-      "---\nphase: design\nid: epic\n---\n# PRD");
+      "---\nphase: design\nepic-slug: epic\n---\n# PRD");
     writeArtifact("validate", "2026-03-30-epic.md",
       "---\nphase: validate\nstatus: passed\n---\n# Report");
 
@@ -378,28 +389,28 @@ describe("runSessionStop", () => {
   test("the bug scenario: stale plan features are excluded by frontmatter", () => {
     // Stale artifact from old epic still in plan/ dir
     writeArtifact("plan", "2026-03-29-done-status-v2-github-sync.md",
-      "---\nphase: plan\nepic: done-status-v2\nfeature: github-sync\n---\n# Old feature");
+      "---\nphase: plan\nepic-slug: done-status-v2\nfeature-slug: github-sync\n---\n# Old feature");
 
     // Current epic's plan artifact
     writeArtifact("plan", "2026-03-30-remove-persona-voice.md",
-      "---\nphase: plan\nepic: remove-persona-voice\nid: remove-persona-voice\n---\n# Plan");
+      "---\nphase: plan\nepic-slug: remove-persona-voice\nepic-id: remove-persona-voice\n---\n# Plan");
 
     // Current epic's feature plan
     writeArtifact("plan", "2026-03-30-remove-persona-voice-strip.md",
-      "---\nphase: plan\nepic: remove-persona-voice\nfeature: strip-persona-import\n---\n# Strip");
+      "---\nphase: plan\nepic-slug: remove-persona-voice\nfeature-slug: strip-persona-import\n---\n# Strip");
 
     runSessionStop(ARTIFACTS_DIR);
 
     // The stale artifact's output should only contain done-status-v2 features
     const staleOutput = readOutputJson("plan", "2026-03-29-done-status-v2-github-sync");
-    const staleFeatures = (staleOutput.artifacts as Record<string, unknown>).features as Array<{ slug: string }>;
+    const staleFeatures = (staleOutput.artifacts as Record<string, unknown>).features as Array<{ "feature-slug": string }>;
     expect(staleFeatures).toHaveLength(1);
-    expect(staleFeatures[0].slug).toBe("github-sync");
+    expect(staleFeatures[0]["feature-slug"]).toBe("github-sync");
 
     // The current epic's output should only contain remove-persona-voice features
     const currentOutput = readOutputJson("plan", "2026-03-30-remove-persona-voice");
-    const currentFeatures = (currentOutput.artifacts as Record<string, unknown>).features as Array<{ slug: string }>;
+    const currentFeatures = (currentOutput.artifacts as Record<string, unknown>).features as Array<{ "feature-slug": string }>;
     expect(currentFeatures).toHaveLength(1);
-    expect(currentFeatures[0].slug).toBe("strip-persona-import");
+    expect(currentFeatures[0]["feature-slug"]).toBe("strip-persona-import");
   });
 });

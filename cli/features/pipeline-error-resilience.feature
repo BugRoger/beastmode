@@ -49,12 +49,11 @@ Feature: Pipeline error resilience -- transient failures don't abort remaining s
 
     # Must run design first so manifest transitions to plan phase
     When the dispatch will write a design artifact:
-      | field    | value        |
-      | phase    | design       |
-      | slug     | regress-epic |
-      | epic     | regress-epic |
-      | problem  | Test problem |
-      | solution | Test solution |
+      | field     | value        |
+      | phase     | design       |
+      | epic-slug | regress-epic |
+      | problem   | Test problem |
+      | solution  | Test solution |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest phase should be "plan"

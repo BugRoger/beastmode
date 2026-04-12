@@ -73,7 +73,7 @@
 - Skills write artifacts with YAML frontmatter to `artifacts/<phase>/` — skills never write output.json or manifests
 - A Stop hook (generated into `.claude/settings.local.json` at dispatch time) fires when Claude finishes, scans `artifacts/<phase>/` for files matching the slug convention, reads YAML frontmatter, and generates `artifacts/<phase>/YYYY-MM-DD-<slug>.output.json`
 - output.json is the sole completion signal for all dispatch strategies — replaces `.dispatch-done.json`
-- Standardized artifact frontmatter across all phases: `phase`, `id` (entity identifier), `epic` (human name) always present; phase-specific additions: plan adds `feature`, `wave`; implement adds `feature`, `status`; validate adds `status`; release adds `bump`
+- Standardized artifact frontmatter across all phases: `phase`, `epic-id` (entity identifier), `epic-slug` (human name) always present; phase-specific additions: plan adds `feature-slug`, `wave`; implement adds `feature-id`, `feature-slug`, `status`; validate adds `status`, `failed-features`; release adds `bump`
 - CLI reads output.json from the worktree's `artifacts/<phase>/` directory after dispatch, located by hex slug match for unambiguous identification
 - `filenameMatchesEpic()` handles both hex-named files (pre-rename) and epic-named files (post-rename) during the design phase transition window
 

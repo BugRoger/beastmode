@@ -73,9 +73,9 @@
 
 ## Manifest Schema
 - PipelineManifest is pure pipeline state at `.beastmode/state/YYYY-MM-DD-<slug>.manifest.json` — local-only, gitignored, CLI rebuilds from worktree branch scanning on cold start
-- Schema: slug (immutable hex), epic? (human name, set after rename), originId? (birth hex for lineage), phase (Phase), features (ManifestFeature[]), artifacts (Record<string, string[]>), summary? ({ problem, solution }), worktree? ({ branch, path }), github? ({ epic, repo, bodyHash? }), lastUpdated (ISO-8601)
-- ManifestFeature extended with optional `description` field — populated by plan checkpoint
-- Design checkpoint populates `summary.problem` and `summary.solution` on the manifest root
+- Schema: slug (immutable hex), epic? (human name, set after rename), originId? (birth hex for lineage), phase (Phase), features (ManifestFeature[]), artifacts (Record<string, string[]>), summary? (string, extracted from design artifact body), worktree? ({ branch, path }), github? ({ epic, repo, bodyHash? }), lastUpdated (ISO-8601)
+- ManifestFeature extended with optional `description` field — extracted from plan artifact body by reconcile
+- Design checkpoint triggers reconcile to extract ## Problem Statement and ## Solution from design artifact body into epic.summary as a concatenated string
 - ALWAYS create manifest at first phase dispatch (design) via store.create(slug) — manifest exists before skill session starts
 - ALWAYS enrich manifest from output.json at each checkpoint — Stop hook generates output.json from artifact frontmatter
 - CLI is the sole manifest mutator via manifest-store.ts + manifest.ts — github-sync.ts returns mutations instead of mutating in-place

@@ -290,9 +290,9 @@ Each feature plan file must begin with YAML frontmatter:
 ```
 ---
 phase: plan
-slug: <epic-id>
-epic: <epic-name>
-feature: <feature-name>
+epic-id: <epic-id>
+epic-slug: <epic-name>
+feature-slug: <feature-name>
 wave: <N>
 ---
 ```
@@ -341,9 +341,9 @@ Each feature plan file follows this structure:
 ```markdown
 ---
 phase: plan
-slug: <epic-id>
-epic: <epic-name>
-feature: <feature-name>
+epic-id: <epic-id>
+epic-slug: <epic-name>
+feature-slug: <feature-name>
 wave: <N>
 ---
 

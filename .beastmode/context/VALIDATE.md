@@ -35,8 +35,8 @@ Common type errors introduced by new test files that require fixup before the ty
 
 ## Targeted Re-Dispatch
 
-- ALWAYS write `failedFeatures: feat-a,feat-b` (comma-separated slugs) in validate artifact frontmatter when specific failing features can be identified — pipeline uses this to send REGRESS_FEATURES instead of blanket REGRESS
-- NEVER write `failedFeatures` when status is passed — only present on failure with identifiable per-feature failures
+- ALWAYS write `failed-features: feat-a,feat-b` (comma-separated slugs) in validate artifact frontmatter when specific failing features can be identified — pipeline uses this to send REGRESS_FEATURES instead of blanket REGRESS
+- NEVER write `failed-features` when status is passed — only present on failure with identifiable per-feature failures
 - Identify failing features by mapping integration test failures to feature slugs via naming conventions (file naming, tags, describe blocks) — same conventions as implement BDD verification
-- When feature-level identification is not possible (non-feature-scoped tests), omit `failedFeatures` and let the pipeline fall back to blanket regression
+- When feature-level identification is not possible (non-feature-scoped tests), omit `failed-features` and let the pipeline fall back to blanket regression
 - Per-feature re-dispatch budget is 2 cycles; the third failure marks the feature as permanently blocked — report which features are blocked and how many cycles were attempted

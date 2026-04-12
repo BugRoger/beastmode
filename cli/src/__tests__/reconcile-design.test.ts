@@ -8,6 +8,7 @@ let sharedMockStore: any;
 vi.mock("../artifacts/reader.js", () => ({
   loadWorktreePhaseOutput: vi.fn(),
   loadWorktreeFeatureOutput: vi.fn(),
+  extractSectionFromFile: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../pipeline-machine/index.js", () => ({
@@ -30,12 +31,14 @@ vi.mock("../store/index.js", () => {
   }
   return {
     JsonFileStore: MockJsonFileStore as any,
+    resolveIdentifier: vi.fn(),
   };
 });
 
 import { loadWorktreePhaseOutput } from "../artifacts/reader.js";
 import { epicMachine, loadEpic } from "../pipeline-machine/index.js";
 import { renameTags } from "../git/tags.js";
+import { resolveIdentifier } from "../store/index.js";
 import type { Epic } from "../store/types.js";
 
 describe("reconcileDesign", () => {
@@ -50,6 +53,8 @@ describe("reconcileDesign", () => {
       getEpic: vi.fn(),
       updateEpic: vi.fn(),
     };
+    // Default resolveIdentifier mock to return "not_found"
+    vi.mocked(resolveIdentifier).mockReturnValue({ kind: "not-found" });
   });
 
   it("returns undefined when output is not completed", async () => {
@@ -75,13 +80,12 @@ describe("reconcileDesign", () => {
       phase: "design",
       status: "completed",
       artifacts: {
-        slug: "test-slug",
-        summary: { problem: "Problem", solution: "Solution" },
+        "epic-slug": "test-slug",
         design: "/path/to/design.md",
       },
     } as any);
 
-    sharedMockStore.find.mockReturnValue(undefined);
+    sharedMockStore.getEpic.mockReturnValue(undefined);
     sharedMockStore.listFeatures.mockReturnValue([]);
 
     const result = await reconcileDesign("/project/root", "test-slug", "/wt/path");
@@ -94,13 +98,19 @@ describe("reconcileDesign", () => {
       phase: "design",
       status: "completed",
       artifacts: {
-        slug: "test-slug",
-        summary: { problem: "Problem", solution: "Solution" },
+        "epic-slug": "test-slug",
         design: "/path/to/design.md",
       },
     } as any);
 
-    sharedMockStore.find.mockReturnValue({ type: "feature", id: "f-1" });
+    // getEpic returns undefined, so resolveEpic falls back to resolveIdentifier
+    sharedMockStore.getEpic.mockReturnValue(undefined);
+    // resolveIdentifier finds a feature instead of an epic
+    vi.mocked(resolveIdentifier).mockReturnValue({
+      kind: "found",
+      entity: { type: "feature", id: "f-1", parent: "bm-1", name: "feat", slug: "feat", status: "pending", depends_on: [], created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" } as any,
+    });
+    sharedMockStore.listFeatures.mockReturnValue([]);
 
     const result = await reconcileDesign("/project/root", "test-slug", "/wt/path");
     expect(result).toBeUndefined();
@@ -131,8 +141,7 @@ describe("reconcileDesign", () => {
       phase: "design",
       status: "completed",
       artifacts: {
-        slug: "test-slug",
-        summary: { problem: "Problem", solution: "Solution" },
+        "epic-slug": "test-slug",
         design: "/path/to/design.md",
       },
     } as any);
@@ -153,9 +162,8 @@ describe("reconcileDesign", () => {
 
     vi.mocked(loadEpic).mockReturnValue(mockActor as any);
 
-    sharedMockStore.find.mockReturnValue(mockEpic);
-    sharedMockStore.listFeatures.mockReturnValue([]);
     sharedMockStore.getEpic.mockReturnValue(updatedEpic);
+    sharedMockStore.listFeatures.mockReturnValue([]);
 
     const result = await reconcileDesign("/project/root", "test-slug", "/wt/path");
 
@@ -185,7 +193,7 @@ describe("reconcileDesign", () => {
 
     const updatedEpic: Epic = {
       ...mockEpic,
-      slug: "better-slug",
+      slug: "better-slug-1",
       status: "plan",
       summary: "Problem — Solution",
       design: "/path/to/design.md",
@@ -196,8 +204,7 @@ describe("reconcileDesign", () => {
       phase: "design",
       status: "completed",
       artifacts: {
-        slug: "better-slug",
-        summary: { problem: "Problem", solution: "Solution" },
+        "epic-slug": "better-slug",
         design: "/path/to/design.md",
       },
     } as any);
@@ -218,22 +225,28 @@ describe("reconcileDesign", () => {
 
     vi.mocked(loadEpic).mockReturnValue(mockActor as any);
 
-    sharedMockStore.find.mockReturnValue(mockEpic);
+    // Mock getEpic to return different values based on what's being called
+    sharedMockStore.getEpic.mockImplementation((id: string) => {
+      // When called with "temp-hex-slug", return the initial epic
+      if (id === "temp-hex-slug") return mockEpic;
+      // When called with "bm-1" (the ID), return the updated epic
+      if (id === "bm-1") return updatedEpic;
+      return undefined;
+    });
     sharedMockStore.listFeatures.mockReturnValue([]);
-    sharedMockStore.getEpic.mockReturnValue(updatedEpic);
     vi.mocked(renameTags).mockResolvedValue(undefined);
 
     const result = await reconcileDesign("/project/root", "temp-hex-slug", "/wt/path");
 
     expect(result).toBeDefined();
-    expect(result?.epic.slug).toBe("better-slug");
-    expect(vi.mocked(renameTags)).toHaveBeenCalledWith("temp-hex-slug", "better-slug", {
+    expect(result?.epic.slug).toBe("better-slug-1");
+    expect(vi.mocked(renameTags)).toHaveBeenCalledWith("temp-hex-slug", "better-slug-1", {
       cwd: "/project/root",
     });
     expect(sharedMockStore.updateEpic).toHaveBeenCalledWith(
       "bm-1",
       expect.objectContaining({
-        slug: "better-slug",
+        slug: "better-slug-1",
       })
     );
   });
@@ -262,8 +275,7 @@ describe("reconcileDesign", () => {
       phase: "design",
       status: "completed",
       artifacts: {
-        slug: "test-slug",
-        summary: { problem: "Problem", solution: "Solution" },
+        "epic-slug": "test-slug",
         design: "/path/to/design.md",
       },
     } as any);
@@ -290,9 +302,8 @@ describe("reconcileDesign", () => {
       { slug: "feature-3", status: "pending" },
     ];
 
-    sharedMockStore.find.mockReturnValue(mockEpic);
-    sharedMockStore.listFeatures.mockReturnValue(mockFeatures);
     sharedMockStore.getEpic.mockReturnValue(updatedEpic);
+    sharedMockStore.listFeatures.mockReturnValue(mockFeatures);
 
     const result = await reconcileDesign("/project/root", "test-slug", "/wt/path");
 

@@ -6,7 +6,7 @@ Before bdd-loop, validate failure triggered a REGRESS event resetting ALL featur
 
 ## Decision
 
-Validate writes per-feature pass/fail into `failedFeatures` frontmatter. Pipeline sends REGRESS_FEATURES (resets only failing features) when this field is present. Falls back to blanket REGRESS when absent. Budget of 2 re-dispatch cycles per feature, after which the feature is marked blocked.
+Validate writes per-feature pass/fail into `failed-features` frontmatter. Pipeline sends REGRESS_FEATURES (resets only failing features) when this field is present. Falls back to blanket REGRESS when absent. Budget of 2 re-dispatch cycles per feature, after which the feature is marked blocked.
 
 ## Rationale
 

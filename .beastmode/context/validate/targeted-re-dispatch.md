@@ -2,19 +2,19 @@
 
 ## Pattern
 
-When validate identifies specific failing features (integration tests map to feature slugs), write `failedFeatures` in the artifact frontmatter. The pipeline reads this field and sends `REGRESS_FEATURES` to the epic machine, resetting only failing features to pending while passing features retain their completed status.
+When validate identifies specific failing features (integration tests map to feature slugs), write `failed-features` in the artifact frontmatter. The pipeline reads this field and sends `REGRESS_FEATURES` to the epic machine, resetting only failing features to pending while passing features retain their completed status.
 
 ## Artifact Frontmatter
 
 ```yaml
 phase: validate
-slug: <hex>
-epic: <name>
+epic-id: <hex>
+epic-slug: <name>
 status: failed
-failedFeatures: feat-a,feat-b
+failed-features: feat-a,feat-b
 ```
 
-`failedFeatures` is a comma-separated list of feature slugs. Omit when status is passed or when feature-level identification is impossible.
+`failed-features` is a comma-separated list of feature slugs. Omit when status is passed or when feature-level identification is impossible.
 
 ## Feature Identification
 
@@ -23,7 +23,7 @@ Map test failures to feature slugs using naming conventions:
 - Tags: `@<feature-slug>` on Gherkin features or test groups
 - Describe blocks: feature slug in the describe/Feature block name
 
-When identification is not possible, omit `failedFeatures` — pipeline falls back to blanket REGRESS.
+When identification is not possible, omit `failed-features` — pipeline falls back to blanket REGRESS.
 
 ## Budget
 

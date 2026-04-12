@@ -22,16 +22,14 @@ const WORKFLOW_PHASES: readonly string[] = ["design", "plan", "implement", "vali
 /** Frontmatter extracted from a markdown artifact. */
 export interface ArtifactFrontmatter {
   phase?: string;
-  id?: string;
-  epic?: string;
-  feature?: string;
+  "epic-id"?: string;
+  "epic-slug"?: string;
+  "feature-id"?: string;
+  "feature-slug"?: string;
   status?: string;
   bump?: string;
-  description?: string;
-  problem?: string;
-  solution?: string;
   wave?: string;
-  failedFeatures?: string;
+  "failed-features"?: string;
 }
 
 /**
@@ -75,18 +73,14 @@ export function buildOutput(
 ): PhaseOutput | undefined {
   switch (fm.phase) {
     case "design": {
-      const summary = fm.problem && fm.solution
-        ? { problem: fm.problem, solution: fm.solution }
-        : undefined;
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
-        artifacts: { design: basename(artifactPath), slug: fm.epic ?? fm.id, epic: fm.epic, summary },
+        artifacts: { design: basename(artifactPath), "epic-slug": fm["epic-slug"] },
       };
     }
 
     case "plan": {
-      const epic = fm.epic ?? fm.id;
-      const features = scanPlanFeatures(artifactsDir, epic);
+      const features = scanPlanFeatures(artifactsDir, fm["epic-slug"]);
       return {
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
         artifacts: { features },
@@ -98,7 +92,7 @@ export function buildOutput(
         status: (fm.status as PhaseOutput["status"]) ?? "completed",
         artifacts: {
           features: [{
-            slug: featureOverride ?? fm.feature ?? "unknown",
+            "feature-slug": featureOverride ?? fm["feature-slug"] ?? "unknown",
             status: (fm.status ?? "completed") as "completed" | "blocked",
           }],
         },
@@ -106,15 +100,15 @@ export function buildOutput(
 
     case "validate": {
       const passed = fm.status !== "failed";
-      const failedFeatures = fm.failedFeatures
-        ? fm.failedFeatures.split(",").map((s) => s.trim()).filter(Boolean)
+      const failedFeatures = fm["failed-features"]
+        ? fm["failed-features"].split(",").map((s) => s.trim()).filter(Boolean)
         : undefined;
       return {
         status: passed ? "completed" : "error",
         artifacts: {
           report: basename(artifactPath),
           passed,
-          ...(failedFeatures && failedFeatures.length > 0 ? { failedFeatures } : {}),
+          ...(failedFeatures && failedFeatures.length > 0 ? { "failed-features": failedFeatures } : {}),
         },
       };
     }
@@ -135,18 +129,18 @@ export function buildOutput(
 
 /**
  * Scan plan artifacts for features belonging to an epic.
- * Only includes files whose frontmatter `epic` field exactly matches.
+ * Only includes files whose frontmatter `epic-slug` field exactly matches.
  */
 export function scanPlanFeatures(
   artifactsDir: string,
   epic: string | undefined,
-): Array<{ slug: string; plan: string; description?: string; wave?: number }> {
+): Array<{ "feature-slug": string; plan: string; wave?: number }> {
   if (!epic) return [];
 
   const planDir = join(artifactsDir, "plan");
   if (!existsSync(planDir)) return [];
 
-  const features: Array<{ slug: string; plan: string; description?: string; wave?: number }> = [];
+  const features: Array<{ "feature-slug": string; plan: string; wave?: number }> = [];
 
   for (const filename of readdirSync(planDir)) {
     if (!filename.endsWith(".md")) continue;
@@ -160,14 +154,12 @@ export function scanPlanFeatures(
     }
 
     const fm = parseFrontmatter(content);
-    if (!fm.feature) continue;
-    // Match on epic field only — slug fallback removed per env-frontmatter-contract
-    if (fm.epic !== epic) continue;
+    if (!fm["feature-slug"]) continue;
+    if (fm["epic-slug"] !== epic) continue;
 
-    const entry: { slug: string; plan: string; description?: string; wave?: number } = {
-      slug: fm.feature,
+    const entry: { "feature-slug": string; plan: string; wave?: number } = {
+      "feature-slug": fm["feature-slug"],
       plan: basename(filePath, ".md") + ".md",
-      description: fm.description,
     };
     if (fm.wave !== undefined) {
       const parsed = parseInt(fm.wave, 10);
@@ -204,7 +196,7 @@ export function processArtifact(artifactPath: string, artifactsDir: string, work
     // During design the worktree is still the hex slug; after rename it's the epic name.
     const dateMatch = artBasename.match(/^(\d{4}-\d{2}-\d{2})-/);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
-    const effectiveFeature = featureOverride ?? fm.feature;
+    const effectiveFeature = featureOverride ?? fm["feature-slug"];
     const featureSuffix = effectiveFeature ? `-${effectiveFeature}` : "";
     outputBasename = `${date}-${worktreeSlug}${featureSuffix}`;
   } else {

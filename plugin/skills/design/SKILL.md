@@ -210,8 +210,8 @@ There is no "skip design" path.
 ```
 ---
 phase: design
-slug: <epic-id>
-epic: <epic-name>
+epic-id: <epic-id>
+epic-slug: <epic-name>
 ---
 
 ## Problem Statement

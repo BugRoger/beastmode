@@ -14,6 +14,7 @@ let mockDesignOutput: unknown = undefined;
 vi.mock("../artifacts/reader.js", () => ({
   loadWorktreePhaseOutput: () => mockDesignOutput,
   loadWorktreeFeatureOutput: () => undefined,
+  extractSectionFromFile: vi.fn().mockResolvedValue(undefined),
 }));
 
 // --- Mock git tags ---
@@ -28,7 +29,7 @@ vi.mock("../git/tags.js", () => ({
 import { reconcileDesign } from "../pipeline/reconcile.js";
 import { JsonFileStore } from "../store/index.js";
 import { resolve } from "node:path";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 
 describe("reconcileDesign preserves collision-proof hex suffix", () => {
@@ -53,15 +54,14 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
   }
 
   it("should append hex suffix from epic ID to realSlug", async () => {
-    const { epicId, originalSlug } = seedEpic("f00d");
+    const { epicId } = seedEpic("f00d");
     const shortId = epicId.replace("bm-", "");
 
     // Design phase outputs a human-readable slug
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "dashboard-stats-persistence",
-        summary: { problem: "stats lost", solution: "persist them" },
+        "epic-slug": "dashboard-stats-persistence",
         design: "2026-04-11-dashboard-stats-persistence.md",
       },
     };
@@ -79,9 +79,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
 
     mockDesignOutput = {
       status: "completed",
-      artifacts: {
-        summary: { problem: "broken", solution: "fix it" },
-      },
+      artifacts: {},
     };
 
     const result = await reconcileDesign(projectRoot, epicId, "/tmp/fake-wt");
@@ -98,8 +96,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "auth-redesign",
-        summary: { problem: "auth bad", solution: "redo it" },
+        "epic-slug": "auth-redesign",
       },
     };
 
@@ -116,7 +113,7 @@ describe("reconcileDesign preserves collision-proof hex suffix", () => {
     mockDesignOutput = {
       status: "completed",
       artifacts: {
-        slug: "my-cool-feature",
+        "epic-slug": "my-cool-feature",
       },
     };
 

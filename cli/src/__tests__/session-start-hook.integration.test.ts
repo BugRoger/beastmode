@@ -46,7 +46,7 @@ describe("SessionStart hook integration", () => {
       const result = assembleContext({
         phase: "design",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("L0 context content");
@@ -62,7 +62,7 @@ describe("SessionStart hook integration", () => {
       const result = assembleContext({
         phase: "plan",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("L0 context content");
@@ -79,7 +79,7 @@ describe("SessionStart hook integration", () => {
       const result = assembleContext({
         phase: "implement",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         feature: "my-feature",
         repoRoot: tempDir,
       });
@@ -91,17 +91,17 @@ describe("SessionStart hook integration", () => {
     test("validate phase injects L0 + L1 + implementation artifacts + gate status", async () => {
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-test-epic-feat-a.md"),
-        "---\nphase: implement\nepic: test-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl A content",
+        "---\nphase: implement\nepic-slug: test-epic\nfeature-slug: feat-a\nstatus: completed\n---\n\nImpl A content",
       );
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-test-epic-feat-b.md"),
-        "---\nphase: implement\nepic: test-epic\nfeature: feat-b\nstatus: completed\n---\n\nImpl B content",
+        "---\nphase: implement\nepic-slug: test-epic\nfeature-slug: feat-b\nstatus: completed\n---\n\nImpl B content",
       );
       const { assembleContext } = await import("../hooks/session-start");
       const result = assembleContext({
         phase: "validate",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("L0 context content");
@@ -124,7 +124,7 @@ describe("SessionStart hook integration", () => {
       const result = assembleContext({
         phase: "release",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("L0 context content");
@@ -140,7 +140,7 @@ describe("SessionStart hook integration", () => {
       expect(() => assembleContext({
         phase: "" as any,
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       })).toThrow();
     });
@@ -150,7 +150,7 @@ describe("SessionStart hook integration", () => {
       expect(() => assembleContext({
         phase: "design",
         epic: "",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       })).toThrow();
     });
@@ -161,7 +161,7 @@ describe("SessionStart hook integration", () => {
       expect(() => assembleContext({
         phase: "design",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       })).toThrow();
     });
@@ -171,7 +171,7 @@ describe("SessionStart hook integration", () => {
       expect(() => assembleContext({
         phase: "plan",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       })).toThrow();
     });
@@ -181,13 +181,13 @@ describe("SessionStart hook integration", () => {
     test("validate gate status indicates all features implemented", async () => {
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-test-epic-feat-a.md"),
-        "---\nphase: implement\nepic: test-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl content",
+        "---\nphase: implement\nepic-slug: test-epic\nfeature-slug: feat-a\nstatus: completed\n---\n\nImpl content",
       );
       const { assembleContext } = await import("../hooks/session-start");
       const result = assembleContext({
         phase: "validate",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("Gate Status");
@@ -197,18 +197,18 @@ describe("SessionStart hook integration", () => {
     test("validate gate status indicates incomplete features without blocking", async () => {
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-test-epic-feat-a.md"),
-        "---\nphase: implement\nepic: test-epic\nfeature: feat-a\nstatus: completed\n---\n\nImpl A",
+        "---\nphase: implement\nepic-slug: test-epic\nfeature-slug: feat-a\nstatus: completed\n---\n\nImpl A",
       );
       writeFileSync(
         join(tempDir, ".beastmode", "artifacts", "implement", "2026-04-11-test-epic-feat-b.md"),
-        "---\nphase: implement\nepic: test-epic\nfeature: feat-b\nstatus: error\n---\n\nImpl B",
+        "---\nphase: implement\nepic-slug: test-epic\nfeature-slug: feat-b\nstatus: error\n---\n\nImpl B",
       );
       const { assembleContext } = await import("../hooks/session-start");
       // Should NOT throw — gate failures don't block
       const result = assembleContext({
         phase: "validate",
         epic: "test-epic",
-        id: "abc123",
+        slug: "test-epic",
         repoRoot: tempDir,
       });
       expect(result).toContain("Gate Status");

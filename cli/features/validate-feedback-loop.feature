@@ -14,12 +14,11 @@ Feature: Validate re-dispatches only failing features for re-implement cycles
     And a manifest is seeded for slug "hex0c3d4e"
 
     When the dispatch will write a design artifact:
-      | field    | value                          |
-      | phase    | design                         |
-      | slug     | hex0c3d4e                      |
-      | epic     | auth-flow                      |
-      | problem  | Cross-feature integration      |
-      | solution | Targeted re-dispatch           |
+      | field     | value                          |
+      | phase     | design                         |
+      | epic-slug | hex0c3d4e                      |
+      | problem   | Cross-feature integration      |
+      | solution  | Targeted re-dispatch           |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest slug should be "auth-flow"
@@ -79,12 +78,11 @@ Feature: Validate re-dispatches only failing features for re-implement cycles
     And a manifest is seeded for slug "hex1a2b3c"
 
     When the dispatch will write a design artifact:
-      | field    | value                     |
-      | phase    | design                    |
-      | slug     | hex1a2b3c                 |
-      | epic     | stubborn-epic             |
-      | problem  | Persistent failure        |
-      | solution | Budget exhaustion         |
+      | field     | value             |
+      | phase     | design            |
+      | epic-slug | hex1a2b3c         |
+      | problem   | Persistent failure        |
+      | solution  | Budget exhaustion         |
     And the pipeline runs the "design" phase
     Then the pipeline result should be successful
     And the manifest slug should be "stubborn-epic"

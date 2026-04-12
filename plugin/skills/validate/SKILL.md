@@ -140,16 +140,16 @@ The validation report must begin with YAML frontmatter:
 ```
 ---
 phase: validate
-slug: <epic-id>
-epic: <epic-name>
+epic-id: <epic-id>
+epic-slug: <epic-name>
 status: passed
-failedFeatures: feat-a,feat-b
+failed-features: feat-a,feat-b
 ---
 ```
 
 Set `status` to `passed` or `failed` matching the validation result.
 
-- `failedFeatures` is a comma-separated list of feature slugs that failed validation
+- `failed-features` is a comma-separated list of feature slugs that failed validation
 - Only present when `status: failed` and specific features can be identified
 - When absent on failure, the pipeline falls back to blanket regression (all features reset)
 

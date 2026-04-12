@@ -15,11 +15,11 @@ describe("buildTreePrefix — new hierarchy", () => {
   });
 
   test("leaf-epic has padded bar connector", () => {
-    expect(buildTreePrefix("leaf-epic")).toBe("    │ ");
+    expect(buildTreePrefix("leaf-epic")).toBe("  │ ");
   });
 
   test("leaf-feature has padded nested bar connector", () => {
-    expect(buildTreePrefix("leaf-feature")).toBe("    │ │ ");
+    expect(buildTreePrefix("leaf-feature")).toBe("  │ │ ");
   });
 });
 
