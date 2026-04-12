@@ -20,31 +20,54 @@ export interface GhResult {
  */
 export async function gh(
   args: string[],
-  opts: { cwd?: string; logger?: Logger } = {},
+  opts: { cwd?: string; logger?: Logger; signal?: AbortSignal } = {},
 ): Promise<GhResult | undefined> {
   const log = opts.logger ?? createLogger(createStdioSink(0), {});
   try {
+    // If already aborted, bail immediately
+    if (opts.signal?.aborted) {
+      return undefined;
+    }
+
     const proc = Bun.spawn(["gh", ...args], {
       cwd: opts.cwd,
       stdout: "pipe",
       stderr: "pipe",
     });
 
-    const [stdout, stderr] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-    ]);
+    // Wire up abort signal to kill the process
+    const onAbort = () => {
+      try {
+        proc.kill();
+      } catch {
+        // Process may have already exited
+      }
+    };
+    opts.signal?.addEventListener("abort", onAbort, { once: true });
 
-    const exitCode = await proc.exited;
+    try {
+      const [stdout, stderr] = await Promise.all([
+        new Response(proc.stdout).text(),
+        new Response(proc.stderr).text(),
+      ]);
 
-    if (exitCode !== 0) {
-      log.warn(
-        `gh ${args.slice(0, 2).join(" ")} failed (exit ${exitCode}): ${stderr.trim()}`,
-      );
-      return undefined;
+      const exitCode = await proc.exited;
+
+      if (opts.signal?.aborted) {
+        return undefined;
+      }
+
+      if (exitCode !== 0) {
+        log.warn(
+          `gh ${args.slice(0, 2).join(" ")} failed (exit ${exitCode}): ${stderr.trim()}`,
+        );
+        return undefined;
+      }
+
+      return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
+    } finally {
+      opts.signal?.removeEventListener("abort", onAbort);
     }
-
-    return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
   } catch (err) {
     log.warn(
       `gh ${args.slice(0, 2).join(" ")} failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -58,7 +81,7 @@ export async function gh(
  */
 export async function ghJson<T = unknown>(
   args: string[],
-  opts: { cwd?: string; logger?: Logger } = {},
+  opts: { cwd?: string; logger?: Logger; signal?: AbortSignal } = {},
 ): Promise<T | undefined> {
   const result = await gh(args, opts);
   if (!result) return undefined;
@@ -78,7 +101,7 @@ export async function ghJson<T = unknown>(
 export async function ghGraphQL<T = unknown>(
   query: string,
   variables: Record<string, string | number> = {},
-  opts: { cwd?: string; logger?: Logger } = {},
+  opts: { cwd?: string; logger?: Logger; signal?: AbortSignal } = {},
 ): Promise<T | undefined> {
   const args: string[] = ["api", "graphql", "-f", `query=${query}`];
   for (const [key, value] of Object.entries(variables)) {
