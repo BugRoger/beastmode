@@ -8,7 +8,6 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import { strict as assert } from "node:assert";
 import type { GitHubEnrichmentWorld } from "../support/enrichment-world.js";
-import { formatEpicBody } from "../../../src/github/sync.js";
 
 // ==========================================================================
 // Feature 1: Epic Issue Body Content
@@ -144,9 +143,11 @@ Given("a new epic has no design artifact yet", function (this: GitHubEnrichmentW
 });
 
 Then("the body contains the epic slug as the title", function (this: GitHubEnrichmentWorld) {
-  // With the phase badge removed, a minimal epic body (no summary, no features)
-  // will be empty. Verify the badge is absent.
+  // With phase badge removed, a minimal epic body (no summary, no features)
+  // contains no structured content. Verify no PRD sections or phase badge leaked.
   assert.ok(!this.lastBody.includes("**Phase:**"), "Phase badge should be absent");
+  assert.ok(!this.lastBody.includes("## Problem"), "Should have no Problem section");
+  assert.ok(!this.lastBody.includes("## Solution"), "Should have no Solution section");
 });
 
 Then("the body does not contain PRD sections", function (this: GitHubEnrichmentWorld) {
