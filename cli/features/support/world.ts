@@ -114,17 +114,30 @@ export class PipelineWorld extends World {
 
   writeDesignArtifact(wtPath: string, fields: Record<string, string>): void {
     const date = new Date().toISOString().slice(0, 10);
-    const slug = fields.slug ?? this.epicSlug;
+    const epicSlug = fields["epic-slug"] ?? this.epicSlug;
     const dir = join(wtPath, ".beastmode", "artifacts", "design");
     mkdirSync(dir, { recursive: true });
 
-    const frontmatter = Object.entries(fields)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("\n");
+    const problem = fields.problem;
+    const solution = fields.solution;
+
+    const frontmatterEntries = Object.entries(fields)
+      .filter(([k]) => k !== "problem" && k !== "solution")
+      .map(([k, v]) => `${k}: ${v}`);
+
+    const frontmatter = frontmatterEntries.join("\n");
+
+    let body = `# ${epicSlug}\n\nDesign document.`;
+    if (problem) {
+      body += `\n\n## Problem Statement\n\n${problem}`;
+    }
+    if (solution) {
+      body += `\n\n## Solution\n\n${solution}`;
+    }
 
     writeFileSync(
-      join(dir, `${date}-${slug}.md`),
-      `---\n${frontmatter}\n---\n\n# ${fields.epic ?? slug}\n\nDesign document.\n`,
+      join(dir, `${date}-${epicSlug}.md`),
+      `---\n${frontmatter}\n---\n\n${body}\n`,
     );
   }
 
@@ -140,16 +153,16 @@ export class PipelineWorld extends World {
     for (const f of features) {
       const frontmatter = [
         `phase: plan`,
-        `slug: ${epicSlug}`,
-        `epic: ${epicSlug}`,
-        `feature: ${f.feature}`,
+        `epic-slug: ${epicSlug}`,
+        `feature-slug: ${f.feature}`,
         `wave: ${f.wave}`,
-        `description: ${f.description}`,
       ].join("\n");
+
+      const body = `# ${f.feature}\n\nFeature plan.\n\n## What to Build\n\n${f.description}`;
 
       writeFileSync(
         join(dir, `${date}-${epicSlug}-${f.feature}.md`),
-        `---\n${frontmatter}\n---\n\n# ${f.feature}\n\nFeature plan.\n`,
+        `---\n${frontmatter}\n---\n\n${body}\n`,
       );
     }
   }
@@ -161,9 +174,8 @@ export class PipelineWorld extends World {
 
     const frontmatter = [
       `phase: implement`,
-      `slug: ${epicSlug}`,
-      `epic: ${epicSlug}`,
-      `feature: ${featureSlug}`,
+      `epic-slug: ${epicSlug}`,
+      `feature-slug: ${featureSlug}`,
       `status: completed`,
     ].join("\n");
 
@@ -180,8 +192,7 @@ export class PipelineWorld extends World {
 
     const frontmatter = [
       `phase: validate`,
-      `slug: ${epicSlug}`,
-      `epic: ${epicSlug}`,
+      `epic-slug: ${epicSlug}`,
       `status: ${status}`,
     ].join("\n");
 
@@ -208,11 +219,10 @@ export class PipelineWorld extends World {
 
     const frontmatter = [
       `phase: validate`,
-      `slug: ${epicSlug}`,
-      `epic: ${epicSlug}`,
+      `epic-slug: ${epicSlug}`,
       `status: ${allPassed ? "passed" : "failed"}`,
       ...(failedFeatures.length > 0
-        ? [`failedFeatures: ${failedFeatures.join(",")}`]
+        ? [`failed-features: ${failedFeatures.join(",")}`]
         : []),
     ].join("\n");
 
@@ -229,8 +239,7 @@ export class PipelineWorld extends World {
 
     const frontmatter = [
       `phase: release`,
-      `slug: ${epicSlug}`,
-      `epic: ${epicSlug}`,
+      `epic-slug: ${epicSlug}`,
       `bump: ${bump}`,
     ].join("\n");
 
