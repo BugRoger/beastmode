@@ -55,7 +55,7 @@ Init detects your stack and bootstraps the full knowledge hierarchy — inventor
 |-------|-------|-------------|
 | Design | `/design` | Structured dialogue. Research from 3+ sources. Lock decisions before writing code. |
 | Plan | `/plan` | Break the design into wave-ordered, file-isolated tasks. Generate integration tests. |
-| Implement | `/implement` | Fan out one agent per feature in parallel worktrees. Two-stage review per task. |
+| Implement | `/implement` | Dispatch parallel agents on the shared feature branch with wave file isolation. Two-stage review per task. |
 | Validate | `/validate` | Tests, lint, type checks. Failing features regress to implement automatically. |
 | Release | `/release` | Changelog, version bump, retro, squash-merge to main. |
 
