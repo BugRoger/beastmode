@@ -37,8 +37,8 @@ async function mergeKnownMarketplaces(homeDir) {
 
   data['beastmode-marketplace'] = {
     source: {
-      source: 'npm',
-      name: 'beastmode',
+      source: 'directory',
+      path: join(homeDir, '.claude', 'plugins', 'marketplaces', 'bugroger'),
     },
     installLocation: join(homeDir, '.claude', 'plugins', 'marketplaces', 'bugroger'),
     lastUpdated: new Date().toISOString(),

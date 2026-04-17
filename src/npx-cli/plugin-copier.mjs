@@ -1,5 +1,5 @@
 // src/npx-cli/plugin-copier.mjs
-import { cp, rm, mkdir } from 'node:fs/promises';
+import { cp, rm, mkdir, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /**
@@ -19,12 +19,12 @@ export async function copyPlugin({ homeDir, packageDir, version }) {
 
   // Clean-replace marketplace directory
   await rm(marketplaceDir, { recursive: true, force: true });
-  await mkdir(marketplaceDir, { recursive: true });
+  await mkdir(join(marketplaceDir, '.claude-plugin'), { recursive: true });
 
-  // Copy marketplace.json to marketplace dir
+  // Copy marketplace.json into .claude-plugin/ subdir (where Claude Code expects it)
   await cp(
     join(pluginMetaDir, 'marketplace.json'),
-    join(marketplaceDir, 'marketplace.json')
+    join(marketplaceDir, '.claude-plugin', 'marketplace.json')
   );
 
   // Clean-replace cache directory
@@ -33,6 +33,9 @@ export async function copyPlugin({ homeDir, packageDir, version }) {
 
   // Copy plugin tree to cache dir (includes plugin.json, skills/, agents/, hooks/)
   await cp(pluginSourceDir, cacheDir, { recursive: true });
+
+  // Symlink plugin content into marketplace dir so "source": "./plugin" resolves
+  await symlink(cacheDir, join(marketplaceDir, 'plugin'));
 
   console.log(`Plugin files copied to ${marketplaceDir}`);
   console.log(`Plugin cache written to ${cacheDir}`);

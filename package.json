@@ -9,7 +9,8 @@
   "files": [
     "src/npx-cli/",
     "plugin/",
-    "cli/"
+    "cli/",
+    ".claude-plugin/"
   ],
   "scripts": {
     "test:npx": "node --test src/npx-cli/__tests__/*.test.mjs",
