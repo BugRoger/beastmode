@@ -18,6 +18,30 @@ Decompose a PRD into independent feature plans. Each feature is a vertical slice
 
 ## Phase 1: Execute
 
+### -1. Acquire Worktree Lock
+
+Before any work, acquire the worktree lock to prevent parallel sessions from modifying the same branch. Design and plan commit directly to the base branch (no worktree), so concurrent sessions would race on `git add -A`.
+
+```bash
+( set -C; echo "$$:plan:$(date -Iseconds)" > .beastmode/.worktree-lock ) 2>/dev/null
+```
+
+If the lock file already exists (command fails), read it and STOP immediately:
+
+```bash
+cat .beastmode/.worktree-lock
+```
+
+Print:
+
+```
+BLOCKED — another beastmode session is active on this branch.
+Lock held by: <contents of lock file>
+Wait for it to finish, or remove .beastmode/.worktree-lock if the session crashed.
+```
+
+STOP. Do not proceed.
+
 ### 0. Check Research Trigger
 
 Research triggers if ANY:
@@ -303,6 +327,12 @@ Commit all work to the feature branch:
 ```bash
 git add -A
 git commit -m "plan(<epic-slug>): checkpoint"
+```
+
+Release the worktree lock:
+
+```bash
+rm -f .beastmode/.worktree-lock
 ```
 
 Print features and their implement commands:
