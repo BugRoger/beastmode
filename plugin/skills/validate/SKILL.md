@@ -20,6 +20,25 @@ No release without passing validation.
 
 ## Phase 0: Pre-Execute
 
+### 0. Enter Worktree
+
+Validate must run inside the implement worktree where the feature code lives.
+
+```bash
+git worktree list
+```
+
+If already inside `.claude/worktrees/<epic-slug>` (current directory matches): skip to step 1.
+
+If at repo root, look for `.claude/worktrees/<epic-slug>` in the worktree list. If found, use `EnterWorktree` with `path: ".claude/worktrees/<epic-slug>"` to switch into it.
+
+If no matching worktree exists, STOP:
+
+```
+BLOCKED — no worktree found for <epic-slug>.
+Run /beastmode:implement first to create the worktree and build the feature.
+```
+
 ### 1. Check Feature Completion
 
 Scan for implementation artifacts to verify all features have been implemented:

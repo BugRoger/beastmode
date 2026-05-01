@@ -13,8 +13,30 @@ Load plan, dispatch subagents per task in wave order, verify completion.
 - **Session metadata is the source of truth** — the session-start hook injects a metadata block with `epic-id`, `epic-slug`, `feature-id`, `feature-name`, `feature-slug`, parent artifacts, and `output-target`. Use these values verbatim — do NOT re-derive, re-extract, or generate alternatives.
 - **Wave ordering drives sequencing** — foundation before consumers; parallel-safe waves dispatch all tasks concurrently; reviews run sequentially after all implementations complete
 - **Model escalation** — start cheap (haiku), escalate on failure (sonnet, then opus). See Reference > Model Escalation.
-- **Working directory isolation** — the CLI provides the working directory; skills don't manage worktrees; each phase commits to the feature branch at checkpoint; merge happens only at /release
+- **Working directory isolation** — `/implement` always creates a dedicated git worktree so the main repo stays clean on its current branch and multiple features can run in parallel. The worktree persists until `/release` completes the squash-merge.
 - **Subagent safety** — one agent per task; parallel-safe waves dispatch all tasks simultaneously, non-parallel-safe waves dispatch sequentially; agents commit per task via `git add <files>` + `git commit`; agents must NOT read the plan file, modify files outside their task's file list, or push/switch branches
+
+## Phase 0: Worktree Setup
+
+Before dispatching the taskplanner, ensure work happens in an isolated worktree.
+
+### 0a. Check for existing worktree
+
+```bash
+git worktree list
+```
+
+If `.claude/worktrees/<epic-slug>` already appears (interrupted prior session), use `EnterWorktree` with `path: ".claude/worktrees/<epic-slug>"` to re-enter it, then skip to Phase 1.
+
+### 0b. Create worktree (first run)
+
+```bash
+git worktree add .claude/worktrees/<epic-slug> -b feat/<epic-slug>
+```
+
+Then use `EnterWorktree` with `path: ".claude/worktrees/<epic-slug>"` to switch the session into it.
+
+All subsequent work (taskplanner, implementers, reviewers, commits, tests) runs inside this worktree. The main repo working directory is never touched.
 
 ## Phase 1: Execute
 

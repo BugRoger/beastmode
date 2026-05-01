@@ -16,6 +16,27 @@ No release without passing validation.
 - **Bump type auto-detected, not user-prompted** — commit message conventions determine major/minor/patch automatically
 - **Warn-and-continue for non-blocking failures** — report problems, attempt fixes, only hard-stop on critical validation failures
 
+## Phase 0: Pre-Execute
+
+### 0. Enter Worktree
+
+Release must run inside the implement worktree so that release-notes generation, the retro context walker, and the feature-branch checkpoint commit all operate on the feature branch's state. The squash-merge in Phase 3 still happens from the main repo via explicit `cd "$main_repo"`; this Phase 0 step only governs the parent skill's cwd and the cwd that subagents (notably the retro) inherit.
+
+```bash
+git worktree list
+```
+
+If already inside `.claude/worktrees/<epic-slug>` (current directory matches): skip to Phase 1.
+
+If at repo root, look for `.claude/worktrees/<epic-slug>` in the worktree list. If found, use `EnterWorktree` with `path: ".claude/worktrees/<epic-slug>"` to switch into it.
+
+If no matching worktree exists, STOP:
+
+```
+BLOCKED — no worktree found for <epic-slug>.
+Run /beastmode:implement and /beastmode:validate first, then retry.
+```
+
 ## Phase 1: Execute
 
 ### 1. Stage Uncommitted Changes
@@ -136,8 +157,6 @@ Run a context reconciliation pass across all phase artifacts before releasing.
 
 4. **Apply BEASTMODE.md Updates** — If no L0 changes proposed, skip this step. Apply L0 changes and log.
 
-> **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
-
 ### 2. Commit to Feature Branch
 
 Before merging to main, commit all release artifacts to the feature branch:
@@ -146,6 +165,8 @@ Before merging to main, commit all release artifacts to the feature branch:
 git add -A
 git commit -m "release(<epic-name>): checkpoint"
 ```
+
+> **TRANSITION BOUNDARY — Steps below operate from main repo, NOT the feature branch working directory.**
 
 ### 3. Squash Merge to Main
 
