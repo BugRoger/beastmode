@@ -45,8 +45,8 @@ describe('copyPlugin', () => {
     const marketplaceDir = join(homeDir, '.claude', 'plugins', 'marketplaces', 'bugroger');
     const cacheDir = join(homeDir, '.claude', 'plugins', 'cache', 'bugroger', 'beastmode', '0.99.0');
 
-    // Marketplace dir has marketplace.json
-    const mktJson = JSON.parse(await readFile(join(marketplaceDir, 'marketplace.json'), 'utf8'));
+    // Marketplace dir has marketplace.json in .claude-plugin/ subdir
+    const mktJson = JSON.parse(await readFile(join(marketplaceDir, '.claude-plugin', 'marketplace.json'), 'utf8'));
     assert.equal(mktJson.name, 'beastmode-marketplace');
 
     // Cache dir has plugin files

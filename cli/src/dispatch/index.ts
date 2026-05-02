@@ -53,5 +53,9 @@ export type {
   ITerm2AvailabilityResult,
 } from "./it2.js";
 
+// Cross-platform terminal factory (Windows Terminal / GNOME Terminal)
+export { TerminalSessionFactory } from "./terminal.js";
+export type { CreateWorktreeFn as TerminalCreateWorktreeFn } from "./terminal.js";
+
 // Reconciling factory
 export { ReconcilingFactory } from "./reconciling.js";

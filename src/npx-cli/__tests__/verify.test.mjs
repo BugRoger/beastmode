@@ -4,12 +4,13 @@ import assert from 'node:assert/strict';
 import { verifyInstall } from '../verify.mjs';
 
 describe('verifyInstall', () => {
-  it('returns success when both commands work', async () => {
+  it('returns success when both commands work (unix)', async () => {
     const result = await verifyInstall({
+      platform: 'linux',
       execCommand: (cmd) => {
         if (cmd.includes('beastmode --version')) return { stdout: '0.99.0', exitCode: 0 };
         if (cmd.includes('claude --version')) return { stdout: '1.0.0', exitCode: 0 };
-        return { stdout: '', exitCode: 0 };
+        throw new Error(`unexpected command: ${cmd}`);
       },
     });
 
@@ -18,12 +19,44 @@ describe('verifyInstall', () => {
     assert.deepEqual(result.failures, []);
   });
 
-  it('reports beastmode failure', async () => {
+  it('returns success when both commands work (win32)', async () => {
     const result = await verifyInstall({
+      platform: 'win32',
+      execCommand: (cmd) => {
+        if (cmd.includes('beastmode help')) return { stdout: '', exitCode: 0 };
+        if (cmd.includes('claude --version')) return { stdout: '1.0.0', exitCode: 0 };
+        throw new Error(`unexpected command: ${cmd}`);
+      },
+    });
+
+    assert.equal(result.beastmode, true);
+    assert.equal(result.claude, true);
+    assert.deepEqual(result.failures, []);
+  });
+
+  it('reports beastmode failure (unix)', async () => {
+    const result = await verifyInstall({
+      platform: 'linux',
       execCommand: (cmd) => {
         if (cmd.includes('beastmode --version')) throw new Error('not found');
         if (cmd.includes('claude --version')) return { stdout: '1.0.0', exitCode: 0 };
-        return { stdout: '', exitCode: 0 };
+        throw new Error(`unexpected command: ${cmd}`);
+      },
+    });
+
+    assert.equal(result.beastmode, false);
+    assert.equal(result.claude, true);
+    assert.ok(result.failures.length > 0);
+    assert.ok(result.failures[0].includes('beastmode'));
+  });
+
+  it('reports beastmode failure (win32)', async () => {
+    const result = await verifyInstall({
+      platform: 'win32',
+      execCommand: (cmd) => {
+        if (cmd.includes('beastmode help')) throw new Error('not found');
+        if (cmd.includes('claude --version')) return { stdout: '1.0.0', exitCode: 0 };
+        throw new Error(`unexpected command: ${cmd}`);
       },
     });
 
@@ -35,10 +68,11 @@ describe('verifyInstall', () => {
 
   it('reports claude failure', async () => {
     const result = await verifyInstall({
+      platform: 'linux',
       execCommand: (cmd) => {
         if (cmd.includes('beastmode --version')) return { stdout: '0.99.0', exitCode: 0 };
         if (cmd.includes('claude --version')) throw new Error('not found');
-        return { stdout: '', exitCode: 0 };
+        throw new Error(`unexpected command: ${cmd}`);
       },
     });
 
@@ -49,6 +83,7 @@ describe('verifyInstall', () => {
 
   it('reports both failures', async () => {
     const result = await verifyInstall({
+      platform: 'linux',
       execCommand: () => { throw new Error('not found'); },
     });
 

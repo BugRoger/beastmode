@@ -4,7 +4,7 @@ import { WatchLoop } from "./watch-loop.js";
 import type { WatchDeps } from "./watch-loop.js";
 import { listEnrichedFromStore } from "../store/scan.js";
 import { JsonFileStore } from "../store/json-file-store.js";
-import { ReconcilingFactory, ITermSessionFactory, It2Client } from "../dispatch/index.js";
+import { ReconcilingFactory, ITermSessionFactory, It2Client, TerminalSessionFactory } from "../dispatch/index.js";
 import type { SessionFactory } from "../dispatch/index.js";
 import { discoverGitHub } from "../github/index.js";
 import { FallbackEntryStore } from "../dashboard/lifecycle-entries.js";
@@ -30,8 +30,11 @@ export async function dashboardCommand(
   const dashboardSink = new DashboardSink({ fallbackStore, systemRef });
   const logger = createLogger(dashboardSink);
 
-  // --- Create iTerm2 dispatch factory ---
-  const innerFactory: SessionFactory = new ITermSessionFactory(new It2Client());
+  // --- Create dispatch factory (platform-aware) ---
+  // iTerm2 is macOS-only; Windows and Linux use the native terminal factory.
+  const innerFactory: SessionFactory = process.platform === "darwin"
+    ? new ITermSessionFactory(new It2Client())
+    : new TerminalSessionFactory();
 
   const sessionFactory = new ReconcilingFactory(innerFactory, projectRoot, logger);
 

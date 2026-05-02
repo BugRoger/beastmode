@@ -11,19 +11,18 @@
 export async function checkPrereqs({ platform, execCommand }) {
   const errors = [];
 
-  // Check macOS
-  if (platform !== 'darwin') {
+  // Check supported platform (macOS, Linux, Windows)
+  if (platform !== 'darwin' && platform !== 'linux' && platform !== 'win32') {
     errors.push(
-      `beastmode requires macOS. Detected platform: ${platform}. ` +
-      `Linux and Windows are not supported yet.`
+      `beastmode requires macOS, Linux, or Windows. Detected platform: ${platform}.`
     );
-    // Fail fast — no point checking other prereqs on wrong OS
     return { ok: false, errors };
   }
 
   // Check Claude Code
+  const claudeCheck = platform === 'win32' ? 'where claude' : 'command -v claude';
   try {
-    execCommand('command -v claude');
+    execCommand(claudeCheck);
   } catch {
     errors.push(
       'Claude Code is not installed. ' +

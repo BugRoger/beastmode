@@ -61,6 +61,11 @@ export function parseArgs(argv: string[]): ParsedCommand {
 
   const command = userArgs[0];
 
+  // Version flags are handled directly in index.ts before dispatch
+  if (command === "--version" || command === "-v") {
+    return { command: command as Command, args: [], verbosity: 0, force: false };
+  }
+
   if (!ALL_COMMANDS.has(command)) {
     process.stderr.write(`Unknown command: ${command}\n`);
     process.stderr.write(`Phases: ${VALID_PHASES.join(", ")}\n`);

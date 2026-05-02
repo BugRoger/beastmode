@@ -54,7 +54,7 @@ describe("lockfile", () => {
 
   it("detects stale lockfile (dead PID)", () => {
     // Write a lockfile with a definitely-dead PID
-    const lockPath = resolve(TEST_ROOT, "cli", ".beastmode-watch.lock");
+    const lockPath = resolve(TEST_ROOT, ".beastmode", ".beastmode-watch.lock");
     writeFileSync(
       lockPath,
       JSON.stringify({ pid: 999999999, startedAt: new Date().toISOString() }),

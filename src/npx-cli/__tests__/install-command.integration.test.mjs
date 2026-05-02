@@ -243,7 +243,7 @@ describe('Install failure produces clear diagnostic message', () => {
     await rm(sandbox.home, { recursive: true, force: true });
   });
 
-  it('rejects non-macOS with a clear message', async () => {
+  it('rejects unsupported platforms with a clear message', async () => {
     const { install } = await import('../install.mjs');
 
     const result = await install({
@@ -251,11 +251,11 @@ describe('Install failure produces clear diagnostic message', () => {
       skipPrereqs: false,
       execCommand: mockExecCommand({ bun: true, claude: true, beastmode: true }),
       packageDir: getPackageDir(),
-      platform: 'linux',
+      platform: 'freebsd',
     });
 
     assert.equal(result.success, false);
-    assert.ok(result.error.includes('macOS'), 'Error should mention macOS');
+    assert.ok(result.error.includes('freebsd'), 'Error should mention the detected platform');
   });
 
   it('reports missing Claude Code', async () => {

@@ -10,12 +10,12 @@ Turns Claude Code into a disciplined engineering partner. Five phases. Context t
 
 **Prerequisites:**
 
-- **macOS** — only supported platform (required)
+- **macOS, Windows, or Linux** — supported platforms (required)
 - **[Node.js](https://nodejs.org/) >= 18** — runtime for npx (required)
 - **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — AI coding assistant (required)
 - **[Git](https://git-scm.com/)** — branch and commit operations (required)
 - **[GitHub CLI](https://cli.github.com/)** — issue and project board sync (optional, for GitHub integration)
-- **[iTerm2](https://iterm2.com/)** — pipeline dashboard terminal (optional, for pipeline dashboard)
+- **[iTerm2](https://iterm2.com/)** (macOS) / **[Windows Terminal](https://aka.ms/terminal)** (Windows) / **GNOME Terminal** (Linux) — pipeline dashboard terminal (optional, for pipeline dashboard)
 
 **Paste this into Claude Code:**
 

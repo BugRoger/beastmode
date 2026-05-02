@@ -243,7 +243,10 @@ export async function amendCommitsInRange(
 
   // Shell script that reads current HEAD subject, looks up in map, amends.
   const scriptPath = join(gitDir, "beastmode-amend.sh");
-  const escapedMapPath = mapPath.replace(/'/g, "'\\''");
+  // Convert to POSIX forward slashes: Git's bundled sh on Windows handles
+  // these, but backslashes are treated as escape characters inside sh strings.
+  const toPosix = (p: string) => p.replace(/\\/g, "/");
+  const escapedMapPath = toPosix(mapPath).replace(/'/g, "'\\''");
   const script = `#!/bin/sh
 SUBJECT=$(git log -1 --format=%s)
 MAP_FILE='${escapedMapPath}'
@@ -260,9 +263,10 @@ fi
 `;
   await writeFile(scriptPath, script, { mode: 0o755 });
 
-  // Run rebase with exec
+  // Run rebase with exec — use POSIX path so Git's sh doesn't misinterpret
+  // Windows backslashes as escape characters.
   const rebaseResult = await git(
-    ["rebase", "--exec", `sh '${scriptPath.replace(/'/g, "'\\''")}'`, rangeStart],
+    ["rebase", "--exec", `sh '${toPosix(scriptPath).replace(/'/g, "'\\''")}'`, rangeStart],
     { cwd: opts.cwd, allowFailure: true },
   );
 

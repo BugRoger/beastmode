@@ -85,7 +85,7 @@ export async function runInteractive(
   let cancelled = false;
   const onSigint = () => {
     cancelled = true;
-    proc.kill("SIGINT");
+    proc.kill(); // cross-platform: SIGTERM on Unix, TerminateProcess on Windows
   };
   process.on("SIGINT", onSigint);
 

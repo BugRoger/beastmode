@@ -19,14 +19,42 @@ describe('checkPrereqs', () => {
     assert.equal(result.errors.length, 0);
   });
 
-  it('rejects non-macOS platforms', async () => {
+  it('rejects unsupported platforms', async () => {
     const result = await checkPrereqs({
-      platform: 'linux',
+      platform: 'freebsd',
       execCommand: () => ({ stdout: '', exitCode: 0 }),
     });
 
     assert.equal(result.ok, false);
-    assert.ok(result.errors[0].includes('macOS'));
+    assert.ok(result.errors[0].includes('freebsd'));
+  });
+
+  it('accepts linux platform', async () => {
+    const result = await checkPrereqs({
+      platform: 'linux',
+      execCommand: (cmd) => {
+        if (cmd.includes('command -v claude')) {
+          return { stdout: '/usr/bin/claude', exitCode: 0 };
+        }
+        return { stdout: '', exitCode: 0 };
+      },
+    });
+
+    assert.equal(result.ok, true);
+  });
+
+  it('accepts win32 platform', async () => {
+    const result = await checkPrereqs({
+      platform: 'win32',
+      execCommand: (cmd) => {
+        if (cmd.includes('where claude')) {
+          return { stdout: 'C:\\claude.exe', exitCode: 0 };
+        }
+        return { stdout: '', exitCode: 0 };
+      },
+    });
+
+    assert.equal(result.ok, true);
   });
 
   it('rejects when Claude Code is not installed', async () => {

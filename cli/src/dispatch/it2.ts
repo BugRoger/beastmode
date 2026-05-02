@@ -90,16 +90,17 @@ export type SpawnFn = (
   exited: Promise<number>;
 };
 
-/** Resolve the it2 binary path. Checks PATH via which(1). */
+/** Resolve the it2 binary path. Checks PATH via which(1) on Unix, where on Windows. */
 function resolveIt2Binary(): string {
+  const whichCmd = process.platform === "win32" ? "where" : "which";
   try {
-    const proc = Bun.spawnSync(["which", "it2"], {
+    const proc = Bun.spawnSync([whichCmd, "it2"], {
       stdout: "pipe",
       stderr: "pipe",
     });
     if (proc.exitCode === 0) return "it2";
   } catch {
-    // which not available or failed
+    // which/where not available or failed
   }
   return "it2"; // let it fail at exec time
 }

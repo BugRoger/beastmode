@@ -1,7 +1,7 @@
 /**
  * Lockfile manager — prevents duplicate watch instances.
  *
- * Creates cli/.beastmode-watch.lock on start, removes on clean shutdown.
+ * Creates .beastmode/.beastmode-watch.lock on start, removes on clean shutdown.
  * Detects stale lockfiles by checking if the PID is still running.
  */
 
@@ -14,7 +14,7 @@ import type { LockfileInfo } from "./dispatch/index.js";
 const LOCKFILE_NAME = ".beastmode-watch.lock";
 
 function lockfilePath(projectRoot: string): string {
-  return resolve(projectRoot, "cli", LOCKFILE_NAME);
+  return resolve(projectRoot, ".beastmode", LOCKFILE_NAME);
 }
 
 /** Check if a process with the given PID is still running. */

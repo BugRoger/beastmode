@@ -471,7 +471,9 @@ export class WatchLoop extends EventEmitter {
     };
 
     process.on("SIGINT", handler);
-    process.on("SIGTERM", handler);
+    if (process.platform !== "win32") {
+      process.on("SIGTERM", handler);
+    }
   }
 }
 

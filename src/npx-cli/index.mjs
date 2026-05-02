@@ -18,6 +18,9 @@ switch (command) {
       homeDir: homedir(),
       packageDir,
     });
+    if (!result.success) {
+      console.error(`\nInstallation failed: ${result.error}`);
+    }
     process.exit(result.success ? 0 : 1);
     break;
   }
